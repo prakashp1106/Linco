@@ -1,0 +1,6 @@
+{
+  "name": "LINCO – AI Lost & Found",
+  "description": "An AI-powered Lost & Found directory featuring Gemini matching, secure claim verification, voice speech dictation, and timeline reconstruction.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
