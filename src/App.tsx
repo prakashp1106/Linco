@@ -160,10 +160,16 @@ export default function App() {
   const [fAddress, setFAddress] = useState("");
   const [fReward, setFReward] = useState("");
   const [fContact, setFContact] = useState("");
+  const [fSecurityPin, setFSecurityPin] = useState("");
   const [fCategory, setFCategory] = useState("");
   const [fUrgency, setFUrgency] = useState<UrgencyType>("Normal");
   const [fImage, setFImage] = useState<string | null>(null);
   const [fTimeline, setFTimeline] = useState("");
+
+  // Safety & Unlocked features
+  const [unlockedPosts, setUnlockedPosts] = useState<string[]>([]);
+  const [pinModal, setPinModal] = useState<{ isOpen: boolean; postId: string; actionType: "delete" | "resolve"; actualPin: string; } | null>(null);
+  const [enteredPin, setEnteredPin] = useState("");
 
   // AI Feature Loading Indicator States
   const [photoLoading, setPhotoLoading] = useState(false);
@@ -307,6 +313,10 @@ export default function App() {
       addToast("Enter a valid 10-digit mobile number for WhatsApp contact", "warn");
       return false;
     }
+    if (!fSecurityPin.trim() || !/^\d{4}$/.test(fSecurityPin.trim())) {
+      addToast("Please set a 4-digit Security PIN for your safety", "warn");
+      return false;
+    }
     return true;
   };
 
@@ -321,6 +331,7 @@ export default function App() {
       address: fAddress.trim(),
       reward: fType === "Lost" ? fReward.trim() : "",
       contact: fContact.trim().replace(/\D/g, ""),
+      securityPin: fSecurityPin.trim(),
       category: fCategory,
       urgency: fUrgency,
       image: fImage,
@@ -356,6 +367,7 @@ export default function App() {
         setFAddress("");
         setFReward("");
         setFContact("");
+        setFSecurityPin("");
         setFCategory("");
         setFUrgency("Normal");
         setFImage(null);
@@ -417,8 +429,8 @@ export default function App() {
           body: JSON.stringify({ image: base64 }),
         });
 
-        if (!response.ok) throw new Error("Gemini Image Reader failed");
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Gemini Image Reader failed");
 
         if (data.item) setFItem(data.item);
         if (data.description) setFDetails(data.description);
@@ -428,7 +440,7 @@ export default function App() {
         }
         addToast("Gemini auto-filled item description and category from your photo!", "success");
       } catch (err: any) {
-        addToast("Photo AI Reading failed. You can still input manually.", "error");
+        addToast("Photo AI Reading failed: " + err.message, "error");
         console.error(err);
       } finally {
         setPhotoLoading(false);
@@ -468,8 +480,8 @@ export default function App() {
           body: JSON.stringify({ transcript }),
         });
 
-        if (!response.ok) throw new Error("Gemini voice parsing failed");
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Gemini voice parsing failed");
 
         if (data.item) setFItem(data.item);
         if (data.description) setFDetails(data.description);
@@ -480,7 +492,7 @@ export default function App() {
         addToast("Gemini populated the form from your voice input!", "success");
       } catch (err: any) {
         setFDetails(transcript);
-        addToast("Voice processed as raw description", "info");
+        addToast("Voice processed as raw: " + err.message, "info");
       } finally {
         setVoiceLoading(false);
       }
@@ -515,8 +527,8 @@ export default function App() {
         body: JSON.stringify({ item: fItem, category: fCategory, description: fDetails }),
       });
 
-      if (!response.ok) throw new Error("Enhancement failed");
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Enhancement failed");
 
       if (data.description) {
         setFDetails(data.description);
@@ -546,8 +558,8 @@ export default function App() {
         body: JSON.stringify({ item: fItem, description: fDetails }),
       });
 
-      if (!response.ok) throw new Error("Estimation failed");
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Estimation failed");
 
       if (data.min !== undefined) {
         setFReward(String(data.min));
@@ -578,8 +590,8 @@ export default function App() {
         body: JSON.stringify({ item: fItem, timeline: fTimeline }),
       });
 
-      if (!response.ok) throw new Error("Trace failed");
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Trace failed");
 
       if (data.analysis) {
         setTimelineResult(data.analysis);
@@ -608,34 +620,76 @@ export default function App() {
   // Mark Resolved
   const handleMarkResolved = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const response = await fetch(`/api/posts/${id}/resolve`, { method: "PUT" });
-      if (!response.ok) throw new Error("Failed to resolve");
-      const data = await response.json();
-      if (data.success) {
-        setPosts((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, status: "Resolved" } : p))
-        );
-        addToast("Congratulations on recovering this item!", "success");
-      }
-    } catch (err) {
-      addToast("Error marking post resolved", "error");
-    }
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    setPinModal({
+      isOpen: true,
+      postId: id,
+      actionType: "resolve",
+      actualPin: post.securityPin || "1234",
+    });
+    setEnteredPin("");
   };
 
   // Delete Post
   const handleDeletePost = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this post permanently?")) return;
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    setPinModal({
+      isOpen: true,
+      postId: id,
+      actionType: "delete",
+      actualPin: post.securityPin || "1234",
+    });
+    setEnteredPin("");
+  };
 
-    try {
-      const response = await fetch(`/api/posts/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Delete failed");
-      setPosts((prev) => prev.filter((p) => p.id !== id));
-      addToast("Post deleted successfully", "info");
-    } catch (err) {
-      addToast("Error deleting post", "error");
+  // PIN Verification and execution of Safe Actions
+  const handleVerifyPinAndExecute = async () => {
+    if (!pinModal) return;
+    const { postId, actionType, actualPin } = pinModal;
+    const expectedPin = actualPin || "1234";
+
+    if (enteredPin !== expectedPin) {
+      addToast("Wrong PIN!", "error");
+      window.alert("Wrong PIN!");
+      return;
     }
+
+    if (actionType === "delete") {
+      try {
+        const response = await fetch(`/api/posts/${postId}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ securityPin: enteredPin }),
+        });
+        if (!response.ok) throw new Error("Delete failed");
+        setPosts((prev) => prev.filter((p) => p.id !== postId));
+        addToast("Post deleted successfully", "info");
+      } catch (err) {
+        addToast("Error deleting post", "error");
+      }
+    } else if (actionType === "resolve") {
+      try {
+        const response = await fetch(`/api/posts/${postId}/resolve`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ securityPin: enteredPin }),
+        });
+        if (!response.ok) throw new Error("Failed to resolve");
+        const data = await response.json();
+        if (data.success) {
+          setPosts((prev) =>
+            prev.map((p) => (p.id === postId ? { ...p, status: "Resolved" } : p))
+          );
+          addToast("Congratulations on recovering this item!", "success");
+        }
+      } catch (err) {
+        addToast("Error marking post resolved", "error");
+      }
+    }
+    setPinModal(null);
   };
 
   // Share/Copy Post
@@ -666,16 +720,16 @@ export default function App() {
         body: JSON.stringify({ item: p.item, description: p.details }),
       });
 
-      if (!response.ok) throw new Error("Could not formulate questions");
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not formulate questions");
 
       if (Array.isArray(data) && data.length > 0) {
         setClaimQuestions(data);
       } else {
         throw new Error("No questions returned");
       }
-    } catch (err) {
-      addToast("Fallback: Verification questions bypassed. Chat directly on WhatsApp.", "warn");
+    } catch (err: any) {
+      addToast(`Questions Bypassed: ${err.message}`, "warn");
       setClaimQuestions(["Can you describe any unique scratches, contents, or branding?", "Where and around what time did you lose this item?"]);
     } finally {
       setClaimLoading(false);
@@ -704,8 +758,8 @@ export default function App() {
         }),
       });
 
-      if (!response.ok) throw new Error("Verification processing failed");
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Verification processing failed");
 
       setClaimResult({
         verified: data.verified,
@@ -715,6 +769,7 @@ export default function App() {
 
       if (data.verified) {
         addToast(`Ownership Verified with ${data.confidence}% confidence!`, "success");
+        setUnlockedPosts((prev) => [...prev, claimingPost.id]);
       } else {
         addToast("Verification failed. Please review answers.", "error");
       }
@@ -1106,6 +1161,24 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Security PIN Field */}
+              <div className="mb-4">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Security PIN (4-digit numeric)
+                </label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  placeholder="e.g. 1234"
+                  value={fSecurityPin}
+                  onChange={(e) => setFSecurityPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-xs text-slate-200 transition duration-150 font-mono tracking-widest"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Required to delete or mark this post as resolved later.
+                </p>
+              </div>
+
               {/* Reward estimation Box (Only for Lost) */}
               {fType === "Lost" && (
                 <div className="mb-4 p-3.5 bg-amber-500/5 rounded-xl border border-amber-500/20">
@@ -1405,15 +1478,27 @@ export default function App() {
 
                         {/* Action Buttons: WhatsApp and Claim */}
                         <div className="flex gap-2">
-                          <a
-                            href={`https://wa.me/91${p.contact}?text=Hi! I saw your ${p.type} item listing on LINCO for '${p.item}'. Let's connect!`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center shadow shadow-emerald-950/20"
-                          >
-                            💬 Contact on WhatsApp
-                          </a>
+                          {!isLost && !unlockedPosts.includes(p.id) ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToast("Please click 'Claim' and pass the AI verification quiz to unlock this WhatsApp button!", "info");
+                              }}
+                              className="flex-1 py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-500 hover:text-slate-400 transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center select-none cursor-not-allowed"
+                            >
+                              🔒 WhatsApp Locked (Claim first)
+                            </button>
+                          ) : (
+                            <a
+                              href={`https://wa.me/91${p.contact}?text=Hi! I saw your ${p.type} item listing on LINCO for '${p.item}'. Let's connect!`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center shadow shadow-emerald-950/20"
+                            >
+                              💬 Contact on WhatsApp
+                            </a>
+                          )}
 
                           {/* Claim Ownership verification Flow button (Only for Found items) */}
                           {!isLost && !isResolved && (
@@ -1544,6 +1629,72 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* SECURITY PIN VERIFICATION MODAL */}
+      <AnimatePresence>
+        {pinModal && pinModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-slate-950 border border-rose-500/30 rounded-2xl p-5 md:p-6 w-full max-w-sm shadow-2xl relative"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setPinModal(null)}
+                className="absolute top-3 right-3 p-1 rounded hover:bg-slate-900 text-slate-400 transition"
+              >
+                <X size={15} />
+              </button>
+
+              <div className="flex items-center gap-1 text-xs font-bold text-rose-400 uppercase tracking-wider mb-2">
+                <Lock size={14} /> Security Verification
+              </div>
+              <h3 className="text-sm font-display font-bold text-slate-100 mb-1">
+                Enter Security PIN
+              </h3>
+              <p className="text-[10px] text-slate-400 leading-relaxed mb-4">
+                Please enter the 4-digit Security PIN to {pinModal.actionType === "delete" ? "permanently delete" : "mark this post as resolved"}.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    placeholder="Enter 4-digit PIN"
+                    value={enteredPin}
+                    onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-800 focus:border-rose-500/40 outline-none text-center text-lg font-bold tracking-widest text-slate-200 transition duration-150"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => setPinModal(null)}
+                    className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleVerifyPinAndExecute}
+                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-slate-950 font-extrabold hover:text-black transition cursor-pointer text-xs"
+                  >
+                    Verify & Proceed
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* CLAIM OWNERSHIP VERIFICATION MODAL */}
       <AnimatePresence>

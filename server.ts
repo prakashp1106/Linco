@@ -287,7 +287,7 @@ app.get("/api/posts", async (req, res) => {
 // Submit a new post
 app.post("/api/posts", async (req, res) => {
   try {
-    const { item, details, type, address, reward, contact, category, urgency, image } = req.body;
+    const { item, details, type, address, reward, contact, category, urgency, image, securityPin } = req.body;
     
     if (!item || !details || !type || !address || !contact || !category) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -304,6 +304,7 @@ app.post("/api/posts", async (req, res) => {
       address,
       reward: reward || "",
       contact,
+      securityPin: securityPin || "1234",
       category,
       urgency: urgency || "Normal",
       image: image || null,
@@ -347,9 +348,14 @@ app.post("/api/posts", async (req, res) => {
 // Mark post as Resolved
 app.put("/api/posts/:id/resolve", (req, res) => {
   const { id } = req.params;
+  const { securityPin } = req.body;
   const dbData = readDB();
   const post = dbData.posts.find((p) => p.id === id);
   if (post) {
+    const expectedPin = post.securityPin || "1234";
+    if (expectedPin !== securityPin) {
+      return res.status(403).json({ error: "Wrong PIN!" });
+    }
     post.status = "Resolved";
     writeDB(dbData);
     res.json({ success: true, post });
@@ -375,17 +381,37 @@ app.post("/api/posts/:id/view", (req, res) => {
 // Delete a post
 app.delete("/api/posts/:id", (req, res) => {
   const { id } = req.params;
+  const { securityPin } = req.body;
   const dbData = readDB();
-  dbData.posts = dbData.posts.filter((p) => p.id !== id);
-  delete dbData.matches[id];
-  writeDB(dbData);
-  res.json({ success: true });
+  const post = dbData.posts.find((p) => p.id === id);
+  if (post) {
+    const expectedPin = post.securityPin || "1234";
+    if (expectedPin !== securityPin) {
+      return res.status(403).json({ error: "Wrong PIN!" });
+    }
+    dbData.posts = dbData.posts.filter((p) => p.id !== id);
+    delete dbData.matches[id];
+    writeDB(dbData);
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: "Post not found" });
+  }
 });
 
 // --- AI ENDPOINTS (SECURE & SERVER-SIDE) ---
 
+// Middleware to verify Gemini API Key exists
+function requireGeminiApiKey(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(400).json({
+      error: "GEMINI_API_KEY is not configured in your environment. Please open your Render Dashboard (render.com), go to your Web Service, click 'Environment', click 'Add Environment Variable', set Key as 'GEMINI_API_KEY' and Value as your Gemini API Key from Google AI Studio. Click save to redeploy and activate LINCO AI features!"
+    });
+  }
+  next();
+}
+
 // 1. Photo Analyzer
-app.post("/api/ai/quick-fill-photo", async (req, res) => {
+app.post("/api/ai/quick-fill-photo", requireGeminiApiKey, async (req, res) => {
   try {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: "Image base64 data required" });
@@ -428,7 +454,7 @@ The JSON object MUST have exactly these keys:
 });
 
 // 2. Voice Input Fill
-app.post("/api/ai/quick-fill-voice", async (req, res) => {
+app.post("/api/ai/quick-fill-voice", requireGeminiApiKey, async (req, res) => {
   try {
     const { transcript } = req.body;
     if (!transcript) return res.status(400).json({ error: "Transcript is required" });
@@ -459,7 +485,7 @@ The JSON object MUST have exactly these keys:
 });
 
 // 3. Description Enhancer
-app.post("/api/ai/enhance-description", async (req, res) => {
+app.post("/api/ai/enhance-description", requireGeminiApiKey, async (req, res) => {
   try {
     const { item, category, description } = req.body;
     if (!description) return res.status(400).json({ error: "Description is required" });
@@ -484,7 +510,7 @@ Return ONLY the final enhanced description. Do not include introductory text, he
 });
 
 // 4. Timeline Reconstructor
-app.post("/api/ai/reconstruct-timeline", async (req, res) => {
+app.post("/api/ai/reconstruct-timeline", requireGeminiApiKey, async (req, res) => {
   try {
     const { item, timeline } = req.body;
     if (!timeline) return res.status(400).json({ error: "Timeline text is required" });
@@ -513,7 +539,7 @@ Be positive, logical, and concise. Keep your answer under 4 sentences total. Ret
 });
 
 // 5. Suggest Reward
-app.post("/api/ai/suggest-reward", async (req, res) => {
+app.post("/api/ai/suggest-reward", requireGeminiApiKey, async (req, res) => {
   try {
     const { item, description } = req.body;
     if (!item) return res.status(400).json({ error: "Item name is required" });
@@ -545,7 +571,7 @@ Return ONLY a valid JSON object (no markdown backticks):
 });
 
 // 6. Generate Verification Questions
-app.post("/api/ai/generate-verification", async (req, res) => {
+app.post("/api/ai/generate-verification", requireGeminiApiKey, async (req, res) => {
   try {
     const { item, description } = req.body;
     if (!item || !description) return res.status(400).json({ error: "Item and description required" });
@@ -578,7 +604,7 @@ Format:
 });
 
 // 7. Verify Answers
-app.post("/api/ai/verify-claim", async (req, res) => {
+app.post("/api/ai/verify-claim", requireGeminiApiKey, async (req, res) => {
   try {
     const { item, description, questions, answers } = req.body;
     if (!questions || !answers) {
