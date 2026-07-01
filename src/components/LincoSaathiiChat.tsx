@@ -32,14 +32,14 @@ interface ChatMessage {
 }
 
 // Modern, futuristic SVG Robot Avatar component with clean vector styling
-const RobotAvatarIcon = ({ size = 20 }: { size?: number }) => (
+const RobotAvatarIcon = ({ size = 20, className = "text-cyan-400" }: { size?: number; className?: string }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="text-cyan-400"
+    className={className}
   >
     {/* Antennas */}
     <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -213,7 +213,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
     }
   };
 
-  const ChatContent = () => (
+  const renderChatContent = () => (
     <div className="flex flex-col h-full bg-[#020817]/90 border border-slate-900/80 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl relative">
       {/* Top Banner with high precision alignment */}
       <div className="p-3 bg-gradient-to-r from-violet-950/40 to-cyan-950/40 border-b border-slate-900/60 flex items-center justify-between">
@@ -370,7 +370,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
     <>
       {/* 1. DESKTOP PERMANENT PANEL SIDEBAR */}
       <div className="hidden lg:block h-[560px]">
-        <ChatContent />
+        {renderChatContent()}
       </div>
 
       {/* 2. MOBILE FLOATING ACTION BUTTON */}
@@ -385,7 +385,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
           </span>
-          <MessageSquare size={22} className="group-hover:rotate-12 transition-transform duration-200" />
+          <RobotAvatarIcon size={24} className="text-[#020817] group-hover:rotate-12 transition-transform duration-200" />
         </motion.button>
       </div>
 
@@ -400,7 +400,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="w-full max-w-md h-[80vh] relative"
             >
-              <ChatContent />
+              {renderChatContent()}
             </motion.div>
           </div>
         )}

@@ -25,35 +25,23 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // MapmyIndia static API Key
   const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
 
-  // Reverse geocoding using MapmyIndia API
+  // Reverse geocoding using secure server map proxy (MapmyIndia + Nominatim)
   const reverseGeocode = async (newLat: number, newLng: number) => {
     if (!onAddressChange) return;
     try {
       const response = await fetch(
-        `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${newLat}&lng=${newLng}`
+        `/api/maps/revgeocode?lat=${newLat}&lng=${newLng}`
       );
       const data = await response.json();
       if (data && data.results && data.results.length > 0) {
         const result = data.results[0];
-        const addressText =
-          result.formatted_address ||
-          result.formattedAddress ||
-          [
-            result.poi,
-            result.street,
-            result.subLocality,
-            result.locality,
-            result.district,
-            result.state,
-          ]
-            .filter(Boolean)
-            .join(", ");
+        const addressText = result.formatted_address;
         if (addressText) {
           onAddressChange(addressText);
         }
       }
     } catch (error) {
-      console.error("MapmyIndia Reverse Geocoding Error:", error);
+      console.error("MapmyIndia Reverse Geocoding Proxy Error:", error);
     }
   };
 
@@ -201,16 +189,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [lat, lng]);
 
-  // Handle Mappls Autocomplete search submission
+  // Handle Mappls Autocomplete search submission via secure proxy
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     setSearchLoading(true);
     try {
       const response = await fetch(
-        `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(
-          searchQuery
-        )}`
+        `/api/maps/autosuggest?query=${encodeURIComponent(searchQuery)}`
       );
       const data = await response.json();
       if (data && data.suggestedLocations) {
@@ -219,7 +205,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         setSearchResults([]);
       }
     } catch (err) {
-      console.error("MapmyIndia AutoSuggest Error:", err);
+      console.error("MapmyIndia Proxy AutoSuggest Error:", err);
     } finally {
       setSearchLoading(false);
     }

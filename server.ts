@@ -303,6 +303,150 @@ Expected format:
 
 // --- API ROUTES ---
 
+// Proxy for MapmyIndia / Nominatim Autocomplete AutoSuggest
+app.get("/api/maps/autosuggest", async (req, res) => {
+  try {
+    const query = req.query.query as string;
+    if (!query || !query.trim()) {
+      return res.json({ suggestedLocations: [] });
+    }
+
+    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    let results: any[] = [];
+    let mapplsSuccess = false;
+
+    // 1. Try MapmyIndia first
+    try {
+      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
+      const response = await fetch(mapplsUrl, {
+        headers: {
+          "Referer": "https://apis.mappls.com"
+        }
+      });
+      if (response.ok) {
+        const data: any = await response.json();
+        if (data && data.suggestedLocations && data.suggestedLocations.length > 0) {
+          results = data.suggestedLocations.map((item: any) => ({
+            placeName: item.placeName || item.formatted_address || item.placeAddress || "Location",
+            placeAddress: item.placeAddress || item.formatted_address || item.placeName || "",
+            latitude: item.latitude !== undefined ? item.latitude : item.lat,
+            longitude: item.longitude !== undefined ? item.longitude : item.lng,
+            eLoc: item.eLoc || String(Math.random())
+          }));
+          mapplsSuccess = results.length > 0;
+        }
+      }
+    } catch (err) {
+      console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
+    }
+
+    // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no results
+    if (!mapplsSuccess) {
+      try {
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=10`;
+        const response = await fetch(nominatimUrl, {
+          headers: {
+            "User-Agent": "LincoAILostAndFound/1.0",
+            "Accept-Language": "en-IN,en;q=0.9"
+          }
+        });
+        if (response.ok) {
+          const data: any = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            results = data.map((item: any) => {
+              const parts = item.display_name.split(",");
+              const name = parts[0]?.trim() || "Location";
+              const address = parts.slice(1).join(",").trim() || item.display_name;
+              return {
+                placeName: name,
+                placeAddress: address || item.display_name,
+                latitude: parseFloat(item.lat),
+                longitude: parseFloat(item.lon),
+                eLoc: item.place_id ? String(item.place_id) : String(Math.random())
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Server Nominatim AutoSuggest Proxy Error:", err);
+      }
+    }
+
+    res.json({ suggestedLocations: results });
+  } catch (globalErr: any) {
+    console.error("Global AutoSuggest Proxy Error:", globalErr);
+    res.status(500).json({ error: globalErr.message || "Failed to search location" });
+  }
+});
+
+// Proxy for MapmyIndia / Nominatim Reverse Geocoding
+app.get("/api/maps/revgeocode", async (req, res) => {
+  try {
+    const lat = req.query.lat as string;
+    const lng = req.query.lng as string;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "Missing lat or lng" });
+    }
+
+    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    let addressText = "";
+    let mapplsSuccess = false;
+
+    // 1. Try MapmyIndia first
+    try {
+      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
+      const response = await fetch(mapplsUrl, {
+        headers: {
+          "Referer": "https://apis.mappls.com"
+        }
+      });
+      if (response.ok) {
+        const data: any = await response.json();
+        if (data && data.results && data.results.length > 0) {
+          const result = data.results[0];
+          addressText = result.formatted_address || result.formattedAddress || [
+            result.poi,
+            result.street,
+            result.subLocality,
+            result.locality,
+            result.district,
+            result.state
+          ].filter(Boolean).join(", ");
+          if (addressText) mapplsSuccess = true;
+        }
+      }
+    } catch (err) {
+      console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
+    }
+
+    // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no address
+    if (!mapplsSuccess) {
+      try {
+        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        const response = await fetch(nominatimUrl, {
+          headers: {
+            "User-Agent": "LincoAILostAndFound/1.0",
+            "Accept-Language": "en-IN,en;q=0.9"
+          }
+        });
+        if (response.ok) {
+          const data: any = await response.json();
+          if (data && data.display_name) {
+            addressText = data.display_name;
+          }
+        }
+      } catch (err) {
+        console.error("Server Nominatim Reverse Geocoding Error:", err);
+      }
+    }
+
+    res.json({ results: [{ formatted_address: addressText || "Unknown Location" }] });
+  } catch (globalErr: any) {
+    console.error("Global Reverse Geocoding Proxy Error:", globalErr);
+    res.status(500).json({ error: globalErr.message || "Failed to reverse geocode" });
+  }
+});
+
 // Healthcheck
 app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", time: new Date().toISOString() });
