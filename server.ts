@@ -293,7 +293,7 @@ app.post("/api/posts", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const dbData = readDB();
+    const dbData = await readDBAsync();
     const now = Date.now();
     
     const newPost: Post = {
@@ -330,11 +330,11 @@ app.post("/api/posts", async (req, res) => {
 
     // Perform the matching
     runAIMatch(newPost, dbData.posts)
-      .then((newMatches) => {
+      .then(async (newMatches) => {
         if (newMatches.length > 0) {
-          const freshDbData = readDB();
+          const freshDbData = await readDBAsync();
           freshDbData.matches[newPost.id] = newMatches;
-          writeDB(freshDbData);
+          await writeDBAsync(freshDbData);
           console.log(`AI Matches found for post ${newPost.id}:`, newMatches);
         }
       })
@@ -346,10 +346,10 @@ app.post("/api/posts", async (req, res) => {
 });
 
 // Mark post as Resolved
-app.put("/api/posts/:id/resolve", (req, res) => {
+app.put("/api/posts/:id/resolve", async (req, res) => {
   const { id } = req.params;
   const { securityPin } = req.body;
-  const dbData = readDB();
+  const dbData = await readDBAsync();
   const post = dbData.posts.find((p) => p.id === id);
   if (post) {
     const expectedPin = post.securityPin || "1234";
@@ -365,9 +365,9 @@ app.put("/api/posts/:id/resolve", (req, res) => {
 });
 
 // Increment post view count
-app.post("/api/posts/:id/view", (req, res) => {
+app.post("/api/posts/:id/view", async (req, res) => {
   const { id } = req.params;
-  const dbData = readDB();
+  const dbData = await readDBAsync();
   const post = dbData.posts.find((p) => p.id === id);
   if (post) {
     post.views = (post.views || 0) + 1;
@@ -379,10 +379,10 @@ app.post("/api/posts/:id/view", (req, res) => {
 });
 
 // Delete a post
-app.delete("/api/posts/:id", (req, res) => {
+app.delete("/api/posts/:id", async (req, res) => {
   const { id } = req.params;
   const { securityPin } = req.body;
-  const dbData = readDB();
+  const dbData = await readDBAsync();
   const post = dbData.posts.find((p) => p.id === id);
   if (post) {
     const expectedPin = post.securityPin || "1234";
