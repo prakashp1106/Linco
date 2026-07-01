@@ -8,6 +8,8 @@ import path from "path";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch } from "./src/types.js";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore, Firestore } from "firebase-admin/firestore";
 
 // Initialize Gemini SDK with telemetry User-Agent header
 const ai = new GoogleGenAI({
@@ -96,74 +98,95 @@ const initialPosts: Post[] = [
   }
 ];
 
+// Initialize Firestore
+let db: Firestore;
+try {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  let databaseId: string | undefined;
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    databaseId = config.firestoreDatabaseId;
+  }
+  
+  if (getApps().length === 0) {
+    initializeApp();
+  }
+  
+  if (databaseId) {
+    db = getFirestore(databaseId);
+    console.log(`Initialized Firestore with databaseId: ${databaseId}`);
+  } else {
+    db = getFirestore();
+    console.log("Initialized Firestore with default database");
+  }
+} catch (error) {
+  console.error("Failed to initialize Firebase Admin, falling back:", error);
+  if (getApps().length === 0) {
+    initializeApp();
+  }
+  db = getFirestore();
+}
+
 // Memory cache of DB data
 let memoryCache: { posts: Post[]; matches: Record<string, AIMatch[]> } | null = null;
 
-// Helper to load posts database (with cloud JSONBin backup + local file sync)
-async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> }> {
-  if (memoryCache) {
-    return memoryCache;
-  }
-
-  // 1. Try JSONBin (Cloud Storage)
+// Helper to seed initial posts if Firestore collection is empty
+async function seedFirestoreIfNeeded() {
   try {
-    const response = await fetch(`${BIN_URL}/latest`, {
-      headers: {
-        "X-Master-Key": BIN_KEY,
-        "X-Bin-Meta": "false"
+    const postsSnapshot = await db.collection("posts").limit(1).get();
+    if (postsSnapshot.empty) {
+      console.log("Firestore 'posts' collection is empty. Seeding initial posts...");
+      const batch = db.batch();
+      for (const p of initialPosts) {
+        const docRef = db.collection("posts").doc(p.id);
+        batch.set(docRef, p);
       }
-    });
-    if (response.ok) {
-      const cloudData = await response.json() as any;
-      if (cloudData && Array.isArray(cloudData.posts)) {
-        console.log("Successfully loaded data from cloud JSONBin!");
-        memoryCache = {
-          posts: cloudData.posts,
-          matches: cloudData.matches || {}
-        };
-        // Update local file for redundancy
-        fs.writeFileSync(DB_PATH, JSON.stringify(memoryCache, null, 2), "utf-8");
-        return memoryCache;
-      }
+      await batch.commit();
+      console.log("Successfully seeded initial posts in Firestore.");
     }
   } catch (err) {
-    console.warn("Could not reach JSONBin cloud database, falling back to local storage:", err);
+    console.error("Failed to check or seed Firestore:", err);
   }
-
-  // 2. Fallback to Local posts_db.json
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      const data = fs.readFileSync(DB_PATH, "utf-8");
-      memoryCache = JSON.parse(data);
-      return memoryCache!;
-    }
-  } catch (err) {
-    console.error("Error reading local posts_db.json:", err);
-  }
-
-  // 3. Fallback to Seed Initial Data
-  const dbData = { posts: initialPosts, matches: {} };
-  memoryCache = dbData;
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(dbData, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error creating initial posts_db.json:", err);
-  }
-  return dbData;
 }
 
-// Synchronous version for backwards compatibility where async is difficult, but we prefer async
+// Helper to load posts database
+async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> }> {
+  try {
+    await seedFirestoreIfNeeded();
+
+    // Fetch posts
+    const postsSnapshot = await db.collection("posts").get();
+    const posts: Post[] = [];
+    postsSnapshot.forEach(doc => {
+      posts.push(doc.data() as Post);
+    });
+
+    // Sort posts by created descending (newest first)
+    posts.sort((a, b) => b.created - a.created);
+
+    // Fetch matches
+    const matchesSnapshot = await db.collection("matches").get();
+    const matches: Record<string, AIMatch[]> = {};
+    matchesSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data && Array.isArray(data.list)) {
+        matches[doc.id] = data.list;
+      }
+    });
+
+    const data = { posts, matches };
+    memoryCache = data;
+    return data;
+  } catch (err) {
+    console.error("Error reading from Firestore:", err);
+    if (memoryCache) return memoryCache;
+    return { posts: initialPosts, matches: {} };
+  }
+}
+
+// Synchronous version for backwards compatibility where async is difficult
 function readDB(): { posts: Post[]; matches: Record<string, AIMatch[]> } {
   if (memoryCache) return memoryCache;
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      const data = fs.readFileSync(DB_PATH, "utf-8");
-      memoryCache = JSON.parse(data);
-      return memoryCache!;
-    }
-  } catch (err) {
-    console.error("Sync read fallback error:", err);
-  }
   return { posts: initialPosts, matches: {} };
 }
 
@@ -171,30 +194,37 @@ function readDB(): { posts: Post[]; matches: Record<string, AIMatch[]> } {
 async function writeDBAsync(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
   memoryCache = data;
   
-  // 1. Save Locally
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing local posts_db.json:", err);
-  }
-
-  // 2. Save to JSONBin Cloud
-  try {
-    const response = await fetch(BIN_URL, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": BIN_KEY
-      },
-      body: JSON.stringify(data)
-    });
-    if (response.ok) {
-      console.log("Successfully saved and synced data to cloud JSONBin!");
-    } else {
-      console.warn("Failed to sync data to JSONBin cloud:", response.statusText);
+    const postsSnapshot = await db.collection("posts").get();
+    const existingPostIds = postsSnapshot.docs.map(doc => doc.id);
+    const currentPostIds = new Set(data.posts.map(p => p.id));
+    
+    const batch = db.batch();
+    
+    // Delete posts that are no longer present
+    for (const id of existingPostIds) {
+      if (!currentPostIds.has(id)) {
+        batch.delete(db.collection("posts").doc(id));
+        batch.delete(db.collection("matches").doc(id));
+      }
     }
+    
+    // Write/update current posts
+    for (const post of data.posts) {
+      const docRef = db.collection("posts").doc(post.id);
+      batch.set(docRef, post);
+    }
+    
+    // Write/update matches
+    for (const [postId, list] of Object.entries(data.matches)) {
+      const docRef = db.collection("matches").doc(postId);
+      batch.set(docRef, { list });
+    }
+    
+    await batch.commit();
+    console.log("Successfully synchronized data to Firestore!");
   } catch (err) {
-    console.error("Error syncing to JSONBin cloud database:", err);
+    console.error("Error syncing to Firestore:", err);
   }
 }
 
