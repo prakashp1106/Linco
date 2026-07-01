@@ -13,6 +13,7 @@ export interface Post {
   address: string;
   reward?: string;
   contact: string;
+  maskedContact?: string;
   securityPin?: string;
   category: string;
   urgency: UrgencyType;

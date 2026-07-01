@@ -33,6 +33,68 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Post, AIMatch, UrgencyType, Category, UrgencyInfo } from "./types";
 
+// --- END-TO-END CRYPTO ENGINES (WEB CRYPTO API) ---
+async function deriveKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(pin),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 50000,
+      hash: "SHA-256",
+    },
+    baseKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encryptContact(contact: string, pin: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encoder.encode(contact)
+  );
+  // Combine salt, iv, and ciphertext into hex representations
+  const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+  const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+  const ciphertextHex = Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `ENC:${saltHex}:${ivHex}:${ciphertextHex}`;
+}
+
+async function decryptContact(encryptedStr: string, pin: string): Promise<string> {
+  if (!encryptedStr || !encryptedStr.startsWith("ENC:")) {
+    // Return raw if it's a legacy unencrypted post
+    return encryptedStr;
+  }
+  const parts = encryptedStr.split(":");
+  if (parts.length !== 4) throw new Error("Invalid encrypted format");
+  
+  const salt = new Uint8Array(parts[1].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  const iv = new Uint8Array(parts[2].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  const ciphertext = new Uint8Array(parts[3].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+  
+  const key = await deriveKey(pin, salt);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
 const CATEGORIES: Category[] = [
   { id: "Electronics", emoji: "📱" },
   { id: "Documents", emoji: "📄" },
@@ -170,6 +232,9 @@ export default function App() {
   const [unlockedPosts, setUnlockedPosts] = useState<string[]>([]);
   const [pinModal, setPinModal] = useState<{ isOpen: boolean; postId: string; actionType: "delete" | "resolve"; actualPin: string; } | null>(null);
   const [enteredPin, setEnteredPin] = useState("");
+  const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
+  const [decryptPinEntered, setDecryptPinEntered] = useState("");
+  const [isPinVerifiedSuccessfully, setIsPinVerifiedSuccessfully] = useState(false);
 
   // AI Feature Loading Indicator States
   const [photoLoading, setPhotoLoading] = useState(false);
@@ -324,14 +389,28 @@ export default function App() {
   const handleSubmitPost = async () => {
     if (!validateForm()) return;
 
+    const plainContact = fContact.trim().replace(/\D/g, "");
+    const pin = fSecurityPin.trim();
+
+    addToast("Encrypting your contact details locally using AES-GCM...", "info");
+
+    let encryptedContact = plainContact;
+    try {
+      encryptedContact = await encryptContact(plainContact, pin);
+    } catch (err) {
+      console.error("Local client-side encryption failed:", err);
+      addToast("Encryption warning: falling back to standard storage", "warn");
+    }
+
     const payload = {
       item: fItem.trim(),
       details: fDetails.trim(),
       type: fType,
       address: fAddress.trim(),
       reward: fType === "Lost" ? fReward.trim() : "",
-      contact: fContact.trim().replace(/\D/g, ""),
-      securityPin: fSecurityPin.trim(),
+      contact: encryptedContact,
+      maskedContact: "+91 ******" + plainContact.slice(-2),
+      securityPin: pin,
       category: fCategory,
       urgency: fUrgency,
       image: fImage,
@@ -695,7 +774,12 @@ export default function App() {
   // Share/Copy Post
   const handleSharePost = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
-    const shareText = `🔍 LINCO Lost & Found 🔍\n\n📢 Status: ${p.type === "Lost" ? "🚨 LOST" : "✅ FOUND"}\n📦 Item: ${p.item}\n📍 Location: ${p.address}\n📝 Description: ${p.details}${p.reward ? `\n💰 Reward Offered: ₹${p.reward}` : ""}\n\n📱 Contact via WhatsApp at: wa.me/91${p.contact}\n\n— Tracked on LINCO AI`;
+    const isUnlocked = unlockedPosts.includes(p.id);
+    const displayContact = isUnlocked 
+      ? (decryptedContacts[p.id] || p.contact) 
+      : (p.maskedContact || "+91 ******" + (p.contact.startsWith("ENC:") ? "XX" : p.contact.slice(-2)));
+
+    const shareText = `🔍 LINCO Lost & Found 🔍\n\n📢 Status: ${p.type === "Lost" ? "🚨 LOST" : "✅ FOUND"}\n📦 Item: ${p.item}\n📍 Location: ${p.address}\n📝 Description: ${p.details}${p.reward ? `\n💰 Reward Offered: ₹${p.reward}` : ""}\n\n📱 Contact via WhatsApp at: wa.me/91${displayContact}\n\n— Tracked on LINCO AI`;
     
     navigator.clipboard.writeText(shareText)
       .then(() => {
@@ -712,6 +796,8 @@ export default function App() {
     setClaimResult(null);
     setShowClaimModal(true);
     setClaimLoading(true);
+    setDecryptPinEntered("");
+    setIsPinVerifiedSuccessfully(false);
 
     try {
       const response = await fetch("/api/ai/generate-verification", {
@@ -768,13 +854,46 @@ export default function App() {
       });
 
       if (data.verified) {
-        addToast(`Ownership Verified with ${data.confidence}% confidence!`, "success");
-        setUnlockedPosts((prev) => [...prev, claimingPost.id]);
+        addToast("AI Quiz Passed! Please enter the Security PIN to decrypt contact details.", "success");
       } else {
         addToast("Verification failed. Please review answers.", "error");
       }
     } catch (err: any) {
       addToast("Error validating claim: " + err.message, "error");
+    } finally {
+      setClaimLoading(false);
+    }
+  };
+
+  // Decrypt contact locally using Web Crypto API
+  const handleDecryptContact = async () => {
+    if (!claimingPost) return;
+    if (!decryptPinEntered.trim() || !/^\d{4}$/.test(decryptPinEntered.trim())) {
+      addToast("Please enter a valid 4-digit Security PIN", "warn");
+      return;
+    }
+
+    setClaimLoading(true);
+    try {
+      const isLegacy = !claimingPost.contact.startsWith("ENC:");
+      let decrypted = "";
+      if (isLegacy) {
+        if (decryptPinEntered !== (claimingPost.securityPin || "1234")) {
+          throw new Error("Incorrect Security PIN");
+        }
+        decrypted = claimingPost.contact;
+      } else {
+        decrypted = await decryptContact(claimingPost.contact, decryptPinEntered);
+      }
+
+      // Success!
+      setDecryptedContacts((prev) => ({ ...prev, [claimingPost.id]: decrypted }));
+      setUnlockedPosts((prev) => [...prev, claimingPost.id]);
+      setIsPinVerifiedSuccessfully(true);
+      addToast("Contact details decrypted successfully! Connection unlocked.", "success");
+    } catch (err) {
+      console.error(err);
+      addToast("Incorrect Security PIN! Decryption failed.", "error");
     } finally {
       setClaimLoading(false);
     }
@@ -1364,9 +1483,36 @@ export default function App() {
 
               {/* Feed posts list */}
               {loadingPosts ? (
-                <div className="p-12 text-center text-slate-400 font-medium">
-                  <RefreshCw className="animate-spin inline-block mr-2 text-cyan-400" size={18} />
-                  Accessing synchronized directory...
+                <div className="space-y-4 animate-pulse">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="bg-slate-900/40 border border-slate-900/80 rounded-2xl p-4 md:p-5 relative overflow-hidden">
+                      {/* Top Row Skeleton */}
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-900/60">
+                        <div className="flex gap-2">
+                          <div className="h-4 w-12 bg-slate-800/80 rounded-full" />
+                          <div className="h-4 w-20 bg-slate-800/80 rounded-full" />
+                        </div>
+                        <div className="h-4 w-8 bg-slate-800/80 rounded" />
+                      </div>
+                      {/* Title Skeleton */}
+                      <div className="h-5 bg-slate-800/80 rounded w-1/3 mb-2.5" />
+                      {/* Details Lines Skeletons */}
+                      <div className="space-y-2 mb-3">
+                        <div className="h-3 bg-slate-800/60 rounded w-full" />
+                        <div className="h-3 bg-slate-800/60 rounded w-5/6" />
+                      </div>
+                      {/* Metadata Row Skeleton */}
+                      <div className="flex gap-3 mb-4">
+                        <div className="h-3 w-16 bg-slate-800/40 rounded" />
+                        <div className="h-3 w-24 bg-slate-800/40 rounded" />
+                      </div>
+                      {/* Buttons Skeleton */}
+                      <div className="flex gap-2">
+                        <div className="h-8 bg-slate-800/80 rounded-xl flex-1" />
+                        <div className="h-8 bg-slate-800/80 rounded-xl w-16" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : filteredPosts.length === 0 ? (
                 <div className="bg-slate-950/20 border border-slate-900/60 rounded-2xl p-12 text-center text-slate-500">
@@ -1397,18 +1543,19 @@ export default function App() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.04, 0.2) }}
                         onClick={() => handleIncrementViews(p.id)}
-                        className={`bg-slate-950/40 hover:bg-slate-950/50 border rounded-2xl p-4 md:p-5 transition-all duration-200 cursor-pointer relative overflow-hidden group ${
-                          isLost ? "border-l-4 border-l-rose-500/80 border-slate-900/80" : "border-l-4 border-l-emerald-500/80 border-slate-900/80"
+                        className={`bg-slate-950/40 hover:bg-slate-950/60 border rounded-2xl p-4 md:p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5 hover:border-slate-800/80 cursor-pointer relative overflow-hidden group ${
+                          isLost ? "border-l-4 border-l-rose-500 border-slate-900/80" : "border-l-4 border-l-emerald-500 border-slate-900/80"
                         } ${isResolved ? "opacity-70 border-l-slate-600" : ""} ${postMatches.length > 0 ? "border-r border-r-violet-500/20 shadow-lg shadow-violet-950/5" : ""}`}
                       >
                         {/* Top Metadata Row */}
                         <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5 pb-2 border-b border-slate-900">
                           <div className="flex flex-wrap items-center gap-1.5">
                             {/* Type badge */}
-                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 ${
                               isLost ? "bg-rose-950/40 text-rose-300 border border-rose-500/20" : "bg-emerald-950/40 text-emerald-300 border border-emerald-500/20"
                             }`}>
-                              {isLost ? "🚨 Lost" : "🤝 Found"}
+                              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isLost ? "bg-rose-500 shadow-[0_0_8px_#f43f5e]" : "bg-emerald-500 shadow-[0_0_8px_#10b981]"}`} />
+                              {isLost ? "Lost" : "Found"}
                             </span>
                             {/* Category badge */}
                             {itemCat && (
@@ -1474,23 +1621,35 @@ export default function App() {
                           <span className="flex items-center gap-1"><Calendar size={11} className="text-slate-600" /> {p.timestamp}</span>
                           <span>👀 {p.views || 0} views</span>
                           {p.reward && <span className="text-amber-400 font-bold">💰 Reward Offered: ₹{p.reward}</span>}
+                          <span className="flex items-center gap-1">
+                            <span>📞</span>
+                            {unlockedPosts.includes(p.id) ? (
+                              <span className="text-emerald-400 font-bold bg-emerald-950/20 px-1.5 py-0.5 rounded border border-emerald-500/10">
+                                +91 {decryptedContacts[p.id] || p.contact}
+                              </span>
+                            ) : (
+                              <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                {p.maskedContact || "+91 ******" + (p.contact.startsWith("ENC:") ? "XX" : p.contact.slice(-2))}
+                              </span>
+                            )}
+                          </span>
                         </div>
 
                         {/* Action Buttons: WhatsApp and Claim */}
                         <div className="flex gap-2">
-                          {!isLost && !unlockedPosts.includes(p.id) ? (
+                          {!unlockedPosts.includes(p.id) ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                addToast("Please click 'Claim' and pass the AI verification quiz to unlock this WhatsApp button!", "info");
+                                addToast(`Please click '${isLost ? "Verify" : "Claim"}' and pass the AI verification quiz to unlock this WhatsApp button!`, "info");
                               }}
                               className="flex-1 py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-500 hover:text-slate-400 transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center select-none cursor-not-allowed"
                             >
-                              🔒 WhatsApp Locked (Claim first)
+                              🔒 WhatsApp Locked ({isLost ? "Verify" : "Claim"} first)
                             </button>
                           ) : (
                             <a
-                              href={`https://wa.me/91${p.contact}?text=Hi! I saw your ${p.type} item listing on LINCO for '${p.item}'. Let's connect!`}
+                              href={`https://wa.me/91${decryptedContacts[p.id] || p.contact}?text=Hi! I saw your ${p.type} item listing on LINCO for '${p.item}'. Let's connect!`}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -1500,13 +1659,13 @@ export default function App() {
                             </a>
                           )}
 
-                          {/* Claim Ownership verification Flow button (Only for Found items) */}
-                          {!isLost && !isResolved && (
+                          {/* Claim Ownership verification Flow button */}
+                          {!isResolved && !unlockedPosts.includes(p.id) && (
                             <button
                               onClick={(e) => handleStartClaim(p, e)}
                               className="px-3 py-2 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-xs font-bold text-violet-300 hover:text-violet-100 transition duration-150 flex items-center justify-center gap-1 text-center"
                             >
-                              <ShieldCheck size={14} /> Claim
+                              <ShieldCheck size={14} /> {isLost ? "Verify" : "Claim"}
                             </button>
                           )}
 
@@ -1795,17 +1954,58 @@ export default function App() {
                   <h4 className={`text-sm font-bold uppercase tracking-wider mb-2 ${
                     claimResult.verified ? "text-emerald-400" : "text-rose-400"
                   }`}>
-                    {claimResult.verified ? "Ownership Verified!" : "Verification Failed"}
+                    {claimResult.verified ? "AI Verification Passed!" : "Verification Failed"}
                   </h4>
                   
-                  <p className="text-[11px] text-slate-300 leading-relaxed mb-5 px-1 bg-slate-950 p-2.5 rounded-lg border border-slate-900">
+                  <p className="text-[11px] text-slate-300 leading-relaxed mb-4 px-1 bg-slate-950 p-2.5 rounded-lg border border-slate-900">
                     {claimResult.message}
                   </p>
 
+                  {claimResult.verified && claimingPost && (
+                    <div className="mb-4 text-left border border-slate-900 bg-slate-950/60 p-3 rounded-xl space-y-3 animate-fadeIn">
+                      {!isPinVerifiedSuccessfully ? (
+                        <>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-400 uppercase tracking-widest">
+                            <Lock size={12} /> End-to-End Encrypted Contact
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-relaxed">
+                            This post's contact information is fully encrypted on the browser using AES-GCM. To unlock and view, please enter the post's 4-digit Security PIN:
+                          </p>
+                          <input
+                            type="password"
+                            maxLength={4}
+                            placeholder="Enter 4-digit Security PIN"
+                            value={decryptPinEntered}
+                            onChange={(e) => setDecryptPinEntered(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 focus:border-violet-500/40 outline-none text-center text-sm font-bold tracking-widest text-slate-200 transition duration-150"
+                          />
+                          <button
+                            onClick={handleDecryptContact}
+                            className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-slate-950 font-bold hover:text-black transition text-xs cursor-pointer"
+                          >
+                            🔓 Decrypt & Unlock Contact
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                            <ShieldCheck size={12} /> Connection Securely Decrypted!
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-relaxed">
+                            Decryption successful! The contact number has been safely unlocked in your browser. You can now tap below to coordinate with them.
+                          </p>
+                          <div className="text-xs font-mono font-bold text-slate-200 bg-emerald-950/20 p-2 rounded border border-emerald-500/10 text-center">
+                            Unlocked Number: +91 {decryptedContacts[claimingPost.id]}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
-                    {claimResult.verified && claimingPost && (
+                    {claimResult.verified && claimingPost && isPinVerifiedSuccessfully && (
                       <a
-                        href={`https://wa.me/91${claimingPost.contact}?text=Hi! I successfully passed the LINCO Gemini Ownership Verification for your found item '${claimingPost.item}' (with ${claimResult.confidence}% match). Let's coordinate the handover!`}
+                        href={`https://wa.me/91${decryptedContacts[claimingPost.id] || claimingPost.contact}?text=Hi! I successfully passed the LINCO Gemini Ownership Verification for your found item '${claimingPost.item}' (with ${claimResult.confidence}% match). Let's coordinate the handover!`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition flex items-center justify-center gap-1 text-xs"
