@@ -1422,6 +1422,8 @@ export default function App() {
                     <InteractiveMap lat={fLat} lng={fLng} onChange={(lat, lng) => {
                       setFLat(lat);
                       setFLng(lng);
+                    }} onAddressChange={(address) => {
+                      setFAddress(address);
                     }} />
                   </div>
 
