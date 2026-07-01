@@ -576,13 +576,13 @@ app.post("/api/ai/generate-verification", requireGeminiApiKey, async (req, res) 
     const { item, description } = req.body;
     if (!item || !description) return res.status(400).json({ error: "Item and description required" });
 
-    const prompt = `Generate exactly 2 short, clever ownership verification questions for a found item.
-The questions must be answerable ONLY by the genuine owner who had it daily.
-Ask about unique, secret features NOT obvious from a distance, such as a specific sticker, scratch location, lock-screen wallpaper, specific app layout, contents of a pocket, or internal brand labels.
-Item: "${item}"
-Found Description: "${description}"
+    const prompt = `Generate exactly 2 or 3 short, highly clever and specific ownership verification questions for this item.
+The questions MUST be directly based on the unique details mentioned in the item's description (for example, if the description mentions colors, brands, specific cards inside, scratch marks, stickers, patterns, or exact locations, generate questions testing the claimant on those specific physical details, like "What is the color of the wallet's interior?" or "Which specific identification card was present inside?").
+Do NOT generate generic questions. Keep the questions direct and hard to guess for an outsider, but easy for the true owner.
+Item Name: "${item}"
+Item Description: "${description}"
 
-Return ONLY a valid JSON array of exactly 2 strings. Do not include markdown backticks.
+Return ONLY a valid JSON array of 2 or 3 strings. Do not include markdown backticks or block wrappers.
 Format:
 [
   "Specific Question 1?",

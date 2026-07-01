@@ -116,6 +116,8 @@ const URGENCY_LEVELS: UrgencyInfo[] = [
   { id: "Medical", cls: "text-red-400 border-red-500/20 bg-red-950/20", color: "#f87171", bgColor: "rgba(239, 68, 68, 0.1)" },
 ];
 
+const CITIES = ["Pune", "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Noida", "Gurgaon"];
+
 // Canvas Component for starry drifting particles
 const CanvasParticles: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -213,6 +215,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [feedTypeFilter, setFeedTypeFilter] = useState<"All" | "Lost" | "Found">("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [cityFilter, setCityFilter] = useState("All");
   const [sortBy, setSortBy] = useState<"new" | "old" | "views">("new");
 
   // Form States
@@ -351,6 +354,105 @@ export default function App() {
       resolved: posts.filter((p) => p.status === "Resolved").length,
     });
   }, [posts]);
+
+  // Dynamic SEO, Meta tags & Schema.org JSON-LD Structured Data
+  useEffect(() => {
+    let title = "LINCO AI | Smart AI Lost & Found Portal";
+    let desc = "LINCO AI is a community-driven Lost & Found portal powered by Google Gemini. Report lost keys, wallets, phones and get verified matches instantly.";
+    let ldJson: any = null;
+
+    if (claimingPost) {
+      const typeStr = claimingPost.type === "Lost" ? "Lost" : "Found";
+      title = `${typeStr}: ${claimingPost.item} in ${claimingPost.address} | LINCO AI`;
+      desc = `Verify/Claim ${claimingPost.type.toLowerCase()} ${claimingPost.item} in ${claimingPost.address}. Details: ${claimingPost.details.slice(0, 150)}`;
+      ldJson = {
+        "@context": "https://schema.org",
+        "@type": "Thing",
+        "name": claimingPost.item,
+        "description": claimingPost.details,
+        "location": {
+          "@type": "Place",
+          "name": claimingPost.address,
+          "address": claimingPost.address
+        },
+        "identifier": claimingPost.id,
+        "url": window.location.href
+      };
+    } else if (cityFilter && cityFilter !== "All") {
+      title = `Lost & Found Items in ${cityFilter} | LINCO AI`;
+      desc = `Browse recently lost and found items in ${cityFilter} area. Register your missing keys, bags, wallets, phones, or electronics to initiate Gemini matching.`;
+      
+      const cityPosts = posts.filter(p => p.address.toLowerCase().includes(cityFilter.toLowerCase()));
+      ldJson = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": `Lost and Found Items in ${cityFilter}`,
+        "description": desc,
+        "numberOfItems": cityPosts.length,
+        "itemListElement": cityPosts.slice(0, 10).map((p, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "name": p.item,
+          "description": p.details,
+          "url": `${window.location.href}?id=${p.id}`
+        }))
+      };
+    } else if (categoryFilter && categoryFilter !== "All") {
+      title = `Lost & Found ${categoryFilter} | LINCO AI`;
+      desc = `View recently lost and found ${categoryFilter} listings on LINCO AI. Fast AI-assisted claims and verification.`;
+    } else if (searchQuery.trim()) {
+      title = `Search: "${searchQuery}" | LINCO AI`;
+      desc = `Search results for "${searchQuery}" on LINCO AI lost & found directory.`;
+    } else {
+      // General landing page schema
+      ldJson = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "LINCO AI",
+        "url": window.location.origin,
+        "description": desc,
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": `${window.location.origin}/?q={search_term_string}`,
+          "query-input": "required name=search_term_string"
+        }
+      };
+    }
+
+    // Apply Page Title
+    document.title = title;
+    
+    // Apply Meta Description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', desc);
+
+    // Inject JSON-LD Schema.org script block
+    let scriptTag = document.getElementById("linco-jsonld-schema") as HTMLScriptElement;
+    if (!scriptTag) {
+      scriptTag = document.createElement("script");
+      scriptTag.id = "linco-jsonld-schema";
+      scriptTag.type = "application/ld+json";
+      document.head.appendChild(scriptTag);
+    }
+    
+    if (ldJson) {
+      scriptTag.text = JSON.stringify(ldJson, null, 2);
+    } else {
+      scriptTag.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "LINCO AI",
+        "url": window.location.origin,
+        "logo": `${window.location.origin}/logo.png`,
+        "description": "AI-powered Local Community Lost & Found Directory"
+      }, null, 2);
+    }
+  }, [claimingPost, cityFilter, categoryFilter, searchQuery, posts]);
 
   // Form Field Validation Check
   const validateForm = (): boolean => {
@@ -909,8 +1011,9 @@ export default function App() {
 
     const matchesType = feedTypeFilter === "All" || p.type === feedTypeFilter;
     const matchesCategory = categoryFilter === "All" || p.category === categoryFilter;
+    const matchesCity = cityFilter === "All" || p.address.toLowerCase().includes(cityFilter.toLowerCase());
 
-    return matchesSearch && matchesType && matchesCategory;
+    return matchesSearch && matchesType && matchesCategory && matchesCity;
   }).sort((a, b) => {
     if (sortBy === "old") return a.created - b.created;
     if (sortBy === "views") return (b.views || 0) - (a.views || 0);
@@ -1458,7 +1561,7 @@ export default function App() {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none"
+                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
                   >
                     <option value="All">All Categories</option>
                     {CATEGORIES.map((c) => (
@@ -1468,11 +1571,25 @@ export default function App() {
                     ))}
                   </select>
 
+                  {/* City/Area Filter dropdown */}
+                  <select
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
+                  >
+                    <option value="All">All Cities</option>
+                    {CITIES.map((city) => (
+                      <option key={city} value={city}>
+                        📍 {city}
+                      </option>
+                    ))}
+                  </select>
+
                   {/* Sort Filter dropdown */}
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none"
+                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
                   >
                     <option value="new">Newest First</option>
                     <option value="old">Oldest First</option>
