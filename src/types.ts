@@ -18,6 +18,8 @@ export interface Post {
   category: string;
   urgency: UrgencyType;
   image?: string | null;
+  latitude?: number;
+  longitude?: number;
   status: "Active" | "Resolved";
   views: number;
   created: number;
