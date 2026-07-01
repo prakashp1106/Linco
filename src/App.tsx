@@ -33,6 +33,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Post, AIMatch, UrgencyType, Category, UrgencyInfo } from "./types";
 import { InteractiveMap, MiniMap } from "./components/LeafletMap";
+import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 
 // --- END-TO-END CRYPTO ENGINES (WEB CRYPTO API) ---
 async function deriveKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
@@ -1172,14 +1173,14 @@ export default function App() {
       </nav>
 
       {/* Main Container wrap */}
-      <main className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pb-12">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 pb-12">
         {/* SUCCESS BANNER OVERLAY */}
         {banner && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="mb-4 bg-gradient-to-br from-cyan-950/40 via-slate-950/60 to-violet-950/40 border border-cyan-500/30 p-5 rounded-2xl text-center shadow-2xl relative overflow-hidden"
+            className="mb-6 bg-gradient-to-br from-cyan-950/40 via-slate-950/60 to-violet-950/40 border border-cyan-500/30 p-5 rounded-2xl text-center shadow-2xl relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-400 to-violet-500" />
             <div className="text-4xl mb-2 animate-bounce">{banner.icon}</div>
@@ -1188,7 +1189,10 @@ export default function App() {
           </motion.div>
         )}
 
-        <AnimatePresence mode="wait">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* LEFT COLUMN: Main tab content */}
+          <div className="lg:col-span-8 space-y-6">
+            <AnimatePresence mode="wait">
           {/* 1. CREATE POST TAB */}
           {activeTab === "home" && (
             <motion.div
@@ -1247,21 +1251,21 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
                 
                 {/* COLUMN 1: Item Details */}
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {/* Form Category selection */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
                       Category
                     </label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {CATEGORIES.map((cat) => (
                         <button
                           key={cat.id}
                           type="button"
                           onClick={() => setFCategory(cat.id)}
-                          className={`text-xs md:text-sm px-3 py-2 rounded-xl border transition duration-150 font-bold ${
+                          className={`text-xs md:text-sm px-4 py-3 rounded-2xl border transition duration-150 font-extrabold ${
                             fCategory === cat.id
-                              ? "bg-cyan-500/10 border-cyan-400 text-cyan-300 shadow"
+                              ? "bg-cyan-500/15 border-cyan-400 text-cyan-200 shadow-lg scale-105"
                               : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
                           }`}
                         >
@@ -1273,7 +1277,7 @@ export default function App() {
 
                   {/* Item Title Input */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
                       Item Name / Title
                     </label>
                     <input
@@ -1281,23 +1285,23 @@ export default function App() {
                       placeholder="e.g. Silver Casio G-Shock G-5600"
                       value={fItem}
                       onChange={(e) => setFItem(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-sm md:text-base text-slate-200 transition duration-150 font-medium placeholder:text-slate-600"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-extrabold placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
 
                   {/* Description Details Input with Gemini Enhance */}
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider">
                         Detailed Description
                       </label>
                       <button
                         type="button"
                         onClick={handleEnhanceDescription}
                         disabled={enhanceLoading}
-                        className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 uppercase transition duration-150 disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-xs md:text-sm font-extrabold text-emerald-400 hover:text-emerald-300 uppercase transition duration-150 disabled:opacity-50"
                       >
-                        <Sparkles size={13} className={enhanceLoading ? "animate-spin" : ""} />
+                        <Sparkles size={14} className={enhanceLoading ? "animate-spin" : ""} />
                         Polished with AI
                       </button>
                     </div>
@@ -1306,24 +1310,24 @@ export default function App() {
                       rows={4}
                       value={fDetails}
                       onChange={(e) => setFDetails(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-sm md:text-base text-slate-200 transition duration-150 resize-y leading-relaxed font-medium placeholder:text-slate-600"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 resize-y leading-relaxed font-extrabold placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
 
                   {/* Urgency selection */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
                       Urgency Level
                     </label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-2.5">
                       {URGENCY_LEVELS.map((urg) => (
                         <button
                           key={urg.id}
                           type="button"
                           onClick={() => setFUrgency(urg.id)}
-                          className={`text-[10px] md:text-xs font-bold py-2.5 rounded-xl border text-center transition duration-150 uppercase tracking-wider ${
+                          className={`text-xs md:text-sm font-extrabold py-3.5 rounded-2xl border text-center transition duration-150 uppercase tracking-wider ${
                             fUrgency === urg.id
-                              ? `${urg.cls} border-opacity-100 scale-[1.02]`
+                              ? `${urg.cls} border-opacity-100 scale-105`
                               : "bg-slate-950/40 border-slate-900 text-slate-500 hover:border-slate-800"
                           }`}
                         >
@@ -1335,58 +1339,58 @@ export default function App() {
 
                   {/* Lost or Found State Toggle */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
                       What happened?
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <button
                         type="button"
                         onClick={() => setFType("Lost")}
-                        className={`py-4 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition duration-200 ${
+                        className={`py-5 rounded-3xl border flex flex-col items-center justify-center gap-2 transition duration-200 ${
                           fType === "Lost"
                             ? "bg-rose-950/20 border-rose-500/40 text-rose-300"
                             : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
                         }`}
                       >
-                        <span className="text-2xl">🚨</span>
-                        <span className="text-sm font-extrabold font-display">I Lost Something</span>
+                        <span className="text-3xl">🚨</span>
+                        <span className="text-base font-black font-display">I Lost Something</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setFType("Found")}
-                        className={`py-4 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition duration-200 ${
+                        className={`py-5 rounded-3xl border flex flex-col items-center justify-center gap-2 transition duration-200 ${
                           fType === "Found"
                             ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-300"
                             : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
                         }`}
                       >
-                        <span className="text-2xl">🤝</span>
-                        <span className="text-sm font-extrabold font-display">I Found Something</span>
+                        <span className="text-3xl">🤝</span>
+                        <span className="text-base font-black font-display">I Found Something</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Photo Attachment upload */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
                       Image Attachment (Optional)
                     </label>
                     {fImage ? (
-                      <div className="relative rounded-2xl overflow-hidden border border-slate-800 max-h-52 group">
-                        <img src={fImage} alt="Attachment Preview" className="w-full h-52 object-cover" />
+                      <div className="relative rounded-3xl overflow-hidden border border-slate-800 max-h-56 group">
+                        <img src={fImage} alt="Attachment Preview" className="w-full h-56 object-cover" />
                         <button
                           type="button"
                           onClick={() => setFImage(null)}
-                          className="absolute top-3 right-3 p-2 rounded-xl bg-[#020817]/85 border border-slate-800 text-slate-400 hover:text-rose-400 transition"
+                          className="absolute top-3.5 right-3.5 p-2.5 rounded-xl bg-[#020817]/85 border border-slate-800 text-slate-400 hover:text-rose-400 transition"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center p-6 border border-dashed border-slate-800 hover:border-cyan-500/30 rounded-2xl cursor-pointer bg-slate-950/20 hover:bg-slate-950/40 transition duration-150 text-center">
-                        <span className="text-3xl mb-1.5">🖼️</span>
-                        <span className="text-xs md:text-sm text-slate-300 font-bold">Upload Photo Attachment</span>
+                      <label className="flex flex-col items-center justify-center p-7 border border-dashed border-slate-800 hover:border-cyan-500/30 rounded-3xl cursor-pointer bg-slate-950/20 hover:bg-slate-950/40 transition duration-150 text-center">
+                        <span className="text-4xl mb-2">🖼️</span>
+                        <span className="text-sm md:text-base text-slate-300 font-extrabold">Upload Photo Attachment</span>
                         <span className="text-xs text-slate-500 mt-1 font-medium">Max file size: 5 MB</span>
                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                       </label>
@@ -1395,10 +1399,10 @@ export default function App() {
                 </div>
 
                 {/* COLUMN 2: Location and Security details */}
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {/* Location Input */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
                       {fType === "Lost" ? "Where did you lose it?" : fType === "Found" ? "Where did you find it?" : "Approximate Location"}
                     </label>
                     <input
@@ -1406,13 +1410,13 @@ export default function App() {
                       placeholder="Area, landmark, building, city (e.g. FC Road near Starbucks, Pune)"
                       value={fAddress}
                       onChange={(e) => setFAddress(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-sm md:text-base text-slate-200 transition duration-150 font-medium placeholder:text-slate-600"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-extrabold placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
 
                   {/* Interactive Location Map (Leaflet.js OpenStreetMap) */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2.5">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
                       📍 Pin Exact Location on Map
                     </label>
                     <InteractiveMap lat={fLat} lng={fLng} onChange={(lat, lng) => {
@@ -1423,25 +1427,25 @@ export default function App() {
 
                   {/* WhatsApp Mobile Number Input */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
                       WhatsApp Contact Mobile Number (10 digits)
                     </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-4 text-slate-500 text-sm md:text-base font-bold">+91</span>
+                      <span className="absolute left-5 text-slate-500 text-base md:text-lg font-black">+91</span>
                       <input
                         type="tel"
                         maxLength={10}
                         placeholder="9876543210"
                         value={fContact}
                         onChange={(e) => setFContact(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        className="w-full pl-14 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-sm md:text-base text-slate-200 transition duration-150 font-mono tracking-wider"
+                        className="w-full pl-16 pr-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-mono font-extrabold tracking-wider"
                       />
                     </div>
                   </div>
 
                   {/* Security PIN Field */}
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
                       Security PIN (4-digit numeric)
                     </label>
                     <input
@@ -1450,42 +1454,42 @@ export default function App() {
                       placeholder="e.g. 1234"
                       value={fSecurityPin}
                       onChange={(e) => setFSecurityPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-sm md:text-base text-slate-200 transition duration-150 font-mono tracking-widest"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-mono font-extrabold tracking-widest"
                     />
-                    <p className="text-[11px] text-slate-500 mt-1.5 font-medium leading-relaxed">
+                    <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">
                       Required to delete or mark this post as resolved later.
                     </p>
                   </div>
 
                   {/* Reward estimation Box (Only for Lost) */}
                   {fType === "Lost" && (
-                    <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/20">
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="block text-xs md:text-sm font-bold text-amber-300 uppercase tracking-wider">
+                    <div className="p-5 bg-amber-500/5 rounded-3xl border border-amber-500/20 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="block text-sm md:text-base font-extrabold text-amber-300 uppercase tracking-wider">
                           Reward (optional INR Amount)
                         </label>
                         <button
                           type="button"
                           onClick={handleSuggestReward}
                           disabled={rewardLoading}
-                          className="flex items-center gap-1 text-[10px] md:text-xs font-bold text-amber-400 hover:text-amber-300 uppercase transition"
+                          className="flex items-center gap-1.5 text-xs md:text-sm font-extrabold text-amber-400 hover:text-amber-300 uppercase transition"
                         >
-                          <Award size={13} className={rewardLoading ? "animate-spin" : ""} />
+                          <Award size={14} className={rewardLoading ? "animate-spin" : ""} />
                           {rewardLoading ? "Calculating..." : "AI Reward Assist"}
                         </button>
                       </div>
                       <div className="relative flex items-center">
-                        <span className="absolute left-4 text-amber-500 text-sm md:text-base font-bold">₹</span>
+                        <span className="absolute left-5 text-amber-500 text-base md:text-lg font-black font-mono">₹</span>
                         <input
                           type="text"
                           placeholder="e.g. 500"
                           value={fReward}
                           onChange={(e) => setFReward(e.target.value.replace(/\D/g, ""))}
-                          className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-900 focus:border-amber-500/40 outline-none text-sm md:text-base text-amber-200 font-mono transition duration-150"
+                          className="w-full pl-10 pr-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-amber-500/40 outline-none text-base md:text-lg text-amber-200 font-mono font-extrabold transition duration-150"
                         />
                       </div>
                       {rewardReason && (
-                        <p className="text-xs text-amber-300/80 leading-relaxed mt-2.5 italic font-medium">
+                        <p className="text-xs text-amber-300/80 leading-relaxed pt-1 italic font-semibold">
                           💡 Suggestion: {rewardReason}
                         </p>
                       )}
@@ -1494,11 +1498,11 @@ export default function App() {
 
                   {/* TIMELINE RECONSTRUCTOR DETECTIVE BLOCK (Only for Lost) */}
                   {fType === "Lost" && (
-                    <div className="p-4 rounded-2xl border border-amber-500/10 bg-amber-950/5">
-                      <div className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-amber-400 uppercase tracking-wider mb-1">
-                        <Clock size={15} /> Timeline Reconstructor
+                    <div className="p-5 rounded-3xl border border-amber-500/10 bg-amber-950/5 space-y-3">
+                      <div className="flex items-center gap-1.5 text-sm md:text-base font-extrabold text-amber-400 uppercase tracking-wider">
+                        <Clock size={16} /> Timeline Reconstructor
                       </div>
-                      <p className="text-xs text-slate-400 mb-3 font-medium">
+                      <p className="text-xs text-slate-400 font-semibold leading-relaxed">
                         Describe your daily route to let Gemini trace the most probable coordinates where you dropped your item.
                       </p>
                       <textarea
@@ -1506,13 +1510,13 @@ export default function App() {
                         rows={2}
                         value={fTimeline}
                         onChange={(e) => setFTimeline(e.target.value)}
-                        className="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-900 focus:border-amber-500/30 outline-none resize-none leading-relaxed text-slate-300 font-medium"
+                        className="w-full px-5 py-4 text-sm md:text-base rounded-2xl bg-slate-950/80 border border-slate-900 focus:border-amber-500/30 outline-none resize-none leading-relaxed text-slate-300 font-extrabold"
                       />
                       <button
                         type="button"
                         onClick={handleAnalyzeTimeline}
                         disabled={timelineLoading}
-                        className="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-xs md:text-sm font-extrabold text-slate-950 hover:text-black shadow transition duration-150 flex items-center justify-center gap-1.5"
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-xs md:text-sm font-extrabold text-slate-950 hover:text-black shadow-lg transition duration-150 flex items-center justify-center gap-1.5"
                       >
                         {timelineLoading ? <RefreshCw size={14} className="animate-spin" /> : "🔍 Trace Timeline coordinates"}
                       </button>
@@ -1521,12 +1525,12 @@ export default function App() {
                         <motion.div
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="mt-3.5 p-3.5 bg-[#020817]/80 rounded-xl border border-amber-500/20"
+                          className="p-4 bg-[#020817]/80 rounded-2xl border border-amber-500/20"
                         >
-                          <div className="text-[10px] md:text-xs font-bold text-amber-400 flex items-center gap-1 mb-1.5 uppercase tracking-wider">
+                          <div className="text-xs font-bold text-amber-400 flex items-center gap-1 mb-1.5 uppercase tracking-wider">
                             🕵️ Detective Deduces
                           </div>
-                          <p className="text-xs text-slate-300 leading-relaxed italic font-medium">
+                          <p className="text-xs text-slate-300 leading-relaxed italic font-semibold">
                             "{timelineResult}"
                           </p>
                         </motion.div>
@@ -1942,7 +1946,34 @@ export default function App() {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+
+          {/* RIGHT COLUMN: Permanent Sidebar for LincoSaathii AI Chatbot */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 h-full">
+            <LincoSaathiiChat
+              currentState={{
+                type: fType === "" ? "Lost" : fType,
+                item: fItem,
+                category: fCategory,
+                details: fDetails,
+                urgency: fUrgency,
+                address: fAddress,
+                contact: fContact,
+              }}
+              onFieldUpdate={(fields) => {
+                if (fields.type) setFType(fields.type);
+                if (fields.item) setFItem(fields.item);
+                if (fields.category) setFCategory(fields.category);
+                if (fields.details) setFDetails(fields.details);
+                if (fields.urgency) setFUrgency(fields.urgency as any);
+                if (fields.address) setFAddress(fields.address);
+                if (fields.contact) setFContact(fields.contact);
+              }}
+              triggerSubmit={handleSubmitPost}
+            />
+          </div>
+        </div>
       </main>
 
       {/* SECURITY PIN VERIFICATION MODAL */}
