@@ -64,6 +64,8 @@ const RobotAvatarIcon = ({ size = 20, className = "text-cyan-400" }: { size?: nu
   </svg>
 );
 
+import { useChat } from "../hooks/useChat";
+
 export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
   onFieldUpdate,
   triggerSubmit,
@@ -71,106 +73,42 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false); // Mobile modal toggle state
   const [inputMessage, setInputMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Initialize state with stable direct evaluation of LocalStorage to prevent mounting blinking bugs!
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem("linco_saathii_messages");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error("Failed to parse saved LincoSaathii messages:", e);
-    }
-    // Return pristine initial welcome message if no saved storage exists
-    return [
-      {
-        id: "welcome",
-        role: "model",
-        content: "Hey! Pareshan mat ho bhai, LincoSaathii hai na. Batao kya ghum hua ya kya mila? Tension mat lo, hum sath mein report fill karke usey dhoond nikalenge! ❤️\n\n(Aap kisi bhi language jaise Hindi, Hinglish, Marathi ya English mein baat kar sakte hain!)",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-      },
-    ];
-  });
-
-  // Save conversation messages to localStorage reliably
-  useEffect(() => {
-    try {
-      localStorage.setItem("linco_saathii_messages", JSON.stringify(messages));
-    } catch (e) {
-      console.error("Failed to persist LincoSaathii messages in localStorage:", e);
-    }
-  }, [messages]);
+  const { messages, setMessages, chatLoading, sendMessage: sendChatMessage } = useChat();
 
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, chatLoading]);
 
   const sendMessage = async (customText?: string) => {
     const textToSend = customText || inputMessage;
-    if (!textToSend.trim() || loading) return;
+    if (!textToSend.trim() || chatLoading) return;
 
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: textToSend,
-      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
     if (!customText) setInputMessage("");
-    setLoading(true);
 
     try {
-      const chatHistory = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const response = await fetch("/api/ai/linco-saathii", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          history: chatHistory,
-          currentState,
-          message: textToSend,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "LincoSaathii is momentarily sleeping.");
-
-      const aiMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "model",
-        content: data.reply || "Kuch toh gadbad hai bhai, main abhi theek se samajh nahi paya. Fir se batao na.",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-      };
-
-      setMessages((prev) => [...prev, aiMsg]);
+      const data = await sendChatMessage(textToSend, currentState as any);
 
       // If fields were extracted, update the main form!
       if (data.extractedFields) {
         const cleanedFields: any = {};
         Object.keys(data.extractedFields).forEach((key) => {
-          if (data.extractedFields[key] !== null) {
-            cleanedFields[key] = data.extractedFields[key];
+          const val = data.extractedFields?.[key as keyof typeof data.extractedFields];
+          if (val !== null && val !== undefined) {
+            cleanedFields[key] = val;
           }
         });
         
         // Ensure urgency is mapped correctly to our accepted state
         if (cleanedFields.urgency) {
-          if (cleanedFields.urgency.toLowerCase().includes("id")) {
+          const urgLower = String(cleanedFields.urgency).toLowerCase();
+          if (urgLower.includes("id")) {
             cleanedFields.urgency = "Contains ID";
-          } else if (cleanedFields.urgency.toLowerCase().includes("medic") || cleanedFields.urgency.toLowerCase().includes("critic")) {
+          } else if (urgLower.includes("medic") || urgLower.includes("critic")) {
             cleanedFields.urgency = "Medical";
-          } else if (cleanedFields.urgency.toLowerCase().includes("urgent")) {
+          } else if (urgLower.includes("urgent")) {
             cleanedFields.urgency = "Urgent";
           } else {
             cleanedFields.urgency = "Normal";
@@ -198,18 +136,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
         }, 1500);
       }
     } catch (err: any) {
-      console.error(err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "model",
-          content: "Sorry bhai, network mein thoda issue lag raha hai. Par tum form manually bhi fill kar sakte ho! Mai yahin hoon.",
-          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    } finally {
-      setLoading(false);
+      console.error("Failed to send chatbot message:", err);
     }
   };
 
@@ -288,7 +215,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
             </motion.div>
           );
         })}
-        {loading && (
+        {chatLoading && (
           <div className="flex gap-2.5 justify-start">
             <div className="relative shrink-0 animate-pulse mt-0.5">
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[2px] opacity-70"></div>
@@ -346,12 +273,12 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
             placeholder="LincoSaathii se baat karein..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            disabled={loading}
+            disabled={chatLoading}
             className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 focus:border-cyan-500/40 text-xs text-slate-200 outline-none placeholder:text-slate-600 transition"
           />
           <button
             type="submit"
-            disabled={loading || !inputMessage.trim()}
+            disabled={chatLoading || !inputMessage.trim()}
             className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-150 flex items-center justify-center shrink-0 disabled:opacity-40 cursor-pointer shadow-md"
           >
             <Send size={14} />

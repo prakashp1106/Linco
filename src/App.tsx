@@ -3,53 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Search,
-  Plus,
-  Sparkles,
-  Mic,
-  MicOff,
-  Camera,
-  Calendar,
-  MapPin,
-  User,
-  CheckCircle2,
-  Trash2,
-  Share2,
-  HelpCircle,
-  Send,
-  RefreshCw,
-  AlertTriangle,
-  X,
-  Lock,
-  ShieldCheck,
-  Award,
-  Info,
-  Clock,
-  ExternalLink,
-  ChevronRight,
-  Map,
-  List,
-  Download,
-  DownloadCloud,
-  QrCode,
-} from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Search, Plus, Info, X } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
-import { Post, AIMatch, UrgencyType, Category, UrgencyInfo } from "./types";
-import { InteractiveMap, MiniMap, FeedMap } from "./components/LeafletMap";
-import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 import confetti from "canvas-confetti";
 
-// --- REFACTORED MODULAR IMPORTS ---
-import { encryptContact, decryptContact } from "./services/encryptionService";
-import { CATEGORIES, URGENCY_LEVELS, CITIES } from "./constants";
-import { CanvasParticles } from "./components/CanvasParticles";
-import { LiveMissingTimer } from "./components/LiveMissingTimer";
-import { CountUpStat } from "./components/CountUpStat";
+import { usePosts } from "./hooks/usePosts";
+import { encryptContact } from "./services/encryptionService";
+import { Post, AIMatch } from "./types";
 
-// Custom Toasts Implementation
+// UI Components
+import { CanvasParticles } from "./components/CanvasParticles";
+import { CountUpStat } from "./components/CountUpStat";
+import { PostForm } from "./components/PostForm";
+import { FeedList } from "./components/FeedList";
+import { AboutTab } from "./components/AboutTab";
+
+// Modals
+import { PinModal } from "./components/PinModal";
+import { ClaimModal } from "./components/ClaimModal";
+import { QRModal } from "./components/QRModal";
+
 interface Toast {
   id: string;
   message: string;
@@ -57,80 +32,42 @@ interface Toast {
 }
 
 export default function App() {
+  const {
+    posts,
+    matches,
+    loadingPosts,
+    backendStatus,
+    unlockedPosts,
+    stats,
+    unlockPost,
+    loadPosts,
+    submitPost,
+    resolvePost,
+    deletePost,
+    incrementPostViews,
+  } = usePosts();
+
   const [activeTab, setActiveTab] = useState<"home" | "feed" | "about">("home");
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [matches, setMatches] = useState<Record<string, AIMatch[]>>({});
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [backendStatus, setBackendStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  // Stats Counters
-  const [stats, setStats] = useState({ total: 0, lost: 0, found: 0, resolved: 0 });
-
-  // Filter States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [feedTypeFilter, setFeedTypeFilter] = useState<"All" | "Lost" | "Found">("All");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [cityFilter, setCityFilter] = useState("All");
-  const [sortBy, setSortBy] = useState<"new" | "old" | "views">("new");
-  const [feedViewMode, setFeedViewMode] = useState<"list" | "map">("list");
-
-  // Form States
-  const [fItem, setFItem] = useState("");
-  const [fDetails, setFDetails] = useState("");
-  const [fType, setFType] = useState<"Lost" | "Found" | "">("");
-  const [fAddress, setFAddress] = useState("");
-  const [fReward, setFReward] = useState("");
-  const [fContact, setFContact] = useState("");
-  const [fSecurityPin, setFSecurityPin] = useState("");
-  const [fCategory, setFCategory] = useState("");
-  const [fUrgency, setFUrgency] = useState<UrgencyType>("Normal");
-  const [fImage, setFImage] = useState<string | null>(null);
-  const [fTimeline, setFTimeline] = useState("");
-  const [fLat, setFLat] = useState<number | undefined>(undefined);
-  const [fLng, setFLng] = useState<number | undefined>(undefined);
-
-  // Safety & Unlocked features
-  const [unlockedPosts, setUnlockedPosts] = useState<string[]>([]);
-  const [pinModal, setPinModal] = useState<{ isOpen: boolean; postId: string; actionType: "delete" | "resolve"; actualPin: string; } | null>(null);
-  const [enteredPin, setEnteredPin] = useState("");
   const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
-  const [decryptPinEntered, setDecryptPinEntered] = useState("");
-  const [isPinVerifiedSuccessfully, setIsPinVerifiedSuccessfully] = useState(false);
-
-  // AI Feature Loading Indicator States
-  const [photoLoading, setPhotoLoading] = useState(false);
-  const [voiceActive, setVoiceActive] = useState(false);
-  const [voiceLoading, setVoiceLoading] = useState(false);
-  const [enhanceLoading, setEnhanceLoading] = useState(false);
-  const [rewardLoading, setRewardLoading] = useState(false);
-  const [timelineLoading, setTimelineLoading] = useState(false);
-
-  // Suggested values / detector states
-  const [rewardReason, setRewardReason] = useState("");
-  const [timelineResult, setTimelineResult] = useState("");
-
-  // Claim Modal States
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimingPost, setClaimingPost] = useState<Post | null>(null);
-  const [claimQuestions, setClaimQuestions] = useState<string[]>([]);
-  const [claimAnswers, setClaimAnswers] = useState<string[]>(["", ""]);
-  const [claimLoading, setClaimLoading] = useState(false);
-  const [claimResult, setClaimResult] = useState<{
-    verified: boolean;
-    confidence: number;
-    message: string;
+  
+  // Modals state
+  const [pinModal, setPinModal] = useState<{
+    isOpen: boolean;
+    postId: string;
+    actionType: "delete" | "resolve";
   } | null>(null);
 
-  // QR Code Modal States
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrModalPost, setQrModalPost] = useState<Post | null>(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
+  const [claimingPost, setClaimingPost] = useState<Post | null>(null);
+  const [showClaimModal, setShowClaimModal] = useState(false);
 
-  // Success Banner State
+  const [qrModalPost, setQrModalPost] = useState<Post | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  // Banner announcement
   const [banner, setBanner] = useState<{ show: boolean; title: string; subtitle: string; icon: string } | null>(null);
 
-  // Typewriter Hero Animation Hook
+  // Typewriter Hero Animation
   const [typewriterText, setTypewriterText] = useState("");
   useEffect(() => {
     const messages = [
@@ -151,7 +88,7 @@ export default function App() {
         charIndex++;
         if (charIndex >= currentMessage.length) {
           isDeleting = true;
-          typingTimer = setTimeout(tick, 2500); // pause at full word
+          typingTimer = setTimeout(tick, 2500);
           return;
         }
       } else {
@@ -160,7 +97,7 @@ export default function App() {
         if (charIndex <= 0) {
           isDeleting = false;
           msgIndex = (msgIndex + 1) % messages.length;
-          typingTimer = setTimeout(tick, 500); // pause before typing next
+          typingTimer = setTimeout(tick, 500);
           return;
         }
       }
@@ -172,52 +109,13 @@ export default function App() {
   }, []);
 
   // Show Toast Toast Notification helper
-  const addToast = (message: string, type: Toast["type"] = "info") => {
+  const addToast = useCallback((message: string, type: Toast["type"] = "info") => {
     const id = Date.now().toString() + Math.random().toString();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4500);
-  };
-
-  // Load posts database from Express Backend
-  const loadPosts = async () => {
-    setBackendStatus("connecting");
-    try {
-      const response = await fetch("/api/posts");
-      if (!response.ok) throw new Error("Could not reach backend");
-      const data = await response.json();
-      setPosts(data.posts || []);
-      setMatches(data.matches || {});
-      setBackendStatus("live");
-    } catch (err) {
-      console.error(err);
-      setBackendStatus("offline");
-      addToast("Backend offline. Retrying connection...", "warn");
-    } finally {
-      setLoadingPosts(false);
-    }
-  };
-
-  // Initial Load
-  useEffect(() => {
-    loadPosts();
-    // Poll the feed every 30 seconds to catch matches/updates
-    const interval = setInterval(() => {
-      loadPosts();
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
-
-  // Update Stats Counters when posts change
-  useEffect(() => {
-    setStats({
-      total: posts.length,
-      lost: posts.filter((p) => p.type === "Lost").length,
-      found: posts.filter((p) => p.type === "Found").length,
-      resolved: posts.filter((p) => p.status === "Resolved").length,
-    });
-  }, [posts]);
 
   // Support deep linking to open a specific post from QR code scans / URLs
   useEffect(() => {
@@ -229,153 +127,18 @@ export default function App() {
         if (foundPost) {
           setClaimingPost(foundPost);
           setActiveTab("feed");
-          setShowClaimModal(true); // Ensure claim verification starts right away
-          // Clean the query parameters from URL so refreshes don't re-trigger it
+          setShowClaimModal(true);
           window.history.replaceState({}, document.title, window.location.pathname);
           addToast(`Scanned QR Code for: ${foundPost.item}!`, "success");
         }
       }
     }
-  }, [posts]);
+  }, [posts, addToast]);
 
-  // Dynamic SEO, Meta tags & Schema.org JSON-LD Structured Data
-  useEffect(() => {
-    let title = "LINCO AI | Smart AI Lost & Found Portal";
-    let desc = "LINCO AI is a community-driven Lost & Found portal powered by Google Gemini. Report lost keys, wallets, phones and get verified matches instantly.";
-    let ldJson: any = null;
-
-    if (claimingPost) {
-      const typeStr = claimingPost.type === "Lost" ? "Lost" : "Found";
-      title = `${typeStr}: ${claimingPost.item} in ${claimingPost.address} | LINCO AI`;
-      desc = `Verify/Claim ${claimingPost.type.toLowerCase()} ${claimingPost.item} in ${claimingPost.address}. Details: ${claimingPost.details.slice(0, 150)}`;
-      ldJson = {
-        "@context": "https://schema.org",
-        "@type": "Thing",
-        "name": claimingPost.item,
-        "description": claimingPost.details,
-        "location": {
-          "@type": "Place",
-          "name": claimingPost.address,
-          "address": claimingPost.address
-        },
-        "identifier": claimingPost.id,
-        "url": window.location.href
-      };
-    } else if (cityFilter && cityFilter !== "All") {
-      title = `Lost & Found Items in ${cityFilter} | LINCO AI`;
-      desc = `Browse recently lost and found items in ${cityFilter} area. Register your missing keys, bags, wallets, phones, or electronics to initiate Gemini matching.`;
-      
-      const cityPosts = posts.filter(p => p.address.toLowerCase().includes(cityFilter.toLowerCase()));
-      ldJson = {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        "name": `Lost and Found Items in ${cityFilter}`,
-        "description": desc,
-        "numberOfItems": cityPosts.length,
-        "itemListElement": cityPosts.slice(0, 10).map((p, idx) => ({
-          "@type": "ListItem",
-          "position": idx + 1,
-          "name": p.item,
-          "description": p.details,
-          "url": `${window.location.href}?id=${p.id}`
-        }))
-      };
-    } else if (categoryFilter && categoryFilter !== "All") {
-      title = `Lost & Found ${categoryFilter} | LINCO AI`;
-      desc = `View recently lost and found ${categoryFilter} listings on LINCO AI. Fast AI-assisted claims and verification.`;
-    } else if (searchQuery.trim()) {
-      title = `Search: "${searchQuery}" | LINCO AI`;
-      desc = `Search results for "${searchQuery}" on LINCO AI lost & found directory.`;
-    } else {
-      // General landing page schema
-      ldJson = {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "LINCO AI",
-        "url": window.location.origin,
-        "description": desc,
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": `${window.location.origin}/?q={search_term_string}`,
-          "query-input": "required name=search_term_string"
-        }
-      };
-    }
-
-    // Apply Page Title
-    document.title = title;
-    
-    // Apply Meta Description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', desc);
-
-    // Inject JSON-LD Schema.org script block
-    let scriptTag = document.getElementById("linco-jsonld-schema") as HTMLScriptElement;
-    if (!scriptTag) {
-      scriptTag = document.createElement("script");
-      scriptTag.id = "linco-jsonld-schema";
-      scriptTag.type = "application/ld+json";
-      document.head.appendChild(scriptTag);
-    }
-    
-    if (ldJson) {
-      scriptTag.text = JSON.stringify(ldJson, null, 2);
-    } else {
-      scriptTag.text = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "LINCO AI",
-        "url": window.location.origin,
-        "logo": `${window.location.origin}/logo.png`,
-        "description": "AI-powered Local Community Lost & Found Directory"
-      }, null, 2);
-    }
-  }, [claimingPost, cityFilter, categoryFilter, searchQuery, posts]);
-
-  // Form Field Validation Check
-  const validateForm = (): boolean => {
-    if (!fItem.trim()) {
-      addToast("Item name is required", "warn");
-      return false;
-    }
-    if (!fCategory) {
-      addToast("Please select an item category", "warn");
-      return false;
-    }
-    if (!fDetails.trim()) {
-      addToast("Please provide details/description", "warn");
-      return false;
-    }
-    if (!fType) {
-      addToast("Specify if you Lost or Found this item", "warn");
-      return false;
-    }
-    if (!fAddress.trim()) {
-      addToast("Location is required", "warn");
-      return false;
-    }
-    if (!fContact.trim() || !/^\d{10}$/.test(fContact.replace(/\D/g, ""))) {
-      addToast("Enter a valid 10-digit mobile number for WhatsApp contact", "warn");
-      return false;
-    }
-    if (!fSecurityPin.trim() || !/^\d{4}$/.test(fSecurityPin.trim())) {
-      addToast("Please set a 4-digit Security PIN for your safety", "warn");
-      return false;
-    }
-    return true;
-  };
-
-  // Post Submission
-  const handleSubmitPost = async () => {
-    if (!validateForm()) return;
-
-    const plainContact = fContact.trim().replace(/\D/g, "");
-    const pin = fSecurityPin.trim();
+  // Form Submission callback
+  const handleCreatePost = async (postFormInput: any) => {
+    const plainContact = postFormInput.contact.trim().replace(/\D/g, "");
+    const pin = postFormInput.securityPin.trim();
 
     addToast("Encrypting your contact details locally using AES-GCM...", "info");
 
@@ -388,35 +151,16 @@ export default function App() {
     }
 
     const payload = {
-      item: fItem.trim(),
-      details: fDetails.trim(),
-      type: fType,
-      address: fAddress.trim(),
-      reward: fType === "Lost" ? fReward.trim() : "",
+      ...postFormInput,
       contact: encryptedContact,
       maskedContact: "+91 ******" + plainContact.slice(-2),
-      securityPin: pin,
-      category: fCategory,
-      urgency: fUrgency,
-      image: fImage,
-      latitude: fLat,
-      longitude: fLng,
     };
 
     addToast("Publishing post & launching Gemini AI matcher...", "info");
 
     try {
-      const response = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Publishing failed");
-      const res = await response.json();
-
+      const res = await submitPost(payload);
       if (res.success) {
-        // Trigger Canvas Confetti celebration animation!
         try {
           confetti({
             particleCount: 150,
@@ -424,351 +168,62 @@ export default function App() {
             origin: { y: 0.6 }
           });
         } catch (e) {
-          console.error("Confetti failed to run:", e);
+          console.error("Confetti failed:", e);
         }
 
-        // Trigger Success banner temporarily
         setBanner({
           show: true,
           title: "Post Published Successfully!",
-          subtitle: payload.type === "Lost" 
-            ? "Your item is now indexed. Gemini is currently scanning all found items for matches..." 
+          subtitle: payload.type === "Lost"
+            ? "Your item is now indexed. Gemini is currently scanning all found items for matches..."
             : "Thank you for being a good citizen! Gemini is scanning lost posts to contact the owner...",
           icon: payload.type === "Lost" ? "🔍" : "🤝",
         });
 
-        // Clear Form fields
-        setFItem("");
-        setFDetails("");
-        setFType("");
-        setFAddress("");
-        setFReward("");
-        setFContact("");
-        setFSecurityPin("");
-        setFCategory("");
-        setFUrgency("Normal");
-        setFImage(null);
-        setFTimeline("");
-        setFLat(undefined);
-        setFLng(undefined);
-        setRewardReason("");
-        setTimelineResult("");
-
-        // Refresh feed & redirect to Feed page after delay
         setTimeout(() => {
           setBanner(null);
-          loadPosts();
           setActiveTab("feed");
         }, 3200);
+
+        return { success: true };
       }
     } catch (err: any) {
       addToast("Error publishing post: " + (err.message || err), "error");
+      return { success: false, error: err.message };
     }
   };
 
-  // Image base64 loading
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      addToast("Images must be under 5 MB to keep uploads snappy", "warn");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // AI Quick Fill via Image Analysis
-  const handlePhotoAIAnalysis = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      addToast("Image size exceeds 5MB limit", "warn");
-      return;
-    }
-
-    setPhotoLoading(true);
-    addToast("Uploading photo & running Gemini Vision scanner...", "info");
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      setFImage(base64); // display in form
-
-      try {
-        const response = await fetch("/api/ai/quick-fill-photo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64 }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Gemini Image Reader failed");
-
-        if (data.item) setFItem(data.item);
-        if (data.description) setFDetails(data.description);
-        if (data.category) {
-          const matchedCat = CATEGORIES.find((c) => c.id.toLowerCase() === data.category.toLowerCase());
-          if (matchedCat) setFCategory(matchedCat.id);
-        }
-        addToast("Gemini auto-filled item description and category from your photo!", "success");
-      } catch (err: any) {
-        addToast("Photo AI Reading failed: " + err.message, "error");
-        console.error(err);
-      } finally {
-        setPhotoLoading(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Web Speech API Voice Listening Integration
-  const handleVoiceInput = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      addToast("Voice Speech Input is only fully supported on Google Chrome mobile/desktop", "warn");
-      return;
-    }
-
-    const rec = new SpeechRecognition();
-    rec.lang = "en-IN";
-    rec.continuous = false;
-    rec.interimResults = false;
-
-    setVoiceActive(true);
-    addToast("Microphone active. Describe your item naturally (color, brand, where lost)...", "info");
-
-    rec.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setVoiceActive(false);
-      setVoiceLoading(true);
-      addToast("Gemini is dissecting speech details...", "info");
-
-      try {
-        const response = await fetch("/api/ai/quick-fill-voice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Gemini voice parsing failed");
-
-        if (data.item) setFItem(data.item);
-        if (data.description) setFDetails(data.description);
-        if (data.category) {
-          const matchedCat = CATEGORIES.find((c) => c.id.toLowerCase() === data.category.toLowerCase());
-          if (matchedCat) setFCategory(matchedCat.id);
-        }
-        addToast("Gemini populated the form from your voice input!", "success");
-      } catch (err: any) {
-        setFDetails(transcript);
-        addToast("Voice processed as raw: " + err.message, "info");
-      } finally {
-        setVoiceLoading(false);
-      }
-    };
-
-    rec.onerror = (e: any) => {
-      setVoiceActive(false);
-      addToast("Speech recognition stopped or denied: " + e.error, "warn");
-    };
-
-    rec.onend = () => {
-      setVoiceActive(false);
-    };
-
-    rec.start();
-  };
-
-  // AI Description Enhancer
-  const handleEnhanceDescription = async () => {
-    if (!fDetails.trim()) {
-      addToast("Write some raw details first to let Gemini enhance them!", "warn");
-      return;
-    }
-
-    setEnhanceLoading(true);
-    addToast("Enhancing details with professional attributes...", "info");
-
-    try {
-      const response = await fetch("/api/ai/enhance-description", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item: fItem, category: fCategory, description: fDetails }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Enhancement failed");
-
-      if (data.description) {
-        setFDetails(data.description);
-        addToast("Gemini polished your description!", "success");
-      }
-    } catch (err: any) {
-      addToast("Polishing details failed: " + err.message, "error");
-    } finally {
-      setEnhanceLoading(false);
-    }
-  };
-
-  // AI Reward Estimator Suggestion
-  const handleSuggestReward = async () => {
-    if (!fItem.trim()) {
-      addToast("Enter an item name first to estimate its reward!", "warn");
-      return;
-    }
-
-    setRewardLoading(true);
-    addToast("Calculating safe finder reward metrics...", "info");
-
-    try {
-      const response = await fetch("/api/ai/suggest-reward", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item: fItem, description: fDetails }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Estimation failed");
-
-      if (data.min !== undefined) {
-        setFReward(String(data.min));
-        setRewardReason(data.reason);
-        addToast("Finder reward proposal generated!", "success");
-      }
-    } catch (err: any) {
-      addToast("Estimating reward failed: " + err.message, "error");
-    } finally {
-      setRewardLoading(false);
-    }
-  };
-
-  // AI Timeline Reconstructor
-  const handleAnalyzeTimeline = async () => {
-    if (!fTimeline.trim()) {
-      addToast("Describe your day's journey to trace the loss timeline", "warn");
-      return;
-    }
-
-    setTimelineLoading(true);
-    addToast("Deducing probable drop spots using spatial reasoning...", "info");
-
-    try {
-      const response = await fetch("/api/ai/reconstruct-timeline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item: fItem, timeline: fTimeline }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Trace failed");
-
-      if (data.analysis) {
-        setTimelineResult(data.analysis);
-        addToast("Trace analysis completed!", "success");
-      }
-    } catch (err: any) {
-      addToast("Tracer failed: " + err.message, "error");
-    } finally {
-      setTimelineLoading(false);
-    }
-  };
-
-  // View Increment
-  const handleIncrementViews = async (id: string) => {
-    try {
-      await fetch(`/api/posts/${id}/view`, { method: "POST" });
-      // Local state increment to prevent laggy rendering
-      setPosts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, views: (p.views || 0) + 1 } : p))
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Mark Resolved
-  const handleMarkResolved = async (id: string, e: React.MouseEvent) => {
+  // Safe Post Resolution with PIN check
+  const handleMarkResolvedTrigger = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const post = posts.find((p) => p.id === id);
-    if (!post) return;
-    setPinModal({
-      isOpen: true,
-      postId: id,
-      actionType: "resolve",
-      actualPin: post.securityPin || "1234",
-    });
-    setEnteredPin("");
+    setPinModal({ isOpen: true, postId: id, actionType: "resolve" });
   };
 
-  // Delete Post
-  const handleDeletePost = async (id: string, e: React.MouseEvent) => {
+  const handleDeletePostTrigger = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const post = posts.find((p) => p.id === id);
-    if (!post) return;
-    setPinModal({
-      isOpen: true,
-      postId: id,
-      actionType: "delete",
-      actualPin: post.securityPin || "1234",
-    });
-    setEnteredPin("");
+    setPinModal({ isOpen: true, postId: id, actionType: "delete" });
   };
 
-  // PIN Verification and execution of Safe Actions
-  const handleVerifyPinAndExecute = async () => {
+  const handleVerifyPinAndExecute = async (pinEntered: string) => {
     if (!pinModal) return;
-    const { postId, actionType, actualPin } = pinModal;
-    const expectedPin = actualPin || "1234";
+    const { postId, actionType } = pinModal;
 
-    if (enteredPin !== expectedPin) {
-      addToast("Wrong PIN!", "error");
-      window.alert("Wrong PIN!");
-      return;
-    }
-
-    if (actionType === "delete") {
-      try {
-        const response = await fetch(`/api/posts/${postId}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ securityPin: enteredPin }),
-        });
-        if (!response.ok) throw new Error("Delete failed");
-        setPosts((prev) => prev.filter((p) => p.id !== postId));
-        addToast("Post deleted successfully", "info");
-      } catch (err) {
-        addToast("Error deleting post", "error");
-      }
-    } else if (actionType === "resolve") {
-      try {
-        const response = await fetch(`/api/posts/${postId}/resolve`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ securityPin: enteredPin }),
-        });
-        if (!response.ok) throw new Error("Failed to resolve");
-        const data = await response.json();
-        if (data.success) {
-          setPosts((prev) =>
-            prev.map((p) => (p.id === postId ? { ...p, status: "Resolved" } : p))
-          );
+    try {
+      if (actionType === "delete") {
+        const res = await deletePost(postId, pinEntered);
+        if (res.success) {
+          addToast("Post deleted successfully", "success");
+        }
+      } else if (actionType === "resolve") {
+        const res = await resolvePost(postId, pinEntered);
+        if (res.success) {
           addToast("Congratulations on recovering this item!", "success");
         }
-      } catch (err) {
-        addToast("Error marking post resolved", "error");
       }
+      setPinModal(null);
+    } catch (err: any) {
+      addToast(err.message || "Action failed", "error");
     }
-    setPinModal(null);
   };
 
   // Share as Canvas Image Card with dynamic QR Code
@@ -787,13 +242,13 @@ export default function App() {
 
     // 1. Draw gradient background
     const grad = ctx.createRadialGradient(400, 400, 50, 400, 400, 600);
-    grad.addColorStop(0, "#0f172a"); // slate-900
-    grad.addColorStop(1, "#020817"); // slate-950
+    grad.addColorStop(0, "#0f172a");
+    grad.addColorStop(1, "#020817");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 800, 800);
 
     // 2. Draw dot grid pattern
-    ctx.fillStyle = "rgba(6, 182, 212, 0.05)"; // cyan-500 with low opacity
+    ctx.fillStyle = "rgba(6, 182, 212, 0.05)";
     for (let x = 20; x < 800; x += 30) {
       for (let y = 20; y < 800; y += 30) {
         ctx.beginPath();
@@ -829,7 +284,7 @@ export default function App() {
     ctx.lineTo(720, 150);
     ctx.stroke();
 
-    // 5. Status Badge (LOST/FOUND)
+    // 5. Status Badge
     const isLost = p.type === "Lost";
     ctx.fillStyle = isLost ? "rgba(239, 68, 68, 0.15)" : "rgba(16, 185, 129, 0.15)";
     const badgeX = 80;
@@ -845,12 +300,11 @@ export default function App() {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Badge Text
     ctx.fillStyle = isLost ? "#f87171" : "#34d399";
     ctx.font = "bold 13px 'Inter', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(isLost ? "🚨 LOST ITEM" : "🤝 FOUND ITEM", badgeX + badgeW/2, badgeY + 22);
-    ctx.textAlign = "left"; // reset
+    ctx.textAlign = "left";
 
     // Category Badge
     const catText = p.category ? `Category: ${p.category}` : "General Item";
@@ -872,7 +326,7 @@ export default function App() {
     // 7. Details (Multiline Wrap)
     ctx.fillStyle = "#cbd5e1";
     ctx.font = "500 17px 'Inter', sans-serif";
-    
+
     const wrapText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
       const words = text.split(" ");
       let line = "";
@@ -896,9 +350,8 @@ export default function App() {
     const detailsStartY = 320;
     const detailsEndY = wrapText(p.details, 80, detailsStartY, 640, 26);
 
-    // 8. Location & Timing Meta Section
     let metaY = detailsEndY + 50;
-    if (metaY < 480) metaY = 480; // ensure spacing
+    if (metaY < 480) metaY = 480;
 
     ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
     ctx.lineWidth = 1;
@@ -907,7 +360,6 @@ export default function App() {
     ctx.lineTo(720, metaY - 20);
     ctx.stroke();
 
-    // Location Label & Text
     ctx.fillStyle = "rgba(6, 182, 212, 0.9)";
     ctx.font = "bold 14px 'Inter', sans-serif";
     ctx.fillText("📍 LOCATION", 80, metaY);
@@ -916,7 +368,6 @@ export default function App() {
     ctx.font = "600 16px 'Inter', sans-serif";
     ctx.fillText(p.address, 80, metaY + 28);
 
-    // Timestamp Label & Text
     ctx.fillStyle = "rgba(139, 92, 246, 0.9)";
     ctx.font = "bold 14px 'Inter', sans-serif";
     ctx.fillText("📅 DATE REPORTED", 420, metaY);
@@ -925,7 +376,6 @@ export default function App() {
     ctx.font = "600 16px 'Inter', sans-serif";
     ctx.fillText(p.timestamp, 420, metaY + 28);
 
-    // 9. Reward Offered Block (if any)
     if (p.reward) {
       const rewardY = metaY + 80;
       ctx.fillStyle = "rgba(245, 158, 11, 0.1)";
@@ -940,19 +390,18 @@ export default function App() {
       ctx.fillText(`💰 REWARD OFFERED: ₹${p.reward}`, 110, rewardY + 36);
     }
 
-    // 10. Generate and draw actual QR Code inside the bottom right area of card
     const qrX = 600;
     const qrY = 615;
     const qrSize = 110;
     const shareUrl = `${window.location.origin}/?id=${p.id}`;
-    
+
     try {
       const qrDataUrl = await QRCode.toDataURL(shareUrl, {
         margin: 1,
         width: qrSize,
         color: {
-          dark: "#0f172a", // slate-900 matching card's dark style
-          light: "#ffffff" // crisp background for scanning readability
+          dark: "#0f172a",
+          light: "#ffffff"
         }
       });
       const qrImg = new Image();
@@ -962,7 +411,6 @@ export default function App() {
         qrImg.onerror = () => reject();
       });
 
-      // Draw container border/glow behind QR code
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.roundRect ? ctx.roundRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8) : ctx.rect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
@@ -972,13 +420,11 @@ export default function App() {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Draw QR Image
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
     } catch (qrErr) {
       console.error("Failed to generate QR Code on image card:", qrErr);
     }
 
-    // 11. Footer Branding Call-to-action
     ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
     ctx.font = "bold 11px 'Inter', sans-serif";
     ctx.fillText("Scan QR code to immediately verify or claim.", 80, 680);
@@ -988,7 +434,6 @@ export default function App() {
     ctx.font = "bold 13px 'Inter', sans-serif";
     ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 80, 735);
 
-    // 12. Download the generated Image
     setTimeout(() => {
       try {
         const link = document.createElement("a");
@@ -1003,39 +448,21 @@ export default function App() {
     }, 100);
   };
 
-  // Trigger interactive QR code modal
-  const handleShowQrCode = async (p: Post, e: React.MouseEvent) => {
+  const handleShowQrCodeTrigger = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     setQrModalPost(p);
     setShowQrModal(true);
-    setQrCodeDataUrl(""); // show loading state initially
-    try {
-      const shareUrl = `${window.location.origin}/?id=${p.id}`;
-      const dataUrl = await QRCode.toDataURL(shareUrl, {
-        margin: 2,
-        width: 300,
-        color: {
-          dark: "#0f172a", // Slate-900 dark color
-          light: "#ffffff" // white background
-        }
-      });
-      setQrCodeDataUrl(dataUrl);
-    } catch (err) {
-      console.error("Failed to generate QR Code", err);
-      addToast("Could not generate QR Code", "error");
-    }
   };
 
-  // Share/Copy Post
-  const handleSharePost = (p: Post, e: React.MouseEvent) => {
+  const handleSharePostText = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     const isUnlocked = unlockedPosts.includes(p.id);
-    const displayContact = isUnlocked 
-      ? (decryptedContacts[p.id] || p.contact) 
+    const displayContact = isUnlocked
+      ? (decryptedContacts[p.id] || p.contact)
       : (p.maskedContact || "+91 ******" + (p.contact.startsWith("ENC:") ? "XX" : p.contact.slice(-2)));
 
     const shareText = `🔍 LINCO Lost & Found 🔍\n\n📢 Status: ${p.type === "Lost" ? "🚨 LOST" : "✅ FOUND"}\n📦 Item: ${p.item}\n📍 Location: ${p.address}\n📝 Description: ${p.details}${p.reward ? `\n💰 Reward Offered: ₹${p.reward}` : ""}\n\n📱 Contact via WhatsApp at: wa.me/91${displayContact}\n\n— Tracked on LINCO AI`;
-    
+
     navigator.clipboard.writeText(shareText)
       .then(() => {
         addToast("Post template copied! Paste on WhatsApp groups.", "success");
@@ -1043,151 +470,28 @@ export default function App() {
       .catch(() => addToast("Copy failed, please retry", "error"));
   };
 
-  // Launch AI Verification Flow
-  const handleStartClaim = async (p: Post, e: React.MouseEvent) => {
+  const handleStartClaimTrigger = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     setClaimingPost(p);
-    setClaimAnswers(["", ""]);
-    setClaimResult(null);
     setShowClaimModal(true);
-    setClaimLoading(true);
-    setDecryptPinEntered("");
-    setIsPinVerifiedSuccessfully(false);
-
-    try {
-      const response = await fetch("/api/ai/generate-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item: p.item, description: p.details }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not formulate questions");
-
-      if (Array.isArray(data) && data.length > 0) {
-        setClaimQuestions(data);
-      } else {
-        throw new Error("No questions returned");
-      }
-    } catch (err: any) {
-      addToast(`Questions Bypassed: ${err.message}`, "warn");
-      setClaimQuestions(["Can you describe any unique scratches, contents, or branding?", "Where and around what time did you lose this item?"]);
-    } finally {
-      setClaimLoading(false);
-    }
   };
 
-  // Submit Verification Claims
-  const handleSubmitClaimAnswers = async () => {
-    if (!claimingPost) return;
-    if (claimAnswers.some((a) => !a.trim())) {
-      addToast("Please answer both questions to verify your claim", "warn");
-      return;
-    }
-
-    setClaimLoading(true);
-
-    try {
-      const response = await fetch("/api/ai/verify-claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          item: claimingPost.item,
-          description: claimingPost.details,
-          questions: claimQuestions,
-          answers: claimAnswers,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Verification processing failed");
-
-      setClaimResult({
-        verified: data.verified,
-        confidence: data.confidence || 0,
-        message: data.message,
-      });
-
-      if (data.verified) {
-        addToast("AI Quiz Passed! Please enter the Security PIN to decrypt contact details.", "success");
-      } else {
-        addToast("Verification failed. Please review answers.", "error");
-      }
-    } catch (err: any) {
-      addToast("Error validating claim: " + err.message, "error");
-    } finally {
-      setClaimLoading(false);
-    }
+  const handleUnlockSuccess = (postId: string, decryptedNumber: string) => {
+    setDecryptedContacts((prev) => ({ ...prev, [postId]: decryptedNumber }));
+    unlockPost(postId);
+    addToast("Contact details decrypted successfully! Connection unlocked.", "success");
   };
-
-  // Decrypt contact locally using Web Crypto API
-  const handleDecryptContact = async () => {
-    if (!claimingPost) return;
-    if (!decryptPinEntered.trim() || !/^\d{4}$/.test(decryptPinEntered.trim())) {
-      addToast("Please enter a valid 4-digit Security PIN", "warn");
-      return;
-    }
-
-    setClaimLoading(true);
-    try {
-      const isLegacy = !claimingPost.contact.startsWith("ENC:");
-      let decrypted = "";
-      if (isLegacy) {
-        if (decryptPinEntered !== (claimingPost.securityPin || "1234")) {
-          throw new Error("Incorrect Security PIN");
-        }
-        decrypted = claimingPost.contact;
-      } else {
-        decrypted = await decryptContact(claimingPost.contact, decryptPinEntered);
-      }
-
-      // Success!
-      setDecryptedContacts((prev) => ({ ...prev, [claimingPost.id]: decrypted }));
-      setUnlockedPosts((prev) => [...prev, claimingPost.id]);
-      setIsPinVerifiedSuccessfully(true);
-      addToast("Contact details decrypted successfully! Connection unlocked.", "success");
-    } catch (err) {
-      console.error(err);
-      addToast("Incorrect Security PIN! Decryption failed.", "error");
-    } finally {
-      setClaimLoading(false);
-    }
-  };
-
-  // Filters logic
-  const filteredPosts = posts.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      p.item.toLowerCase().includes(q) ||
-      p.details.toLowerCase().includes(q) ||
-      p.address.toLowerCase().includes(q);
-
-    const matchesType = feedTypeFilter === "All" || p.type === feedTypeFilter;
-    const matchesCategory = categoryFilter === "All" || p.category === categoryFilter;
-    const matchesCity = cityFilter === "All" || p.address.toLowerCase().includes(cityFilter.toLowerCase());
-
-    return matchesSearch && matchesType && matchesCategory && matchesCity;
-  }).sort((a, b) => {
-    if (sortBy === "old") return a.created - b.created;
-    if (sortBy === "views") return (b.views || 0) - (a.views || 0);
-    return b.created - a.created; // newest
-  });
 
   return (
     <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-dot-grid">
-      {/* Background stars, gradient mesh & rotating blurs */}
       <CanvasParticles />
+
+      {/* Rotating blurs */}
       <div className="fixed -top-[20%] -left-[20%] w-[60vw] h-[60vw] bg-radial from-cyan-500/10 via-transparent to-transparent blur-[120px] pointer-events-none z-0 animate-orb-slow-1" />
       <div className="fixed -bottom-[20%] -right-[20%] w-[50vw] h-[50vw] bg-radial from-violet-600/10 via-transparent to-transparent blur-[120px] pointer-events-none z-0 animate-orb-slow-2" />
       <div className="fixed top-[40%] left-[35%] w-[35vw] h-[35vw] bg-radial from-pink-500/5 via-transparent to-transparent blur-[100px] pointer-events-none z-0 animate-orb-slow-3" />
 
-      {/* Premium Desktop Side Glow Spots */}
-      <div className="hidden xl:block fixed top-1/4 -left-[10vw] w-[35vw] h-[35vw] bg-radial from-cyan-500/15 to-transparent blur-[140px] pointer-events-none z-0" />
-      <div className="hidden xl:block fixed top-1/3 -right-[10vw] w-[35vw] h-[35vw] bg-radial from-violet-600/15 to-transparent blur-[140px] pointer-events-none z-0" />
-
-
-
-      {/* TOAST SYSTEM CONTAINER */}
+      {/* TOAST NOTIFICATION CONTAINER */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
         <AnimatePresence>
           {toasts.map((t) => (
@@ -1209,7 +513,7 @@ export default function App() {
                 </span>
                 <span className="text-xs font-medium leading-relaxed">{t.message}</span>
               </div>
-              <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-200 transition">
+              <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-200 transition cursor-pointer">
                 <X size={14} />
               </button>
             </motion.div>
@@ -1217,13 +521,12 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* HERO HERO CONTAINER */}
+      {/* HERO CONTAINER */}
       <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center select-none overflow-visible">
-        {/* Aurora Shifting Wave Backdrop behind Hero */}
         <div className="absolute inset-0 -top-40 max-h-[500px] bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-pink-500/5 blur-[120px] animate-pulse pointer-events-none z-0 opacity-80" />
         <div className="absolute left-1/4 top-10 w-[50%] h-[260px] bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-[100px] filter blur-[80px] animate-orb-slow-1 opacity-70 pointer-events-none z-0" />
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/40 to-violet-950/40 border border-cyan-500/30 text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest mb-5 shadow-lg shadow-cyan-950/50 backdrop-blur-md relative overflow-hidden group"
@@ -1232,15 +535,12 @@ export default function App() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
           </span>
-          <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost & Found Directory</span>
+          <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost &amp; Found Directory</span>
         </motion.div>
- 
+
         <div className="relative inline-block my-1.5 z-10">
-          {/* Beautiful pulsing animated glow ring behind logo */}
-          <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-radial from-cyan-500/10 to-transparent blur-2xl animate-ping opacity-60 pointer-events-none" />
-          
-          <motion.h1 
+          <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl pointer-events-none" />
+          <motion.h1
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
@@ -1249,29 +549,20 @@ export default function App() {
             LINCO
           </motion.h1>
         </div>
- 
+
         <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-2 mb-4">
           Locate · Identify · Notify · Connect · Owner
         </p>
- 
-        {/* Typewriter message */}
+
+        {/* Typewriter text */}
         <div className="h-6 flex justify-center items-center mb-1">
           <p className="text-xs text-slate-400 font-medium">
             {typewriterText}
             <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
           </p>
         </div>
- 
-        {/* Badges */}
-        <div className="flex flex-wrap gap-1.5 justify-center my-4 opacity-85">
-          {["🧠 Gemini Match", "🎙️ Voice Input", "📸 Photo Analyzer", "🗺️ Timeline Detective", "🔐 Verification Proofs"].map((badge, idx) => (
-            <span key={idx} className="text-[9px] font-medium px-2 py-1 bg-slate-900/50 border border-slate-800 rounded-full text-slate-400 shadow-sm backdrop-blur-sm">
-              {badge}
-            </span>
-          ))}
-        </div>
- 
-        {/* Grid Statistics Counters with Count-up Animations */}
+
+        {/* Statistics Counters */}
         <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto mt-6">
           {[
             { label: "Total", value: stats.total, color: "text-slate-100" },
@@ -1287,34 +578,31 @@ export default function App() {
         </div>
       </header>
 
-      {/* Sticky Tab Navigation Section */}
-      <nav className="sticky top-0 z-30 max-w-2xl mx-auto px-4 py-4 mt-6">
+      {/* Sticky Tab Navigation */}
+      <nav className="sticky top-0 z-35 max-w-2xl mx-auto px-4 py-4 mt-6">
         <div className="flex gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-900 backdrop-blur-xl shadow-xl">
           <button
-            id="nav-tab-post"
             onClick={() => setActiveTab("home")}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "home" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
             <Plus size={14} /> Post Item
           </button>
           <button
-            id="nav-tab-feed"
             onClick={() => {
               setActiveTab("feed");
-              loadPosts();
+              loadPosts(true);
             }}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "feed" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
             <Search size={14} /> Feed ({posts.length})
           </button>
           <button
-            id="nav-tab-about"
             onClick={() => setActiveTab("about")}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "about" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -1323,9 +611,8 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main Container wrap */}
+      {/* Main Content Layout */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 pb-12">
-        {/* SUCCESS BANNER OVERLAY */}
         {banner && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -1341,1333 +628,94 @@ export default function App() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* LEFT COLUMN: Main tab content */}
           <div className="lg:col-span-8 space-y-6">
             <AnimatePresence mode="wait">
-          {/* 1. CREATE POST TAB */}
-          {activeTab === "home" && (
-            <motion.div
-              key="home-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="bg-slate-950/40 border border-slate-900 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-xl relative"
-            >
-              <div className="absolute top-0 right-10 w-32 h-32 bg-cyan-500/5 blur-3xl rounded-full" />
-              <h2 className="text-2xl md:text-3xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 mb-6 pb-2 border-b border-slate-900">
-                Publish a New Item Post
-              </h2>
-
-              {/* AI QUICK FILL ACTIONS CONTAINER */}
-              <div className="mb-8 p-5 md:p-6 rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-950/10 via-slate-950/40 to-cyan-950/10 relative overflow-hidden">
-                <span className="absolute top-0 right-0 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-violet-500/20 border-b border-l border-violet-500/10 text-violet-300 rounded-bl-xl">
-                  ⚡ Smart Assist
-                </span>
-                <div className="flex items-center gap-1.5 text-sm md:text-base font-extrabold text-violet-400 uppercase tracking-wider mb-1">
-                  <Sparkles size={16} /> Gemini AI Quick Fill
-                </div>
-                <p className="text-xs md:text-sm text-slate-400 mb-4 font-medium">
-                  Upload a photo or speak naturally — Gemini will instantly auto-fill the entire form.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-xs md:text-sm font-extrabold text-violet-300 hover:text-violet-100 transition duration-200 cursor-pointer text-center">
-                    <Camera size={16} className={photoLoading ? "animate-spin" : ""} />
-                    {photoLoading ? "Reading photo..." : "Analyze Photo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoAIAnalysis}
-                      className="hidden"
-                      disabled={photoLoading}
-                    />
-                  </label>
-
-                  <button
-                    onClick={handleVoiceInput}
-                    disabled={voiceLoading}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-xs md:text-sm font-extrabold transition duration-200 text-center ${
-                      voiceActive
-                        ? "bg-rose-500/20 border-rose-500 text-rose-300 animate-pulse-ring"
-                        : "bg-rose-600/10 hover:bg-rose-600/20 border-rose-500/20 text-rose-300 hover:text-rose-100"
-                    }`}
-                  >
-                    {voiceActive ? <MicOff size={16} /> : <Mic size={16} className={voiceLoading ? "animate-spin" : ""} />}
-                    {voiceLoading ? "Deducing..." : voiceActive ? "Stop Speaking" : "Speak Voice"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Responsive 2-Column Grid on Desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-                
-                {/* COLUMN 1: Item Details */}
-                <div className="space-y-6">
-                  {/* Form Category selection */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
-                      Category
-                    </label>
-                    <div className="flex flex-wrap gap-2.5">
-                      {CATEGORIES.map((cat) => (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setFCategory(cat.id)}
-                          className={`text-xs md:text-sm px-4 py-3 rounded-2xl border transition duration-150 font-extrabold ${
-                            fCategory === cat.id
-                              ? "bg-cyan-500/15 border-cyan-400 text-cyan-200 shadow-lg scale-105"
-                              : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
-                          }`}
-                        >
-                          {cat.emoji} {cat.id}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Item Title Input */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                      Item Name / Title
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Silver Casio G-Shock G-5600"
-                      value={fItem}
-                      onChange={(e) => setFItem(e.target.value)}
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-extrabold placeholder:text-slate-600 shadow-inner"
-                    />
-                  </div>
-
-                  {/* Description Details Input with Gemini Enhance */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2.5">
-                      <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider">
-                        Detailed Description
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleEnhanceDescription}
-                        disabled={enhanceLoading}
-                        className="flex items-center gap-1.5 text-xs md:text-sm font-extrabold text-emerald-400 hover:text-emerald-300 uppercase transition duration-150 disabled:opacity-50"
-                      >
-                        <Sparkles size={14} className={enhanceLoading ? "animate-spin" : ""} />
-                        Polished with AI
-                      </button>
-                    </div>
-                    <textarea
-                      placeholder="Describe color, model numbers, unique scratches, contents inside, lock-screen layout..."
-                      rows={4}
-                      value={fDetails}
-                      onChange={(e) => setFDetails(e.target.value)}
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 resize-y leading-relaxed font-extrabold placeholder:text-slate-600 shadow-inner"
-                    />
-                  </div>
-
-                  {/* Urgency selection */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
-                      Urgency Level
-                    </label>
-                    <div className="grid grid-cols-4 gap-2.5">
-                      {URGENCY_LEVELS.map((urg) => (
-                        <button
-                          key={urg.id}
-                          type="button"
-                          onClick={() => setFUrgency(urg.id)}
-                          className={`text-xs md:text-sm font-extrabold py-3.5 rounded-2xl border text-center transition duration-150 uppercase tracking-wider ${
-                            fUrgency === urg.id
-                              ? `${urg.cls} border-opacity-100 scale-105`
-                              : "bg-slate-950/40 border-slate-900 text-slate-500 hover:border-slate-800"
-                          }`}
-                        >
-                          {urg.id}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Lost or Found State Toggle */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
-                      What happened?
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setFType("Lost")}
-                        className={`py-5 rounded-3xl border flex flex-col items-center justify-center gap-2 transition duration-200 ${
-                          fType === "Lost"
-                            ? "bg-rose-950/20 border-rose-500/40 text-rose-300"
-                            : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
-                        }`}
-                      >
-                        <span className="text-3xl">🚨</span>
-                        <span className="text-base font-black font-display">I Lost Something</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setFType("Found")}
-                        className={`py-5 rounded-3xl border flex flex-col items-center justify-center gap-2 transition duration-200 ${
-                          fType === "Found"
-                            ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-300"
-                            : "bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800"
-                        }`}
-                      >
-                        <span className="text-3xl">🤝</span>
-                        <span className="text-base font-black font-display">I Found Something</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Photo Attachment upload */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
-                      Image Attachment (Optional)
-                    </label>
-                    {fImage ? (
-                      <div className="relative rounded-3xl overflow-hidden border border-slate-800 max-h-56 group">
-                        <img src={fImage} alt="Attachment Preview" className="w-full h-56 object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setFImage(null)}
-                          className="absolute top-3.5 right-3.5 p-2.5 rounded-xl bg-[#020817]/85 border border-slate-800 text-slate-400 hover:text-rose-400 transition"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center p-7 border border-dashed border-slate-800 hover:border-cyan-500/30 rounded-3xl cursor-pointer bg-slate-950/20 hover:bg-slate-950/40 transition duration-150 text-center">
-                        <span className="text-4xl mb-2">🖼️</span>
-                        <span className="text-sm md:text-base text-slate-300 font-extrabold">Upload Photo Attachment</span>
-                        <span className="text-xs text-slate-500 mt-1 font-medium">Max file size: 5 MB</span>
-                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                {/* COLUMN 2: Location and Security details */}
-                <div className="space-y-6">
-                  {/* Location Input */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                      {fType === "Lost" ? "Where did you lose it?" : fType === "Found" ? "Where did you find it?" : "Approximate Location"}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Area, landmark, building, city (e.g. FC Road near Starbucks, Pune)"
-                      value={fAddress}
-                      onChange={(e) => setFAddress(e.target.value)}
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-extrabold placeholder:text-slate-600 shadow-inner"
-                    />
-                  </div>
-
-                  {/* Interactive Location Map (Leaflet.js OpenStreetMap) */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-3">
-                      📍 Pin Exact Location on Map
-                    </label>
-                    <InteractiveMap lat={fLat} lng={fLng} onChange={(lat, lng) => {
-                      setFLat(lat);
-                      setFLng(lng);
-                    }} onAddressChange={(address) => {
-                      setFAddress(address);
-                    }} />
-                  </div>
-
-                  {/* WhatsApp Mobile Number Input */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                      WhatsApp Contact Mobile Number (10 digits)
-                    </label>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-5 text-slate-500 text-base md:text-lg font-black">+91</span>
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        placeholder="9876543210"
-                        value={fContact}
-                        onChange={(e) => setFContact(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        className="w-full pl-16 pr-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-mono font-extrabold tracking-wider"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Security PIN Field */}
-                  <div>
-                    <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                      Security PIN (4-digit numeric)
-                    </label>
-                    <input
-                      type="password"
-                      maxLength={4}
-                      placeholder="e.g. 1234"
-                      value={fSecurityPin}
-                      onChange={(e) => setFSecurityPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base md:text-lg text-slate-100 transition duration-150 font-mono font-extrabold tracking-widest"
-                    />
-                    <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">
-                      Required to delete or mark this post as resolved later.
-                    </p>
-                  </div>
-
-                  {/* Reward estimation Box (Always Visible, with dynamic state) */}
-                  <div className={`p-5 rounded-3xl border transition-all duration-300 space-y-3 ${
-                    fType === "Lost" 
-                      ? "bg-amber-500/5 border-amber-500/30 shadow-lg shadow-amber-500/5" 
-                      : "bg-slate-900/40 border-slate-900/60 opacity-60"
-                  }`}>
-                    <div className="flex justify-between items-center">
-                      <label className="block text-sm md:text-base font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-2">
-                        <span>💰</span> Reward {fType !== "Lost" && (
-                          <span className="text-[9px] font-bold bg-slate-950 px-2 py-0.5 rounded text-amber-500/80 border border-amber-500/10 normal-case tracking-normal">
-                            Unlocks on 'I Lost Something'
-                          </span>
-                        )}
-                      </label>
-                      {fType === "Lost" && (
-                        <button
-                          type="button"
-                          onClick={handleSuggestReward}
-                          disabled={rewardLoading}
-                          className="flex items-center gap-1.5 text-xs md:text-sm font-extrabold text-amber-400 hover:text-amber-300 uppercase transition"
-                        >
-                          <Award size={14} className={rewardLoading ? "animate-spin" : ""} />
-                          {rewardLoading ? "Calculating..." : "AI Reward Assist"}
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-5 text-amber-500 text-base md:text-lg font-black font-mono">₹</span>
-                      <input
-                        type="text"
-                        placeholder={fType === "Lost" ? "e.g. 500" : "Select 'I Lost Something' to enable"}
-                        value={fType === "Lost" ? fReward : ""}
-                        disabled={fType !== "Lost"}
-                        onChange={(e) => setFReward(e.target.value.replace(/\D/g, ""))}
-                        className={`w-full pl-10 pr-5 py-4 rounded-2xl bg-slate-950/60 border outline-none text-base md:text-lg font-mono font-extrabold transition duration-150 ${
-                          fType === "Lost" 
-                            ? "border-amber-500/30 text-amber-200 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20" 
-                            : "border-slate-900 text-slate-500 cursor-not-allowed"
-                        }`}
-                      />
-                    </div>
-                    {fType === "Lost" && rewardReason && (
-                      <p className="text-xs text-amber-300/80 leading-relaxed pt-1 italic font-semibold">
-                        💡 Suggestion: {rewardReason}
-                      </p>
-                    )}
-                    {fType !== "Lost" && (
-                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                        Offering a reward increases active search motivations by up to 85%! Enabled only when reporting a lost item.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* TIMELINE RECONSTRUCTOR DETECTIVE BLOCK (Only for Lost) */}
-                  {fType === "Lost" && (
-                    <div className="p-5 rounded-3xl border border-amber-500/10 bg-amber-950/5 space-y-3">
-                      <div className="flex items-center gap-1.5 text-sm md:text-base font-extrabold text-amber-400 uppercase tracking-wider">
-                        <Clock size={16} /> Timeline Reconstructor
-                      </div>
-                      <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-                        Describe your daily route to let Gemini trace the most probable coordinates where you dropped your item.
-                      </p>
-                      <textarea
-                        placeholder="e.g. Left home at 9:00 AM, caught public bus #104, reached campus canteen around 12:30 PM..."
-                        rows={2}
-                        value={fTimeline}
-                        onChange={(e) => setFTimeline(e.target.value)}
-                        className="w-full px-5 py-4 text-sm md:text-base rounded-2xl bg-slate-950/80 border border-slate-900 focus:border-amber-500/30 outline-none resize-none leading-relaxed text-slate-300 font-extrabold"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAnalyzeTimeline}
-                        disabled={timelineLoading}
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-xs md:text-sm font-extrabold text-slate-950 hover:text-black shadow-lg transition duration-150 flex items-center justify-center gap-1.5"
-                      >
-                        {timelineLoading ? <RefreshCw size={14} className="animate-spin" /> : "🔍 Trace Timeline coordinates"}
-                      </button>
-
-                      {timelineResult && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="p-4 bg-[#020817]/80 rounded-2xl border border-amber-500/20"
-                        >
-                          <div className="text-xs font-bold text-amber-400 flex items-center gap-1 mb-1.5 uppercase tracking-wider">
-                            🕵️ Detective Deduces
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed italic font-semibold">
-                            "{timelineResult}"
-                          </p>
-                        </motion.div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="button"
-                onClick={handleSubmitPost}
-                className="w-full py-4.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-extrabold hover:text-black font-display text-base md:text-lg tracking-wide shadow-lg hover:shadow-cyan-500/15 transform hover:-translate-y-0.5 transition duration-150 cursor-pointer"
-              >
-                Publish Lost / Found Post
-              </button>
-            </motion.div>
-          )}
-
-          {/* 2. DIRECTORY FEED TAB */}
-          {activeTab === "feed" && (
-            <motion.div
-              key="feed-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="space-y-4"
-            >
-              {/* Sticky Filter Bar */}
-              <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-900 shadow-xl backdrop-blur-xl">
-                {/* Search Bar */}
-                <div className="relative mb-3 flex items-center">
-                  <Search className="absolute left-3.5 text-slate-500" size={15} />
-                  <input
-                    type="text"
-                    placeholder="Search item names, color descriptions, locations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/90 border border-slate-900 focus:border-cyan-500/40 outline-none text-xs text-slate-200 transition"
-                  />
-                </div>
-
-                {/* Sub Filters Row */}
-                <div className="flex flex-wrap gap-1.5 items-center justify-between">
-                  {/* Type Toggles */}
-                  <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-900">
-                    {["All", "Lost", "Found"].map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setFeedTypeFilter(type as any)}
-                        className={`text-[10px] font-bold px-3 py-1.5 rounded-md uppercase transition tracking-wider ${
-                          feedTypeFilter === type
-                            ? "bg-slate-900 text-white"
-                            : "text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Category Filter dropdown */}
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
-                  >
-                    <option value="All">All Categories</option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.id}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* City/Area Filter dropdown */}
-                  <select
-                    value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value)}
-                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
-                  >
-                    <option value="All">All Cities</option>
-                    {CITIES.map((city) => (
-                      <option key={city} value={city}>
-                        📍 {city}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Sort Filter dropdown */}
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="text-[10px] font-bold px-2 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-slate-400 outline-none cursor-pointer hover:border-slate-800 transition"
-                  >
-                    <option value="new">Newest First</option>
-                    <option value="old">Oldest First</option>
-                    <option value="views">Most Viewed</option>
-                  </select>
-
-                  {/* List/Map View Toggle */}
-                  <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-900 shadow-md">
-                    <button
-                      type="button"
-                      onClick={() => setFeedViewMode("list")}
-                      className={`text-[9px] font-extrabold px-2 py-1 rounded transition flex items-center gap-1 uppercase tracking-wider ${
-                        feedViewMode === "list"
-                          ? "bg-slate-900 text-cyan-400 shadow-sm"
-                          : "text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      <List size={10} /> List
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFeedViewMode("map")}
-                      className={`text-[9px] font-extrabold px-2 py-1 rounded transition flex items-center gap-1 uppercase tracking-wider ${
-                        feedViewMode === "map"
-                          ? "bg-slate-900 text-cyan-400 shadow-sm"
-                          : "text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      <Map size={10} /> Map
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feed posts list */}
-              {loadingPosts ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="bg-slate-950/40 border border-slate-900/80 rounded-3xl p-5 md:p-6 relative overflow-hidden space-y-4">
-                      {/* Top Row */}
-                      <div className="flex items-center justify-between pb-3 border-b border-slate-900/60">
-                        <div className="flex gap-2">
-                          <div className="h-5 w-16 rounded-full shimmer-effect" />
-                          <div className="h-5 w-24 rounded-full shimmer-effect" />
-                        </div>
-                        <div className="h-6 w-16 rounded-lg shimmer-effect" />
-                      </div>
-                      {/* Title */}
-                      <div className="h-6 w-1/3 rounded-lg shimmer-effect" />
-                      {/* Description Lines */}
-                      <div className="space-y-2.5">
-                        <div className="h-4 w-full rounded-lg shimmer-effect" />
-                        <div className="h-4 w-5/6 rounded-lg shimmer-effect" />
-                      </div>
-                      {/* Metadata Row */}
-                      <div className="flex gap-4">
-                        <div className="h-4 w-24 rounded-lg shimmer-effect" />
-                        <div className="h-4 w-24 rounded-lg shimmer-effect" />
-                      </div>
-                      {/* Action Buttons */}
-                      <div className="flex gap-2.5 pt-1">
-                        <div className="h-10 rounded-xl shimmer-effect flex-1" />
-                        <div className="h-10 rounded-xl shimmer-effect w-14" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredPosts.length === 0 ? (
-                <div className="bg-slate-950/20 border border-slate-900/60 rounded-2xl p-12 text-center text-slate-500">
-                  <p className="text-sm mb-4">No lost or found item listings matching those filters.</p>
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setFeedTypeFilter("All");
-                      setCategoryFilter("All");
-                    }}
-                    className="px-4 py-2 rounded-lg bg-slate-900 text-xs font-semibold text-slate-300 hover:text-white border border-slate-800 transition"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              ) : feedViewMode === "map" ? (
-                <FeedMap 
-                  posts={filteredPosts} 
-                  onPinClick={(post) => {
-                    setFeedViewMode("list");
-                    setTimeout(() => {
-                      const el = document.getElementById(`post-card-${post.id}`);
-                      if (el) {
-                        el.scrollIntoView({ behavior: "smooth", block: "center" });
-                        el.classList.add("ring-2", "ring-cyan-500/40", "scale-[1.01]");
-                        setTimeout(() => {
-                          el.classList.remove("ring-2", "ring-cyan-500/40", "scale-[1.01]");
-                        }, 2000);
-                      }
-                    }, 200);
-                  }} 
-                />
-              ) : (
-                <div className="space-y-3.5">
-                  {filteredPosts.map((p, idx) => {
-                    const isLost = p.type === "Lost";
-                    const itemCat = CATEGORIES.find((c) => c.id === p.category);
-                    const isResolved = p.status === "Resolved";
-                    const postMatches = matches[p.id] || [];
-
-                    return (
-                      <motion.div
-                        key={p.id}
-                        id={`post-card-${p.id}`}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: Math.min(idx * 0.04, 0.2) }}
-                        onClick={() => handleIncrementViews(p.id)}
-                        className={`bg-slate-950/40 hover:bg-slate-950/60 border rounded-3xl p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-500/5 hover:border-slate-800/85 cursor-pointer relative overflow-hidden group ${
-                          isLost ? "border-l-4 border-l-rose-500 border-slate-900/80" : "border-l-4 border-l-emerald-500 border-slate-900/80"
-                        } ${isResolved ? "opacity-70 border-l-slate-600" : ""} ${postMatches.length > 0 ? "border-r border-r-violet-500/25 shadow-lg shadow-violet-950/10" : ""}`}
-                      >
-                        {/* Top Metadata Row */}
-                        <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5 pb-2 border-b border-slate-900">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {/* Type badge */}
-                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 ${
-                              isLost ? "bg-rose-950/40 text-rose-300 border border-rose-500/20" : "bg-emerald-950/40 text-emerald-300 border border-emerald-500/20"
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isLost ? "bg-rose-500 shadow-[0_0_8px_#f43f5e]" : "bg-emerald-500 shadow-[0_0_8px_#10b981]"}`} />
-                              {isLost ? "Lost" : "Found"}
-                            </span>
-                            {/* Category badge */}
-                            {itemCat && (
-                              <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-slate-400 rounded-full">
-                                {itemCat.emoji} {itemCat.id}
-                              </span>
-                            )}
-                            {/* Urgency tag */}
-                            {p.urgency && p.urgency !== "Normal" && (
-                              <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-rose-400 rounded-full animate-pulse">
-                                ⚡ {p.urgency}
-                              </span>
-                            )}
-                            {/* Live Missing Since Timer */}
-                            {isLost && !isResolved && (
-                              <LiveMissingTimer createdTime={p.created} />
-                            )}
-                            {/* Resolved badge */}
-                            {isResolved && (
-                              <span className="text-[9px] font-extrabold px-2 py-0.5 bg-violet-950/40 text-violet-300 border border-violet-500/20 rounded-full uppercase tracking-wider">
-                                ✅ Resolved
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Post Actions for owners */}
-                          <div className="flex items-center gap-1">
-                            {!isResolved && (
-                              <button
-                                onClick={(e) => handleMarkResolved(p.id, e)}
-                                title="Mark as Resolved"
-                                className="p-1 rounded bg-violet-950/40 hover:bg-violet-950/80 border border-violet-500/20 text-violet-300 hover:text-white transition duration-150"
-                              >
-                                <CheckCircle2 size={12} />
-                              </button>
-                            )}
-                            <button
-                              onClick={(e) => handleDeletePost(p.id, e)}
-                              title="Delete Listing"
-                              className="p-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-500 hover:text-rose-400 transition duration-150"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-base font-display font-bold text-slate-100 group-hover:text-cyan-300 transition duration-150 mb-1.5 leading-snug">
-                          {p.item}
-                        </h3>
-
-                        {/* Optional Image */}
-                        {p.image && (
-                          <div className="my-3 rounded-xl overflow-hidden max-h-44 border border-slate-900">
-                            <img src={p.image} alt="Found item" className="w-full h-44 object-cover" />
-                          </div>
-                        )}
-
-                        {/* Description Details */}
-                        <p className="text-xs text-slate-400 leading-relaxed mb-3 break-words">
-                          {p.details}
-                        </p>
-
-                        {/* Optional MiniMap Location Pin */}
-                        {p.latitude && p.longitude && (
-                          <div className="my-3 rounded-xl overflow-hidden pointer-events-none select-none relative">
-                            <MiniMap lat={p.latitude} lng={p.longitude} />
-                          </div>
-                        )}
-
-                        {/* Spacers & Views Row */}
-                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold text-slate-500 mb-4 font-mono">
-                          <span className="flex items-center gap-1"><MapPin size={11} className="text-slate-600" /> {p.address}</span>
-                          <span className="flex items-center gap-1"><Calendar size={11} className="text-slate-600" /> {p.timestamp}</span>
-                          <span>👀 {p.views || 0} views</span>
-                          {p.reward && <span className="text-amber-400 font-bold">💰 Reward Offered: ₹{p.reward}</span>}
-                          <span className="flex items-center gap-1">
-                            <span>📞</span>
-                            {unlockedPosts.includes(p.id) ? (
-                              <span className="text-emerald-400 font-bold bg-emerald-950/20 px-1.5 py-0.5 rounded border border-emerald-500/10">
-                                +91 {decryptedContacts[p.id] || p.contact}
-                              </span>
-                            ) : (
-                              <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                                {p.maskedContact || "+91 ******" + (p.contact.startsWith("ENC:") ? "XX" : p.contact.slice(-2))}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-
-                        {/* Action Buttons: WhatsApp and Claim */}
-                        <div className="flex gap-2">
-                          {!unlockedPosts.includes(p.id) ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToast(`Please click '${isLost ? "Verify" : "Claim"}' and pass the AI verification quiz to unlock this WhatsApp button!`, "info");
-                              }}
-                              className="flex-1 py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-500 hover:text-slate-400 transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center select-none cursor-not-allowed"
-                            >
-                              🔒 WhatsApp Locked ({isLost ? "Verify" : "Claim"} first)
-                            </button>
-                          ) : (
-                            <a
-                              href={`https://wa.me/91${decryptedContacts[p.id] || p.contact}?text=Hi! I saw your ${p.type} item listing on LINCO for '${p.item}'. Let's connect!`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center shadow shadow-emerald-950/20"
-                            >
-                              💬 Contact on WhatsApp
-                            </a>
-                          )}
-
-                          {/* Claim Ownership verification Flow button */}
-                          {!isResolved && !unlockedPosts.includes(p.id) && (
-                            <button
-                              onClick={(e) => handleStartClaim(p, e)}
-                              className="px-3 py-2 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-xs font-bold text-violet-300 hover:text-violet-100 transition duration-150 flex items-center justify-center gap-1 text-center"
-                            >
-                              <ShieldCheck size={14} /> {isLost ? "Verify" : "Claim"}
-                            </button>
-                          )}
-
-                          {/* Share button */}
-                          <button
-                            onClick={(e) => handleSharePost(p, e)}
-                            title="Share/Copy Template Text"
-                            className="p-2 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-400 hover:text-slate-200 transition duration-150 flex items-center justify-center"
-                          >
-                            <Share2 size={13} />
-                          </button>
-
-                          {/* Share as Image button */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleShareAsImage(p, e)}
-                            title="Download Post as Image Card"
-                            className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-cyan-500/30 hover:text-cyan-400 rounded-xl text-slate-400 transition duration-150 flex items-center justify-center gap-1 text-[9px] font-extrabold uppercase tracking-wider font-sans select-none"
-                          >
-                            <Download size={11} className="text-cyan-400" /> Image
-                          </button>
-
-                          {/* QR Code button */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleShowQrCode(p, e)}
-                            title="Interactive QR Code & Print Settings"
-                            className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-violet-500/30 hover:text-violet-400 rounded-xl text-slate-400 transition duration-150 flex items-center justify-center gap-1 text-[9px] font-extrabold uppercase tracking-wider font-sans select-none"
-                          >
-                            <QrCode size={11} className="text-violet-400" /> QR Code
-                          </button>
-                        </div>
-
-                        {/* ACTIVE GOOGLE GEMINI AI MATCH ALERTS (DISPLAYED INSIDE POST CARD) */}
-                        {postMatches.length > 0 && (
-                          <div className="mt-4 p-3.5 rounded-xl border border-violet-500/30 bg-violet-950/10 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 px-2 py-0.5 bg-violet-500/20 text-[7px] font-bold tracking-widest text-violet-300 rounded-bl-lg uppercase">
-                              AI Match
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-violet-300 uppercase tracking-wider mb-2">
-                              <Sparkles size={11} className="text-violet-400" /> Gemini matched this listing!
-                            </div>
-                            
-                            <div className="space-y-2.5">
-                              {postMatches.map((match, mIdx) => (
-                                <div key={mIdx} className="p-2.5 bg-[#020817]/60 rounded-lg border border-slate-900 flex gap-3 items-start">
-                                  {/* Percentage Circle Ring */}
-                                  <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center bg-slate-950 border border-slate-800 rounded-full font-mono text-[10px] font-extrabold text-violet-400 shadow-inner">
-                                    {match.score}%
-                                  </div>
-                                  
-                                  <div className="flex-1">
-                                    <h4 className="text-xs font-bold text-slate-200 mb-0.5">{match.item}</h4>
-                                    <p className="text-[10px] text-slate-400 leading-normal mb-1.5">{match.reason}</p>
-                                    <a
-                                      href={`https://wa.me/91${match.contact}?text=Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold rounded-md bg-violet-600 hover:bg-violet-500 text-slate-950 hover:text-black transition duration-150"
-                                    >
-                                      Contact Match Owner <ChevronRight size={10} />
-                                    </a>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
+              {activeTab === "home" && (
+                <motion.div
+                  key="home-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <PostForm onSubmit={handleCreatePost} />
+                </motion.div>
               )}
-            </motion.div>
-          )}
 
-          {/* 3. ABOUT TAB */}
-          {activeTab === "about" && (
-            <motion.div
-              key="about-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="space-y-4"
-            >
-              {/* Product Info */}
-              <div className="bg-slate-950/40 border border-slate-900 rounded-2xl p-5 shadow-xl backdrop-blur-xl">
-                <h2 className="text-base font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 mb-3">
-                  About LINCO Smart Technology
-                </h2>
-                <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                  LINCO is a professional, community-first web platform leveraging advanced Gemini Large Language Models to match lost items with finders securely, instantly, and with zero friction.
-                </p>
+              {activeTab === "feed" && (
+                <motion.div
+                  key="feed-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <FeedList
+                    posts={posts}
+                    matches={matches}
+                    loadingPosts={loadingPosts}
+                    unlockedPosts={unlockedPosts}
+                    decryptedContacts={decryptedContacts}
+                    onIncrementViews={incrementPostViews}
+                    onMarkResolved={handleMarkResolvedTrigger}
+                    onDeletePost={handleDeletePostTrigger}
+                    onStartClaim={handleStartClaimTrigger}
+                    onSharePost={handleSharePostText}
+                    onShareAsImage={handleShareAsImage}
+                    onShowQrCode={handleShowQrCodeTrigger}
+                  />
+                </motion.div>
+              )}
 
-                {/* Grid features */}
-                <div className="space-y-3">
-                  {[
-                    { title: "Gemini Match Engine", desc: "Cross-analyzes post descriptions, categories, and locations to highlight overlapping listings with confidence scores." },
-                    { title: "Secure Ownership Verification", desc: "Generates custom questions based on secret markings, only allowing true owners to coordinate handovers." },
-                    { title: "AI Voice & Image Fill", desc: "Avoid complex typing. Gemini reads photos or voice inputs to automatically categorise and describe details." },
-                    { title: "WhatsApp Direct Connect", desc: "No custom logins, accounts, or emails required. Instantly start coordinating via WhatsApp links." },
-                  ].map((feat, idx) => (
-                    <div key={idx} className="flex gap-2.5 p-3 rounded-xl border border-slate-900 bg-slate-950/20">
-                      <span className="text-sm">⚡</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-200">{feat.title}</h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5 leading-normal">{feat.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* FAQs FAQ Section */}
-              <div className="bg-slate-950/40 border border-slate-900 rounded-2xl p-5 shadow-xl backdrop-blur-xl">
-                <h2 className="text-base font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 mb-4">
-                  Frequently Asked Questions
-                </h2>
-                
-                <div className="space-y-3.5">
-                  {[
-                    { q: "Is LINCO free to use?", a: "Yes! LINCO is 100% free and open to everyone without advertisements or account requirements." },
-                    { q: "How does AI Claim Verification work?", a: "When you tap Claim on a found item, Gemini generates specific questions that only the owner can answer. Gemini then scores the answers to verify authenticity." },
-                    { q: "Do I need to sign up?", a: "No signup is needed. You connect directly via WhatsApp links, keeping things simple, fast, and secure." },
-                    { q: "Are my contact numbers secure?", a: "Yes. Mobile numbers are stored in our local database only to render direct WhatsApp links, which are shared exclusively with claimants." },
-                  ].map((faq, idx) => (
-                    <div key={idx} className="pb-3 border-b border-slate-900 last:border-0 last:pb-0">
-                      <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                        <span>❓</span> {faq.q}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                        {faq.a}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
+              {activeTab === "about" && (
+                <motion.div
+                  key="about-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <AboutTab />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
 
-          {/* RIGHT COLUMN: Permanent Sidebar for LincoSaathii AI Chatbot */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 h-full">
-            <LincoSaathiiChat
-              currentState={{
-                type: fType === "" ? "Lost" : fType,
-                item: fItem,
-                category: fCategory,
-                details: fDetails,
-                urgency: fUrgency,
-                address: fAddress,
-                contact: fContact,
-              }}
-              onFieldUpdate={(fields) => {
-                if (fields.type) setFType(fields.type);
-                if (fields.item) setFItem(fields.item);
-                if (fields.category) setFCategory(fields.category);
-                if (fields.details) setFDetails(fields.details);
-                if (fields.urgency) setFUrgency(fields.urgency as any);
-                if (fields.address) setFAddress(fields.address);
-                if (fields.contact) setFContact(fields.contact);
-              }}
-              triggerSubmit={handleSubmitPost}
-            />
+          {/* Persistent Sidebar Info Card */}
+          <div className="lg:col-span-4 bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
+            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
+              💡 Platform Health
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
+            </p>
+            <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
+              <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
+              <span className="text-slate-300">
+                Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
+              </span>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* SECURITY PIN VERIFICATION MODAL */}
-      <AnimatePresence>
-        {pinModal && pinModal.isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-950 border border-rose-500/30 rounded-2xl p-5 md:p-6 w-full max-w-sm shadow-2xl relative"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setPinModal(null)}
-                className="absolute top-3 right-3 p-1 rounded hover:bg-slate-900 text-slate-400 transition"
-              >
-                <X size={15} />
-              </button>
+      {/* Verification Modals */}
+      <PinModal
+        isOpen={!!pinModal}
+        actionType={pinModal?.actionType || "resolve"}
+        onClose={() => setPinModal(null)}
+        onSubmit={handleVerifyPinAndExecute}
+      />
 
-              <div className="flex items-center gap-1 text-xs font-bold text-rose-400 uppercase tracking-wider mb-2">
-                <Lock size={14} /> Security Verification
-              </div>
-              <h3 className="text-sm font-display font-bold text-slate-100 mb-1">
-                Enter Security PIN
-              </h3>
-              <p className="text-[10px] text-slate-400 leading-relaxed mb-4">
-                Please enter the 4-digit Security PIN to {pinModal.actionType === "delete" ? "permanently delete" : "mark this post as resolved"}.
-              </p>
+      <ClaimModal
+        isOpen={showClaimModal}
+        claimingPost={claimingPost}
+        onClose={() => setShowClaimModal(false)}
+        onUnlockSuccess={handleUnlockSuccess}
+      />
 
-              <div className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    maxLength={4}
-                    placeholder="Enter 4-digit PIN"
-                    value={enteredPin}
-                    onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-800 focus:border-rose-500/40 outline-none text-center text-lg font-bold tracking-widest text-slate-200 transition duration-150"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => setPinModal(null)}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleVerifyPinAndExecute}
-                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-slate-950 font-extrabold hover:text-black transition cursor-pointer text-xs"
-                  >
-                    Verify & Proceed
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* CLAIM OWNERSHIP VERIFICATION MODAL */}
-      <AnimatePresence>
-        {showClaimModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-950 border border-violet-500/30 rounded-2xl p-5 md:p-6 w-full max-w-sm shadow-2xl relative"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setShowClaimModal(false)}
-                className="absolute top-3 right-3 p-1 rounded hover:bg-slate-900 text-slate-400 transition"
-              >
-                <X size={15} />
-              </button>
-
-              <div className="flex items-center gap-1 text-xs font-bold text-violet-400 uppercase tracking-wider mb-2">
-                <ShieldCheck size={14} /> Ownership Verification
-              </div>
-              <h3 className="text-base font-display font-bold text-slate-100 mb-1">
-                Prove ownership of {claimingPost?.item}
-              </h3>
-              <p className="text-[10px] text-slate-400 leading-relaxed mb-4">
-                To prevent spam and fake claims, Gemini has scanned the item details to compose specific verification questions.
-              </p>
-
-              {/* Loader */}
-              {claimLoading && (
-                <div className="py-8 text-center text-xs text-slate-400 font-medium">
-                  <RefreshCw className="animate-spin inline-block mb-2 text-violet-400" size={18} />
-                  <p>Processing with Gemini AI...</p>
-                </div>
-              )}
-
-              {/* Questions Answer Area */}
-              {!claimLoading && !claimResult && (
-                <div className="space-y-4">
-                  {claimQuestions.map((q, idx) => (
-                    <div key={idx}>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 leading-relaxed">
-                        Q{idx + 1}: {q}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Provide details..."
-                        value={claimAnswers[idx]}
-                        onChange={(e) => {
-                          const updated = [...claimAnswers];
-                          updated[idx] = e.target.value;
-                          setClaimAnswers(updated);
-                        }}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-900 focus:border-violet-500/30 outline-none text-xs text-slate-200 transition duration-150"
-                      />
-                    </div>
-                  ))}
-
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      onClick={() => setShowClaimModal(false)}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSubmitClaimAnswers}
-                      className="flex-2 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-slate-950 font-extrabold hover:text-black transition cursor-pointer text-xs"
-                    >
-                      Submit Answers
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Results screen */}
-              {!claimLoading && claimResult && (
-                <div className="text-center py-2">
-                  <div className={`text-4xl mb-2 ${claimResult.verified ? "animate-bounce" : "animate-pulse"}`}>
-                    {claimResult.verified ? "🎉" : "❌"}
-                  </div>
-                  
-                  {/* Matching score ring */}
-                  <div className="my-3 flex items-center justify-center">
-                    <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center font-mono text-base font-extrabold shadow-inner ${
-                      claimResult.verified ? "border-emerald-500/80 text-emerald-400" : "border-rose-500/80 text-rose-400"
-                    }`}>
-                      {claimResult.confidence}%
-                    </div>
-                  </div>
-
-                  <h4 className={`text-sm font-bold uppercase tracking-wider mb-2 ${
-                    claimResult.verified ? "text-emerald-400" : "text-rose-400"
-                  }`}>
-                    {claimResult.verified ? "AI Verification Passed!" : "Verification Failed"}
-                  </h4>
-                  
-                  <p className="text-[11px] text-slate-300 leading-relaxed mb-4 px-1 bg-slate-950 p-2.5 rounded-lg border border-slate-900">
-                    {claimResult.message}
-                  </p>
-
-                  {claimResult.verified && claimingPost && (
-                    <div className="mb-4 text-left border border-slate-900 bg-slate-950/60 p-3 rounded-xl space-y-3 animate-fadeIn">
-                      {!isPinVerifiedSuccessfully ? (
-                        <>
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-400 uppercase tracking-widest">
-                            <Lock size={12} /> End-to-End Encrypted Contact
-                          </div>
-                          <p className="text-[10px] text-slate-400 leading-relaxed">
-                            This post's contact information is fully encrypted on the browser using AES-GCM. To unlock and view, please enter the post's 4-digit Security PIN:
-                          </p>
-                          <input
-                            type="password"
-                            maxLength={4}
-                            placeholder="Enter 4-digit Security PIN"
-                            value={decryptPinEntered}
-                            onChange={(e) => setDecryptPinEntered(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 focus:border-violet-500/40 outline-none text-center text-sm font-bold tracking-widest text-slate-200 transition duration-150"
-                          />
-                          <button
-                            onClick={handleDecryptContact}
-                            className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-slate-950 font-bold hover:text-black transition text-xs cursor-pointer"
-                          >
-                            🔓 Decrypt & Unlock Contact
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                            <ShieldCheck size={12} /> Connection Securely Decrypted!
-                          </div>
-                          <p className="text-[10px] text-slate-400 leading-relaxed">
-                            Decryption successful! The contact number has been safely unlocked in your browser. You can now tap below to coordinate with them.
-                          </p>
-                          <div className="text-xs font-mono font-bold text-slate-200 bg-emerald-950/20 p-2 rounded border border-emerald-500/10 text-center">
-                            Unlocked Number: +91 {decryptedContacts[claimingPost.id]}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    {claimResult.verified && claimingPost && isPinVerifiedSuccessfully && (
-                      <a
-                        href={`https://wa.me/91${decryptedContacts[claimingPost.id] || claimingPost.contact}?text=Hi! I successfully passed the LINCO Gemini Ownership Verification for your found item '${claimingPost.item}' (with ${claimResult.confidence}% match). Let's coordinate the handover!`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition flex items-center justify-center gap-1 text-xs"
-                      >
-                        Contact Finder on WhatsApp <ExternalLink size={12} />
-                      </a>
-                    )}
-                    <button
-                      onClick={() => setShowClaimModal(false)}
-                      className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition text-xs font-bold"
-                    >
-                      Close Window
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* QR CODE GENERATOR & PRINT SETTINGS MODAL */}
-      <AnimatePresence>
-        {showQrModal && qrModalPost && (
-          <motion.div
-            id="qr-modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          >
-            <motion.div
-              id="qr-modal-container"
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-950 border border-violet-500/30 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative overflow-hidden"
-            >
-              {/* Subtle background gradients for premium aesthetic */}
-              <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
-
-              {/* Close Button */}
-              <button
-                id="btn-close-qr-modal"
-                onClick={() => setShowQrModal(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-
-              <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400 uppercase tracking-wider mb-2">
-                <QrCode size={14} /> Printable QR Code
-              </div>
-              <h3 className="text-base font-display font-bold text-slate-100 mb-1">
-                Share Card for {qrModalPost.item}
-              </h3>
-              <p className="text-[10px] text-slate-400 leading-relaxed mb-5">
-                Print and post this QR code physically in public spaces. Scanning instantly guides claimants to prove ownership with Gemini.
-              </p>
-
-              {/* QR Code Canvas/Display area */}
-              <div className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-slate-900 mb-5 relative">
-                {qrCodeDataUrl ? (
-                  <div className="p-3 bg-white rounded-xl shadow-lg border border-slate-200">
-                    <img src={qrCodeDataUrl} alt="Item QR Code" className="w-48 h-48 select-none" />
-                  </div>
-                ) : (
-                  <div className="h-48 flex flex-col items-center justify-center gap-2 text-slate-500 font-medium text-xs">
-                    <RefreshCw className="animate-spin text-violet-400" size={24} />
-                    <span>Generating QR Code...</span>
-                  </div>
-                )}
-                
-                {qrCodeDataUrl && (
-                  <span className="text-[9px] text-slate-500 font-mono mt-3 uppercase tracking-widest bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                    ID: {qrModalPost.id.slice(0, 8)}...
-                  </span>
-                )}
-              </div>
-
-              {/* Copy URL / Print Actions */}
-              <div className="space-y-2.5">
-                <button
-                  id="btn-copy-claim-link"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/?id=${qrModalPost.id}`);
-                    addToast("Deep link copied to clipboard!", "success");
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Share2 size={13} className="text-cyan-400" /> Copy Claim Link
-                </button>
-
-                <button
-                  id="btn-download-image-card"
-                  onClick={(e) => {
-                    handleShareAsImage(qrModalPost, e);
-                    setShowQrModal(false);
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-slate-950 font-extrabold hover:text-black transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/10"
-                >
-                  <Download size={13} /> Download Share Image Card
-                </button>
-
-                <button
-                  id="btn-print-flyer"
-                  onClick={() => {
-                    // Open a clean printable page window
-                    const printWindow = window.open("", "_blank");
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <html>
-                          <head>
-                            <title>Print QR Flyer - ${qrModalPost.item}</title>
-                            <style>
-                              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-                              body {
-                                font-family: 'Inter', sans-serif;
-                                margin: 0;
-                                padding: 40px;
-                                display: flex;
-                                flex-direction: column;
-                                align-items: center;
-                                justify-content: center;
-                                height: 100vh;
-                                text-align: center;
-                                color: #020817;
-                                background-color: #ffffff;
-                              }
-                              .card {
-                                border: 4px solid #0f172a;
-                                border-radius: 24px;
-                                padding: 40px;
-                                max-width: 500px;
-                                display: flex;
-                                flex-direction: column;
-                                align-items: center;
-                                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-                              }
-                              .badge {
-                                display: inline-block;
-                                background-color: ${qrModalPost.type === "Lost" ? "#fee2e2" : "#d1fae5"};
-                                color: ${qrModalPost.type === "Lost" ? "#dc2626" : "#059669"};
-                                font-weight: 800;
-                                font-size: 14px;
-                                padding: 6px 16px;
-                                border-radius: 9999px;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 20px;
-                              }
-                              h1 {
-                                font-size: 28px;
-                                font-weight: 800;
-                                margin: 0 0 10px 0;
-                                color: #0f172a;
-                              }
-                              p.details {
-                                font-size: 14px;
-                                color: #475569;
-                                margin: 0 0 30px 0;
-                                max-width: 400px;
-                                line-height: 1.5;
-                              }
-                              .qr-box {
-                                padding: 20px;
-                                border: 2px dashed #cbd5e1;
-                                border-radius: 16px;
-                                margin-bottom: 30px;
-                              }
-                              .qr-img {
-                                width: 220px;
-                                height: 220px;
-                              }
-                              .instruction {
-                                font-size: 15px;
-                                font-weight: 700;
-                                color: #0f172a;
-                                margin-bottom: 6px;
-                              }
-                              .sub-instruction {
-                                font-size: 12px;
-                                color: #64748b;
-                                margin-bottom: 30px;
-                              }
-                              .footer-logo {
-                                font-weight: 800;
-                                font-size: 18px;
-                                color: #0f172a;
-                                letter-spacing: 0.5px;
-                              }
-                              .footer-sub {
-                                font-size: 10px;
-                                color: #94a3b8;
-                                margin-top: 4px;
-                              }
-                              @media print {
-                                body { padding: 0; }
-                                .no-print { display: none; }
-                              }
-                            </style>
-                          </head>
-                          <body>
-                            <div class="card">
-                              <span class="badge">🚨 ${qrModalPost.type === "Lost" ? "Lost" : "Found"} Listing</span>
-                              <h1>${qrModalPost.item}</h1>
-                              <p class="details">${qrModalPost.details}</p>
-                              <div class="qr-box">
-                                <img class="qr-img" src="${qrCodeDataUrl}" alt="QR" />
-                              </div>
-                              <p class="instruction">Scan QR to Claim or Verify this Item</p>
-                              <p class="sub-instruction">Securely processed via Google Gemini AI Verification</p>
-                              <div class="footer-logo font-display">LINCO AI</div>
-                              <div class="footer-sub">Realtime Lost & Found Directory</div>
-                            </div>
-                            <div style="margin-top: 30px;" class="no-print">
-                              <button onclick="window.print()" style="padding: 10px 24px; font-weight: bold; background-color: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit;">Print Flyer</button>
-                            </div>
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                    } else {
-                      addToast("Popup blocker prevented printing flyer", "warn");
-                    }
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition text-xs font-bold cursor-pointer"
-                >
-                  🖨️ Open Print Flyer Layout
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <QRModal
+        isOpen={showQrModal}
+        post={qrModalPost}
+        onClose={() => setShowQrModal(false)}
+      />
 
       <footer className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center text-slate-600 border-t border-slate-900/40 select-none">
         <h4 className="text-sm font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-500 mb-1">

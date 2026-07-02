@@ -6,6 +6,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch } from "./src/types.js";
 import { initializeApp, getApps } from "firebase-admin/app";
@@ -515,6 +516,68 @@ const createPostSchema = z.object({
 
 const actionPinSchema = z.object({
   securityPin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+});
+
+// Ensure uploads directory exists
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Serve uploaded files statically with safe cache controls
+app.use("/uploads", express.static(UPLOADS_DIR, {
+  maxAge: "7d",
+  etag: true
+}));
+
+// Base64 Image Upload & Storage Endpoint (Replaces heavy base64 storage in db)
+app.post("/api/upload", async (req, res) => {
+  try {
+    const { image, thumbnail } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: "Image base64 data required" });
+    }
+
+    // Process main image
+    const mainMatches = image.match(/^data:image\/(.*?);base64,(.*)$/);
+    if (!mainMatches) {
+      return res.status(400).json({ error: "Invalid main image base64 format" });
+    }
+    const mainExt = mainMatches[1];
+    const mainBuffer = Buffer.from(mainMatches[2], "base64");
+    
+    // Validate file size (max 5MB after decoding)
+    if (mainBuffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: "Image too large. Max size is 5MB." });
+    }
+
+    const mainFilename = `img_${crypto.randomUUID()}.${mainExt === "jpeg" || mainExt === "jpg" ? "jpg" : "png"}`;
+    const mainFilePath = path.join(UPLOADS_DIR, mainFilename);
+    fs.writeFileSync(mainFilePath, mainBuffer);
+
+    let thumbnailUrl = `/uploads/${mainFilename}`;
+
+    // Process thumbnail if provided
+    if (thumbnail) {
+      const thumbMatches = thumbnail.match(/^data:image\/(.*?);base64,(.*)$/);
+      if (thumbMatches) {
+        const thumbExt = thumbMatches[1];
+        const thumbBuffer = Buffer.from(thumbMatches[2], "base64");
+        const thumbFilename = `thumb_${crypto.randomUUID()}.${thumbExt === "jpeg" || thumbExt === "jpg" ? "jpg" : "png"}`;
+        const thumbFilePath = path.join(UPLOADS_DIR, thumbFilename);
+        fs.writeFileSync(thumbFilePath, thumbBuffer);
+        thumbnailUrl = `/uploads/${thumbFilename}`;
+      }
+    }
+
+    res.json({
+      url: `/uploads/${mainFilename}`,
+      thumbnailUrl: thumbnailUrl
+    });
+  } catch (error: any) {
+    console.error("Image upload processing error:", error);
+    res.status(500).json({ error: error.message || "Failed to process image upload" });
+  }
 });
 
 // Healthcheck
