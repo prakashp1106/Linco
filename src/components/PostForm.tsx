@@ -295,9 +295,20 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
             {/* Description (Must stay immediately below Item Name) */}
             <div>
-              <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                Detailed Description
-              </label>
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider">
+                  Detailed Description
+                </label>
+                <button
+                  type="button"
+                  onClick={handleEnhanceDescription}
+                  disabled={ai.enhanceLoading || !form.fDetails.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-400 uppercase transition duration-150 disabled:opacity-40 cursor-pointer"
+                >
+                  <Sparkles size={11} className={ai.enhanceLoading ? "animate-spin" : ""} />
+                  {ai.enhanceLoading ? "Polishing..." : "Polish with AI"}
+                </button>
+              </div>
               <textarea
                 placeholder="Describe color, scratches, lock-screen layout, model names..."
                 rows={4}
@@ -456,16 +467,25 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             </div>
 
             {/* Reward */}
-            <div>
-              <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
-                Reward Offering amount (Optional ₹)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 500, 1000, 5000"
-                value={form.fReward}
-                onChange={(e) => form.setFReward(e.target.value.replace(/\D/g, ""))}
-                className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base text-slate-100 transition font-mono placeholder:text-slate-600 shadow-inner"
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm md:text-base font-extrabold text-slate-200 uppercase tracking-wider mb-2.5">
+                  Reward Offering amount (Optional ₹)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 500, 1000, 5000"
+                  value={form.fReward}
+                  onChange={(e) => form.setFReward(e.target.value.replace(/\D/g, ""))}
+                  className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-base text-slate-100 transition font-mono placeholder:text-slate-600 shadow-inner"
+                />
+              </div>
+
+              <RewardSection
+                itemName={form.fItem}
+                itemDescription={form.fDetails}
+                onSetSuggestedReward={(amount) => form.setFReward(amount)}
+                currentReward={form.fReward}
               />
             </div>
 
@@ -567,28 +587,6 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
               </div>
 
-              {/* Description Enhancer */}
-              <div className="p-5 rounded-2xl bg-slate-900/30 border border-slate-900/80 backdrop-blur-md space-y-3 text-left">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                      <Sparkles size={14} className="text-emerald-400" />
-                      AI Description Enhancement
-                    </h4>
-                    <p className="text-[10px] text-slate-500">Polish your description into a professional detailed report</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleEnhanceDescription}
-                    disabled={ai.enhanceLoading}
-                    className="px-4 py-2 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/25 border border-emerald-500/20 text-[10px] font-extrabold text-emerald-400 uppercase transition duration-150 disabled:opacity-50 cursor-pointer flex items-center gap-1"
-                  >
-                    <Sparkles size={12} className={ai.enhanceLoading ? "animate-spin" : ""} />
-                    {ai.enhanceLoading ? "Polishing..." : "Enhance"}
-                  </button>
-                </div>
-              </div>
-
               {/* Timeline Tracer */}
               {form.fType === "Lost" ? (
                 <TimelineSection
@@ -600,14 +598,6 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   💡 Timeline tracing is optimized for Lost reports.
                 </p>
               )}
-
-              {/* Reward suggestions */}
-              <RewardSection
-                itemName={form.fItem}
-                itemDescription={form.fDetails}
-                onSetSuggestedReward={(amount) => form.setFReward(amount)}
-                currentReward={form.fReward}
-              />
             </div>
 
             {/* Step navigation row */}

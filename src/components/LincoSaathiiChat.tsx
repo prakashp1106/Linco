@@ -215,6 +215,31 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
             </motion.div>
           );
         })}
+        {messages.length === 1 && (
+          <div className="flex flex-wrap gap-1.5 pl-9 pt-1 pb-2">
+            <button
+              type="button"
+              onClick={() => sendMessage("Bhai mera wallet kho gaya hai :(")}
+              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
+            >
+              👛 Wallet kho gaya
+            </button>
+            <button
+              type="button"
+              onClick={() => sendMessage("Mujhe ek laptop charger mila hai desk par.")}
+              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
+            >
+              🔌 Charger mila hai
+            </button>
+            <button
+              type="button"
+              onClick={() => sendMessage("Mera dog park se ghum ho gaya hai.")}
+              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
+            >
+              🐶 Pet lost status
+            </button>
+          </div>
+        )}
         {chatLoading && (
           <div className="flex gap-2.5 justify-start">
             <div className="relative shrink-0 animate-pulse mt-0.5">
@@ -232,33 +257,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Suggested Quick Prompts */}
-      <div className="px-4 pb-2 pt-0.5 flex flex-wrap gap-1.5">
-        {messages.length === 1 && (
-          <>
-            <button
-              onClick={() => sendMessage("Bhai mera wallet kho gaya hai :(")}
-              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              👛 Wallet kho gaya
-            </button>
-            <button
-              onClick={() => sendMessage("Mujhe ek laptop charger mila hai desk par.")}
-              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              🔌 Charger mila hai
-            </button>
-            <button
-              onClick={() => sendMessage("Mera dog park se ghum ho gaya hai.")}
-              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              🐶 Pet lost status
-            </button>
-          </>
-        )}
-      </div>
-
+ 
       {/* Input Form scaled down with custom styling and neat typography */}
       <div className="p-3.5 bg-slate-950/90 border-t border-slate-900/80">
         <form
@@ -290,14 +289,14 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
       </div>
     </div>
   );
-
+ 
   return (
     <>
       {/* 1. DESKTOP PERMANENT PANEL SIDEBAR */}
       <div className="hidden lg:block h-[560px]">
         {renderChatContent()}
       </div>
-
+ 
       {/* 2. MOBILE FLOATING ACTION BUTTON */}
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
         <motion.button
@@ -313,7 +312,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
           <RobotAvatarIcon size={24} className="text-[#020817] group-hover:rotate-12 transition-transform duration-200" />
         </motion.button>
       </div>
-
+ 
       {/* 3. MOBILE MODAL DRAWER OVERLAY */}
       <AnimatePresence>
         {isOpen && (
@@ -323,7 +322,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md h-[80vh] relative"
+              className="w-full max-w-md h-[460px] sm:h-[520px] max-h-[85vh] relative"
             >
               {renderChatContent()}
             </motion.div>
