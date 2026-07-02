@@ -11,6 +11,11 @@ import { Post, AIMatch } from "./src/types.js";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
+import bcrypt from "bcrypt";
+import { z } from "zod";
+
 // Initialize Gemini SDK with telemetry User-Agent header
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -23,6 +28,53 @@ const ai = new GoogleGenAI({
 
 const app = express();
 const PORT = 3000;
+
+// Secure Headers with Helmet configured for iframe embedding & Leaflet map tile rendering
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://apis.mappls.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://fonts.googleapis.com", "https://apis.mappls.com"],
+        imgSrc: [
+          "'self'", 
+          "data:", 
+          "blob:", 
+          "https://*.openstreetmap.org", 
+          "https://unpkg.com", 
+          "https://apis.mappls.com", 
+          "https://*.mappls.com", 
+          "https://*.google.com",
+          "https://*.googleapis.com"
+        ],
+        connectSrc: [
+          "'self'", 
+          "https://nominatim.openstreetmap.org", 
+          "https://apis.mappls.com", 
+          "https://*.mappls.com", 
+          "https://generativelanguage.googleapis.com"
+        ],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        frameAncestors: ["'self'", "*"], // Required for AI Studio iframe preview
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+  })
+);
+
+// Express rate limiting to guard against API spam/brute-force
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 150, // Limit each IP to 150 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests from this IP, please try again later." },
+});
+
+app.use("/api/", apiLimiter);
 
 // Set high body limits to allow base64 images to pass through
 app.use(express.json({ limit: "15mb" }));
@@ -447,6 +499,24 @@ app.get("/api/maps/revgeocode", async (req, res) => {
   }
 });
 
+// --- INPUT VALIDATION SCHEMAS (ZOD) ---
+const createPostSchema = z.object({
+  item: z.string().min(1, "Item name is required").max(100),
+  details: z.string().min(1, "Details/description is required").max(1000),
+  type: z.enum(["Lost", "Found"]),
+  address: z.string().min(1, "Location address is required").max(300),
+  reward: z.string().optional().nullable(),
+  contact: z.string().min(1, "Contact details are required"),
+  category: z.string().min(1, "Category is required"),
+  urgency: z.enum(["Normal", "Urgent", "Contains ID", "Medical"]).optional().nullable(),
+  image: z.string().nullable().optional(),
+  securityPin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits").optional(),
+});
+
+const actionPinSchema = z.object({
+  securityPin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+});
+
 // Healthcheck
 app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", time: new Date().toISOString() });
@@ -461,27 +531,28 @@ app.get("/api/posts", async (req, res) => {
 // Submit a new post
 app.post("/api/posts", async (req, res) => {
   try {
-    const { item, details, type, address, reward, contact, category, urgency, image, securityPin } = req.body;
-    
-    if (!item || !details || !type || !address || !contact || !category) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    // 1. Zod input validation
+    const parsedData = createPostSchema.parse(req.body);
 
     const dbData = await readDBAsync();
     const now = Date.now();
+
+    // 2. Cryptographically hash the security PIN on the server
+    const plainPin = parsedData.securityPin || "1234";
+    const hashedPin = await bcrypt.hash(plainPin, 10);
     
     const newPost: Post = {
       id: now.toString(),
-      item,
-      details,
-      type,
-      address,
-      reward: reward || "",
-      contact,
-      securityPin: securityPin || "1234",
-      category,
-      urgency: urgency || "Normal",
-      image: image || null,
+      item: parsedData.item,
+      details: parsedData.details,
+      type: parsedData.type,
+      address: parsedData.address,
+      reward: parsedData.reward || "",
+      contact: parsedData.contact,
+      securityPin: hashedPin, // Store secure hashed PIN
+      category: parsedData.category,
+      urgency: parsedData.urgency || "Normal",
+      image: parsedData.image || null,
       status: "Active",
       views: 0,
       created: now,
@@ -505,36 +576,53 @@ app.post("/api/posts", async (req, res) => {
     // Perform the matching
     runAIMatch(newPost, dbData.posts)
       .then(async (newMatches) => {
-        if (newMatches.length > 0) {
-          const freshDbData = await readDBAsync();
-          freshDbData.matches[newPost.id] = newMatches;
-          await writeDBAsync(freshDbData);
-          console.log(`AI Matches found for post ${newPost.id}:`, newMatches);
-        }
+         if (newMatches.length > 0) {
+           const freshDbData = await readDBAsync();
+           freshDbData.matches[newPost.id] = newMatches;
+           await writeDBAsync(freshDbData);
+           console.log(`AI Matches found for post ${newPost.id}:`, newMatches);
+         }
       })
       .catch((err) => console.error("Async matching fail:", err));
 
   } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: "Validation error", details: (err as any).errors });
+    }
     res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 
 // Mark post as Resolved
 app.put("/api/posts/:id/resolve", async (req, res) => {
-  const { id } = req.params;
-  const { securityPin } = req.body;
-  const dbData = await readDBAsync();
-  const post = dbData.posts.find((p) => p.id === id);
-  if (post) {
-    const expectedPin = post.securityPin || "1234";
-    if (expectedPin !== securityPin) {
-      return res.status(403).json({ error: "Wrong PIN!" });
+  try {
+    const { id } = req.params;
+    const { securityPin } = actionPinSchema.parse(req.body);
+
+    const dbData = await readDBAsync();
+    const post = dbData.posts.find((p) => p.id === id);
+    if (post) {
+      const expectedPin = post.securityPin || "1234";
+      
+      // Backward compatibility check for plain vs bcrypt hash
+      const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+        ? await bcrypt.compare(securityPin, expectedPin)
+        : expectedPin === securityPin;
+
+      if (!isPinValid) {
+        return res.status(403).json({ error: "Wrong PIN!" });
+      }
+      post.status = "Resolved";
+      writeDB(dbData);
+      res.json({ success: true, post });
+    } else {
+      res.status(404).json({ error: "Post not found" });
     }
-    post.status = "Resolved";
-    writeDB(dbData);
-    res.json({ success: true, post });
-  } else {
-    res.status(404).json({ error: "Post not found" });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: "Validation error", details: (err as any).errors });
+    }
+    res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 
@@ -554,21 +642,35 @@ app.post("/api/posts/:id/view", async (req, res) => {
 
 // Delete a post
 app.delete("/api/posts/:id", async (req, res) => {
-  const { id } = req.params;
-  const { securityPin } = req.body;
-  const dbData = await readDBAsync();
-  const post = dbData.posts.find((p) => p.id === id);
-  if (post) {
-    const expectedPin = post.securityPin || "1234";
-    if (expectedPin !== securityPin) {
-      return res.status(403).json({ error: "Wrong PIN!" });
+  try {
+    const { id } = req.params;
+    const { securityPin } = actionPinSchema.parse(req.body);
+
+    const dbData = await readDBAsync();
+    const post = dbData.posts.find((p) => p.id === id);
+    if (post) {
+      const expectedPin = post.securityPin || "1234";
+
+      // Backward compatibility check for plain vs bcrypt hash
+      const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+        ? await bcrypt.compare(securityPin, expectedPin)
+        : expectedPin === securityPin;
+
+      if (!isPinValid) {
+        return res.status(403).json({ error: "Wrong PIN!" });
+      }
+      dbData.posts = dbData.posts.filter((p) => p.id !== id);
+      delete dbData.matches[id];
+      writeDB(dbData);
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Post not found" });
     }
-    dbData.posts = dbData.posts.filter((p) => p.id !== id);
-    delete dbData.matches[id];
-    writeDB(dbData);
-    res.json({ success: true });
-  } else {
-    res.status(404).json({ error: "Post not found" });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: "Validation error", details: (err as any).errors });
+    }
+    res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 

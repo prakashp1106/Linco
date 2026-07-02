@@ -214,34 +214,31 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
   };
 
   const renderChatContent = () => (
-    <div className="flex flex-col h-full bg-[#020817]/90 border border-slate-900/80 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl relative">
-      {/* Top Banner with high precision alignment */}
-      <div className="p-3 bg-gradient-to-r from-violet-950/40 to-cyan-950/40 border-b border-slate-900/60 flex items-center justify-between">
+    <div className="flex flex-col h-full bg-slate-950/45 border border-slate-900/90 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl relative">
+      {/* Top Banner with premium alignment and glow */}
+      <div className="p-3.5 bg-gradient-to-r from-violet-950/20 via-slate-950/50 to-cyan-950/20 border-b border-slate-900/80 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Futuristic friendly cyber robot avatar layout with glowing neon border */}
+          {/* Cyber robot avatar with a breathing glow */}
           <div className="relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[3px] animate-pulse opacity-80" />
-            <div className="w-9 h-9 rounded-2xl bg-[#020817] border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-lg shadow-violet-500/10">
-              <RobotAvatarIcon size={22} />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[4px] animate-pulse opacity-60" />
+            <div className="w-9 h-9 rounded-2xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-lg shadow-violet-500/10">
+              <RobotAvatarIcon size={22} className="text-cyan-400 animate-pulse" />
             </div>
+            {/* Pulsing online badge right on avatar corner */}
+            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 bg-emerald-500 z-20"></span>
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span className="font-display font-extrabold text-xs sm:text-sm text-slate-100 tracking-wide">LincoSaathii</span>
-              <span className="text-[9px] font-black uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full leading-none">
+              <span className="text-[8px] font-black uppercase tracking-wider bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded-md leading-none">
                 AI Friend
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 font-semibold mt-0.5 leading-none">Conversational Assistant</p>
+            <p className="text-[10px] text-slate-500 font-semibold mt-0.5 leading-none">Your Lost & Found Guide</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {/* Status Indicator */}
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-[10px] text-emerald-400 font-mono font-extrabold uppercase tracking-wider">Active</span>
+          <span className="text-[9px] text-emerald-400 font-mono font-extrabold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Online</span>
           
           {/* Close button for mobile modal layout */}
           <button
@@ -262,28 +259,29 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
               key={m.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
               className={`flex gap-2.5 ${isModel ? "justify-start" : "justify-end"}`}
             >
               {isModel && (
-                <div className="relative shrink-0">
+                <div className="relative shrink-0 mt-0.5">
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[2px] opacity-70"></div>
-                  <div className="w-7 h-7 rounded-xl bg-[#020817] border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
+                  <div className="w-7 h-7 rounded-xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
                     <RobotAvatarIcon size={15} />
                   </div>
                 </div>
               )}
-              <div className="max-w-[82%]">
+              <div className="max-w-[85%]">
                 <div
-                  className={`px-4 py-3 rounded-2xl text-xs md:text-sm leading-relaxed ${
+                  className={`px-4 py-3 rounded-2xl text-xs md:text-[13px] leading-relaxed ${
                     isModel
-                      ? "bg-gradient-to-br from-slate-950/60 to-slate-900/60 border border-slate-900/80 text-slate-200 rounded-tl-sm shadow-md font-semibold"
-                      : "bg-gradient-to-r from-cyan-500/80 to-violet-600/80 text-slate-950 font-black rounded-tr-sm shadow-lg shadow-cyan-500/5"
+                      ? "bg-slate-900/60 border border-slate-800/80 text-slate-100 rounded-tl-sm shadow-md font-medium"
+                      : "bg-gradient-to-r from-cyan-500/10 to-violet-600/15 border border-cyan-500/20 text-cyan-200 font-semibold rounded-tr-sm shadow-lg shadow-cyan-500/5"
                   }`}
                   style={{ whiteSpace: "pre-line" }}
                 >
                   {m.content}
                 </div>
-                <span className={`text-[9px] text-slate-600 font-semibold block mt-1.5 ${!isModel ? "text-right" : ""}`}>
+                <span className={`text-[8.5px] text-slate-600 font-semibold block mt-1.5 ${!isModel ? "text-right" : ""}`}>
                   {m.timestamp}
                 </span>
               </div>
@@ -292,13 +290,13 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
         })}
         {loading && (
           <div className="flex gap-2.5 justify-start">
-            <div className="relative shrink-0 animate-pulse">
+            <div className="relative shrink-0 animate-pulse mt-0.5">
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[2px] opacity-70"></div>
-              <div className="w-7 h-7 rounded-xl bg-[#020817] border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
+              <div className="w-7 h-7 rounded-xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
                 <RobotAvatarIcon size={15} />
               </div>
             </div>
-            <div className="px-4 py-3 bg-slate-950/60 border border-slate-900/80 rounded-2xl rounded-tl-sm shadow-md flex items-center gap-1.5">
+            <div className="px-4 py-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl rounded-tl-sm shadow-md flex items-center gap-1.5 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
               <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
               <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -309,24 +307,24 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
       </div>
 
       {/* Suggested Quick Prompts */}
-      <div className="px-4 pb-1.5 pt-0.5 flex flex-wrap gap-1.5">
+      <div className="px-4 pb-2 pt-0.5 flex flex-wrap gap-1.5">
         {messages.length === 1 && (
           <>
             <button
               onClick={() => sendMessage("Bhai mera wallet kho gaya hai :(")}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-slate-300 font-extrabold transition"
+              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
             >
               👛 Wallet kho gaya
             </button>
             <button
               onClick={() => sendMessage("Mujhe ek laptop charger mila hai desk par.")}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-slate-300 font-extrabold transition"
+              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
             >
               🔌 Charger mila hai
             </button>
             <button
               onClick={() => sendMessage("Mera dog park se ghum ho gaya hai.")}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-slate-300 font-extrabold transition"
+              className="px-3 py-1.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
             >
               🐶 Pet lost status
             </button>
@@ -335,7 +333,7 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
       </div>
 
       {/* Input Form scaled down with custom styling and neat typography */}
-      <div className="p-3 bg-slate-950/80 border-t border-slate-900/60">
+      <div className="p-3.5 bg-slate-950/90 border-t border-slate-900/80">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -349,17 +347,17 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={loading}
-            className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-900 focus:border-cyan-500/40 text-xs text-slate-200 outline-none placeholder:text-slate-600 transition"
+            className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 focus:border-cyan-500/40 text-xs text-slate-200 outline-none placeholder:text-slate-600 transition"
           />
           <button
             type="submit"
             disabled={loading || !inputMessage.trim()}
-            className="p-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition flex items-center justify-center shrink-0 disabled:opacity-50"
+            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-150 flex items-center justify-center shrink-0 disabled:opacity-40 cursor-pointer shadow-md"
           >
             <Send size={14} />
           </button>
         </form>
-        <p className="text-[7.5px] sm:text-[8px] text-slate-500 text-center mt-2 font-mono tracking-widest uppercase leading-snug">
+        <p className="text-[7.5px] sm:text-[8px] text-slate-600 text-center mt-2.5 font-mono tracking-widest uppercase leading-snug">
           LINCO SAATHII AUTOMATED INPUT FORM POPULATION SYSTEM
         </p>
       </div>

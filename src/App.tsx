@@ -33,246 +33,21 @@ import {
   List,
   Download,
   DownloadCloud,
+  QrCode,
 } from "lucide-react";
+import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, AIMatch, UrgencyType, Category, UrgencyInfo } from "./types";
 import { InteractiveMap, MiniMap, FeedMap } from "./components/LeafletMap";
 import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 import confetti from "canvas-confetti";
 
-// --- END-TO-END CRYPTO ENGINES (WEB CRYPTO API) ---
-async function deriveKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
-  const encoder = new TextEncoder();
-  const baseKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(pin),
-    "PBKDF2",
-    false,
-    ["deriveKey"]
-  );
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt,
-      iterations: 50000,
-      hash: "SHA-256",
-    },
-    baseKey,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
-}
-
-async function encryptContact(contact: string, pin: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(pin, salt);
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encoder.encode(contact)
-  );
-  // Combine salt, iv, and ciphertext into hex representations
-  const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
-  const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
-  const ciphertextHex = Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return `ENC:${saltHex}:${ivHex}:${ciphertextHex}`;
-}
-
-async function decryptContact(encryptedStr: string, pin: string): Promise<string> {
-  if (!encryptedStr || !encryptedStr.startsWith("ENC:")) {
-    // Return raw if it's a legacy unencrypted post
-    return encryptedStr;
-  }
-  const parts = encryptedStr.split(":");
-  if (parts.length !== 4) throw new Error("Invalid encrypted format");
-  
-  const salt = new Uint8Array(parts[1].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  const iv = new Uint8Array(parts[2].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  const ciphertext = new Uint8Array(parts[3].match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  
-  const key = await deriveKey(pin, salt);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    ciphertext
-  );
-  return new TextDecoder().decode(decrypted);
-}
-
-const CATEGORIES: Category[] = [
-  { id: "Electronics", emoji: "📱" },
-  { id: "Documents", emoji: "📄" },
-  { id: "Wallet / Purse", emoji: "👛" },
-  { id: "Keys", emoji: "🔑" },
-  { id: "Pet", emoji: "🐶" },
-  { id: "Bag / Luggage", emoji: "💼" },
-  { id: "Jewelry", emoji: "💍" },
-  { id: "ID / Card", emoji: "🆔" },
-  { id: "Vehicle", emoji: "🚗" },
-  { id: "Clothing", emoji: "👕" },
-  { id: "Other", emoji: "📦" },
-];
-
-const URGENCY_LEVELS: UrgencyInfo[] = [
-  { id: "Normal", cls: "text-cyan-400 border-cyan-500/20 bg-cyan-950/20", color: "#22d3ee", bgColor: "rgba(6, 182, 212, 0.1)" },
-  { id: "Urgent", cls: "text-amber-400 border-amber-500/20 bg-amber-950/20", color: "#fbbf24", bgColor: "rgba(245, 158, 11, 0.1)" },
-  { id: "Contains ID", cls: "text-pink-400 border-pink-500/20 bg-pink-950/20", color: "#f472b6", bgColor: "rgba(236, 72, 153, 0.1)" },
-  { id: "Medical", cls: "text-red-400 border-red-500/20 bg-red-950/20", color: "#f87171", bgColor: "rgba(239, 68, 68, 0.1)" },
-];
-
-const CITIES = ["Pune", "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Noida", "Gurgaon"];
-
-// Canvas Component for starry drifting particles
-const CanvasParticles: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    interface Particle {
-      x: number;
-      y: number;
-      r: number;
-      vx: number;
-      vy: number;
-      opacity: number;
-    }
-
-    const particles: Particle[] = [];
-    const count = 50;
-
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        r: Math.random() * 1.5 + 0.5,
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: (Math.random() - 0.5) * 0.15,
-        opacity: Math.random() * 0.4 + 0.1,
-      });
-    }
-
-    let animationId: number;
-
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(6, 182, 212, ${p.opacity})`;
-        ctx.fill();
-      });
-      animationId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-60" />;
-};
-
-// --- LIVE URGENCIES & DYNAMIC TIMERS ---
-const LiveMissingTimer: React.FC<{ createdTime: number }> = ({ createdTime }) => {
-  const [elapsedText, setElapsedText] = useState("");
-
-  useEffect(() => {
-    const calculateElapsed = () => {
-      const now = Date.now();
-      const diffMs = now - createdTime;
-
-      if (diffMs <= 0) {
-        setElapsedText("Just now");
-        return;
-      }
-
-      const diffSecs = Math.floor(diffMs / 1000);
-      const diffMins = Math.floor(diffSecs / 60);
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
-
-      const displayHours = diffHours % 24;
-      const displayMins = diffMins % 60;
-      const displaySecs = diffSecs % 60;
-
-      if (diffDays > 0) {
-        setElapsedText(`Missing for ${diffDays}d ${displayHours}h`);
-      } else if (diffHours > 0) {
-        setElapsedText(`Missing for ${diffHours}h ${displayMins}m`);
-      } else if (diffMins > 0) {
-        setElapsedText(`Missing for ${diffMins}m ${displaySecs}s`);
-      } else {
-        setElapsedText(`Missing for ${displaySecs}s`);
-      }
-    };
-
-    calculateElapsed();
-    const interval = setInterval(calculateElapsed, 10000); // update every 10 seconds
-    return () => clearInterval(interval);
-  }, [createdTime]);
-
-  return (
-    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-amber-400 bg-amber-950/40 border border-amber-500/20 px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.1)]">
-      <Clock size={9} /> {elapsedText}
-    </span>
-  );
-};
-
-const CountUpStat: React.FC<{ value: number; color: string }> = ({ value, color }) => {
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const end = value;
-    if (end === 0) {
-      setDisplayValue(0);
-      return;
-    }
-    const duration = 1200; // ms
-    const increment = Math.ceil(end / (duration / 16)); // ~60fps
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        clearInterval(timer);
-        setDisplayValue(end);
-      } else {
-        setDisplayValue(start);
-      }
-    }, 16);
-
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return <span className={`text-xl font-extrabold block ${color}`}>{displayValue}</span>;
-};
+// --- REFACTORED MODULAR IMPORTS ---
+import { encryptContact, decryptContact } from "./services/encryptionService";
+import { CATEGORIES, URGENCY_LEVELS, CITIES } from "./constants";
+import { CanvasParticles } from "./components/CanvasParticles";
+import { LiveMissingTimer } from "./components/LiveMissingTimer";
+import { CountUpStat } from "./components/CountUpStat";
 
 // Custom Toasts Implementation
 interface Toast {
@@ -346,6 +121,11 @@ export default function App() {
     confidence: number;
     message: string;
   } | null>(null);
+
+  // QR Code Modal States
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrModalPost, setQrModalPost] = useState<Post | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
 
   // Success Banner State
   const [banner, setBanner] = useState<{ show: boolean; title: string; subtitle: string; icon: string } | null>(null);
@@ -437,6 +217,25 @@ export default function App() {
       found: posts.filter((p) => p.type === "Found").length,
       resolved: posts.filter((p) => p.status === "Resolved").length,
     });
+  }, [posts]);
+
+  // Support deep linking to open a specific post from QR code scans / URLs
+  useEffect(() => {
+    if (posts.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const postId = urlParams.get("id");
+      if (postId) {
+        const foundPost = posts.find((p) => p.id === postId);
+        if (foundPost) {
+          setClaimingPost(foundPost);
+          setActiveTab("feed");
+          setShowClaimModal(true); // Ensure claim verification starts right away
+          // Clean the query parameters from URL so refreshes don't re-trigger it
+          window.history.replaceState({}, document.title, window.location.pathname);
+          addToast(`Scanned QR Code for: ${foundPost.item}!`, "success");
+        }
+      }
+    }
   }, [posts]);
 
   // Dynamic SEO, Meta tags & Schema.org JSON-LD Structured Data
@@ -972,8 +771,8 @@ export default function App() {
     setPinModal(null);
   };
 
-  // Share as Canvas Image Card
-  const handleShareAsImage = (p: Post, e: React.MouseEvent) => {
+  // Share as Canvas Image Card with dynamic QR Code
+  const handleShareAsImage = async (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     addToast("Generating your shareable image card...", "info");
 
@@ -1141,30 +940,90 @@ export default function App() {
       ctx.fillText(`💰 REWARD OFFERED: ₹${p.reward}`, 110, rewardY + 36);
     }
 
-    // 10. Footer Branding Call-to-action
+    // 10. Generate and draw actual QR Code inside the bottom right area of card
+    const qrX = 600;
+    const qrY = 615;
+    const qrSize = 110;
+    const shareUrl = `${window.location.origin}/?id=${p.id}`;
+    
+    try {
+      const qrDataUrl = await QRCode.toDataURL(shareUrl, {
+        margin: 1,
+        width: qrSize,
+        color: {
+          dark: "#0f172a", // slate-900 matching card's dark style
+          light: "#ffffff" // crisp background for scanning readability
+        }
+      });
+      const qrImg = new Image();
+      qrImg.src = qrDataUrl;
+      await new Promise<void>((resolve, reject) => {
+        qrImg.onload = () => resolve();
+        qrImg.onerror = () => reject();
+      });
+
+      // Draw container border/glow behind QR code
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8) : ctx.rect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(6, 182, 212, 0.4)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Draw QR Image
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    } catch (qrErr) {
+      console.error("Failed to generate QR Code on image card:", qrErr);
+    }
+
+    // 11. Footer Branding Call-to-action
     ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.font = "bold 12px 'Inter', sans-serif";
-    ctx.fillText("Scan QR or visit linco.ai to claim or contact the owner", 80, 715);
+    ctx.font = "bold 11px 'Inter', sans-serif";
+    ctx.fillText("Scan QR code to immediately verify or claim.", 80, 680);
+    ctx.fillText("Visit linco.ai or contact the community.", 80, 705);
 
     ctx.fillStyle = "rgba(6, 182, 212, 0.8)";
     ctx.font = "bold 13px 'Inter', sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 720, 715);
-    ctx.textAlign = "left";
+    ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 80, 735);
 
-    // 11. Download the generated Image
+    // 12. Download the generated Image
     setTimeout(() => {
       try {
         const link = document.createElement("a");
-        link.download = `LINCO_${p.type.toUpperCase()}_${p.item.replace(/\s+/g, '_')}.png`;
+        link.download = `LINCO_${p.type.toUpperCase()}_${p.item.replace(/\s+/g, '_')}_QR.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
-        addToast("Shareable image generated and downloaded! 🚀", "success");
+        addToast("Shareable image with QR Code generated and downloaded! 🚀", "success");
       } catch (err) {
         console.error("Canvas export failed", err);
         addToast("Could not auto-download image, right click or retry", "error");
       }
     }, 100);
+  };
+
+  // Trigger interactive QR code modal
+  const handleShowQrCode = async (p: Post, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQrModalPost(p);
+    setShowQrModal(true);
+    setQrCodeDataUrl(""); // show loading state initially
+    try {
+      const shareUrl = `${window.location.origin}/?id=${p.id}`;
+      const dataUrl = await QRCode.toDataURL(shareUrl, {
+        margin: 2,
+        width: 300,
+        color: {
+          dark: "#0f172a", // Slate-900 dark color
+          light: "#ffffff" // white background
+        }
+      });
+      setQrCodeDataUrl(dataUrl);
+    } catch (err) {
+      console.error("Failed to generate QR Code", err);
+      addToast("Could not generate QR Code", "error");
+    }
   };
 
   // Share/Copy Post
@@ -1326,17 +1185,7 @@ export default function App() {
       <div className="hidden xl:block fixed top-1/4 -left-[10vw] w-[35vw] h-[35vw] bg-radial from-cyan-500/15 to-transparent blur-[140px] pointer-events-none z-0" />
       <div className="hidden xl:block fixed top-1/3 -right-[10vw] w-[35vw] h-[35vw] bg-radial from-violet-600/15 to-transparent blur-[140px] pointer-events-none z-0" />
 
-      {/* FLOATING SYNC CONNECTION BAR */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#020817]/85 border border-slate-800 backdrop-blur-xl text-xs shadow-2xl transition-all">
-        <span className={`w-2 h-2 rounded-full ${
-          backendStatus === "live" ? "bg-emerald-400 animate-pulse" : 
-          backendStatus === "connecting" ? "bg-amber-400 animate-pulse" : "bg-red-400"
-        }`} />
-        <span className="text-slate-400 font-medium tracking-wide">
-          {backendStatus === "live" ? "Gemini Synced" : 
-           backendStatus === "connecting" ? "Linking Cloud..." : "Connection Lost"}
-        </span>
-      </div>
+
 
       {/* TOAST SYSTEM CONTAINER */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
@@ -1442,6 +1291,7 @@ export default function App() {
       <nav className="sticky top-0 z-30 max-w-2xl mx-auto px-4 py-4 mt-6">
         <div className="flex gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-900 backdrop-blur-xl shadow-xl">
           <button
+            id="nav-tab-post"
             onClick={() => setActiveTab("home")}
             className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 ${
               activeTab === "home" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
@@ -1450,6 +1300,7 @@ export default function App() {
             <Plus size={14} /> Post Item
           </button>
           <button
+            id="nav-tab-feed"
             onClick={() => {
               setActiveTab("feed");
               loadPosts();
@@ -1461,6 +1312,7 @@ export default function App() {
             <Search size={14} /> Feed ({posts.length})
           </button>
           <button
+            id="nav-tab-about"
             onClick={() => setActiveTab("about")}
             className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 ${
               activeTab === "about" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
@@ -2214,6 +2066,16 @@ export default function App() {
                           >
                             <Download size={11} className="text-cyan-400" /> Image
                           </button>
+
+                          {/* QR Code button */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleShowQrCode(p, e)}
+                            title="Interactive QR Code & Print Settings"
+                            className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-violet-500/30 hover:text-violet-400 rounded-xl text-slate-400 transition duration-150 flex items-center justify-center gap-1 text-[9px] font-extrabold uppercase tracking-wider font-sans select-none"
+                          >
+                            <QrCode size={11} className="text-violet-400" /> QR Code
+                          </button>
                         </div>
 
                         {/* ACTIVE GOOGLE GEMINI AI MATCH ALERTS (DISPLAYED INSIDE POST CARD) */}
@@ -2586,6 +2448,222 @@ export default function App() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* QR CODE GENERATOR & PRINT SETTINGS MODAL */}
+      <AnimatePresence>
+        {showQrModal && qrModalPost && (
+          <motion.div
+            id="qr-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              id="qr-modal-container"
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-slate-950 border border-violet-500/30 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative overflow-hidden"
+            >
+              {/* Subtle background gradients for premium aesthetic */}
+              <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Close Button */}
+              <button
+                id="btn-close-qr-modal"
+                onClick={() => setShowQrModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+
+              <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400 uppercase tracking-wider mb-2">
+                <QrCode size={14} /> Printable QR Code
+              </div>
+              <h3 className="text-base font-display font-bold text-slate-100 mb-1">
+                Share Card for {qrModalPost.item}
+              </h3>
+              <p className="text-[10px] text-slate-400 leading-relaxed mb-5">
+                Print and post this QR code physically in public spaces. Scanning instantly guides claimants to prove ownership with Gemini.
+              </p>
+
+              {/* QR Code Canvas/Display area */}
+              <div className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-slate-900 mb-5 relative">
+                {qrCodeDataUrl ? (
+                  <div className="p-3 bg-white rounded-xl shadow-lg border border-slate-200">
+                    <img src={qrCodeDataUrl} alt="Item QR Code" className="w-48 h-48 select-none" />
+                  </div>
+                ) : (
+                  <div className="h-48 flex flex-col items-center justify-center gap-2 text-slate-500 font-medium text-xs">
+                    <RefreshCw className="animate-spin text-violet-400" size={24} />
+                    <span>Generating QR Code...</span>
+                  </div>
+                )}
+                
+                {qrCodeDataUrl && (
+                  <span className="text-[9px] text-slate-500 font-mono mt-3 uppercase tracking-widest bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    ID: {qrModalPost.id.slice(0, 8)}...
+                  </span>
+                )}
+              </div>
+
+              {/* Copy URL / Print Actions */}
+              <div className="space-y-2.5">
+                <button
+                  id="btn-copy-claim-link"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/?id=${qrModalPost.id}`);
+                    addToast("Deep link copied to clipboard!", "success");
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Share2 size={13} className="text-cyan-400" /> Copy Claim Link
+                </button>
+
+                <button
+                  id="btn-download-image-card"
+                  onClick={(e) => {
+                    handleShareAsImage(qrModalPost, e);
+                    setShowQrModal(false);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 text-slate-950 font-extrabold hover:text-black transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/10"
+                >
+                  <Download size={13} /> Download Share Image Card
+                </button>
+
+                <button
+                  id="btn-print-flyer"
+                  onClick={() => {
+                    // Open a clean printable page window
+                    const printWindow = window.open("", "_blank");
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <html>
+                          <head>
+                            <title>Print QR Flyer - ${qrModalPost.item}</title>
+                            <style>
+                              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+                              body {
+                                font-family: 'Inter', sans-serif;
+                                margin: 0;
+                                padding: 40px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                height: 100vh;
+                                text-align: center;
+                                color: #020817;
+                                background-color: #ffffff;
+                              }
+                              .card {
+                                border: 4px solid #0f172a;
+                                border-radius: 24px;
+                                padding: 40px;
+                                max-width: 500px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                              }
+                              .badge {
+                                display: inline-block;
+                                background-color: ${qrModalPost.type === "Lost" ? "#fee2e2" : "#d1fae5"};
+                                color: ${qrModalPost.type === "Lost" ? "#dc2626" : "#059669"};
+                                font-weight: 800;
+                                font-size: 14px;
+                                padding: 6px 16px;
+                                border-radius: 9999px;
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                margin-bottom: 20px;
+                              }
+                              h1 {
+                                font-size: 28px;
+                                font-weight: 800;
+                                margin: 0 0 10px 0;
+                                color: #0f172a;
+                              }
+                              p.details {
+                                font-size: 14px;
+                                color: #475569;
+                                margin: 0 0 30px 0;
+                                max-width: 400px;
+                                line-height: 1.5;
+                              }
+                              .qr-box {
+                                padding: 20px;
+                                border: 2px dashed #cbd5e1;
+                                border-radius: 16px;
+                                margin-bottom: 30px;
+                              }
+                              .qr-img {
+                                width: 220px;
+                                height: 220px;
+                              }
+                              .instruction {
+                                font-size: 15px;
+                                font-weight: 700;
+                                color: #0f172a;
+                                margin-bottom: 6px;
+                              }
+                              .sub-instruction {
+                                font-size: 12px;
+                                color: #64748b;
+                                margin-bottom: 30px;
+                              }
+                              .footer-logo {
+                                font-weight: 800;
+                                font-size: 18px;
+                                color: #0f172a;
+                                letter-spacing: 0.5px;
+                              }
+                              .footer-sub {
+                                font-size: 10px;
+                                color: #94a3b8;
+                                margin-top: 4px;
+                              }
+                              @media print {
+                                body { padding: 0; }
+                                .no-print { display: none; }
+                              }
+                            </style>
+                          </head>
+                          <body>
+                            <div class="card">
+                              <span class="badge">🚨 ${qrModalPost.type === "Lost" ? "Lost" : "Found"} Listing</span>
+                              <h1>${qrModalPost.item}</h1>
+                              <p class="details">${qrModalPost.details}</p>
+                              <div class="qr-box">
+                                <img class="qr-img" src="${qrCodeDataUrl}" alt="QR" />
+                              </div>
+                              <p class="instruction">Scan QR to Claim or Verify this Item</p>
+                              <p class="sub-instruction">Securely processed via Google Gemini AI Verification</p>
+                              <div class="footer-logo font-display">LINCO AI</div>
+                              <div class="footer-sub">Realtime Lost & Found Directory</div>
+                            </div>
+                            <div style="margin-top: 30px;" class="no-print">
+                              <button onclick="window.print()" style="padding: 10px 24px; font-weight: bold; background-color: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit;">Print Flyer</button>
+                            </div>
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                    } else {
+                      addToast("Popup blocker prevented printing flyer", "warn");
+                    }
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition text-xs font-bold cursor-pointer"
+                >
+                  🖨️ Open Print Flyer Layout
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
