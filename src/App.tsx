@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
 
 import { usePosts } from "./hooks/usePosts";
+import { usePostForm } from "./hooks/usePostForm";
 import { encryptContact } from "./services/encryptionService";
 import { Post, AIMatch } from "./types";
 
@@ -19,6 +20,7 @@ import { CountUpStat } from "./components/CountUpStat";
 import { PostForm } from "./components/PostForm";
 import { FeedList } from "./components/FeedList";
 import { AboutTab } from "./components/AboutTab";
+import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 
 // Modals
 import { PinModal } from "./components/PinModal";
@@ -46,6 +48,8 @@ export default function App() {
     deletePost,
     incrementPostViews,
   } = usePosts();
+
+  const form = usePostForm();
 
   const [activeTab, setActiveTab] = useState<"home" | "feed" | "about">("home");
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -240,6 +244,167 @@ export default function App() {
       return;
     }
 
+    // Helper: Address Shortener (e.g., converts long address to Landmark + Neighborhood or Landmark + City)
+    const getShortAddress = (addr: string): string => {
+      if (!addr) return "Unknown Location";
+      const parts = addr.split(",").map(item => item.trim()).filter(Boolean);
+      if (parts.length <= 2) return addr;
+
+      const isZip = (s: string) => /\d{5,}/.test(s);
+      const isCountry = (s: string) => ["india", "usa", "uk", "germany", "canada"].includes(s.toLowerCase());
+
+      const relevant = parts.filter(p => !isZip(p) && !isCountry(p));
+      if (relevant.length <= 2) {
+        return relevant.join(", ");
+      }
+      return `${relevant[0]}, ${relevant[1]}`;
+    };
+
+    let shortAddr = getShortAddress(p.address);
+    if (shortAddr.length > 45) {
+      shortAddr = shortAddr.substring(0, 42) + "...";
+    }
+
+    // Helper: Wrap text to fit canvas width
+    const wrapTextToArray = (text: string, maxWidth: number, font: string): string[] => {
+      ctx.font = font;
+      const words = text.split(/\s+/).filter(Boolean);
+      const lines: string[] = [];
+      let currentLine = "";
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const width = ctx.measureText(testLine).width;
+        if (width > maxWidth) {
+          if (currentLine) {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      return lines;
+    };
+
+    // Helper: Dynamic Space & Layout Calculator
+    const computeLayout = (S: number, maxDescLines: number = 4) => {
+      const titleFontSize = Math.round(36 * S);
+      const descFontSize = Math.round(16 * S);
+      const descLineHeight = Math.round(24 * S);
+      const metaHeaderFontSize = Math.round(12 * S);
+      const metaValueFontSize = Math.round(15 * S);
+      const metaValueLineHeight = Math.round(20 * S);
+      const rewardFontSize = Math.round(18 * S);
+      const rewardHeight = Math.round(54 * S);
+
+      const titleFont = `bold ${titleFontSize}px 'Inter', sans-serif`;
+      const descFont = `500 ${descFontSize}px 'Inter', sans-serif`;
+      const metaHeaderFont = `bold ${metaHeaderFontSize}px 'Inter', sans-serif`;
+      const metaValueFont = `600 ${metaValueFontSize}px 'Inter', sans-serif`;
+
+      // Wrap & compute Title
+      const titleLines = wrapTextToArray(p.item, 640, titleFont);
+      const titleHeight = titleLines.length * (titleFontSize + 8);
+
+      const spacing1 = Math.round(15 * S);
+
+      // Wrap & compute Description
+      const descLinesAll = wrapTextToArray(p.details, 640, descFont);
+      const actualMaxLines = Math.min(maxDescLines, descLinesAll.length);
+      
+      // Ellipsis on description if it exceeds bounds
+      if (descLinesAll.length > actualMaxLines && actualMaxLines > 0) {
+        let line = descLinesAll[actualMaxLines - 1];
+        ctx.font = descFont;
+        while (line.length > 0 && ctx.measureText(line + "...").width > 640) {
+          line = line.substring(0, line.length - 1);
+        }
+        descLinesAll[actualMaxLines - 1] = line + "...";
+      }
+      const descLines = descLinesAll.slice(0, actualMaxLines);
+      const descHeight = descLines.length * descLineHeight;
+
+      const spacing2 = Math.round(20 * S);
+
+      // Metadata section (Location & Date)
+      const locLinesCol = wrapTextToArray(shortAddr, 280, metaValueFont);
+      const dateLinesCol = wrapTextToArray(p.timestamp, 280, metaValueFont);
+
+      // Switch column format dynamically if scale is small or text wraps too much (avoid collision)
+      const useSingleColumn = S < 0.85 || locLinesCol.length > 1 || dateLinesCol.length > 1;
+      let metadataHeight = 0;
+      let locLinesToRender: string[] = [];
+      let dateLinesToRender: string[] = [];
+
+      if (useSingleColumn) {
+        locLinesToRender = wrapTextToArray(shortAddr, 640, metaValueFont);
+        dateLinesToRender = wrapTextToArray(p.timestamp, 640, metaValueFont);
+        metadataHeight = metaHeaderFontSize + 4 + (locLinesToRender.length * metaValueLineHeight) + 12 + metaHeaderFontSize + 4 + (dateLinesToRender.length * metaValueLineHeight);
+      } else {
+        locLinesToRender = locLinesCol;
+        dateLinesToRender = dateLinesCol;
+        const maxLines = Math.max(locLinesToRender.length, dateLinesToRender.length);
+        metadataHeight = metaHeaderFontSize + 4 + (maxLines * metaValueLineHeight);
+      }
+
+      let spacing3 = 0;
+      let rewardTotalHeight = 0;
+      if (p.reward) {
+        spacing3 = Math.round(20 * S);
+        rewardTotalHeight = rewardHeight;
+      }
+
+      const totalHeight = titleHeight + spacing1 + descHeight + spacing2 + metadataHeight + spacing3 + rewardTotalHeight;
+
+      return {
+        S,
+        titleFontSize,
+        descFontSize,
+        descLineHeight,
+        metaHeaderFontSize,
+        metaValueFontSize,
+        metaValueLineHeight,
+        rewardFontSize,
+        rewardHeight,
+        titleFont,
+        descFont,
+        metaHeaderFont,
+        metaValueFont,
+        titleLines,
+        titleHeight,
+        spacing1,
+        descLines,
+        descHeight,
+        spacing2,
+        useSingleColumn,
+        locLinesToRender,
+        dateLinesToRender,
+        metadataHeight,
+        spacing3,
+        totalHeight,
+      };
+    };
+
+    // Find the perfect fitting layout (Scale from 1.0 down to 0.55; description lines from 4 down to 2)
+    const findFittingLayout = () => {
+      for (let dLines = 4; dLines >= 2; dLines--) {
+        for (let s = 1.0; s >= 0.55; s -= 0.05) {
+          const tempLayout = computeLayout(s, dLines);
+          if (tempLayout.totalHeight <= 340) {
+            return tempLayout;
+          }
+        }
+      }
+      return computeLayout(0.55, 2); // Absolute fallback
+    };
+
+    const layout = findFittingLayout();
+
     // 1. Draw gradient background
     const grad = ctx.createRadialGradient(400, 400, 50, 400, 400, 600);
     grad.addColorStop(0, "#0f172a");
@@ -318,81 +483,125 @@ export default function App() {
     ctx.font = "bold 11px 'Inter', sans-serif";
     ctx.fillText(catText, 240, badgeY + 21);
 
-    // 6. Item Title
+    // --- 6. Content Area Drawing with Layout Engine ---
+    let currentY = 240;
+
+    // Draw Title Lines
     ctx.fillStyle = "#f8fafc";
-    ctx.font = "bold 36px 'Inter', sans-serif";
-    ctx.fillText(p.item, 80, 270);
+    ctx.font = layout.titleFont;
+    layout.titleLines.forEach((line) => {
+      ctx.fillText(line, 80, currentY + layout.titleFontSize);
+      currentY += layout.titleFontSize + 8;
+    });
 
-    // 7. Details (Multiline Wrap)
+    currentY += layout.spacing1;
+
+    // Draw Description Lines
     ctx.fillStyle = "#cbd5e1";
-    ctx.font = "500 17px 'Inter', sans-serif";
+    ctx.font = layout.descFont;
+    layout.descLines.forEach((line) => {
+      ctx.fillText(line, 80, currentY + layout.descFontSize);
+      currentY += layout.descLineHeight;
+    });
 
-    const wrapText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
-      const words = text.split(" ");
-      let line = "";
-      let currentY = y;
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + " ";
-        const metrics = ctx.measureText(testLine);
-        const testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
-          ctx.fillText(line, x, currentY);
-          line = words[n] + " ";
-          currentY += lineHeight;
-        } else {
-          line = testLine;
-        }
-      }
-      ctx.fillText(line, x, currentY);
-      return currentY;
-    };
+    currentY += layout.spacing2;
 
-    const detailsStartY = 320;
-    const detailsEndY = wrapText(p.details, 80, detailsStartY, 640, 26);
-
-    let metaY = detailsEndY + 50;
-    if (metaY < 480) metaY = 480;
-
+    // Draw Metadata Section (Divider & Content)
     ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(80, metaY - 20);
-    ctx.lineTo(720, metaY - 20);
+    ctx.moveTo(80, currentY - 10);
+    ctx.lineTo(720, currentY - 10);
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(6, 182, 212, 0.9)";
-    ctx.font = "bold 14px 'Inter', sans-serif";
-    ctx.fillText("📍 LOCATION", 80, metaY);
+    if (layout.useSingleColumn) {
+      // Stacked Location
+      ctx.fillStyle = "rgba(6, 182, 212, 0.9)";
+      ctx.font = layout.metaHeaderFont;
+      ctx.fillText("📍 LOCATION", 80, currentY + layout.metaHeaderFontSize);
+      currentY += layout.metaHeaderFontSize + 4;
 
-    ctx.fillStyle = "#f1f5f9";
-    ctx.font = "600 16px 'Inter', sans-serif";
-    ctx.fillText(p.address, 80, metaY + 28);
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = layout.metaValueFont;
+      layout.locLinesToRender.forEach((line) => {
+        ctx.fillText(line, 80, currentY + layout.metaValueFontSize);
+        currentY += layout.metaValueLineHeight;
+      });
 
-    ctx.fillStyle = "rgba(139, 92, 246, 0.9)";
-    ctx.font = "bold 14px 'Inter', sans-serif";
-    ctx.fillText("📅 DATE REPORTED", 420, metaY);
+      currentY += 12;
 
-    ctx.fillStyle = "#f1f5f9";
-    ctx.font = "600 16px 'Inter', sans-serif";
-    ctx.fillText(p.timestamp, 420, metaY + 28);
+      // Stacked Date
+      ctx.fillStyle = "rgba(139, 92, 246, 0.9)";
+      ctx.font = layout.metaHeaderFont;
+      ctx.fillText("📅 DATE REPORTED", 80, currentY + layout.metaHeaderFontSize);
+      currentY += layout.metaHeaderFontSize + 4;
 
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = layout.metaValueFont;
+      layout.dateLinesToRender.forEach((line) => {
+        ctx.fillText(line, 80, currentY + layout.metaValueFontSize);
+        currentY += layout.metaValueLineHeight;
+      });
+    } else {
+      // Side-by-Side Location & Date
+      const metaStartY = currentY;
+
+      ctx.fillStyle = "rgba(6, 182, 212, 0.9)";
+      ctx.font = layout.metaHeaderFont;
+      ctx.fillText("📍 LOCATION", 80, metaStartY + layout.metaHeaderFontSize);
+
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = layout.metaValueFont;
+      let locY = metaStartY + layout.metaHeaderFontSize + 4;
+      layout.locLinesToRender.forEach((line) => {
+        ctx.fillText(line, 80, locY + layout.metaValueFontSize);
+        locY += layout.metaValueLineHeight;
+      });
+
+      ctx.fillStyle = "rgba(139, 92, 246, 0.9)";
+      ctx.font = layout.metaHeaderFont;
+      ctx.fillText("📅 DATE REPORTED", 420, metaStartY + layout.metaHeaderFontSize);
+
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = layout.metaValueFont;
+      let dateY = metaStartY + layout.metaHeaderFontSize + 4;
+      layout.dateLinesToRender.forEach((line) => {
+        ctx.fillText(line, 420, dateY + layout.metaValueFontSize);
+        dateY += layout.metaValueLineHeight;
+      });
+
+      currentY += layout.metadataHeight;
+    }
+
+    // Draw Reward Box
     if (p.reward) {
-      const rewardY = metaY + 80;
-      ctx.fillStyle = "rgba(245, 158, 11, 0.1)";
+      currentY += layout.spacing3;
+      ctx.fillStyle = "rgba(245, 158, 11, 0.08)";
       ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(80, rewardY, 640, 60, 12) : ctx.rect(80, rewardY, 640, 60);
+      ctx.roundRect ? ctx.roundRect(80, currentY, 640, layout.rewardHeight, 12) : ctx.rect(80, currentY, 640, layout.rewardHeight);
       ctx.fill();
+
       ctx.strokeStyle = "rgba(245, 158, 11, 0.3)";
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       ctx.fillStyle = "#fbbf24";
-      ctx.font = "bold 18px 'Inter', sans-serif";
-      ctx.fillText(`💰 REWARD OFFERED: ₹${p.reward}`, 110, rewardY + 36);
+      ctx.font = `bold ${layout.rewardFontSize}px 'Inter', sans-serif`;
+      ctx.fillText(`💰 REWARD OFFERED: ₹${p.reward}`, 110, currentY + layout.rewardHeight / 2 + layout.rewardFontSize / 2 - 2);
     }
 
-    const qrX = 600;
-    const qrY = 615;
-    const qrSize = 110;
+    // --- 7. Dedicated Footer Area (Guaranteed Overlap Free) ---
+    const footerTop = 590;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, footerTop);
+    ctx.lineTo(720, footerTop);
+    ctx.stroke();
+
+    const qrX = 590;
+    const qrY = 610;
+    const qrSize = 120;
     const shareUrl = `${window.location.origin}/?id=${p.id}`;
 
     try {
@@ -425,14 +634,14 @@ export default function App() {
       console.error("Failed to generate QR Code on image card:", qrErr);
     }
 
+    ctx.fillStyle = "rgba(6, 182, 212, 0.85)";
+    ctx.font = "bold 13px 'Inter', sans-serif";
+    ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 80, 630);
+
     ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
     ctx.font = "bold 11px 'Inter', sans-serif";
-    ctx.fillText("Scan QR code to immediately verify or claim.", 80, 680);
-    ctx.fillText("Visit linco.ai or contact the community.", 80, 705);
-
-    ctx.fillStyle = "rgba(6, 182, 212, 0.8)";
-    ctx.font = "bold 13px 'Inter', sans-serif";
-    ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 80, 735);
+    ctx.fillText("Scan QR code to immediately verify or claim.", 80, 665);
+    ctx.fillText("Visit linco.ai or contact the community.", 80, 690);
 
     setTimeout(() => {
       try {
@@ -637,7 +846,7 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                 >
-                  <PostForm onSubmit={handleCreatePost} />
+                  <PostForm form={form} onSubmit={handleCreatePost} />
                 </motion.div>
               )}
 
@@ -678,19 +887,79 @@ export default function App() {
             </AnimatePresence>
           </div>
 
-          {/* Persistent Sidebar Info Card */}
-          <div className="lg:col-span-4 bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
-            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
-              💡 Platform Health
-            </h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
-            </p>
-            <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
-              <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
-              <span className="text-slate-300">
-                Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
-              </span>
+          {/* Persistent Sidebar Info Card & LincoSaathii Chatbot */}
+          <div className="lg:col-span-4 space-y-6">
+            <LincoSaathiiChat
+              onFieldUpdate={(fields) => {
+                if (fields.type) form.setFType(fields.type);
+                if (fields.item) form.setFItem(fields.item);
+                if (fields.category) form.setFCategory(fields.category);
+                if (fields.details) form.setFDetails(fields.details);
+                if (fields.urgency) form.setFUrgency(fields.urgency as any);
+                if (fields.address) form.setFAddress(fields.address);
+                if (fields.contact) form.setFContact(fields.contact);
+              }}
+              triggerSubmit={async () => {
+                if (!form.validateStep1()) {
+                  addToast("Please fill in Step 1 (Basic Details) first!", "error");
+                  form.setStep(1);
+                  return;
+                }
+                if (!form.validateStep2()) {
+                  addToast("Please choose a 4-Digit Security PIN in Step 2!", "error");
+                  form.setStep(2);
+                  return;
+                }
+                
+                const postData = {
+                  item: form.fItem,
+                  details: form.fDetails,
+                  type: form.fType,
+                  address: form.fAddress,
+                  reward: form.fReward,
+                  contact: form.fContact,
+                  category: form.fCategory,
+                  urgency: form.fUrgency,
+                  image: form.fImage,
+                  timeline: form.fTimeline,
+                  latitude: form.fLat,
+                  longitude: form.fLng,
+                  securityPin: form.fSecurityPin || "0000",
+                };
+
+                try {
+                  const res = await handleCreatePost(postData);
+                  if (res && res.success) {
+                    form.resetForm();
+                  }
+                } catch (e) {
+                  console.error("Auto submit failed:", e);
+                }
+              }}
+              currentState={{
+                type: (form.fType || "Lost") as "Lost" | "Found",
+                item: form.fItem,
+                category: form.fCategory,
+                details: form.fDetails,
+                urgency: form.fUrgency,
+                address: form.fAddress,
+                contact: form.fContact,
+              }}
+            />
+
+            <div className="bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
+              <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
+                💡 Platform Health
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
+              </p>
+              <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
+                <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
+                <span className="text-slate-300">
+                  Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
+                </span>
+              </div>
             </div>
           </div>
         </div>

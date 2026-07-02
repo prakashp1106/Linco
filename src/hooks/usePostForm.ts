@@ -84,23 +84,23 @@ export function usePostForm() {
       newErrors.contact = "Contact must be a valid 10-digit mobile number";
     }
     if (!fAddress.trim()) newErrors.address = "Location/address is required";
+    if (!fDetails.trim()) newErrors.details = "Description is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fType, fItem, fCategory, fContact, fAddress]);
+  }, [fType, fItem, fCategory, fContact, fAddress, fDetails]);
 
   const validateStep2 = useCallback(() => {
     const newErrors: FormErrors = {};
-    if (!fDetails.trim()) newErrors.details = "Description details are required";
     if (!fSecurityPin) {
       newErrors.securityPin = "A 4-digit Security PIN is required to edit/resolve later";
     } else if (!/^\d{4}$/.test(fSecurityPin)) {
       newErrors.securityPin = "PIN must be exactly 4 numeric digits";
     }
 
-    setErrors((prev) => ({ ...prev, ...newErrors }));
+    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fDetails, fSecurityPin]);
+  }, [fSecurityPin]);
 
   const resetForm = useCallback(() => {
     setFItem("");
@@ -126,6 +126,8 @@ export function usePostForm() {
       if (validateStep1()) setStep(2);
     } else if (step === 2) {
       if (validateStep2()) setStep(3);
+    } else if (step === 3) {
+      setStep(4);
     }
   }, [step, validateStep1, validateStep2]);
 

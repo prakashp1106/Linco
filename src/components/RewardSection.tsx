@@ -11,12 +11,14 @@ interface RewardSectionProps {
   itemName: string;
   itemDescription: string;
   onSetSuggestedReward: (amount: string) => void;
+  currentReward?: string;
 }
 
 export const RewardSection: React.FC<RewardSectionProps> = ({
   itemName,
   itemDescription,
   onSetSuggestedReward,
+  currentReward,
 }) => {
   const { rewardLoading, rewardReason, runRewardSuggestion } = useAI();
   const [estimatedMin, setEstimatedMin] = useState<number | null>(null);
@@ -45,8 +47,14 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
           <DollarSign size={16} />
         </div>
         <div>
-          <h4 className="text-xs font-bold text-slate-200">AI Reward Recommender</h4>
-          <p className="text-[10px] text-slate-500">Find the optimal thank-you token</p>
+          <h4 className="text-xs font-bold text-slate-200">
+            {currentReward ? "AI Reward Evaluator" : "AI Reward Recommender"}
+          </h4>
+          <p className="text-[10px] text-slate-500">
+            {currentReward 
+              ? `Recommended reward based on your input of ₹${currentReward}` 
+              : "Find the optimal thank-you token"}
+          </p>
         </div>
       </div>
 
