@@ -29,11 +29,16 @@ import {
   Clock,
   ExternalLink,
   ChevronRight,
+  Map,
+  List,
+  Download,
+  DownloadCloud,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, AIMatch, UrgencyType, Category, UrgencyInfo } from "./types";
-import { InteractiveMap, MiniMap } from "./components/LeafletMap";
+import { InteractiveMap, MiniMap, FeedMap } from "./components/LeafletMap";
 import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
+import confetti from "canvas-confetti";
 
 // --- END-TO-END CRYPTO ENGINES (WEB CRYPTO API) ---
 async function deriveKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
@@ -195,6 +200,80 @@ const CanvasParticles: React.FC = () => {
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0 opacity-60" />;
 };
 
+// --- LIVE URGENCIES & DYNAMIC TIMERS ---
+const LiveMissingTimer: React.FC<{ createdTime: number }> = ({ createdTime }) => {
+  const [elapsedText, setElapsedText] = useState("");
+
+  useEffect(() => {
+    const calculateElapsed = () => {
+      const now = Date.now();
+      const diffMs = now - createdTime;
+
+      if (diffMs <= 0) {
+        setElapsedText("Just now");
+        return;
+      }
+
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      const displayHours = diffHours % 24;
+      const displayMins = diffMins % 60;
+      const displaySecs = diffSecs % 60;
+
+      if (diffDays > 0) {
+        setElapsedText(`Missing for ${diffDays}d ${displayHours}h`);
+      } else if (diffHours > 0) {
+        setElapsedText(`Missing for ${diffHours}h ${displayMins}m`);
+      } else if (diffMins > 0) {
+        setElapsedText(`Missing for ${diffMins}m ${displaySecs}s`);
+      } else {
+        setElapsedText(`Missing for ${displaySecs}s`);
+      }
+    };
+
+    calculateElapsed();
+    const interval = setInterval(calculateElapsed, 10000); // update every 10 seconds
+    return () => clearInterval(interval);
+  }, [createdTime]);
+
+  return (
+    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-amber-400 bg-amber-950/40 border border-amber-500/20 px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.1)]">
+      <Clock size={9} /> {elapsedText}
+    </span>
+  );
+};
+
+const CountUpStat: React.FC<{ value: number; color: string }> = ({ value, color }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (end === 0) {
+      setDisplayValue(0);
+      return;
+    }
+    const duration = 1200; // ms
+    const increment = Math.ceil(end / (duration / 16)); // ~60fps
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        clearInterval(timer);
+        setDisplayValue(end);
+      } else {
+        setDisplayValue(start);
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  return <span className={`text-xl font-extrabold block ${color}`}>{displayValue}</span>;
+};
+
 // Custom Toasts Implementation
 interface Toast {
   id: string;
@@ -219,6 +298,7 @@ export default function App() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [cityFilter, setCityFilter] = useState("All");
   const [sortBy, setSortBy] = useState<"new" | "old" | "views">("new");
+  const [feedViewMode, setFeedViewMode] = useState<"list" | "map">("list");
 
   // Form States
   const [fItem, setFItem] = useState("");
@@ -537,6 +617,17 @@ export default function App() {
       const res = await response.json();
 
       if (res.success) {
+        // Trigger Canvas Confetti celebration animation!
+        try {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } catch (e) {
+          console.error("Confetti failed to run:", e);
+        }
+
         // Trigger Success banner temporarily
         setBanner({
           show: true,
@@ -881,6 +972,201 @@ export default function App() {
     setPinModal(null);
   };
 
+  // Share as Canvas Image Card
+  const handleShareAsImage = (p: Post, e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToast("Generating your shareable image card...", "info");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 800;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      addToast("Failed to create canvas context", "error");
+      return;
+    }
+
+    // 1. Draw gradient background
+    const grad = ctx.createRadialGradient(400, 400, 50, 400, 400, 600);
+    grad.addColorStop(0, "#0f172a"); // slate-900
+    grad.addColorStop(1, "#020817"); // slate-950
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 800, 800);
+
+    // 2. Draw dot grid pattern
+    ctx.fillStyle = "rgba(6, 182, 212, 0.05)"; // cyan-500 with low opacity
+    for (let x = 20; x < 800; x += 30) {
+      for (let y = 20; y < 800; y += 30) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 3. Draw outer glowing border
+    ctx.strokeStyle = p.type === "Lost" ? "rgba(239, 68, 68, 0.35)" : "rgba(16, 185, 129, 0.35)";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 40, 720, 720);
+
+    // Subtle inner cyan accents
+    ctx.strokeStyle = "rgba(6, 182, 212, 0.15)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(50, 50, 700, 700);
+
+    // 4. Header Branding
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 24px 'Inter', sans-serif";
+    ctx.fillText("LINCO AI", 80, 100);
+
+    ctx.fillStyle = "rgba(6, 182, 212, 0.8)";
+    ctx.font = "bold 12px 'Inter', sans-serif";
+    ctx.fillText("REALTIME LOST & FOUND DIRECTORY", 80, 125);
+
+    // Decorative line
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, 150);
+    ctx.lineTo(720, 150);
+    ctx.stroke();
+
+    // 5. Status Badge (LOST/FOUND)
+    const isLost = p.type === "Lost";
+    ctx.fillStyle = isLost ? "rgba(239, 68, 68, 0.15)" : "rgba(16, 185, 129, 0.15)";
+    const badgeX = 80;
+    const badgeY = 180;
+    const badgeW = 125;
+    const badgeH = 34;
+    const badgeR = 8;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeR) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
+    ctx.fill();
+
+    ctx.strokeStyle = isLost ? "rgba(239, 68, 68, 0.4)" : "rgba(16, 185, 129, 0.4)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Badge Text
+    ctx.fillStyle = isLost ? "#f87171" : "#34d399";
+    ctx.font = "bold 13px 'Inter', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(isLost ? "🚨 LOST ITEM" : "🤝 FOUND ITEM", badgeX + badgeW/2, badgeY + 22);
+    ctx.textAlign = "left"; // reset
+
+    // Category Badge
+    const catText = p.category ? `Category: ${p.category}` : "General Item";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(220, badgeY, 180, badgeH, badgeR) : ctx.rect(220, badgeY, 180, badgeH);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.stroke();
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "bold 11px 'Inter', sans-serif";
+    ctx.fillText(catText, 240, badgeY + 21);
+
+    // 6. Item Title
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 36px 'Inter', sans-serif";
+    ctx.fillText(p.item, 80, 270);
+
+    // 7. Details (Multiline Wrap)
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "500 17px 'Inter', sans-serif";
+    
+    const wrapText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+      const words = text.split(" ");
+      let line = "";
+      let currentY = y;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, x, currentY);
+          line = words[n] + " ";
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, currentY);
+      return currentY;
+    };
+
+    const detailsStartY = 320;
+    const detailsEndY = wrapText(p.details, 80, detailsStartY, 640, 26);
+
+    // 8. Location & Timing Meta Section
+    let metaY = detailsEndY + 50;
+    if (metaY < 480) metaY = 480; // ensure spacing
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, metaY - 20);
+    ctx.lineTo(720, metaY - 20);
+    ctx.stroke();
+
+    // Location Label & Text
+    ctx.fillStyle = "rgba(6, 182, 212, 0.9)";
+    ctx.font = "bold 14px 'Inter', sans-serif";
+    ctx.fillText("📍 LOCATION", 80, metaY);
+
+    ctx.fillStyle = "#f1f5f9";
+    ctx.font = "600 16px 'Inter', sans-serif";
+    ctx.fillText(p.address, 80, metaY + 28);
+
+    // Timestamp Label & Text
+    ctx.fillStyle = "rgba(139, 92, 246, 0.9)";
+    ctx.font = "bold 14px 'Inter', sans-serif";
+    ctx.fillText("📅 DATE REPORTED", 420, metaY);
+
+    ctx.fillStyle = "#f1f5f9";
+    ctx.font = "600 16px 'Inter', sans-serif";
+    ctx.fillText(p.timestamp, 420, metaY + 28);
+
+    // 9. Reward Offered Block (if any)
+    if (p.reward) {
+      const rewardY = metaY + 80;
+      ctx.fillStyle = "rgba(245, 158, 11, 0.1)";
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(80, rewardY, 640, 60, 12) : ctx.rect(80, rewardY, 640, 60);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.3)";
+      ctx.stroke();
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 18px 'Inter', sans-serif";
+      ctx.fillText(`💰 REWARD OFFERED: ₹${p.reward}`, 110, rewardY + 36);
+    }
+
+    // 10. Footer Branding Call-to-action
+    ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.font = "bold 12px 'Inter', sans-serif";
+    ctx.fillText("Scan QR or visit linco.ai to claim or contact the owner", 80, 715);
+
+    ctx.fillStyle = "rgba(6, 182, 212, 0.8)";
+    ctx.font = "bold 13px 'Inter', sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText("SECURED BY LINCO AI • GEMINI POWERED", 720, 715);
+    ctx.textAlign = "left";
+
+    // 11. Download the generated Image
+    setTimeout(() => {
+      try {
+        const link = document.createElement("a");
+        link.download = `LINCO_${p.type.toUpperCase()}_${p.item.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        addToast("Shareable image generated and downloaded! 🚀", "success");
+      } catch (err) {
+        console.error("Canvas export failed", err);
+        addToast("Could not auto-download image, right click or retry", "error");
+      }
+    }, 100);
+  };
+
   // Share/Copy Post
   const handleSharePost = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1029,7 +1315,7 @@ export default function App() {
   });
 
   return (
-    <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-grid-pattern">
+    <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-dot-grid">
       {/* Background stars, gradient mesh & rotating blurs */}
       <CanvasParticles />
       <div className="fixed -top-[20%] -left-[20%] w-[60vw] h-[60vw] bg-radial from-cyan-500/10 via-transparent to-transparent blur-[120px] pointer-events-none z-0 animate-orb-slow-1" />
@@ -1083,47 +1369,60 @@ export default function App() {
       </div>
 
       {/* HERO HERO CONTAINER */}
-      <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-10 text-center select-none">
+      <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center select-none overflow-visible">
+        {/* Aurora Shifting Wave Backdrop behind Hero */}
+        <div className="absolute inset-0 -top-40 max-h-[500px] bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-pink-500/5 blur-[120px] animate-pulse pointer-events-none z-0 opacity-80" />
+        <div className="absolute left-1/4 top-10 w-[50%] h-[260px] bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-[100px] filter blur-[80px] animate-orb-slow-1 opacity-70 pointer-events-none z-0" />
+
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/5 border border-cyan-500/20 text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-4"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/40 to-violet-950/40 border border-cyan-500/30 text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest mb-5 shadow-lg shadow-cyan-950/50 backdrop-blur-md relative overflow-hidden group"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-          Realtime Lost & Found Directory
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
+          </span>
+          <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost & Found Directory</span>
         </motion.div>
-
-        <motion.h1 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter leading-none bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-500 bg-[size:200%] animate-shimmer text-transparent bg-clip-text"
-        >
-          LINCO
-        </motion.h1>
-
-        <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-1 mb-3">
+ 
+        <div className="relative inline-block my-1.5 z-10">
+          {/* Beautiful pulsing animated glow ring behind logo */}
+          <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-radial from-cyan-500/10 to-transparent blur-2xl animate-ping opacity-60 pointer-events-none" />
+          
+          <motion.h1 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter leading-none bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-500 bg-[size:200%] animate-shimmer text-transparent bg-clip-text relative z-10"
+          >
+            LINCO
+          </motion.h1>
+        </div>
+ 
+        <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-2 mb-4">
           Locate · Identify · Notify · Connect · Owner
         </p>
-
+ 
         {/* Typewriter message */}
-        <div className="h-6 flex justify-center items-center">
+        <div className="h-6 flex justify-center items-center mb-1">
           <p className="text-xs text-slate-400 font-medium">
             {typewriterText}
             <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
           </p>
         </div>
-
+ 
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5 justify-center my-4 opacity-85">
           {["🧠 Gemini Match", "🎙️ Voice Input", "📸 Photo Analyzer", "🗺️ Timeline Detective", "🔐 Verification Proofs"].map((badge, idx) => (
-            <span key={idx} className="text-[9px] font-medium px-2 py-1 bg-slate-900/50 border border-slate-800 rounded-full text-slate-400">
+            <span key={idx} className="text-[9px] font-medium px-2 py-1 bg-slate-900/50 border border-slate-800 rounded-full text-slate-400 shadow-sm backdrop-blur-sm">
               {badge}
             </span>
           ))}
         </div>
-
-        {/* Grid Statistics Counters */}
+ 
+        {/* Grid Statistics Counters with Count-up Animations */}
         <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto mt-6">
           {[
             { label: "Total", value: stats.total, color: "text-slate-100" },
@@ -1131,8 +1430,8 @@ export default function App() {
             { label: "Found", value: stats.found, color: "text-emerald-400" },
             { label: "Resolved", value: stats.resolved, color: "text-violet-400" },
           ].map((stat, idx) => (
-            <div key={idx} className="bg-slate-950/40 border border-slate-900 rounded-xl p-2.5 text-center transition hover:border-slate-800/80">
-              <span className={`text-xl font-extrabold block ${stat.color}`}>{stat.value}</span>
+            <div key={idx} className="bg-slate-950/40 border border-slate-900 rounded-xl p-2.5 text-center transition hover:border-slate-800/80 shadow-md">
+              <CountUpStat value={stat.value} color={stat.color} />
               <span className="text-[8px] tracking-wider text-slate-500 uppercase block font-semibold mt-0.5">{stat.label}</span>
             </div>
           ))}
@@ -1463,13 +1762,21 @@ export default function App() {
                     </p>
                   </div>
 
-                  {/* Reward estimation Box (Only for Lost) */}
-                  {fType === "Lost" && (
-                    <div className="p-5 bg-amber-500/5 rounded-3xl border border-amber-500/20 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <label className="block text-sm md:text-base font-extrabold text-amber-300 uppercase tracking-wider">
-                          Reward (optional INR Amount)
-                        </label>
+                  {/* Reward estimation Box (Always Visible, with dynamic state) */}
+                  <div className={`p-5 rounded-3xl border transition-all duration-300 space-y-3 ${
+                    fType === "Lost" 
+                      ? "bg-amber-500/5 border-amber-500/30 shadow-lg shadow-amber-500/5" 
+                      : "bg-slate-900/40 border-slate-900/60 opacity-60"
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <label className="block text-sm md:text-base font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                        <span>💰</span> Reward {fType !== "Lost" && (
+                          <span className="text-[9px] font-bold bg-slate-950 px-2 py-0.5 rounded text-amber-500/80 border border-amber-500/10 normal-case tracking-normal">
+                            Unlocks on 'I Lost Something'
+                          </span>
+                        )}
+                      </label>
+                      {fType === "Lost" && (
                         <button
                           type="button"
                           onClick={handleSuggestReward}
@@ -1479,24 +1786,34 @@ export default function App() {
                           <Award size={14} className={rewardLoading ? "animate-spin" : ""} />
                           {rewardLoading ? "Calculating..." : "AI Reward Assist"}
                         </button>
-                      </div>
-                      <div className="relative flex items-center">
-                        <span className="absolute left-5 text-amber-500 text-base md:text-lg font-black font-mono">₹</span>
-                        <input
-                          type="text"
-                          placeholder="e.g. 500"
-                          value={fReward}
-                          onChange={(e) => setFReward(e.target.value.replace(/\D/g, ""))}
-                          className="w-full pl-10 pr-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-amber-500/40 outline-none text-base md:text-lg text-amber-200 font-mono font-extrabold transition duration-150"
-                        />
-                      </div>
-                      {rewardReason && (
-                        <p className="text-xs text-amber-300/80 leading-relaxed pt-1 italic font-semibold">
-                          💡 Suggestion: {rewardReason}
-                        </p>
                       )}
                     </div>
-                  )}
+                    <div className="relative flex items-center">
+                      <span className="absolute left-5 text-amber-500 text-base md:text-lg font-black font-mono">₹</span>
+                      <input
+                        type="text"
+                        placeholder={fType === "Lost" ? "e.g. 500" : "Select 'I Lost Something' to enable"}
+                        value={fType === "Lost" ? fReward : ""}
+                        disabled={fType !== "Lost"}
+                        onChange={(e) => setFReward(e.target.value.replace(/\D/g, ""))}
+                        className={`w-full pl-10 pr-5 py-4 rounded-2xl bg-slate-950/60 border outline-none text-base md:text-lg font-mono font-extrabold transition duration-150 ${
+                          fType === "Lost" 
+                            ? "border-amber-500/30 text-amber-200 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20" 
+                            : "border-slate-900 text-slate-500 cursor-not-allowed"
+                        }`}
+                      />
+                    </div>
+                    {fType === "Lost" && rewardReason && (
+                      <p className="text-xs text-amber-300/80 leading-relaxed pt-1 italic font-semibold">
+                        💡 Suggestion: {rewardReason}
+                      </p>
+                    )}
+                    {fType !== "Lost" && (
+                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                        Offering a reward increases active search motivations by up to 85%! Enabled only when reporting a lost item.
+                      </p>
+                    )}
+                  </div>
 
                   {/* TIMELINE RECONSTRUCTOR DETECTIVE BLOCK (Only for Lost) */}
                   {fType === "Lost" && (
@@ -1633,38 +1950,64 @@ export default function App() {
                     <option value="old">Oldest First</option>
                     <option value="views">Most Viewed</option>
                   </select>
+
+                  {/* List/Map View Toggle */}
+                  <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-900 shadow-md">
+                    <button
+                      type="button"
+                      onClick={() => setFeedViewMode("list")}
+                      className={`text-[9px] font-extrabold px-2 py-1 rounded transition flex items-center gap-1 uppercase tracking-wider ${
+                        feedViewMode === "list"
+                          ? "bg-slate-900 text-cyan-400 shadow-sm"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <List size={10} /> List
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFeedViewMode("map")}
+                      className={`text-[9px] font-extrabold px-2 py-1 rounded transition flex items-center gap-1 uppercase tracking-wider ${
+                        feedViewMode === "map"
+                          ? "bg-slate-900 text-cyan-400 shadow-sm"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <Map size={10} /> Map
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Feed posts list */}
               {loadingPosts ? (
-                <div className="space-y-4 animate-pulse">
+                <div className="space-y-4">
                   {[1, 2, 3].map((n) => (
-                    <div key={n} className="bg-slate-900/40 border border-slate-900/80 rounded-2xl p-4 md:p-5 relative overflow-hidden">
-                      {/* Top Row Skeleton */}
-                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-900/60">
+                    <div key={n} className="bg-slate-950/40 border border-slate-900/80 rounded-3xl p-5 md:p-6 relative overflow-hidden space-y-4">
+                      {/* Top Row */}
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-900/60">
                         <div className="flex gap-2">
-                          <div className="h-4 w-12 bg-slate-800/80 rounded-full" />
-                          <div className="h-4 w-20 bg-slate-800/80 rounded-full" />
+                          <div className="h-5 w-16 rounded-full shimmer-effect" />
+                          <div className="h-5 w-24 rounded-full shimmer-effect" />
                         </div>
-                        <div className="h-4 w-8 bg-slate-800/80 rounded" />
+                        <div className="h-6 w-16 rounded-lg shimmer-effect" />
                       </div>
-                      {/* Title Skeleton */}
-                      <div className="h-5 bg-slate-800/80 rounded w-1/3 mb-2.5" />
-                      {/* Details Lines Skeletons */}
-                      <div className="space-y-2 mb-3">
-                        <div className="h-3 bg-slate-800/60 rounded w-full" />
-                        <div className="h-3 bg-slate-800/60 rounded w-5/6" />
+                      {/* Title */}
+                      <div className="h-6 w-1/3 rounded-lg shimmer-effect" />
+                      {/* Description Lines */}
+                      <div className="space-y-2.5">
+                        <div className="h-4 w-full rounded-lg shimmer-effect" />
+                        <div className="h-4 w-5/6 rounded-lg shimmer-effect" />
                       </div>
-                      {/* Metadata Row Skeleton */}
-                      <div className="flex gap-3 mb-4">
-                        <div className="h-3 w-16 bg-slate-800/40 rounded" />
-                        <div className="h-3 w-24 bg-slate-800/40 rounded" />
+                      {/* Metadata Row */}
+                      <div className="flex gap-4">
+                        <div className="h-4 w-24 rounded-lg shimmer-effect" />
+                        <div className="h-4 w-24 rounded-lg shimmer-effect" />
                       </div>
-                      {/* Buttons Skeleton */}
-                      <div className="flex gap-2">
-                        <div className="h-8 bg-slate-800/80 rounded-xl flex-1" />
-                        <div className="h-8 bg-slate-800/80 rounded-xl w-16" />
+                      {/* Action Buttons */}
+                      <div className="flex gap-2.5 pt-1">
+                        <div className="h-10 rounded-xl shimmer-effect flex-1" />
+                        <div className="h-10 rounded-xl shimmer-effect w-14" />
                       </div>
                     </div>
                   ))}
@@ -1683,6 +2026,23 @@ export default function App() {
                     Clear Filters
                   </button>
                 </div>
+              ) : feedViewMode === "map" ? (
+                <FeedMap 
+                  posts={filteredPosts} 
+                  onPinClick={(post) => {
+                    setFeedViewMode("list");
+                    setTimeout(() => {
+                      const el = document.getElementById(`post-card-${post.id}`);
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        el.classList.add("ring-2", "ring-cyan-500/40", "scale-[1.01]");
+                        setTimeout(() => {
+                          el.classList.remove("ring-2", "ring-cyan-500/40", "scale-[1.01]");
+                        }, 2000);
+                      }
+                    }, 200);
+                  }} 
+                />
               ) : (
                 <div className="space-y-3.5">
                   {filteredPosts.map((p, idx) => {
@@ -1694,13 +2054,14 @@ export default function App() {
                     return (
                       <motion.div
                         key={p.id}
+                        id={`post-card-${p.id}`}
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.04, 0.2) }}
                         onClick={() => handleIncrementViews(p.id)}
-                        className={`bg-slate-950/40 hover:bg-slate-950/60 border rounded-2xl p-4 md:p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/5 hover:border-slate-800/80 cursor-pointer relative overflow-hidden group ${
+                        className={`bg-slate-950/40 hover:bg-slate-950/60 border rounded-3xl p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-500/5 hover:border-slate-800/85 cursor-pointer relative overflow-hidden group ${
                           isLost ? "border-l-4 border-l-rose-500 border-slate-900/80" : "border-l-4 border-l-emerald-500 border-slate-900/80"
-                        } ${isResolved ? "opacity-70 border-l-slate-600" : ""} ${postMatches.length > 0 ? "border-r border-r-violet-500/20 shadow-lg shadow-violet-950/5" : ""}`}
+                        } ${isResolved ? "opacity-70 border-l-slate-600" : ""} ${postMatches.length > 0 ? "border-r border-r-violet-500/25 shadow-lg shadow-violet-950/10" : ""}`}
                       >
                         {/* Top Metadata Row */}
                         <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5 pb-2 border-b border-slate-900">
@@ -1723,6 +2084,10 @@ export default function App() {
                               <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-rose-400 rounded-full animate-pulse">
                                 ⚡ {p.urgency}
                               </span>
+                            )}
+                            {/* Live Missing Since Timer */}
+                            {isLost && !isResolved && (
+                              <LiveMissingTimer createdTime={p.created} />
                             )}
                             {/* Resolved badge */}
                             {isResolved && (
@@ -1834,10 +2199,20 @@ export default function App() {
                           {/* Share button */}
                           <button
                             onClick={(e) => handleSharePost(p, e)}
-                            title="Share/Copy Template"
+                            title="Share/Copy Template Text"
                             className="p-2 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-400 hover:text-slate-200 transition duration-150 flex items-center justify-center"
                           >
                             <Share2 size={13} />
+                          </button>
+
+                          {/* Share as Image button */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleShareAsImage(p, e)}
+                            title="Download Post as Image Card"
+                            className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-cyan-500/30 hover:text-cyan-400 rounded-xl text-slate-400 transition duration-150 flex items-center justify-center gap-1 text-[9px] font-extrabold uppercase tracking-wider font-sans select-none"
+                          >
+                            <Download size={11} className="text-cyan-400" /> Image
                           </button>
                         </div>
 

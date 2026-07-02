@@ -382,3 +382,129 @@ export const MiniMap: React.FC<MiniMapProps> = ({ lat, lng }) => {
     </div>
   );
 };
+
+interface FeedMapProps {
+  posts: any[];
+  onPinClick?: (post: any) => void;
+}
+
+export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+
+  useEffect(() => {
+    const L = (window as any).L;
+    if (!L || !mapContainerRef.current) return;
+
+    // Center map around a default location (Wagholi, Pune) or average of posts if available
+    const validPosts = posts.filter(p => p.latitude !== undefined && p.longitude !== undefined);
+    let centerLat = 18.5793;
+    let centerLng = 73.9850;
+    let initialZoom = 12;
+
+    if (validPosts.length > 0) {
+      centerLat = validPosts[0].latitude!;
+      centerLng = validPosts[0].longitude!;
+      initialZoom = 13;
+    }
+
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+    }).setView([centerLat, centerLng], initialZoom);
+
+    mapRef.current = map;
+
+    // Dark Matter tiles for premium feel
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20,
+    }).addTo(map);
+
+    // Create markers for each post
+    const markers: any[] = [];
+    validPosts.forEach((post) => {
+      const isLost = post.type === "Lost";
+      const colorClass = isLost ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]";
+      const glowColor = isLost ? "bg-rose-500/20" : "bg-emerald-500/20";
+
+      const pinIcon = L.divIcon({
+        html: `
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-8 h-8 ${glowColor} rounded-full animate-ping"></div>
+            <div class="w-4.5 h-4.5 ${colorClass} rounded-full border-2 border-[#020817] shadow-lg flex items-center justify-center text-[8px] font-extrabold text-slate-950">
+              ${isLost ? "L" : "F"}
+            </div>
+          </div>
+        `,
+        className: "custom-feed-marker",
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      const popupContent = `
+        <div style="background-color: #020817; color: #f1f5f9; padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); font-family: 'Inter', sans-serif; width: 210px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 9999px; ${isLost ? 'background-color: rgba(244,63,94,0.15); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2);' : 'background-color: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.2);'}">
+              ${post.type}
+            </span>
+            <span style="font-size: 9px; color: #94a3b8; font-weight: 600;">${post.category || ""}</span>
+          </div>
+          <h4 style="font-size: 13px; font-weight: 700; color: #f8fafc; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${post.item}</h4>
+          <p style="font-size: 10px; color: #94a3b8; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${post.details}</p>
+          <div style="font-size: 9px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-bottom: 10px;">
+            <span>📍</span> <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;">${post.address}</span>
+          </div>
+          ${post.reward ? `<div style="font-size: 10px; color: #f59e0b; font-weight: 700; margin-bottom: 10px;">💰 Reward: ₹${post.reward}</div>` : ''}
+          <button id="btn-view-${post.id}" style="width: 100%; padding: 8px 0; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: #020817; font-size: 10px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.2s;">
+            View details
+          </button>
+        </div>
+      `;
+
+      const marker = L.marker([post.latitude, post.longitude], { icon: pinIcon })
+        .addTo(map)
+        .bindPopup(popupContent, {
+          closeButton: false,
+          className: 'dark-leaflet-popup',
+          minWidth: 220,
+        });
+
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`btn-view-${post.id}`);
+        if (btn) {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (onPinClick) {
+              onPinClick(post);
+            }
+          });
+        }
+      });
+
+      markers.push(marker);
+    });
+
+    if (markers.length > 0) {
+      const group = new L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.15));
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [posts]);
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden border border-slate-900 shadow-2xl bg-slate-950/40">
+      <div ref={mapContainerRef} className="w-full h-[400px] md:h-[450px] outline-none z-0" />
+      <div className="absolute bottom-2.5 right-2.5 z-[1000] bg-slate-950/80 px-3 py-1 rounded-lg text-[9px] text-slate-500 font-mono shadow-md backdrop-blur-md">
+        © OpenStreetMap • {posts.filter(p => p.latitude && p.longitude).length} items pinned
+      </div>
+    </div>
+  );
+};
