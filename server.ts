@@ -9,7 +9,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch } from "./src/types.js";
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 
 import helmet from "helmet";
@@ -162,7 +162,26 @@ try {
   }
   
   if (getApps().length === 0) {
-    initializeApp();
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+    if (projectId && clientEmail && privateKey) {
+      initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey
+        })
+      });
+      console.log("Initialized Firebase Admin with cert from environment variables.");
+    } else {
+      const missingVars = [];
+      if (!projectId) missingVars.push("FIREBASE_PROJECT_ID");
+      if (!clientEmail) missingVars.push("FIREBASE_CLIENT_EMAIL");
+      if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push("FIREBASE_PRIVATE_KEY");
+      console.error(`Failed to initialize Firebase Admin: Missing required environment variables: ${missingVars.join(", ")}`);
+    }
   }
   
   if (databaseId) {
