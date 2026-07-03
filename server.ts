@@ -11,11 +11,19 @@ import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch } from "./src/types.js";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { v2 as cloudinary } from "cloudinary";
 
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Initialize Gemini SDK with telemetry User-Agent header
 const ai = new GoogleGenAI({
@@ -47,7 +55,8 @@ app.use(
           "https://apis.mappls.com", 
           "https://*.mappls.com", 
           "https://*.google.com",
-          "https://*.googleapis.com"
+          "https://*.googleapis.com",
+          "https://res.cloudinary.com"
         ],
         connectSrc: [
           "'self'", 
@@ -657,6 +666,44 @@ app.use("/uploads", express.static(UPLOADS_DIR, {
   etag: true
 }));
 
+// Helper to extract Cloudinary public ID from its URL
+function getPublicIdFromUrl(url: string): string | null {
+  if (!url || !url.includes("cloudinary.com")) return null;
+  try {
+    const parts = url.split("/image/upload/");
+    if (parts.length < 2) return null;
+    const afterUpload = parts[1]; // e.g. "v123456/folder/public_id.jpg"
+    const remainingParts = afterUpload.split("/");
+    if (remainingParts[0].startsWith("v") && /^\d+$/.test(remainingParts[0].substring(1))) {
+      remainingParts.shift();
+    }
+    const publicIdWithExt = remainingParts.join("/");
+    const dotIndex = publicIdWithExt.lastIndexOf(".");
+    if (dotIndex !== -1) {
+      return publicIdWithExt.substring(0, dotIndex);
+    }
+    return publicIdWithExt;
+  } catch (error) {
+    console.error("Error parsing Cloudinary URL:", error);
+    return null;
+  }
+}
+
+// Helper to delete a Cloudinary image by its URL
+async function deleteCloudinaryImage(url: string | null | undefined) {
+  if (!url) return;
+  const publicId = getPublicIdFromUrl(url);
+  if (publicId) {
+    try {
+      console.log(`Attempting to delete Cloudinary image with public ID: ${publicId}`);
+      const result = await cloudinary.uploader.destroy(publicId);
+      console.log(`Cloudinary deletion result for ${publicId}:`, result);
+    } catch (err) {
+      console.error(`Failed to delete Cloudinary image with URL ${url}:`, err);
+    }
+  }
+}
+
 // Base64 Image Upload & Storage Endpoint (Replaces heavy base64 storage in db)
 app.post("/api/upload", async (req, res) => {
   try {
@@ -665,40 +712,36 @@ app.post("/api/upload", async (req, res) => {
       return res.status(400).json({ error: "Image base64 data required" });
     }
 
-    // Process main image
-    const mainMatches = image.match(/^data:image\/(.*?);base64,(.*)$/);
-    if (!mainMatches) {
-      return res.status(400).json({ error: "Invalid main image base64 format" });
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return res.status(500).json({ error: "Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET." });
     }
-    const mainExt = mainMatches[1];
-    const mainBuffer = Buffer.from(mainMatches[2], "base64");
+
+    // Upload main image to Cloudinary
+    console.log("Uploading main image to Cloudinary...");
+    const mainUpload = await cloudinary.uploader.upload(image, {
+      folder: "linco/posts",
+    });
     
-    // Validate file size (max 5MB after decoding)
-    if (mainBuffer.length > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Image too large. Max size is 5MB." });
-    }
-
-    const mainFilename = `img_${crypto.randomUUID()}.${mainExt === "jpeg" || mainExt === "jpg" ? "jpg" : "png"}`;
-    const mainFilePath = path.join(UPLOADS_DIR, mainFilename);
-    fs.writeFileSync(mainFilePath, mainBuffer);
-
-    let thumbnailUrl = `/uploads/${mainFilename}`;
-
-    // Process thumbnail if provided
+    let thumbnailUrl = mainUpload.secure_url;
+    
+    // Upload thumbnail to Cloudinary if provided
     if (thumbnail) {
-      const thumbMatches = thumbnail.match(/^data:image\/(.*?);base64,(.*)$/);
-      if (thumbMatches) {
-        const thumbExt = thumbMatches[1];
-        const thumbBuffer = Buffer.from(thumbMatches[2], "base64");
-        const thumbFilename = `thumb_${crypto.randomUUID()}.${thumbExt === "jpeg" || thumbExt === "jpg" ? "jpg" : "png"}`;
-        const thumbFilePath = path.join(UPLOADS_DIR, thumbFilename);
-        fs.writeFileSync(thumbFilePath, thumbBuffer);
-        thumbnailUrl = `/uploads/${thumbFilename}`;
+      try {
+        console.log("Uploading thumbnail to Cloudinary...");
+        const thumbUpload = await cloudinary.uploader.upload(thumbnail, {
+          folder: "linco/thumbnails",
+        });
+        thumbnailUrl = thumbUpload.secure_url;
+      } catch (thumbErr) {
+        console.error("Cloudinary thumbnail upload error:", thumbErr);
+        // Fall back to main image URL if thumbnail upload fails
       }
     }
 
+    console.log("Successfully uploaded to Cloudinary! URLs:", { url: mainUpload.secure_url, thumbnailUrl });
+
     res.json({
-      url: `/uploads/${mainFilename}`,
+      url: mainUpload.secure_url,
       thumbnailUrl: thumbnailUrl
     });
   } catch (error: any) {
@@ -849,6 +892,12 @@ app.delete("/api/posts/:id", async (req, res) => {
       if (!isPinValid) {
         return res.status(403).json({ error: "Wrong PIN!" });
       }
+
+      // Delete the image from Cloudinary if it exists
+      if (post.image) {
+        await deleteCloudinaryImage(post.image);
+      }
+
       dbData.posts = dbData.posts.filter((p) => p.id !== id);
       delete dbData.matches[id];
       writeDB(dbData);
