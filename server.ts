@@ -152,7 +152,7 @@ const initialPosts: Post[] = [
 ];
 
 // Initialize Firestore
-let db: Firestore;
+let db: Firestore | null = null;
 try {
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
   let databaseId: string | undefined;
@@ -173,18 +173,90 @@ try {
     console.log("Initialized Firestore with default database");
   }
 } catch (error) {
-  console.error("Failed to initialize Firebase Admin, falling back:", error);
-  if (getApps().length === 0) {
-    initializeApp();
-  }
-  db = getFirestore();
+  console.error("Failed to initialize Firebase Admin, running in hybrid mode:", error);
 }
 
 // Memory cache of DB data
 let memoryCache: { posts: Post[]; matches: Record<string, AIMatch[]> } | null = null;
 
+// Helper to save to local file cache
+function saveLocalBackup(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
+  try {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+    console.log("Saved local backup to", DB_PATH);
+  } catch (err) {
+    console.error("Failed to write local backup:", err);
+  }
+}
+
+// Helper to read from local file cache
+function readLocalBackup(): { posts: Post[]; matches: Record<string, AIMatch[]> } | null {
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      const content = fs.readFileSync(DB_PATH, "utf-8");
+      const parsed = JSON.parse(content);
+      if (parsed && Array.isArray(parsed.posts)) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to read local backup:", err);
+  }
+  return null;
+}
+
+// Helper to load from JSONBin
+async function readFromJSONBin(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> } | null> {
+  try {
+    console.log("Attempting to load data from JSONBin...");
+    const res = await fetch(BIN_URL, {
+      headers: {
+        "X-Master-Key": BIN_KEY
+      }
+    });
+    if (!res.ok) {
+      console.error("JSONBin read failed with status:", res.status);
+      return null;
+    }
+    const data: any = await res.json();
+    if (data && data.record && Array.isArray(data.record.posts)) {
+      console.log(`Successfully loaded ${data.record.posts.length} posts from JSONBin!`);
+      return data.record;
+    }
+    return null;
+  } catch (err) {
+    console.error("Failed to read from JSONBin:", err);
+    return null;
+  }
+}
+
+// Helper to save to JSONBin
+async function writeToJSONBin(data: { posts: Post[]; matches: Record<string, AIMatch[]> }): Promise<boolean> {
+  try {
+    console.log("Attempting to sync data to JSONBin...");
+    const res = await fetch(BIN_URL, {
+      method: "PUT",
+      headers: {
+        "X-Master-Key": BIN_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      console.log("Successfully synchronized data to JSONBin!");
+      return true;
+    }
+    console.error("JSONBin write failed with status:", res.status);
+    return false;
+  } catch (err) {
+    console.error("Failed to write to JSONBin:", err);
+    return false;
+  }
+}
+
 // Helper to seed initial posts if Firestore collection is empty
 async function seedFirestoreIfNeeded() {
+  if (!db) return;
   try {
     const postsSnapshot = await db.collection("posts").limit(1).get();
     if (postsSnapshot.empty) {
@@ -204,37 +276,62 @@ async function seedFirestoreIfNeeded() {
 
 // Helper to load posts database
 async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> }> {
-  try {
-    await seedFirestoreIfNeeded();
+  // 1. Try Firestore if available
+  if (db) {
+    try {
+      await seedFirestoreIfNeeded();
 
-    // Fetch posts
-    const postsSnapshot = await db.collection("posts").get();
-    const posts: Post[] = [];
-    postsSnapshot.forEach(doc => {
-      posts.push(doc.data() as Post);
-    });
+      // Fetch posts
+      const postsSnapshot = await db.collection("posts").get();
+      const posts: Post[] = [];
+      postsSnapshot.forEach(doc => {
+        posts.push(doc.data() as Post);
+      });
 
-    // Sort posts by created descending (newest first)
-    posts.sort((a, b) => b.created - a.created);
+      // Sort posts by created descending (newest first)
+      posts.sort((a, b) => b.created - a.created);
 
-    // Fetch matches
-    const matchesSnapshot = await db.collection("matches").get();
-    const matches: Record<string, AIMatch[]> = {};
-    matchesSnapshot.forEach(doc => {
-      const data = doc.data();
-      if (data && Array.isArray(data.list)) {
-        matches[doc.id] = data.list;
-      }
-    });
+      // Fetch matches
+      const matchesSnapshot = await db.collection("matches").get();
+      const matches: Record<string, AIMatch[]> = {};
+      matchesSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && Array.isArray(data.list)) {
+          matches[doc.id] = data.list;
+        }
+      });
 
-    const data = { posts, matches };
-    memoryCache = data;
-    return data;
-  } catch (err) {
-    console.error("Error reading from Firestore:", err);
-    if (memoryCache) return memoryCache;
-    return { posts: initialPosts, matches: {} };
+      const data = { posts, matches };
+      memoryCache = data;
+      saveLocalBackup(data); // Sync local file backup
+      return data;
+    } catch (err) {
+      console.error("Firestore read error, attempting cloud fallback (JSONBin):", err);
+    }
   }
+
+  // 2. Fall back to JSONBin
+  const binData = await readFromJSONBin();
+  if (binData) {
+    memoryCache = binData;
+    saveLocalBackup(binData); // Sync local file backup
+    return binData;
+  }
+
+  // 3. Fall back to local backup file
+  const localData = readLocalBackup();
+  if (localData) {
+    console.log("Using local database backup.");
+    memoryCache = localData;
+    return localData;
+  }
+
+  // 4. Default fallback to initial hardcoded seed posts
+  console.log("No cloud or local database accessible. Falling back to memory cache / initial seed data.");
+  if (memoryCache) return memoryCache;
+  const fallbackData = { posts: initialPosts, matches: {} };
+  memoryCache = fallbackData;
+  return fallbackData;
 }
 
 // Synchronous version for backwards compatibility where async is difficult
@@ -247,38 +344,49 @@ function readDB(): { posts: Post[]; matches: Record<string, AIMatch[]> } {
 async function writeDBAsync(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
   memoryCache = data;
   
-  try {
-    const postsSnapshot = await db.collection("posts").get();
-    const existingPostIds = postsSnapshot.docs.map(doc => doc.id);
-    const currentPostIds = new Set(data.posts.map(p => p.id));
-    
-    const batch = db.batch();
-    
-    // Delete posts that are no longer present
-    for (const id of existingPostIds) {
-      if (!currentPostIds.has(id)) {
-        batch.delete(db.collection("posts").doc(id));
-        batch.delete(db.collection("matches").doc(id));
+  // 1. Always save a local file backup
+  saveLocalBackup(data);
+  
+  // 2. Attempt Firestore sync if db exists
+  let firestoreSuccess = false;
+  if (db) {
+    try {
+      const postsSnapshot = await db.collection("posts").get();
+      const existingPostIds = postsSnapshot.docs.map(doc => doc.id);
+      const currentPostIds = new Set(data.posts.map(p => p.id));
+      
+      const batch = db.batch();
+      
+      // Delete posts that are no longer present
+      for (const id of existingPostIds) {
+        if (!currentPostIds.has(id)) {
+          batch.delete(db.collection("posts").doc(id));
+          batch.delete(db.collection("matches").doc(id));
+        }
       }
+      
+      // Write/update current posts
+      for (const post of data.posts) {
+        const docRef = db.collection("posts").doc(post.id);
+        batch.set(docRef, post);
+      }
+      
+      // Write/update matches
+      for (const [postId, list] of Object.entries(data.matches)) {
+        const docRef = db.collection("matches").doc(postId);
+        batch.set(docRef, { list });
+      }
+      
+      await batch.commit();
+      console.log("Successfully synchronized data to Firestore!");
+      firestoreSuccess = true;
+    } catch (err) {
+      console.error("Error syncing to Firestore:", err);
     }
-    
-    // Write/update current posts
-    for (const post of data.posts) {
-      const docRef = db.collection("posts").doc(post.id);
-      batch.set(docRef, post);
-    }
-    
-    // Write/update matches
-    for (const [postId, list] of Object.entries(data.matches)) {
-      const docRef = db.collection("matches").doc(postId);
-      batch.set(docRef, { list });
-    }
-    
-    await batch.commit();
-    console.log("Successfully synchronized data to Firestore!");
-  } catch (err) {
-    console.error("Error syncing to Firestore:", err);
   }
+
+  // 3. Sync to JSONBin as a reliable cloud fallback
+  await writeToJSONBin(data);
 }
 
 // Sync fallback wrapper
