@@ -9,8 +9,8 @@ import fs from "fs";
 import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch } from "./src/types.js";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { Firestore } from "firebase-admin/firestore";
+import { db } from "./src/services/firebaseAdmin.js";
 import { v2 as cloudinary } from "cloudinary";
 
 import helmet from "helmet";
@@ -160,122 +160,21 @@ const initialPosts: Post[] = [
   }
 ];
 
-// Initialize Firestore
-let db: Firestore | null = null;
+// Initialize Firestore tracking errors
 let lastFirestoreError: string | null = null;
 let lastFirestoreErrorDetails: string | null = null;
 
 try {
-  console.log("[DIAGNOSTIC-STARTUP] Checking for Firebase config file...");
-  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-  let fileProjectId: string | undefined;
-  let fileDatabaseId: string | undefined;
-  if (fs.existsSync(configPath)) {
-    try {
-      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-      fileProjectId = config.projectId;
-      fileDatabaseId = config.firestoreDatabaseId;
-      console.log(`[DIAGNOSTIC-STARTUP] Found config file. Project ID: ${fileProjectId}, Database ID: ${fileDatabaseId}`);
-    } catch (e) {
-      console.error("[DIAGNOSTIC-STARTUP] Error reading config file:", e);
-    }
-  } else {
-    console.log("[DIAGNOSTIC-STARTUP] No firebase-applet-config.json found.");
+  if (!db) {
+    throw new Error("Firestore client not initialized.");
   }
-  
-  let app;
-  const existingApps = getApps();
-  if (existingApps.length === 0) {
-    let projectId = process.env.FIREBASE_PROJECT_ID?.trim();
-    if (projectId && projectId.startsWith('"') && projectId.endsWith('"')) {
-      projectId = projectId.slice(1, -1);
-    }
-    if (projectId && projectId.startsWith("'") && projectId.endsWith("'")) {
-      projectId = projectId.slice(1, -1);
-    }
-
-    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
-    if (clientEmail && clientEmail.startsWith('"') && clientEmail.endsWith('"')) {
-      clientEmail = clientEmail.slice(1, -1);
-    }
-    if (clientEmail && clientEmail.startsWith("'") && clientEmail.endsWith("'")) {
-      clientEmail = clientEmail.slice(1, -1);
-    }
-
-    let rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
-    if (rawPrivateKey && rawPrivateKey.startsWith('"') && rawPrivateKey.endsWith('"')) {
-      rawPrivateKey = rawPrivateKey.slice(1, -1);
-    }
-    if (rawPrivateKey && rawPrivateKey.startsWith("'") && rawPrivateKey.endsWith("'")) {
-      rawPrivateKey = rawPrivateKey.slice(1, -1);
-    }
-    const privateKey = rawPrivateKey?.replace(/\\n/g, "\n").trim();
-
-    const finalProjectId = projectId || fileProjectId;
-
-    if (finalProjectId && clientEmail && privateKey) {
-      console.log("[DIAGNOSTIC-STARTUP] Initializing Firebase Admin with environment variables credentials...");
-      app = initializeApp({
-        credential: cert({
-          projectId: finalProjectId,
-          clientEmail,
-          privateKey
-        })
-      });
-      console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App.");
-    } else if (finalProjectId) {
-      console.log(`[DIAGNOSTIC-STARTUP] Initializing Firebase Admin using Application Default Credentials with projectId: ${finalProjectId}`);
-      app = initializeApp({
-        projectId: finalProjectId
-      });
-      console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App using ADC.");
-    } else {
-      const missingVars = [];
-      if (!finalProjectId) missingVars.push("FIREBASE_PROJECT_ID");
-      if (!clientEmail) missingVars.push("FIREBASE_CLIENT_EMAIL");
-      if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push("FIREBASE_PRIVATE_KEY");
-      console.error(`[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin: Missing required environment variables or config: ${missingVars.join(", ")}`);
-    }
-  } else {
-    app = existingApps[0];
-    console.log("[DIAGNOSTIC-STARTUP] Firebase Admin App already initialized.");
-  }
-  
-  const targetDbId = process.env.FIREBASE_DATABASE_ID || fileDatabaseId;
-  if (targetDbId) {
-    console.log(`[DIAGNOSTIC-STARTUP] Attempting to connect to Firestore database: '${targetDbId}'`);
-    db = getFirestore(app || undefined, targetDbId);
-  } else {
-    console.log("[DIAGNOSTIC-STARTUP] Attempting to connect to default Firestore database.");
-    db = getFirestore(app || undefined);
-  }
-  
-  let resolvedProjectId = "unknown";
-  if (app) {
-    const options = app.options;
-    if (options && options.credential) {
-      resolvedProjectId = (options.credential as any).projectId || "default";
-    }
-  }
-  if (resolvedProjectId === "unknown" || resolvedProjectId === "default") {
-    let envId = process.env.FIREBASE_PROJECT_ID?.trim();
-    if (envId && envId.startsWith('"') && envId.endsWith('"')) envId = envId.slice(1, -1);
-    if (envId && envId.startsWith("'") && envId.endsWith("'")) envId = envId.slice(1, -1);
-    resolvedProjectId = envId || fileProjectId || "unknown";
-  }
-
-  const appName = app ? app.name : "[DEFAULT]";
-  const createdSuccessfully = !!db;
-
-  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] Project ID: ${resolvedProjectId}`);
-  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] App Name: ${appName}`);
-  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] Firestore client created successfully: ${createdSuccessfully}`);
+  console.log("[DIAGNOSTIC-STARTUP] Firebase production Firestore instance loaded successfully from firebaseAdmin module.");
 } catch (error: any) {
   lastFirestoreError = error.message || String(error);
   if (error && typeof error === "object") {
     lastFirestoreErrorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
   }
-  console.error("[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin / Firestore:", error);
+  console.error("[DIAGNOSTIC-STARTUP] Failed to load production Firestore instance:", error);
 }
 
 // Helper to seed initial posts if Firestore collection is empty
