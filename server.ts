@@ -162,124 +162,86 @@ const initialPosts: Post[] = [
 
 // Initialize Firestore
 let db: Firestore | null = null;
+let lastFirestoreError: string | null = null;
+let lastFirestoreErrorDetails: string | null = null;
+
 try {
+  console.log("[DIAGNOSTIC-STARTUP] Checking for Firebase config file...");
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
   let databaseId: string | undefined;
   if (fs.existsSync(configPath)) {
     const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     databaseId = config.firestoreDatabaseId;
+    console.log(`[DIAGNOSTIC-STARTUP] Found config file. databaseId: ${databaseId}`);
+  } else {
+    console.log("[DIAGNOSTIC-STARTUP] No firebase-applet-config.json found.");
   }
   
-  if (getApps().length === 0) {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  let app;
+  const existingApps = getApps();
+  if (existingApps.length === 0) {
+    let projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+    if (projectId && projectId.startsWith('"') && projectId.endsWith('"')) {
+      projectId = projectId.slice(1, -1);
+    }
+    if (projectId && projectId.startsWith("'") && projectId.endsWith("'")) {
+      projectId = projectId.slice(1, -1);
+    }
+
+    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+    if (clientEmail && clientEmail.startsWith('"') && clientEmail.endsWith('"')) {
+      clientEmail = clientEmail.slice(1, -1);
+    }
+    if (clientEmail && clientEmail.startsWith("'") && clientEmail.endsWith("'")) {
+      clientEmail = clientEmail.slice(1, -1);
+    }
+
+    let rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
+    if (rawPrivateKey && rawPrivateKey.startsWith('"') && rawPrivateKey.endsWith('"')) {
+      rawPrivateKey = rawPrivateKey.slice(1, -1);
+    }
+    if (rawPrivateKey && rawPrivateKey.startsWith("'") && rawPrivateKey.endsWith("'")) {
+      rawPrivateKey = rawPrivateKey.slice(1, -1);
+    }
+    const privateKey = rawPrivateKey?.replace(/\\n/g, "\n").trim();
 
     if (projectId && clientEmail && privateKey) {
-      initializeApp({
+      console.log("[DIAGNOSTIC-STARTUP] Initializing Firebase Admin with environment variables credentials...");
+      app = initializeApp({
         credential: cert({
           projectId,
           clientEmail,
           privateKey
         })
       });
-      console.log("Initialized Firebase Admin with cert from environment variables.");
+      console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App.");
     } else {
       const missingVars = [];
       if (!projectId) missingVars.push("FIREBASE_PROJECT_ID");
       if (!clientEmail) missingVars.push("FIREBASE_CLIENT_EMAIL");
       if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push("FIREBASE_PRIVATE_KEY");
-      console.error(`Failed to initialize Firebase Admin: Missing required environment variables: ${missingVars.join(", ")}`);
+      console.error(`[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin: Missing required environment variables: ${missingVars.join(", ")}`);
     }
+  } else {
+    app = existingApps[0];
+    console.log("[DIAGNOSTIC-STARTUP] Firebase Admin App already initialized.");
   }
   
   if (databaseId) {
-    db = getFirestore(databaseId);
-    console.log(`Initialized Firestore with databaseId: ${databaseId}`);
+    console.log(`[DIAGNOSTIC-STARTUP] Attempting to connect to named Firestore database: '${databaseId}'`);
+    db = getFirestore(app || undefined, databaseId);
+    console.log(`[DIAGNOSTIC-STARTUP] Initialized Firestore successfully with databaseId: ${databaseId}`);
   } else {
-    db = getFirestore();
-    console.log("Initialized Firestore with default database");
+    console.log("[DIAGNOSTIC-STARTUP] Attempting to connect to default Firestore database.");
+    db = getFirestore(app || undefined);
+    console.log("[DIAGNOSTIC-STARTUP] Initialized Firestore successfully with default database");
   }
-} catch (error) {
-  console.error("Failed to initialize Firebase Admin, running in hybrid mode:", error);
-}
-
-// Memory cache of DB data
-let memoryCache: { posts: Post[]; matches: Record<string, AIMatch[]> } | null = null;
-
-// Helper to save to local file cache
-function saveLocalBackup(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-    console.log("Saved local backup to", DB_PATH);
-  } catch (err) {
-    console.error("Failed to write local backup:", err);
+} catch (error: any) {
+  lastFirestoreError = error.message || String(error);
+  if (error && typeof error === "object") {
+    lastFirestoreErrorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
   }
-}
-
-// Helper to read from local file cache
-function readLocalBackup(): { posts: Post[]; matches: Record<string, AIMatch[]> } | null {
-  try {
-    if (fs.existsSync(DB_PATH)) {
-      const content = fs.readFileSync(DB_PATH, "utf-8");
-      const parsed = JSON.parse(content);
-      if (parsed && Array.isArray(parsed.posts)) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error("Failed to read local backup:", err);
-  }
-  return null;
-}
-
-// Helper to load from JSONBin
-async function readFromJSONBin(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> } | null> {
-  try {
-    console.log("Attempting to load data from JSONBin...");
-    const res = await fetch(BIN_URL, {
-      headers: {
-        "X-Master-Key": BIN_KEY
-      }
-    });
-    if (!res.ok) {
-      console.error("JSONBin read failed with status:", res.status);
-      return null;
-    }
-    const data: any = await res.json();
-    if (data && data.record && Array.isArray(data.record.posts)) {
-      console.log(`Successfully loaded ${data.record.posts.length} posts from JSONBin!`);
-      return data.record;
-    }
-    return null;
-  } catch (err) {
-    console.error("Failed to read from JSONBin:", err);
-    return null;
-  }
-}
-
-// Helper to save to JSONBin
-async function writeToJSONBin(data: { posts: Post[]; matches: Record<string, AIMatch[]> }): Promise<boolean> {
-  try {
-    console.log("Attempting to sync data to JSONBin...");
-    const res = await fetch(BIN_URL, {
-      method: "PUT",
-      headers: {
-        "X-Master-Key": BIN_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-    if (res.ok) {
-      console.log("Successfully synchronized data to JSONBin!");
-      return true;
-    }
-    console.error("JSONBin write failed with status:", res.status);
-    return false;
-  } catch (err) {
-    console.error("Failed to write to JSONBin:", err);
-    return false;
-  }
+  console.error("[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin / Firestore:", error);
 }
 
 // Helper to seed initial posts if Firestore collection is empty
@@ -297,129 +259,49 @@ async function seedFirestoreIfNeeded() {
       await batch.commit();
       console.log("Successfully seeded initial posts in Firestore.");
     }
-  } catch (err) {
+  } catch (err: any) {
+    lastFirestoreError = err.message || String(err);
+    if (err && typeof err === "object") {
+      lastFirestoreErrorDetails = JSON.stringify(err, Object.getOwnPropertyNames(err));
+    }
     console.error("Failed to check or seed Firestore:", err);
   }
 }
 
-// Helper to load posts database
+// Helper to load posts database directly and exclusively from Firestore
 async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> }> {
-  // 1. Try Firestore if available
-  if (db) {
-    try {
-      await seedFirestoreIfNeeded();
+  console.log(`[DIAGNOSTIC-DB] readDBAsync invoked.`);
+  if (!db) {
+    throw new Error("Firestore database is not initialized");
+  }
 
-      // Fetch posts
-      const postsSnapshot = await db.collection("posts").get();
-      const posts: Post[] = [];
-      postsSnapshot.forEach(doc => {
-        posts.push(doc.data() as Post);
-      });
+  await seedFirestoreIfNeeded();
 
-      // Sort posts by created descending (newest first)
-      posts.sort((a, b) => b.created - a.created);
+  // Fetch posts
+  console.log("[DIAGNOSTIC-DB] Querying 'posts' collection from Firestore...");
+  const postsSnapshot = await db.collection("posts").get();
+  const posts: Post[] = [];
+  postsSnapshot.forEach(doc => {
+    posts.push(doc.data() as Post);
+  });
+  console.log(`[DIAGNOSTIC-DB] Fetched ${posts.length} posts successfully from Firestore.`);
 
-      // Fetch matches
-      const matchesSnapshot = await db.collection("matches").get();
-      const matches: Record<string, AIMatch[]> = {};
-      matchesSnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data && Array.isArray(data.list)) {
-          matches[doc.id] = data.list;
-        }
-      });
+  // Sort posts by created descending (newest first)
+  posts.sort((a, b) => b.created - a.created);
 
-      const data = { posts, matches };
-      memoryCache = data;
-      saveLocalBackup(data); // Sync local file backup
-      return data;
-    } catch (err) {
-      console.error("Firestore read error, attempting cloud fallback (JSONBin):", err);
+  // Fetch matches
+  console.log("[DIAGNOSTIC-DB] Querying 'matches' collection from Firestore...");
+  const matchesSnapshot = await db.collection("matches").get();
+  const matches: Record<string, AIMatch[]> = {};
+  matchesSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data && Array.isArray(data.list)) {
+      matches[doc.id] = data.list;
     }
-  }
+  });
+  console.log(`[DIAGNOSTIC-DB] Fetched ${Object.keys(matches).length} matches successfully from Firestore.`);
 
-  // 2. Fall back to JSONBin
-  const binData = await readFromJSONBin();
-  if (binData) {
-    memoryCache = binData;
-    saveLocalBackup(binData); // Sync local file backup
-    return binData;
-  }
-
-  // 3. Fall back to local backup file
-  const localData = readLocalBackup();
-  if (localData) {
-    console.log("Using local database backup.");
-    memoryCache = localData;
-    return localData;
-  }
-
-  // 4. Default fallback to initial hardcoded seed posts
-  console.log("No cloud or local database accessible. Falling back to memory cache / initial seed data.");
-  if (memoryCache) return memoryCache;
-  const fallbackData = { posts: initialPosts, matches: {} };
-  memoryCache = fallbackData;
-  return fallbackData;
-}
-
-// Synchronous version for backwards compatibility where async is difficult
-function readDB(): { posts: Post[]; matches: Record<string, AIMatch[]> } {
-  if (memoryCache) return memoryCache;
-  return { posts: initialPosts, matches: {} };
-}
-
-// Helper to save posts database to both cloud and local cache asynchronously
-async function writeDBAsync(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
-  memoryCache = data;
-  
-  // 1. Always save a local file backup
-  saveLocalBackup(data);
-  
-  // 2. Attempt Firestore sync if db exists
-  let firestoreSuccess = false;
-  if (db) {
-    try {
-      const postsSnapshot = await db.collection("posts").get();
-      const existingPostIds = postsSnapshot.docs.map(doc => doc.id);
-      const currentPostIds = new Set(data.posts.map(p => p.id));
-      
-      const batch = db.batch();
-      
-      // Delete posts that are no longer present
-      for (const id of existingPostIds) {
-        if (!currentPostIds.has(id)) {
-          batch.delete(db.collection("posts").doc(id));
-          batch.delete(db.collection("matches").doc(id));
-        }
-      }
-      
-      // Write/update current posts
-      for (const post of data.posts) {
-        const docRef = db.collection("posts").doc(post.id);
-        batch.set(docRef, post);
-      }
-      
-      // Write/update matches
-      for (const [postId, list] of Object.entries(data.matches)) {
-        const docRef = db.collection("matches").doc(postId);
-        batch.set(docRef, { list });
-      }
-      
-      await batch.commit();
-      console.log("Successfully synchronized data to Firestore!");
-      firestoreSuccess = true;
-    } catch (err) {
-      console.error("Error syncing to Firestore:", err);
-    }
-  }
-
-  // 3. Sync to JSONBin as a reliable cloud fallback
-  await writeToJSONBin(data);
-}
-
-// Sync fallback wrapper
-function writeDB(data: { posts: Post[]; matches: Record<string, AIMatch[]> }) {
-  writeDBAsync(data).catch(err => console.error("Async write error:", err));
+  return { posts, matches };
 }
 
 // AI Matching Engine
@@ -752,25 +634,45 @@ app.post("/api/upload", async (req, res) => {
 
 // Healthcheck
 app.get("/api/health", (req, res) => {
-  res.json({ status: "healthy", time: new Date().toISOString() });
+  res.json({
+    status: "healthy",
+    time: new Date().toISOString(),
+    firestore: {
+      initialized: !!db,
+      lastError: lastFirestoreError,
+      lastErrorDetails: lastFirestoreErrorDetails
+    }
+  });
 });
 
-// Load all posts & matches
+// Load all posts & matches directly from Firestore
 app.get("/api/posts", async (req, res) => {
-  const dbData = await readDBAsync();
-  res.json(dbData);
+  try {
+    const dbData = await readDBAsync();
+    res.json(dbData);
+  } catch (err: any) {
+    console.error("GET /api/posts failed:", err);
+    res.status(500).json({ error: err.message || "Failed to load posts from Firestore" });
+  }
 });
 
-// Submit a new post
+// Submit a new post and save directly/exclusively to Firestore
 app.post("/api/posts", async (req, res) => {
+  console.log("[DIAGNOSTIC-POST] POST /api/posts endpoint called.");
   try {
-    // 1. Zod input validation
-    const parsedData = createPostSchema.parse(req.body);
+    if (!db) {
+      throw new Error("Firestore database is not initialized");
+    }
 
-    const dbData = await readDBAsync();
+    // 1. Zod input validation
+    console.log("[DIAGNOSTIC-POST] Validating request body against createPostSchema...");
+    const parsedData = createPostSchema.parse(req.body);
+    console.log("[DIAGNOSTIC-POST] Zod validation passed. Parsing body parameters...");
+
     const now = Date.now();
 
     // 2. Cryptographically hash the security PIN on the server
+    console.log("[DIAGNOSTIC-POST] Hashing post security PIN...");
     const plainPin = parsedData.securityPin || "1234";
     const hashedPin = await bcrypt.hash(plainPin, 10);
     
@@ -799,58 +701,87 @@ app.post("/api/posts", async (req, res) => {
       }),
     };
 
-    // Add new post to the front of the list
-    dbData.posts.unshift(newPost);
-    writeDB(dbData);
+    console.log(`[DIAGNOSTIC-POST] Created new post object (ID: ${newPost.id}). Details:`, {
+      item: newPost.item,
+      type: newPost.type,
+      category: newPost.category,
+      urgency: newPost.urgency
+    });
 
-    // Trigger asynchronous AI Match in background so the user gets instant form response
+    // Save the new post directly and exclusively to Firestore
+    console.log("[DIAGNOSTIC-POST] Saving post to Firestore...");
+    await db.collection("posts").doc(newPost.id).set(newPost);
+    console.log("[DIAGNOSTIC-POST] Post saved successfully in Firestore.");
+
+    // Return success to the client ONLY after successful Firestore save
     res.json({ success: true, post: newPost });
 
-    // Perform the matching
-    runAIMatch(newPost, dbData.posts)
-      .then(async (newMatches) => {
-         if (newMatches.length > 0) {
-           const freshDbData = await readDBAsync();
-           freshDbData.matches[newPost.id] = newMatches;
-           await writeDBAsync(freshDbData);
-           console.log(`AI Matches found for post ${newPost.id}:`, newMatches);
-         }
-      })
-      .catch((err) => console.error("Async matching fail:", err));
+    // Trigger asynchronous AI Match in background
+    console.log("[DIAGNOSTIC-POST] Triggering background runAIMatch matching algorithm...");
+    (async () => {
+      try {
+        const postsSnapshot = await db.collection("posts").get();
+        const posts: Post[] = [];
+        postsSnapshot.forEach(doc => {
+          posts.push(doc.data() as Post);
+        });
+
+        const newMatches = await runAIMatch(newPost, posts);
+        console.log(`[DIAGNOSTIC-POST-BG] AI matching complete. Found matches: ${newMatches.length}`);
+        if (newMatches.length > 0) {
+          console.log(`[DIAGNOSTIC-POST-BG] Saving matches to Firestore matches collection for post ${newPost.id}...`);
+          await db.collection("matches").doc(newPost.id).set({ list: newMatches });
+          console.log(`[DIAGNOSTIC-POST-BG] Matches successfully saved to Firestore.`);
+        } else {
+          console.log("[DIAGNOSTIC-POST-BG] No positive AI matches found.");
+        }
+      } catch (bgErr) {
+        console.error("[DIAGNOSTIC-POST-BG] Background matching/saving failed:", bgErr);
+      }
+    })();
 
   } catch (err: any) {
+    console.error("[DIAGNOSTIC-POST] Error during post creation handler execution:", err);
     if (err instanceof z.ZodError) {
+      console.warn("[DIAGNOSTIC-POST] Validation failed:", JSON.stringify((err as any).errors));
       return res.status(400).json({ error: "Validation error", details: (err as any).errors });
     }
     res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 
-// Mark post as Resolved
+// Mark post as Resolved directly in Firestore
 app.put("/api/posts/:id/resolve", async (req, res) => {
   try {
     const { id } = req.params;
     const { securityPin } = actionPinSchema.parse(req.body);
 
-    const dbData = await readDBAsync();
-    const post = dbData.posts.find((p) => p.id === id);
-    if (post) {
-      const expectedPin = post.securityPin || "1234";
-      
-      // Backward compatibility check for plain vs bcrypt hash
-      const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-        ? await bcrypt.compare(securityPin, expectedPin)
-        : expectedPin === securityPin;
-
-      if (!isPinValid) {
-        return res.status(403).json({ error: "Wrong PIN!" });
-      }
-      post.status = "Resolved";
-      writeDB(dbData);
-      res.json({ success: true, post });
-    } else {
-      res.status(404).json({ error: "Post not found" });
+    if (!db) {
+      throw new Error("Firestore database is not initialized");
     }
+
+    const docRef = db.collection("posts").doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = doc.data() as Post;
+    const expectedPin = post.securityPin || "1234";
+    
+    // Backward compatibility check for plain vs bcrypt hash
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Wrong PIN!" });
+    }
+
+    post.status = "Resolved";
+    await docRef.set(post); // Update ONLY Firestore, wait for it to succeed
+
+    res.json({ success: true, post });
   } catch (err: any) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: "Validation error", details: (err as any).errors });
@@ -859,32 +790,25 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
   }
 });
 
-// Increment post view count
-app.post("/api/posts/:id/view", async (req, res) => {
-  const { id } = req.params;
-  const dbData = await readDBAsync();
-  const post = dbData.posts.find((p) => p.id === id);
-  if (post) {
-    post.views = (post.views || 0) + 1;
-    writeDB(dbData);
-    res.json({ success: true, views: post.views });
-  } else {
-    res.status(404).json({ error: "Post not found" });
-  }
-});
-
-// Delete a post
-app.delete("/api/posts/:id", async (req, res) => {
+// Generic update endpoint (PUT /api/posts/:id) updating ONLY Firestore
+app.put("/api/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { securityPin } = actionPinSchema.parse(req.body);
+    if (!db) {
+      throw new Error("Firestore database is not initialized");
+    }
 
-    const dbData = await readDBAsync();
-    const post = dbData.posts.find((p) => p.id === id);
-    if (post) {
+    const docRef = db.collection("posts").doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = doc.data() as Post;
+    const { securityPin, ...otherFields } = req.body;
+
+    if (securityPin) {
       const expectedPin = post.securityPin || "1234";
-
-      // Backward compatibility check for plain vs bcrypt hash
       const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
         ? await bcrypt.compare(securityPin, expectedPin)
         : expectedPin === securityPin;
@@ -892,19 +816,82 @@ app.delete("/api/posts/:id", async (req, res) => {
       if (!isPinValid) {
         return res.status(403).json({ error: "Wrong PIN!" });
       }
+    }
 
-      // Delete the image from Cloudinary if it exists
-      if (post.image) {
-        await deleteCloudinaryImage(post.image);
-      }
+    const updatedPost: Post = {
+      ...post,
+      ...otherFields,
+      id, // protect document ID
+    };
 
-      dbData.posts = dbData.posts.filter((p) => p.id !== id);
-      delete dbData.matches[id];
-      writeDB(dbData);
-      res.json({ success: true });
+    await docRef.set(updatedPost); // Save ONLY to Firestore, wait for success
+
+    res.json({ success: true, post: updatedPost });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+// Increment post view count directly in Firestore
+app.post("/api/posts/:id/view", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!db) {
+      throw new Error("Firestore database is not initialized");
+    }
+    const docRef = db.collection("posts").doc(id);
+    const doc = await docRef.get();
+    if (doc.exists) {
+      const post = doc.data() as Post;
+      const newViews = (post.views || 0) + 1;
+      await docRef.update({ views: newViews });
+      res.json({ success: true, views: newViews });
     } else {
       res.status(404).json({ error: "Post not found" });
     }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+// Delete a post directly and exclusively from Firestore
+app.delete("/api/posts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { securityPin } = actionPinSchema.parse(req.body);
+
+    if (!db) {
+      throw new Error("Firestore database is not initialized");
+    }
+
+    const docRef = db.collection("posts").doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const post = doc.data() as Post;
+    const expectedPin = post.securityPin || "1234";
+
+    // Backward compatibility check for plain vs bcrypt hash
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Wrong PIN!" });
+    }
+
+    // Delete the image from Cloudinary if it exists
+    if (post.image) {
+      await deleteCloudinaryImage(post.image);
+    }
+
+    // Delete directly from Firestore, and delete matches as well
+    await docRef.delete();
+    await db.collection("matches").doc(id).delete().catch(() => {}); // ignore match doc deletion error if it didn't exist
+
+    res.json({ success: true });
   } catch (err: any) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: "Validation error", details: (err as any).errors });
