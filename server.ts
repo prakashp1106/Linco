@@ -169,11 +169,13 @@ try {
   console.log("[DIAGNOSTIC-STARTUP] Checking for Firebase config file...");
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
   let fileProjectId: string | undefined;
+  let fileDatabaseId: string | undefined;
   if (fs.existsSync(configPath)) {
     try {
       const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
       fileProjectId = config.projectId;
-      console.log(`[DIAGNOSTIC-STARTUP] Found config file. Project ID in config: ${fileProjectId}`);
+      fileDatabaseId = config.firestoreDatabaseId;
+      console.log(`[DIAGNOSTIC-STARTUP] Found config file. Project ID: ${fileProjectId}, Database ID: ${fileDatabaseId}`);
     } catch (e) {
       console.error("[DIAGNOSTIC-STARTUP] Error reading config file:", e);
     }
@@ -221,6 +223,12 @@ try {
         })
       });
       console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App.");
+    } else if (finalProjectId) {
+      console.log(`[DIAGNOSTIC-STARTUP] Initializing Firebase Admin using Application Default Credentials with projectId: ${finalProjectId}`);
+      app = initializeApp({
+        projectId: finalProjectId
+      });
+      console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App using ADC.");
     } else {
       const missingVars = [];
       if (!finalProjectId) missingVars.push("FIREBASE_PROJECT_ID");
@@ -233,8 +241,14 @@ try {
     console.log("[DIAGNOSTIC-STARTUP] Firebase Admin App already initialized.");
   }
   
-  console.log("[DIAGNOSTIC-STARTUP] Attempting to connect exclusively to the default Firestore database.");
-  db = getFirestore(app || undefined);
+  const targetDbId = process.env.FIREBASE_DATABASE_ID || fileDatabaseId;
+  if (targetDbId) {
+    console.log(`[DIAGNOSTIC-STARTUP] Attempting to connect to Firestore database: '${targetDbId}'`);
+    db = getFirestore(app || undefined, targetDbId);
+  } else {
+    console.log("[DIAGNOSTIC-STARTUP] Attempting to connect to default Firestore database.");
+    db = getFirestore(app || undefined);
+  }
   
   let resolvedProjectId = "unknown";
   if (app) {
