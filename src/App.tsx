@@ -13,6 +13,8 @@ import { usePosts } from "./hooks/usePosts";
 import { usePostForm } from "./hooks/usePostForm";
 import { encryptContact } from "./services/encryptionService";
 import { Post, AIMatch } from "./types";
+import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
+import { apiService } from "./services/api";
 
 // UI Components
 import { CanvasParticles } from "./components/CanvasParticles";
@@ -141,8 +143,72 @@ export default function App() {
 
   // Form Submission callback
   const handleCreatePost = async (postFormInput: any) => {
-    const plainContact = postFormInput.contact.trim().replace(/\D/g, "");
-    const pin = postFormInput.securityPin.trim();
+    let finalItem = postFormInput.item;
+    let finalCategory = postFormInput.category;
+
+    const isUnspecified =
+      !finalItem ||
+      finalItem.trim() === "" ||
+      finalItem.toLowerCase().includes("unspecified") ||
+      finalItem.toLowerCase().includes("personal item") ||
+      finalItem === "Item Name";
+
+    if (postFormInput.details) {
+      addToast("Analyzing details & extracting real object name with AI...", "info");
+      try {
+        const aiRes = await apiService.quickFillVoice(postFormInput.details);
+        if (aiRes && aiRes.item && !aiRes.item.toLowerCase().includes("unspecified")) {
+          finalItem = capitalizeItemName(aiRes.item);
+          if (aiRes.category) {
+            finalCategory = aiRes.category;
+          }
+        } else {
+          const localItem = extractItemLocal(postFormInput.details);
+          if (localItem) {
+            finalItem = capitalizeItemName(localItem);
+          }
+        }
+      } catch (err) {
+        console.error("AI extraction failed, using local fallback:", err);
+        const localItem = extractItemLocal(postFormInput.details);
+        if (localItem) {
+          finalItem = capitalizeItemName(localItem);
+        }
+      }
+    }
+
+    // Force strict category mapping based on user criteria:
+    // Phone -> Electronics, Wallet -> Wallet / Purse, Laptop -> Electronics, Dog -> Pet, Keys -> Keys, Documents -> Documents
+    const detectedCategory = detectCategoryLocal(postFormInput.details || "", finalItem || "");
+    if (detectedCategory) {
+      finalCategory = detectedCategory;
+    }
+
+    // Ensure we NEVER save as "Unspecified personal item" or blank if details have some text
+    if (!finalItem || finalItem.toLowerCase().includes("unspecified")) {
+      const localItem = extractItemLocal(postFormInput.details || "");
+      if (localItem) {
+        finalItem = capitalizeItemName(localItem);
+      } else if (postFormInput.details) {
+        const words = postFormInput.details.trim().split(/\s+/).filter((w: string) => !w.toLowerCase().includes("lost") && !w.toLowerCase().includes("found"));
+        if (words.length > 0) {
+          finalItem = capitalizeItemName(words.slice(0, 3).join(" ").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ""));
+        } else {
+          finalItem = "Personal Item";
+        }
+      } else {
+        finalItem = "Personal Item";
+      }
+    }
+
+    const enrichedFormInput = {
+      ...postFormInput,
+      item: finalItem,
+      category: finalCategory,
+    };
+
+    const plainContact = enrichedFormInput.contact.trim().replace(/\D/g, "");
+    const pin = enrichedFormInput.securityPin.trim();
 
     addToast("Encrypting your contact details locally using AES-GCM...", "info");
 
@@ -155,7 +221,7 @@ export default function App() {
     }
 
     const payload = {
-      ...postFormInput,
+      ...enrichedFormInput,
       contact: encryptedContact,
       maskedContact: "+91 ******" + plainContact.slice(-2),
     };

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { usePostForm } from "../hooks/usePostForm";
 import { useAI } from "../hooks/useAI";
 import { useMaps } from "../hooks/useMaps";
+import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "../utils/extractor";
 import { CATEGORIES, URGENCY_LEVELS } from "../constants";
 import { InteractiveMap } from "./LeafletMap";
 import { imageService } from "../services/imageService";
@@ -316,6 +317,32 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 onChange={(e) => {
                   form.setFDetails(e.target.value);
                   form.setErrors((prev) => ({ ...prev, details: undefined }));
+                }}
+                onBlur={() => {
+                  if (form.fDetails.trim()) {
+                    const isUnspecified =
+                      !form.fItem.trim() ||
+                      form.fItem.toLowerCase().includes("unspecified") ||
+                      form.fItem.toLowerCase().includes("personal item") ||
+                      form.fItem === "Item Name";
+
+                    if (isUnspecified) {
+                      const localItem = extractItemLocal(form.fDetails);
+                      if (localItem) {
+                        form.setFItem(capitalizeItemName(localItem));
+                        const detectedCat = detectCategoryLocal(form.fDetails, localItem);
+                        if (detectedCat) {
+                          form.setFCategory(detectedCat);
+                        }
+                      }
+                    } else {
+                      // If item is already set, we still automatically detect/refine category
+                      const detectedCat = detectCategoryLocal(form.fDetails, form.fItem);
+                      if (detectedCat) {
+                        form.setFCategory(detectedCat);
+                      }
+                    }
+                  }
                 }}
                 className="w-full px-5 py-4 rounded-2xl bg-slate-950/60 border border-slate-900 focus:border-cyan-500/40 outline-none text-xs text-slate-100 transition leading-relaxed placeholder:text-slate-600 shadow-inner resize-y font-mono"
               />
