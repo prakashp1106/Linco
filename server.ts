@@ -168,11 +168,15 @@ let lastFirestoreErrorDetails: string | null = null;
 try {
   console.log("[DIAGNOSTIC-STARTUP] Checking for Firebase config file...");
   const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-  let databaseId: string | undefined;
+  let fileProjectId: string | undefined;
   if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    databaseId = config.firestoreDatabaseId;
-    console.log(`[DIAGNOSTIC-STARTUP] Found config file. databaseId: ${databaseId}`);
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      fileProjectId = config.projectId;
+      console.log(`[DIAGNOSTIC-STARTUP] Found config file. Project ID in config: ${fileProjectId}`);
+    } catch (e) {
+      console.error("[DIAGNOSTIC-STARTUP] Error reading config file:", e);
+    }
   } else {
     console.log("[DIAGNOSTIC-STARTUP] No firebase-applet-config.json found.");
   }
@@ -205,11 +209,13 @@ try {
     }
     const privateKey = rawPrivateKey?.replace(/\\n/g, "\n").trim();
 
-    if (projectId && clientEmail && privateKey) {
+    const finalProjectId = projectId || fileProjectId;
+
+    if (finalProjectId && clientEmail && privateKey) {
       console.log("[DIAGNOSTIC-STARTUP] Initializing Firebase Admin with environment variables credentials...");
       app = initializeApp({
         credential: cert({
-          projectId,
+          projectId: finalProjectId,
           clientEmail,
           privateKey
         })
@@ -217,25 +223,39 @@ try {
       console.log("[DIAGNOSTIC-STARTUP] Successfully initialized Firebase Admin App.");
     } else {
       const missingVars = [];
-      if (!projectId) missingVars.push("FIREBASE_PROJECT_ID");
+      if (!finalProjectId) missingVars.push("FIREBASE_PROJECT_ID");
       if (!clientEmail) missingVars.push("FIREBASE_CLIENT_EMAIL");
       if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push("FIREBASE_PRIVATE_KEY");
-      console.error(`[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin: Missing required environment variables: ${missingVars.join(", ")}`);
+      console.error(`[DIAGNOSTIC-STARTUP] Failed to initialize Firebase Admin: Missing required environment variables or config: ${missingVars.join(", ")}`);
     }
   } else {
     app = existingApps[0];
     console.log("[DIAGNOSTIC-STARTUP] Firebase Admin App already initialized.");
   }
   
-  if (databaseId) {
-    console.log(`[DIAGNOSTIC-STARTUP] Attempting to connect to named Firestore database: '${databaseId}'`);
-    db = getFirestore(app || undefined, databaseId);
-    console.log(`[DIAGNOSTIC-STARTUP] Initialized Firestore successfully with databaseId: ${databaseId}`);
-  } else {
-    console.log("[DIAGNOSTIC-STARTUP] Attempting to connect to default Firestore database.");
-    db = getFirestore(app || undefined);
-    console.log("[DIAGNOSTIC-STARTUP] Initialized Firestore successfully with default database");
+  console.log("[DIAGNOSTIC-STARTUP] Attempting to connect exclusively to the default Firestore database.");
+  db = getFirestore(app || undefined);
+  
+  let resolvedProjectId = "unknown";
+  if (app) {
+    const options = app.options;
+    if (options && options.credential) {
+      resolvedProjectId = (options.credential as any).projectId || "default";
+    }
   }
+  if (resolvedProjectId === "unknown" || resolvedProjectId === "default") {
+    let envId = process.env.FIREBASE_PROJECT_ID?.trim();
+    if (envId && envId.startsWith('"') && envId.endsWith('"')) envId = envId.slice(1, -1);
+    if (envId && envId.startsWith("'") && envId.endsWith("'")) envId = envId.slice(1, -1);
+    resolvedProjectId = envId || fileProjectId || "unknown";
+  }
+
+  const appName = app ? app.name : "[DEFAULT]";
+  const createdSuccessfully = !!db;
+
+  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] Project ID: ${resolvedProjectId}`);
+  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] App Name: ${appName}`);
+  console.log(`[DIAGNOSTIC-FIRESTORE-INIT] Firestore client created successfully: ${createdSuccessfully}`);
 } catch (error: any) {
   lastFirestoreError = error.message || String(error);
   if (error && typeof error === "object") {
@@ -248,11 +268,13 @@ try {
 async function seedFirestoreIfNeeded() {
   if (!db) return;
   try {
+    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before querying for seeding check");
     const postsSnapshot = await db.collection("posts").limit(1).get();
     if (postsSnapshot.empty) {
       console.log("Firestore 'posts' collection is empty. Seeding initial posts...");
       const batch = db.batch();
       for (const p of initialPosts) {
+        console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before writing seed post ${p.id}`);
         const docRef = db.collection("posts").doc(p.id);
         batch.set(docRef, p);
       }
@@ -278,7 +300,7 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
   await seedFirestoreIfNeeded();
 
   // Fetch posts
-  console.log("[DIAGNOSTIC-DB] Querying 'posts' collection from Firestore...");
+  console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before querying");
   const postsSnapshot = await db.collection("posts").get();
   const posts: Post[] = [];
   postsSnapshot.forEach(doc => {
@@ -290,7 +312,7 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
   posts.sort((a, b) => b.created - a.created);
 
   // Fetch matches
-  console.log("[DIAGNOSTIC-DB] Querying 'matches' collection from Firestore...");
+  console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before querying");
   const matchesSnapshot = await db.collection("matches").get();
   const matches: Record<string, AIMatch[]> = {};
   matchesSnapshot.forEach(doc => {
@@ -708,8 +730,8 @@ app.post("/api/posts", async (req, res) => {
       urgency: newPost.urgency
     });
 
-    // Save the new post directly and exclusively to Firestore
-    console.log("[DIAGNOSTIC-POST] Saving post to Firestore...");
+        // Save the new post directly and exclusively to Firestore
+    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving new post");
     await db.collection("posts").doc(newPost.id).set(newPost);
     console.log("[DIAGNOSTIC-POST] Post saved successfully in Firestore.");
 
@@ -720,6 +742,7 @@ app.post("/api/posts", async (req, res) => {
     console.log("[DIAGNOSTIC-POST] Triggering background runAIMatch matching algorithm...");
     (async () => {
       try {
+        console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before fetching candidates for AI match");
         const postsSnapshot = await db.collection("posts").get();
         const posts: Post[] = [];
         postsSnapshot.forEach(doc => {
@@ -729,7 +752,7 @@ app.post("/api/posts", async (req, res) => {
         const newMatches = await runAIMatch(newPost, posts);
         console.log(`[DIAGNOSTIC-POST-BG] AI matching complete. Found matches: ${newMatches.length}`);
         if (newMatches.length > 0) {
-          console.log(`[DIAGNOSTIC-POST-BG] Saving matches to Firestore matches collection for post ${newPost.id}...`);
+          console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before saving matches for post ${newPost.id}`);
           await db.collection("matches").doc(newPost.id).set({ list: newMatches });
           console.log(`[DIAGNOSTIC-POST-BG] Matches successfully saved to Firestore.`);
         } else {
@@ -760,6 +783,7 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
       throw new Error("Firestore database is not initialized");
     }
 
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before resolving post ${id}`);
     const docRef = db.collection("posts").doc(id);
     const doc = await docRef.get();
     if (!doc.exists) {
@@ -779,6 +803,7 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
     }
 
     post.status = "Resolved";
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving resolved status for post ${id}`);
     await docRef.set(post); // Update ONLY Firestore, wait for it to succeed
 
     res.json({ success: true, post });
@@ -798,6 +823,7 @@ app.put("/api/posts/:id", async (req, res) => {
       throw new Error("Firestore database is not initialized");
     }
 
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before updating post ${id}`);
     const docRef = db.collection("posts").doc(id);
     const doc = await docRef.get();
     if (!doc.exists) {
@@ -824,6 +850,7 @@ app.put("/api/posts/:id", async (req, res) => {
       id, // protect document ID
     };
 
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving updated details for post ${id}`);
     await docRef.set(updatedPost); // Save ONLY to Firestore, wait for success
 
     res.json({ success: true, post: updatedPost });
@@ -839,6 +866,7 @@ app.post("/api/posts/:id/view", async (req, res) => {
     if (!db) {
       throw new Error("Firestore database is not initialized");
     }
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before incrementing views for post ${id}`);
     const docRef = db.collection("posts").doc(id);
     const doc = await docRef.get();
     if (doc.exists) {
@@ -864,6 +892,7 @@ app.delete("/api/posts/:id", async (req, res) => {
       throw new Error("Firestore database is not initialized");
     }
 
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting post ${id}`);
     const docRef = db.collection("posts").doc(id);
     const doc = await docRef.get();
     if (!doc.exists) {
@@ -888,7 +917,9 @@ app.delete("/api/posts/:id", async (req, res) => {
     }
 
     // Delete directly from Firestore, and delete matches as well
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting document ${id}`);
     await docRef.delete();
+    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before deleting matches for post ${id}`);
     await db.collection("matches").doc(id).delete().catch(() => {}); // ignore match doc deletion error if it didn't exist
 
     res.json({ success: true });
