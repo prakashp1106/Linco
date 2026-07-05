@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShieldCheck, X, RefreshCw, AlertTriangle, Check, Ban, ExternalLink, MessageSquare, Key, Phone, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";
@@ -29,6 +29,14 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
   const [loading, setLoading] = useState(false);
   const [actioningClaimId, setActioningClaimId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Clear claim and PIN state whenever another post is opened or modal is closed
+  useEffect(() => {
+    setPin("");
+    setIsPinVerified(false);
+    setClaims([]);
+    setErrorMsg("");
+  }, [post?.id, isOpen]);
 
   if (!isOpen || !post) return null;
 
@@ -66,7 +74,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
       }
 
       // 2. Submit server-mediated approval
-      const res = await apiService.approveClaim(claim.id, pin, decryptedContact);
+      const res = await apiService.approveClaim(claim.id, pin, decryptedContact, post.id);
       if (res.success) {
         // Update local claims state
         setClaims((prev) =>
@@ -89,7 +97,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
     setActioningClaimId(claimId);
 
     try {
-      const res = await apiService.rejectClaim(claimId, pin);
+      const res = await apiService.rejectClaim(claimId, pin, post.id);
       if (res.success) {
         setClaims((prev) =>
           prev.map((c) => (c.id === claimId ? res.claim : c))
@@ -197,7 +205,15 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {claims.map((claim) => (
+                    {claims
+                      .filter((claim) => {
+                        if (claim.postId !== post.id) {
+                          console.error(`[DEFENSIVE-VALIDATION-MISMATCH] Claim ID: ${claim.id} has postId "${claim.postId}", but current post is "${post.id}". Ignoring and logging mismatch.`);
+                          return false;
+                        }
+                        return true;
+                      })
+                      .map((claim) => (
                       <div
                         key={claim.id}
                         className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700/50 transition space-y-4"

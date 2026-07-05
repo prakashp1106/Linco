@@ -76,9 +76,9 @@ export const aiController = {
   /**
    * Generates custom questions for proving ownership
    */
-  async generateVerificationQuestions(item: string, description: string): Promise<string[]> {
+  async generateVerificationQuestions(item: string, description: string, postId: string): Promise<string[]> {
     try {
-      const questions = await apiService.generateVerification(item, description);
+      const questions = await apiService.generateVerification(item, description, postId);
       if (questions && questions.length > 0) return questions;
       throw new Error("Empty questions generated");
     } catch (error) {

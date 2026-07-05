@@ -50,7 +50,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
       setErrorMsg("");
       setLoading(true);
 
-      runVerificationQuestions(claimingPost.item, claimingPost.details)
+      runVerificationQuestions(claimingPost.item, claimingPost.details, claimingPost.id)
         .then((questions) => {
           setClaimQuestions(questions);
           setClaimAnswers(questions.map(() => ""));

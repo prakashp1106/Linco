@@ -257,7 +257,7 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
     return {
       posts: local.posts || [],
       matches: local.matches || {},
-      claims: local.claims || []
+      claims: []
     };
   }
 
@@ -286,14 +286,8 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
     });
     console.log(`[DIAGNOSTIC-DB] Fetched ${Object.keys(matches).length} matches successfully from Firestore.`);
 
-    // Fetch claims
-    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'claims' before querying");
-    const claimsSnapshot = await db!.collection("claims").get();
+    // Do NOT fetch global claims to avoid leakage. Return empty array instead.
     const claims: Claim[] = [];
-    claimsSnapshot.forEach(doc => {
-      claims.push(doc.data() as Claim);
-    });
-    console.log(`[DIAGNOSTIC-DB] Fetched ${claims.length} claims successfully from Firestore.`);
 
     return { posts, matches, claims };
   } catch (err: any) {
@@ -303,7 +297,7 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
     return {
       posts: local.posts || [],
       matches: local.matches || {},
-      claims: local.claims || []
+      claims: []
     };
   }
 }
@@ -1007,7 +1001,10 @@ app.delete("/api/posts/:id", async (req, res) => {
 // Global Cache for verification questions to avoid duplicate API calls and support reuse
 const verificationQuestionsCache = new Map<string, string[]>();
 
-function getCacheKey(item: string, description: string): string {
+function getCacheKey(item: string, description: string, postId?: string): string {
+  if (postId) {
+    return `post_${postId.trim().toLowerCase()}`;
+  }
   const normItem = (item || "").trim().toLowerCase();
   const normDesc = (description || "").trim().toLowerCase();
   return `${normItem}||${normDesc}`;
@@ -1264,6 +1261,7 @@ app.get("/api/claims/track", async (req, res) => {
   try {
     const claimId = req.query.claimId as string;
     const code = req.query.code as string;
+    const postId = req.query.postId as string;
 
     if (!claimId || !code) {
       return res.status(400).json({ error: "Claim ID and Tracking Code are required" });
@@ -1272,16 +1270,34 @@ app.get("/api/claims/track", async (req, res) => {
     let claim: Claim | null = null;
     if (useLocalFallback) {
       const local = readLocalDB();
-      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+      claim = local.claims?.find((c: Claim) => {
+        if (postId && c.postId !== postId) return false;
+        return c.id === claimId;
+      }) || null;
     } else {
-      const doc = await db!.collection("claims").doc(claimId).get();
-      if (doc.exists) {
-        claim = doc.data() as Claim;
+      if (postId) {
+        const claimsSnapshot = await db!.collection("claims").where("postId", "==", postId).get();
+        claimsSnapshot.forEach(doc => {
+          const c = doc.data() as Claim;
+          if (c.id === claimId) {
+            claim = c;
+          }
+        });
+      } else {
+        const doc = await db!.collection("claims").doc(claimId).get();
+        if (doc.exists) {
+          claim = doc.data() as Claim;
+        }
       }
     }
 
     if (!claim) {
       return res.status(404).json({ error: "Claim not found" });
+    }
+
+    if (postId && claim.postId !== postId) {
+      console.error(`[CLAIM-MISMATCH] Track Claim requested postId ${postId} but claim has postId ${claim.postId}`);
+      return res.status(403).json({ error: "Claim does not belong to the specified post" });
     }
 
     if (claim.trackingCode.toUpperCase() !== code.trim().toUpperCase()) {
@@ -1299,10 +1315,10 @@ app.get("/api/claims/track", async (req, res) => {
 app.post("/api/claims/:claimId/approve", async (req, res) => {
   try {
     const { claimId } = req.params;
-    const { securityPin, revealedOwnerContact } = req.body;
+    const { securityPin, revealedOwnerContact, postId } = req.body;
 
-    if (!securityPin || !revealedOwnerContact) {
-      return res.status(400).json({ error: "Security PIN and Owner Contact are required" });
+    if (!securityPin || !revealedOwnerContact || !postId) {
+      return res.status(400).json({ error: "Security PIN, Owner Contact, and Post ID are required" });
     }
 
     // Load Claim
@@ -1310,16 +1326,25 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
     let local = useLocalFallback ? readLocalDB() : null;
 
     if (useLocalFallback) {
-      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+      claim = local.claims?.find((c: Claim) => c.id === claimId && c.postId === postId) || null;
     } else {
-      const doc = await db!.collection("claims").doc(claimId).get();
-      if (doc.exists) {
-        claim = doc.data() as Claim;
-      }
+      const claimsSnapshot = await db!.collection("claims").where("postId", "==", postId).get();
+      claimsSnapshot.forEach(doc => {
+        const c = doc.data() as Claim;
+        if (c.id === claimId) {
+          claim = c;
+        }
+      });
     }
 
     if (!claim) {
-      return res.status(404).json({ error: "Claim not found" });
+      return res.status(404).json({ error: "Claim not found under the specified post" });
+    }
+
+    // Defensive validation
+    if (claim.postId !== postId) {
+      console.error(`[CLAIM-MISMATCH] Claim ${claimId} has mismatched postId ${claim.postId} compared to requested postId ${postId}`);
+      return res.status(400).json({ error: "Claim post ID mismatch" });
     }
 
     // Load parent post
@@ -1380,10 +1405,10 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
 app.post("/api/claims/:claimId/reject", async (req, res) => {
   try {
     const { claimId } = req.params;
-    const { securityPin } = req.body;
+    const { securityPin, postId } = req.body;
 
-    if (!securityPin) {
-      return res.status(400).json({ error: "Security PIN is required" });
+    if (!securityPin || !postId) {
+      return res.status(400).json({ error: "Security PIN and Post ID are required" });
     }
 
     // Load Claim
@@ -1391,16 +1416,25 @@ app.post("/api/claims/:claimId/reject", async (req, res) => {
     let local = useLocalFallback ? readLocalDB() : null;
 
     if (useLocalFallback) {
-      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+      claim = local.claims?.find((c: Claim) => c.id === claimId && c.postId === postId) || null;
     } else {
-      const doc = await db!.collection("claims").doc(claimId).get();
-      if (doc.exists) {
-        claim = doc.data() as Claim;
-      }
+      const claimsSnapshot = await db!.collection("claims").where("postId", "==", postId).get();
+      claimsSnapshot.forEach(doc => {
+        const c = doc.data() as Claim;
+        if (c.id === claimId) {
+          claim = c;
+        }
+      });
     }
 
     if (!claim) {
-      return res.status(404).json({ error: "Claim not found" });
+      return res.status(404).json({ error: "Claim not found under the specified post" });
+    }
+
+    // Defensive validation
+    if (claim.postId !== postId) {
+      console.error(`[CLAIM-MISMATCH] Claim ${claimId} has mismatched postId ${claim.postId} compared to requested postId ${postId}`);
+      return res.status(400).json({ error: "Claim post ID mismatch" });
     }
 
     // Load parent post
@@ -1683,13 +1717,13 @@ Return ONLY a valid JSON object (no markdown backticks):
 // 6. Generate Verification Questions
 app.post("/api/ai/generate-verification", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, description } = req.body;
+    const { item, description, postId } = req.body;
     if (!item || !description) return res.status(400).json({ error: "Item and description required" });
 
     // Check Cache first to prevent duplicates and support reuse
-    const cacheKey = getCacheKey(item, description);
+    const cacheKey = getCacheKey(item, description, postId);
     if (verificationQuestionsCache.has(cacheKey)) {
-      console.log(`[VERIFICATION-QUESTIONS-CACHE] Cache HIT for: "${item}"`);
+      console.log(`[VERIFICATION-QUESTIONS-CACHE] Cache HIT for: "${item}" (postId: ${postId})`);
       return res.json(verificationQuestionsCache.get(cacheKey));
     }
 

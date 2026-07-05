@@ -72,8 +72,8 @@ export function useAI() {
     }
   }, []);
 
-  const runVerificationQuestions = useCallback(async (item: string, description: string): Promise<string[]> => {
-    return aiController.generateVerificationQuestions(item, description);
+  const runVerificationQuestions = useCallback(async (item: string, description: string, postId: string): Promise<string[]> => {
+    return aiController.generateVerificationQuestions(item, description, postId);
   }, []);
 
   const runClaimOwnership = useCallback(async (

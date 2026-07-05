@@ -191,11 +191,11 @@ export const apiService = {
   /**
    * AI Generate customized verification questions
    */
-  async generateVerification(item: string, description: string): Promise<string[]> {
+  async generateVerification(item: string, description: string, postId: string): Promise<string[]> {
     const response = await fetch("/api/ai/generate-verification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, description }),
+      body: JSON.stringify({ item, description, postId }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -283,8 +283,12 @@ export const apiService = {
   /**
    * Track a claim using claim ID and tracking code (Magic Link / code lookup)
    */
-  async trackClaim(claimId: string, code: string): Promise<{ success: boolean; claim: Claim }> {
-    const response = await fetch(`/api/claims/track?claimId=${encodeURIComponent(claimId)}&code=${encodeURIComponent(code)}`, {
+  async trackClaim(claimId: string, code: string, postId?: string): Promise<{ success: boolean; claim: Claim }> {
+    let url = `/api/claims/track?claimId=${encodeURIComponent(claimId)}&code=${encodeURIComponent(code)}`;
+    if (postId) {
+      url += `&postId=${encodeURIComponent(postId)}`;
+    }
+    const response = await fetch(url, {
       method: "GET",
     });
     if (!response.ok) {
@@ -300,12 +304,13 @@ export const apiService = {
   async approveClaim(
     claimId: string,
     securityPin: string,
-    revealedOwnerContact: string
+    revealedOwnerContact: string,
+    postId: string
   ): Promise<{ success: boolean; claim: Claim; post: Post }> {
     const response = await fetch(`/api/claims/${claimId}/approve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ securityPin, revealedOwnerContact }),
+      body: JSON.stringify({ securityPin, revealedOwnerContact, postId }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -317,11 +322,11 @@ export const apiService = {
   /**
    * Reject a claim
    */
-  async rejectClaim(claimId: string, securityPin: string): Promise<{ success: boolean; claim: Claim }> {
+  async rejectClaim(claimId: string, securityPin: string, postId: string): Promise<{ success: boolean; claim: Claim }> {
     const response = await fetch(`/api/claims/${claimId}/reject`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ securityPin }),
+      body: JSON.stringify({ securityPin, postId }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
