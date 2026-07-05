@@ -45,3 +45,22 @@ export interface UrgencyInfo {
   color: string;
   bgColor: string;
 }
+
+export interface Claim {
+  id: string;
+  postId: string;
+  postTitle: string;
+  postType: "Lost" | "Found";
+  claimantName: string;
+  claimantContact: string;
+  questions: string[];
+  answers: string[];
+  aiScore: number;
+  aiReason: string;
+  status: "Pending" | "Approved" | "Rejected";
+  created: number;
+  timestamp: string;
+  trackingCode: string;
+  revealedOwnerContact?: string;
+}
+

@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
-import { Post, AIMatch } from "./src/types.js";
+import { Post, AIMatch, Claim } from "./src/types.js";
 import { Firestore } from "firebase-admin/firestore";
 import { db } from "./src/services/firebaseAdmin.js";
 import { v2 as cloudinary } from "cloudinary";
@@ -160,26 +160,68 @@ const initialPosts: Post[] = [
   }
 ];
 
-// Initialize Firestore tracking errors
+// Local File DB Fallback mechanism
+const FALLBACK_DB_PATH = path.join(process.cwd(), "uploads", "fallback_db.json");
+
+// Ensure uploads directory exists
+if (!fs.existsSync(path.join(process.cwd(), "uploads"))) {
+  fs.mkdirSync(path.join(process.cwd(), "uploads"), { recursive: true });
+}
+
+// Initial structure for fallback file
+function initFallbackDB() {
+  if (!fs.existsSync(FALLBACK_DB_PATH)) {
+    fs.writeFileSync(
+      FALLBACK_DB_PATH,
+      JSON.stringify({ posts: initialPosts, matches: {}, claims: [] }, null, 2)
+    );
+  }
+}
+initFallbackDB();
+
+let useLocalFallback = false;
 let lastFirestoreError: string | null = null;
 let lastFirestoreErrorDetails: string | null = null;
 
+// Initialize and verify Firestore
 try {
   if (!db) {
     throw new Error("Firestore client not initialized.");
   }
-  console.log("[DIAGNOSTIC-STARTUP] Firebase production Firestore instance loaded successfully from firebaseAdmin module.");
+  console.log("[DIAGNOSTIC-STARTUP] Firebase production Firestore instance loaded. Testing collection access...");
 } catch (error: any) {
   lastFirestoreError = error.message || String(error);
   if (error && typeof error === "object") {
     lastFirestoreErrorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
   }
-  console.error("[DIAGNOSTIC-STARTUP] Failed to load production Firestore instance:", error);
+  console.error("[DIAGNOSTIC-STARTUP] Failed to load production Firestore instance, enabling local fallback:", error);
+  useLocalFallback = true;
+}
+
+// Function to read local fallback file
+function readLocalDB() {
+  initFallbackDB();
+  try {
+    const raw = fs.readFileSync(FALLBACK_DB_PATH, "utf8");
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error("Failed to read local fallback DB:", err);
+    return { posts: initialPosts, matches: {}, claims: [] };
+  }
+}
+
+// Function to write to local fallback file
+function writeLocalDB(data: any) {
+  try {
+    fs.writeFileSync(FALLBACK_DB_PATH, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("Failed to write local fallback DB:", err);
+  }
 }
 
 // Helper to seed initial posts if Firestore collection is empty
 async function seedFirestoreIfNeeded() {
-  if (!db) return;
+  if (useLocalFallback || !db) return;
   try {
     console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before querying for seeding check");
     const postsSnapshot = await db.collection("posts").limit(1).get();
@@ -199,44 +241,71 @@ async function seedFirestoreIfNeeded() {
     if (err && typeof err === "object") {
       lastFirestoreErrorDetails = JSON.stringify(err, Object.getOwnPropertyNames(err));
     }
-    console.error("Failed to check or seed Firestore:", err);
+    console.error("Failed to check or seed Firestore, enabling local file database fallback:", err);
+    useLocalFallback = true;
   }
 }
 
-// Helper to load posts database directly and exclusively from Firestore
-async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]> }> {
+// Helper to load posts database directly and exclusively from Firestore (or fallback JSON)
+async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, AIMatch[]>; claims: Claim[] }> {
   console.log(`[DIAGNOSTIC-DB] readDBAsync invoked.`);
-  if (!db) {
-    throw new Error("Firestore database is not initialized");
-  }
-
   await seedFirestoreIfNeeded();
 
-  // Fetch posts
-  console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before querying");
-  const postsSnapshot = await db.collection("posts").get();
-  const posts: Post[] = [];
-  postsSnapshot.forEach(doc => {
-    posts.push(doc.data() as Post);
-  });
-  console.log(`[DIAGNOSTIC-DB] Fetched ${posts.length} posts successfully from Firestore.`);
+  if (useLocalFallback) {
+    console.log("[DIAGNOSTIC-DB] Reading from local file fallback database...");
+    const local = readLocalDB();
+    return {
+      posts: local.posts || [],
+      matches: local.matches || {},
+      claims: local.claims || []
+    };
+  }
 
-  // Sort posts by created descending (newest first)
-  posts.sort((a, b) => b.created - a.created);
+  try {
+    // Fetch posts
+    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before querying");
+    const postsSnapshot = await db!.collection("posts").get();
+    const posts: Post[] = [];
+    postsSnapshot.forEach(doc => {
+      posts.push(doc.data() as Post);
+    });
+    console.log(`[DIAGNOSTIC-DB] Fetched ${posts.length} posts successfully from Firestore.`);
 
-  // Fetch matches
-  console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before querying");
-  const matchesSnapshot = await db.collection("matches").get();
-  const matches: Record<string, AIMatch[]> = {};
-  matchesSnapshot.forEach(doc => {
-    const data = doc.data();
-    if (data && Array.isArray(data.list)) {
-      matches[doc.id] = data.list;
-    }
-  });
-  console.log(`[DIAGNOSTIC-DB] Fetched ${Object.keys(matches).length} matches successfully from Firestore.`);
+    // Sort posts by created descending (newest first)
+    posts.sort((a, b) => b.created - a.created);
 
-  return { posts, matches };
+    // Fetch matches
+    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before querying");
+    const matchesSnapshot = await db!.collection("matches").get();
+    const matches: Record<string, AIMatch[]> = {};
+    matchesSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data && Array.isArray(data.list)) {
+        matches[doc.id] = data.list;
+      }
+    });
+    console.log(`[DIAGNOSTIC-DB] Fetched ${Object.keys(matches).length} matches successfully from Firestore.`);
+
+    // Fetch claims
+    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'claims' before querying");
+    const claimsSnapshot = await db!.collection("claims").get();
+    const claims: Claim[] = [];
+    claimsSnapshot.forEach(doc => {
+      claims.push(doc.data() as Claim);
+    });
+    console.log(`[DIAGNOSTIC-DB] Fetched ${claims.length} claims successfully from Firestore.`);
+
+    return { posts, matches, claims };
+  } catch (err: any) {
+    console.error("Firestore readDBAsync failed, falling back to local file DB:", err);
+    useLocalFallback = true;
+    const local = readLocalDB();
+    return {
+      posts: local.posts || [],
+      matches: local.matches || {},
+      claims: local.claims || []
+    };
+  }
 }
 
 // AI Matching Engine
@@ -595,7 +664,7 @@ app.get("/api/posts", async (req, res) => {
 app.post("/api/posts", async (req, res) => {
   console.log("[DIAGNOSTIC-POST] POST /api/posts endpoint called.");
   try {
-    if (!db) {
+    if (!useLocalFallback && !db) {
       throw new Error("Firestore database is not initialized");
     }
 
@@ -643,31 +712,48 @@ app.post("/api/posts", async (req, res) => {
       urgency: newPost.urgency
     });
 
-        // Save the new post directly and exclusively to Firestore
-    console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving new post");
-    await db.collection("posts").doc(newPost.id).set(newPost);
-    console.log("[DIAGNOSTIC-POST] Post saved successfully in Firestore.");
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      local.posts.push(newPost);
+      writeLocalDB(local);
+      console.log("[DIAGNOSTIC-POST] Post saved successfully in Local Fallback File.");
+    } else {
+      console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving new post");
+      await db!.collection("posts").doc(newPost.id).set(newPost);
+      console.log("[DIAGNOSTIC-POST] Post saved successfully in Firestore.");
+    }
 
-    // Return success to the client ONLY after successful Firestore save
+    // Return success to the client
     res.json({ success: true, post: newPost });
 
     // Trigger asynchronous AI Match in background
     console.log("[DIAGNOSTIC-POST] Triggering background runAIMatch matching algorithm...");
     (async () => {
       try {
-        console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before fetching candidates for AI match");
-        const postsSnapshot = await db.collection("posts").get();
-        const posts: Post[] = [];
-        postsSnapshot.forEach(doc => {
-          posts.push(doc.data() as Post);
-        });
+        let posts: Post[] = [];
+        if (useLocalFallback) {
+          const local = readLocalDB();
+          posts = local.posts || [];
+        } else {
+          console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before fetching candidates for AI match");
+          const postsSnapshot = await db!.collection("posts").get();
+          postsSnapshot.forEach(doc => {
+            posts.push(doc.data() as Post);
+          });
+        }
 
         const newMatches = await runAIMatch(newPost, posts);
         console.log(`[DIAGNOSTIC-POST-BG] AI matching complete. Found matches: ${newMatches.length}`);
         if (newMatches.length > 0) {
-          console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before saving matches for post ${newPost.id}`);
-          await db.collection("matches").doc(newPost.id).set({ list: newMatches });
-          console.log(`[DIAGNOSTIC-POST-BG] Matches successfully saved to Firestore.`);
+          if (useLocalFallback) {
+            const local = readLocalDB();
+            local.matches[newPost.id] = newMatches;
+            writeLocalDB(local);
+          } else {
+            console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before saving matches for post ${newPost.id}`);
+            await db!.collection("matches").doc(newPost.id).set({ list: newMatches });
+          }
+          console.log(`[DIAGNOSTIC-POST-BG] Matches successfully saved.`);
         } else {
           console.log("[DIAGNOSTIC-POST-BG] No positive AI matches found.");
         }
@@ -692,18 +778,27 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
     const { id } = req.params;
     const { securityPin } = actionPinSchema.parse(req.body);
 
-    if (!db) {
-      throw new Error("Firestore database is not initialized");
+    let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      if (!db) {
+        throw new Error("Firestore database is not initialized");
+      }
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before resolving post ${id}`);
+      const docRef = db.collection("posts").doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
     }
 
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before resolving post ${id}`);
-    const docRef = db.collection("posts").doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) {
+    if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    const post = doc.data() as Post;
     const expectedPin = post.securityPin || "1234";
     
     // Backward compatibility check for plain vs bcrypt hash
@@ -716,8 +811,17 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
     }
 
     post.status = "Resolved";
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving resolved status for post ${id}`);
-    await docRef.set(post); // Update ONLY Firestore, wait for it to succeed
+
+    if (useLocalFallback) {
+      const idx = local.posts.findIndex((p: Post) => p.id === id);
+      if (idx !== -1) {
+        local.posts[idx] = post;
+        writeLocalDB(local);
+      }
+    } else {
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving resolved status for post ${id}`);
+      await db!.collection("posts").doc(id).set(post); // Update ONLY Firestore, wait for it to succeed
+    }
 
     res.json({ success: true, post });
   } catch (err: any) {
@@ -732,18 +836,27 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
 app.put("/api/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    if (!db) {
-      throw new Error("Firestore database is not initialized");
+    let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      if (!db) {
+        throw new Error("Firestore database is not initialized");
+      }
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before updating post ${id}`);
+      const docRef = db.collection("posts").doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
     }
 
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before updating post ${id}`);
-    const docRef = db.collection("posts").doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) {
+    if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    const post = doc.data() as Post;
     const { securityPin, ...otherFields } = req.body;
 
     if (securityPin) {
@@ -763,8 +876,16 @@ app.put("/api/posts/:id", async (req, res) => {
       id, // protect document ID
     };
 
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving updated details for post ${id}`);
-    await docRef.set(updatedPost); // Save ONLY to Firestore, wait for success
+    if (useLocalFallback) {
+      const idx = local.posts.findIndex((p: Post) => p.id === id);
+      if (idx !== -1) {
+        local.posts[idx] = updatedPost;
+        writeLocalDB(local);
+      }
+    } else {
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving updated details for post ${id}`);
+      await db!.collection("posts").doc(id).set(updatedPost); // Save ONLY to Firestore, wait for success
+    }
 
     res.json({ success: true, post: updatedPost });
   } catch (err: any) {
@@ -776,16 +897,36 @@ app.put("/api/posts/:id", async (req, res) => {
 app.post("/api/posts/:id/view", async (req, res) => {
   try {
     const { id } = req.params;
-    if (!db) {
-      throw new Error("Firestore database is not initialized");
+    let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      if (!db) {
+        throw new Error("Firestore database is not initialized");
+      }
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before incrementing views for post ${id}`);
+      const docRef = db.collection("posts").doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
     }
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before incrementing views for post ${id}`);
-    const docRef = db.collection("posts").doc(id);
-    const doc = await docRef.get();
-    if (doc.exists) {
-      const post = doc.data() as Post;
+
+    if (post) {
       const newViews = (post.views || 0) + 1;
-      await docRef.update({ views: newViews });
+      post.views = newViews;
+
+      if (useLocalFallback) {
+        const idx = local.posts.findIndex((p: Post) => p.id === id);
+        if (idx !== -1) {
+          local.posts[idx] = post;
+          writeLocalDB(local);
+        }
+      } else {
+        await db!.collection("posts").doc(id).update({ views: newViews });
+      }
       res.json({ success: true, views: newViews });
     } else {
       res.status(404).json({ error: "Post not found" });
@@ -801,18 +942,27 @@ app.delete("/api/posts/:id", async (req, res) => {
     const { id } = req.params;
     const { securityPin } = actionPinSchema.parse(req.body);
 
-    if (!db) {
-      throw new Error("Firestore database is not initialized");
+    let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      if (!db) {
+        throw new Error("Firestore database is not initialized");
+      }
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting post ${id}`);
+      const docRef = db.collection("posts").doc(id);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
     }
 
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting post ${id}`);
-    const docRef = db.collection("posts").doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) {
+    if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    const post = doc.data() as Post;
     const expectedPin = post.securityPin || "1234";
 
     // Backward compatibility check for plain vs bcrypt hash
@@ -829,11 +979,19 @@ app.delete("/api/posts/:id", async (req, res) => {
       await deleteCloudinaryImage(post.image);
     }
 
-    // Delete directly from Firestore, and delete matches as well
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting document ${id}`);
-    await docRef.delete();
-    console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before deleting matches for post ${id}`);
-    await db.collection("matches").doc(id).delete().catch(() => {}); // ignore match doc deletion error if it didn't exist
+    if (useLocalFallback) {
+      local.posts = local.posts.filter((p: Post) => p.id !== id);
+      if (local.matches) {
+        delete local.matches[id];
+      }
+      writeLocalDB(local);
+    } else {
+      // Delete directly from Firestore, and delete matches as well
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before deleting document ${id}`);
+      await db!.collection("posts").doc(id).delete();
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before deleting matches for post ${id}`);
+      await db!.collection("matches").doc(id).delete().catch(() => {}); // ignore match doc deletion error if it didn't exist
+    }
 
     res.json({ success: true });
   } catch (err: any) {
@@ -841,6 +999,365 @@ app.delete("/api/posts/:id", async (req, res) => {
       return res.status(400).json({ error: "Validation error", details: (err as any).errors });
     }
     res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+// --- SECURE SYSTEM-MEDIATED CLAIM WORKFLOW ENDPOINTS ---
+
+// Helper to generate a 6-digit tracking code
+function generateTrackingCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // readable chars (no ambiguous ones like I, O, 0, 1)
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// 1. Submit a Claim
+app.post("/api/posts/:id/claims", requireGeminiApiKey, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { claimantName, claimantContact, questions, answers } = req.body;
+
+    if (!claimantName || !claimantContact || !questions || !answers) {
+      return res.status(400).json({ error: "Missing required claim fields" });
+    }
+
+    // Load parent post
+    let post: Post | null = null;
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      const doc = await db!.collection("posts").doc(id).get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: "Associated post not found" });
+    }
+
+    // Call Gemini API to verify ownership based on answers
+    const prompt = `Verify if a claimant is the true owner of a lost/found item based on their answers to verification questions.
+Item Name: "${post.item}"
+Item Detailed Description: "${post.details}"
+
+Questions Asked and Claimant's Answers:
+${questions.map((q: string, i: number) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || "No answer"}`).join("\n\n")}
+
+Task: Evaluate if the answers indicate genuine ownership. Match confidence should be:
+- 85-100% if details are exact (colors, brands, precise contents, unique stickers or marks).
+- 60-80% if answers are plausible but slightly vague.
+- Below 60% if there are mismatches or extremely vague answers.
+
+Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
+{
+  "verified": true or false,
+  "confidence": number from 0 to 100,
+  "message": "A concise 1-2 sentence explanation of your decision."
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+    });
+
+    const text = response.text || "{}";
+    const cleanedText = text.replace(/```json|```/gi, "").trim();
+    let parsedResult = { verified: false, confidence: 0, message: "AI verification failed to parse" };
+    try {
+      parsedResult = JSON.parse(cleanedText);
+    } catch (parseErr) {
+      console.error("Failed to parse Gemini verification result:", cleanedText, parseErr);
+    }
+
+    const claimId = "claim_" + Date.now().toString();
+    const trackingCode = generateTrackingCode();
+
+    const newClaim: Claim = {
+      id: claimId,
+      postId: post.id,
+      postTitle: post.item,
+      postType: post.type,
+      claimantName,
+      claimantContact,
+      questions,
+      answers,
+      aiScore: parsedResult.confidence,
+      aiReason: parsedResult.message,
+      status: "Pending",
+      created: Date.now(),
+      timestamp: new Date().toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      trackingCode,
+    };
+
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      if (!local.claims) local.claims = [];
+      local.claims.push(newClaim);
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(newClaim);
+    }
+
+    console.log(`[CLAIM-SUBMIT] Claim ${claimId} submitted successfully with trackingCode: ${trackingCode}`);
+    res.json({ success: true, claim: newClaim });
+  } catch (err: any) {
+    console.error("Failed to submit claim:", err);
+    res.status(500).json({ error: err.message || "Failed to submit claim" });
+  }
+});
+
+// 2. Get claims for a post (Requires Owner PIN)
+app.post("/api/posts/:id/claims/list", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { securityPin } = req.body;
+
+    if (!securityPin) {
+      return res.status(400).json({ error: "Post Security PIN is required" });
+    }
+
+    // Load parent post
+    let post: Post | null = null;
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      const doc = await db!.collection("posts").doc(id).get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Verify PIN
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
+    }
+
+    // Fetch claims for this post
+    let allClaims: Claim[] = [];
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      allClaims = local.claims || [];
+    } else {
+      const claimsSnapshot = await db!.collection("claims").where("postId", "==", id).get();
+      claimsSnapshot.forEach(doc => {
+        allClaims.push(doc.data() as Claim);
+      });
+    }
+
+    const postClaims = allClaims.filter(c => c.postId === id);
+    res.json({ success: true, claims: postClaims });
+  } catch (err: any) {
+    console.error("Failed to list claims:", err);
+    res.status(500).json({ error: err.message || "Failed to list claims" });
+  }
+});
+
+// 3. Track a Claim (Supports multi-device via Claim ID + Tracking Code)
+app.get("/api/claims/track", async (req, res) => {
+  try {
+    const claimId = req.query.claimId as string;
+    const code = req.query.code as string;
+
+    if (!claimId || !code) {
+      return res.status(400).json({ error: "Claim ID and Tracking Code are required" });
+    }
+
+    let claim: Claim | null = null;
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    if (claim.trackingCode.toUpperCase() !== code.trim().toUpperCase()) {
+      return res.status(403).json({ error: "Incorrect Claim Tracking Code. Access denied." });
+    }
+
+    res.json({ success: true, claim });
+  } catch (err: any) {
+    console.error("Failed to track claim:", err);
+    res.status(500).json({ error: err.message || "Failed to track claim" });
+  }
+});
+
+// 4. Approve a Claim (Requires Owner PIN & includes client-decrypted Owner Contact detail)
+app.post("/api/claims/:claimId/approve", async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const { securityPin, revealedOwnerContact } = req.body;
+
+    if (!securityPin || !revealedOwnerContact) {
+      return res.status(400).json({ error: "Security PIN and Owner Contact are required" });
+    }
+
+    // Load Claim
+    let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    // Load parent post
+    let post: Post | null = null;
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === claim!.postId) || null;
+    } else {
+      const doc = await db!.collection("posts").doc(claim.postId).get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: "Associated post not found" });
+    }
+
+    // Verify Owner PIN
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
+    }
+
+    // Update claim status & owner contact details
+    claim.status = "Approved";
+    claim.revealedOwnerContact = revealedOwnerContact;
+
+    // Resolve post
+    post.status = "Resolved";
+
+    if (useLocalFallback) {
+      // Find and update claim
+      const claimIdx = local.claims.findIndex((c: Claim) => c.id === claimId);
+      if (claimIdx !== -1) local.claims[claimIdx] = claim;
+      
+      // Find and update post
+      const postIdx = local.posts.findIndex((p: Post) => p.id === post!.id);
+      if (postIdx !== -1) local.posts[postIdx] = post;
+
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(claim);
+      await db!.collection("posts").doc(post.id).set(post);
+    }
+
+    res.json({ success: true, claim, post });
+  } catch (err: any) {
+    console.error("Failed to approve claim:", err);
+    res.status(500).json({ error: err.message || "Failed to approve claim" });
+  }
+});
+
+// 5. Reject a Claim (Requires Owner PIN)
+app.post("/api/claims/:claimId/reject", async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const { securityPin } = req.body;
+
+    if (!securityPin) {
+      return res.status(400).json({ error: "Security PIN is required" });
+    }
+
+    // Load Claim
+    let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    // Load parent post
+    let post: Post | null = null;
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === claim!.postId) || null;
+    } else {
+      const doc = await db!.collection("posts").doc(claim.postId).get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: "Associated post not found" });
+    }
+
+    // Verify PIN
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
+    }
+
+    // Update claim status
+    claim.status = "Rejected";
+
+    if (useLocalFallback) {
+      const claimIdx = local.claims.findIndex((c: Claim) => c.id === claimId);
+      if (claimIdx !== -1) local.claims[claimIdx] = claim;
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(claim);
+    }
+
+    res.json({ success: true, claim });
+  } catch (err: any) {
+    console.error("Failed to reject claim:", err);
+    res.status(500).json({ error: err.message || "Failed to reject claim" });
   }
 });
 

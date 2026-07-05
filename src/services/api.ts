@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Post, AIMatch } from "../types";
+import { Post, AIMatch, Claim } from "../types";
 
 export interface DBResponse {
   posts: Post[];
@@ -241,6 +241,91 @@ export const apiService = {
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error || "LincoSaathii assistant failed");
+    }
+    return response.json();
+  },
+
+  /**
+   * Submit a claim for a post
+   */
+  async submitClaim(
+    postId: string,
+    claimData: { claimantName: string; claimantContact: string; questions: string[]; answers: string[] }
+  ): Promise<{ success: boolean; claim: Claim }> {
+    const response = await fetch(`/api/posts/${postId}/claims`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(claimData),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to submit claim");
+    }
+    return response.json();
+  },
+
+  /**
+   * Get all claims for a post using owner security PIN
+   */
+  async listClaims(postId: string, securityPin: string): Promise<{ success: boolean; claims: Claim[] }> {
+    const response = await fetch(`/api/posts/${postId}/claims/list`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ securityPin }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to list claims");
+    }
+    return response.json();
+  },
+
+  /**
+   * Track a claim using claim ID and tracking code (Magic Link / code lookup)
+   */
+  async trackClaim(claimId: string, code: string): Promise<{ success: boolean; claim: Claim }> {
+    const response = await fetch(`/api/claims/track?claimId=${encodeURIComponent(claimId)}&code=${encodeURIComponent(code)}`, {
+      method: "GET",
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to track claim");
+    }
+    return response.json();
+  },
+
+  /**
+   * Approve a claim and supply the decrypted owner contact details
+   */
+  async approveClaim(
+    claimId: string,
+    securityPin: string,
+    revealedOwnerContact: string
+  ): Promise<{ success: boolean; claim: Claim; post: Post }> {
+    const response = await fetch(`/api/claims/${claimId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ securityPin, revealedOwnerContact }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to approve claim");
+    }
+    return response.json();
+  },
+
+  /**
+   * Reject a claim
+   */
+  async rejectClaim(claimId: string, securityPin: string): Promise<{ success: boolean; claim: Claim }> {
+    const response = await fetch(`/api/claims/${claimId}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ securityPin }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to reject claim");
     }
     return response.json();
   },

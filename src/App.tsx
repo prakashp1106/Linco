@@ -29,6 +29,8 @@ import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 import { PinModal } from "./components/PinModal";
 import { ClaimModal } from "./components/ClaimModal";
 import { QRModal } from "./components/QRModal";
+import { OwnerClaimsDashboard } from "./components/OwnerClaimsDashboard";
+import { ClaimTracker } from "./components/ClaimTracker";
 
 interface Toast {
   id: string;
@@ -67,6 +69,15 @@ export default function App() {
 
   const [claimingPost, setClaimingPost] = useState<Post | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
+
+  // Owner dashboard state
+  const [managingPost, setManagingPost] = useState<Post | null>(null);
+  const [showOwnerClaims, setShowOwnerClaims] = useState(false);
+
+  // Claim tracking state
+  const [showClaimTracker, setShowClaimTracker] = useState(false);
+  const [trackerClaimId, setTrackerClaimId] = useState("");
+  const [trackerCode, setTrackerCode] = useState("");
 
   const [qrModalPost, setQrModalPost] = useState<Post | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
@@ -141,6 +152,20 @@ export default function App() {
       }
     }
   }, [posts, addToast]);
+
+  // Support deep linking for Magic Claim Tracker Links (Device-Agnostic Status Check)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const claimId = urlParams.get("claimId");
+    const code = urlParams.get("code");
+    if (claimId && code) {
+      setTrackerClaimId(claimId);
+      setTrackerCode(code);
+      setShowClaimTracker(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      addToast("Scanning Magic Link for Claim status check!", "success");
+    }
+  }, [addToast]);
 
   // Form Submission callback
   const handleCreatePost = async (postFormInput: any) => {
@@ -894,6 +919,12 @@ export default function App() {
           >
             ℹ️ About
           </button>
+          <button
+            onClick={() => setShowClaimTracker(true)}
+            className="flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer text-cyan-400 hover:text-cyan-300 bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/15"
+          >
+            🛰️ Track
+          </button>
         </div>
       </nav>
 
@@ -972,6 +1003,10 @@ export default function App() {
                         onSharePost={handleSharePostText}
                         onShareAsImage={handleShareAsImage}
                         onShowQrCode={handleShowQrCodeTrigger}
+                        onManageClaims={(post) => {
+                          setManagingPost(post);
+                          setShowOwnerClaims(true);
+                        }}
                       />
                     </motion.div>
                   )}
@@ -1081,7 +1116,30 @@ export default function App() {
         isOpen={showClaimModal}
         claimingPost={claimingPost}
         onClose={() => setShowClaimModal(false)}
-        onUnlockSuccess={handleUnlockSuccess}
+      />
+
+      <OwnerClaimsDashboard
+        isOpen={showOwnerClaims}
+        post={managingPost}
+        onClose={() => {
+          setShowOwnerClaims(false);
+          setManagingPost(null);
+        }}
+        onPostUpdated={(updatedPost) => {
+          // Silent refresh of postings to reflect changed resolved flags/details instantly
+          loadPosts();
+        }}
+      />
+
+      <ClaimTracker
+        isOpen={showClaimTracker}
+        onClose={() => {
+          setShowClaimTracker(false);
+          setTrackerClaimId("");
+          setTrackerCode("");
+        }}
+        initialClaimId={trackerClaimId}
+        initialCode={trackerCode}
       />
 
       <QRModal

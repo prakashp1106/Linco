@@ -4,48 +4,51 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, X, RefreshCw, Lock, ExternalLink, AlertTriangle } from "lucide-react";
+import { ShieldCheck, X, RefreshCw, AlertTriangle, CheckCircle, Copy, ExternalLink, Phone, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Post } from "../types";
+import { Post, Claim } from "../types";
 import { useAI } from "../hooks/useAI";
-import { decryptContact } from "../services/encryptionService";
-import { dbService } from "../services/db";
+import { apiService } from "../services/api";
 
 interface ClaimModalProps {
   isOpen: boolean;
   claimingPost: Post | null;
   onClose: () => void;
-  onUnlockSuccess: (postId: string, decryptedContact: string) => void;
+  onClaimSubmitted?: (claim: Claim) => void;
 }
 
 export const ClaimModal: React.FC<ClaimModalProps> = ({
   isOpen,
   claimingPost,
   onClose,
-  onUnlockSuccess,
+  onClaimSubmitted,
 }) => {
-  const { claimLoading, runVerificationQuestions, runClaimOwnership } = useAI();
-  const [localLoading, setLocalLoading] = useState(false);
-  const [claimQuestions, setClaimQuestions] = useState<string[]>([]);
-  const [claimAnswers, setClaimAnswers] = useState<string[]>(["", ""]);
-  const [claimResult, setClaimResult] = useState<{ verified: boolean; confidence: number; message: string } | null>(null);
-  
-  const [decryptPinEntered, setDecryptPinEntered] = useState("");
-  const [isPinVerifiedSuccessfully, setIsPinVerifiedSuccessfully] = useState(false);
-  const [decryptedNumber, setDecryptedNumber] = useState("");
+  const { runVerificationQuestions } = useAI();
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Claim fields
+  const [claimantName, setClaimantName] = useState("");
+  const [claimantContact, setClaimantContact] = useState("");
+  const [claimQuestions, setClaimQuestions] = useState<string[]>([]);
+  const [claimAnswers, setClaimAnswers] = useState<string[]>([]);
+
+  // Success state
+  const [createdClaim, setCreatedClaim] = useState<Claim | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Load questions when claimingPost is selected
   useEffect(() => {
     if (isOpen && claimingPost) {
       setClaimQuestions([]);
-      setClaimAnswers(["", ""]);
-      setClaimResult(null);
-      setDecryptPinEntered("");
-      setIsPinVerifiedSuccessfully(false);
-      setDecryptedNumber("");
+      setClaimAnswers([]);
+      setClaimantName("");
+      setClaimantContact("");
+      setCreatedClaim(null);
+      setCopiedLink(false);
       setErrorMsg("");
-      setLocalLoading(true);
+      setLoading(true);
 
       runVerificationQuestions(claimingPost.item, claimingPost.details)
         .then((questions) => {
@@ -58,72 +61,63 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
             "Where and around what time did you lose this item?",
           ];
           setClaimQuestions(fallbackQuestions);
-          setClaimAnswers(["", ""]);
+          setClaimAnswers(fallbackQuestions.map(() => ""));
         })
         .finally(() => {
-          setLocalLoading(false);
+          setLoading(false);
         });
     }
   }, [isOpen, claimingPost, runVerificationQuestions]);
 
-  const handleSubmitClaimAnswers = async () => {
+  const handleSubmitClaim = async () => {
     if (!claimingPost) return;
+    if (!claimantName.trim()) {
+      setErrorMsg("Please enter your name");
+      return;
+    }
+    if (!claimantContact.trim()) {
+      setErrorMsg("Please enter your WhatsApp contact number");
+      return;
+    }
     if (claimAnswers.some((a) => !a.trim())) {
-      setErrorMsg("Please answer all questions to verify ownership");
+      setErrorMsg("Please answer all verification questions");
       return;
     }
     setErrorMsg("");
-    setLocalLoading(true);
+    setSubmitting(true);
 
     try {
-      const res = await runClaimOwnership(
-        claimingPost.item,
-        claimingPost.details,
-        claimQuestions,
-        claimAnswers
-      );
-      setClaimResult({
-        verified: res.verified,
-        confidence: res.confidence,
-        message: res.message,
+      const res = await apiService.submitClaim(claimingPost.id, {
+        claimantName,
+        claimantContact,
+        questions: claimQuestions,
+        answers: claimAnswers,
       });
+
+      if (res.success && res.claim) {
+        setCreatedClaim(res.claim);
+        if (onClaimSubmitted) {
+          onClaimSubmitted(res.claim);
+        }
+      } else {
+        throw new Error("Failed to register claim on server");
+      }
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to process verification check");
+      setErrorMsg(err.message || "Failed to process claim submission");
     } finally {
-      setLocalLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDecryptContact = async () => {
-    if (!claimingPost) return;
-    if (!/^\d{4}$/.test(decryptPinEntered)) {
-      setErrorMsg("Please enter a valid 4-digit Security PIN");
-      return;
-    }
-    setErrorMsg("");
-    setLocalLoading(true);
+  const getMagicLink = () => {
+    if (!createdClaim) return "";
+    return `${window.location.origin}?claimId=${createdClaim.id}&code=${createdClaim.trackingCode}`;
+  };
 
-    try {
-      const isLegacy = !claimingPost.contact.startsWith("ENC:");
-      let decrypted = "";
-      if (isLegacy) {
-        if (decryptPinEntered !== (claimingPost.securityPin || "1234")) {
-          throw new Error("Incorrect Security PIN");
-        }
-        decrypted = claimingPost.contact;
-      } else {
-        decrypted = await decryptContact(claimingPost.contact, decryptPinEntered);
-      }
-
-      setDecryptedNumber(decrypted);
-      setIsPinVerifiedSuccessfully(true);
-      dbService.saveUnlockedPost(claimingPost.id);
-      onUnlockSuccess(claimingPost.id, decrypted);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Incorrect PIN. Decryption failed.");
-    } finally {
-      setLocalLoading(false);
-    }
+  const handleCopyMagicLink = () => {
+    navigator.clipboard.writeText(getMagicLink());
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   if (!isOpen || !claimingPost) return null;
@@ -141,7 +135,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
           initial={{ scale: 0.95, y: 15 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.95, y: 15 }}
-          className="bg-slate-900 border border-slate-900 rounded-3xl p-5 md:p-6 w-full max-w-sm shadow-2xl relative overflow-hidden"
+          className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 w-full max-w-md shadow-2xl relative overflow-hidden"
         >
           {/* Close Button */}
           <button
@@ -151,156 +145,197 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
             <X size={16} />
           </button>
 
-          <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">
-            <ShieldCheck size={14} /> Ownership Verification
-          </div>
-          <h3 className="text-sm font-bold text-slate-100 mb-1">
-            Prove ownership of {claimingPost.item}
-          </h3>
-          <p className="text-[10px] text-slate-500 leading-relaxed mb-4">
-            To prevent spam and fake claims, Gemini has generated specific questions based on item details.
-          </p>
+          {!createdClaim ? (
+            <>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2">
+                <ShieldCheck size={14} /> Submit Ownership Claim
+              </div>
+              <h3 className="text-sm font-bold text-slate-100 mb-1">
+                Prove ownership of {claimingPost.item}
+              </h3>
+              <p className="text-[10px] text-slate-400 leading-relaxed mb-4">
+                Enter your details and answer the AI-generated verification questions. The owner will review your claim and decide whether to reveal contact info.
+              </p>
 
-          {/* Loader */}
-          {(localLoading || claimLoading) && claimQuestions.length === 0 && (
-            <div className="py-8 text-center text-xs text-slate-400 font-medium space-y-2">
-              <RefreshCw className="animate-spin inline-block text-cyan-400" size={20} />
-              <p>Formulating questions via Gemini AI...</p>
-            </div>
-          )}
-
-          {/* Questions Answer Area */}
-          {!localLoading && !claimLoading && !claimResult && claimQuestions.length > 0 && (
-            <div className="space-y-4">
-              {claimQuestions.map((q, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-relaxed">
-                    Q{idx + 1}: {q}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Provide unique details..."
-                    value={claimAnswers[idx] || ""}
-                    onChange={(e) => {
-                      const updated = [...claimAnswers];
-                      updated[idx] = e.target.value;
-                      setClaimAnswers(updated);
-                    }}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-900 focus:border-cyan-500/50 outline-none text-xs text-slate-200 transition"
-                  />
-                </div>
-              ))}
-
-              {errorMsg && (
-                <div className="text-[10px] text-red-400 flex items-center gap-1">
-                  <AlertTriangle size={12} /> {errorMsg}
+              {/* Loader */}
+              {loading && (
+                <div className="py-12 text-center text-xs text-slate-400 font-medium space-y-2">
+                  <RefreshCw className="animate-spin inline-block text-cyan-400" size={20} />
+                  <p>Formulating customized questions via Gemini AI...</p>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-950 border border-slate-900 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitClaimAnswers}
-                  className="flex-1 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold transition cursor-pointer text-xs"
-                >
-                  Submit Answers
-                </button>
-              </div>
-            </div>
-          )}
+              {/* Form Area */}
+              {!loading && claimQuestions.length > 0 && (
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                  {/* Claimant Name & Contact */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-950/50 p-3 rounded-2xl border border-slate-800/50">
+                    <div className="space-y-1">
+                      <label className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <User size={10} /> Your Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="E.g., John Doe"
+                        value={claimantName}
+                        onChange={(e) => setClaimantName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-500/50 outline-none text-xs text-slate-200 transition"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <Phone size={10} /> WhatsApp Number
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="10-digit number"
+                        value={claimantContact}
+                        onChange={(e) => setClaimantContact(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-500/50 outline-none text-xs text-slate-200 transition"
+                      />
+                    </div>
+                  </div>
 
-          {/* Results screen */}
-          {!localLoading && !claimLoading && claimResult && (
-            <div className="text-center py-2 space-y-4">
-              <div className={`text-4xl ${claimResult.verified ? "animate-bounce" : "animate-pulse"}`}>
-                {claimResult.verified ? "🎉" : "❌"}
-              </div>
-              
-              {/* Matching score ring */}
+                  {/* AI Questions */}
+                  <div className="space-y-3.5">
+                    <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">
+                      AI Verification Questions:
+                    </div>
+                    {claimQuestions.map((q, idx) => (
+                      <div key={idx} className="space-y-1.5">
+                        <label className="block text-[10px] font-medium text-slate-300 leading-relaxed">
+                          Q{idx + 1}: {q}
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="Be as specific and honest as possible..."
+                          value={claimAnswers[idx] || ""}
+                          onChange={(e) => {
+                            const updated = [...claimAnswers];
+                            updated[idx] = e.target.value;
+                            setClaimAnswers(updated);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 focus:border-cyan-500/50 outline-none text-xs text-slate-200 transition resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {errorMsg && (
+                    <div className="text-[10px] text-red-400 flex items-center gap-1 bg-red-950/20 p-2.5 rounded-xl border border-red-900/30">
+                      <AlertTriangle size={12} className="shrink-0" /> {errorMsg}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={onClose}
+                      disabled={submitting}
+                      className="flex-1 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubmitClaim}
+                      disabled={submitting}
+                      className="flex-1 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold transition cursor-pointer text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <>
+                          <RefreshCw className="animate-spin" size={14} /> Submitting...
+                        </>
+                      ) : (
+                        "Submit Claim"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Success State */
+            <div className="text-center py-4 space-y-5 animate-fade-in">
               <div className="flex items-center justify-center">
-                <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center font-mono text-sm font-extrabold shadow-inner ${
-                  claimResult.verified ? "border-emerald-500/80 text-emerald-400" : "border-rose-500/80 text-rose-400"
-                }`}>
-                  {claimResult.confidence}%
+                <div className="w-16 h-16 rounded-full bg-emerald-950/30 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                  <CheckCircle size={36} />
                 </div>
               </div>
 
               <div>
-                <h4 className={`text-xs font-bold uppercase tracking-wider ${
-                  claimResult.verified ? "text-emerald-400" : "text-rose-400"
-                }`}>
-                  {claimResult.verified ? "AI Verification Passed!" : "Verification Failed"}
-                </h4>
-                <p className="text-[10px] text-slate-400 leading-relaxed mt-1 bg-slate-950 p-3 rounded-xl border border-slate-950 text-left">
-                  {claimResult.message}
+                <h3 className="text-base font-bold text-slate-100">Claim Submitted!</h3>
+                <p className="text-[10px] text-slate-400 leading-relaxed mt-1">
+                  Your claim has been successfully submitted and analyzed by Gemini AI. Keep your tracking details safe!
                 </p>
               </div>
 
-              {claimResult.verified && (
-                <div className="text-left border border-slate-900 bg-slate-950/60 p-3 rounded-xl space-y-3 animate-fade-in">
-                  {!isPinVerifiedSuccessfully ? (
-                    <>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-violet-400 uppercase tracking-widest">
-                        <Lock size={12} /> Encrypted Contact Details
-                      </div>
-                      <p className="text-[9px] text-slate-500 leading-normal">
-                        Contact is encrypted using browser AES-GCM. Please enter the post's 4-digit Security PIN to decrypt:
-                      </p>
-                      <input
-                        type="password"
-                        maxLength={4}
-                        placeholder="Enter 4-digit Security PIN"
-                        value={decryptPinEntered}
-                        onChange={(e) => setDecryptPinEntered(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-900 focus:border-violet-500/50 outline-none text-center text-sm font-bold tracking-widest text-slate-200 transition"
-                      />
-                      {errorMsg && (
-                        <p className="text-[10px] text-red-400">{errorMsg}</p>
-                      )}
-                      <button
-                        onClick={handleDecryptContact}
-                        className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-slate-950 font-bold hover:text-black transition text-xs cursor-pointer"
-                      >
-                        🔓 Decrypt &amp; Unlock Contact
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                        <ShieldCheck size={12} /> Contact Securely Decrypted!
-                      </div>
-                      <p className="text-[9px] text-slate-500 leading-normal">
-                        Decryption successful! Contact number has been unlocked locally. Tap below to coordinate.
-                      </p>
-                      <div className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/30 p-2 rounded-xl border border-emerald-500/15 text-center">
-                        Number: +91 {decryptedNumber}
-                      </div>
-                    </>
-                  )}
+              {/* Tracking Details Box */}
+              <div className="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl text-left space-y-3.5">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-900">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    Claim ID
+                  </span>
+                  <span className="text-xs font-mono font-bold text-slate-300">
+                    {createdClaim.id}
+                  </span>
                 </div>
-              )}
 
-              <div className="space-y-2 pt-2">
-                {claimResult.verified && isPinVerifiedSuccessfully && decryptedNumber && (
-                  <a
-                    href={`https://wa.me/91${decryptedNumber}?text=Hi! I successfully passed the LINCO Gemini Ownership Verification for your found item '${claimingPost.item}' (with ${claimResult.confidence}% match). Let's coordinate the handover!`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition flex items-center justify-center gap-1.5 text-xs"
+                <div className="flex justify-between items-center pb-2 border-b border-slate-900">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    Tracking PIN Code
+                  </span>
+                  <span className="text-base font-mono font-extrabold text-cyan-400 tracking-wider">
+                    {createdClaim.trackingCode}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    AI Pre-Verification Score
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${createdClaim.aiScore >= 80 ? "bg-emerald-500" : createdClaim.aiScore >= 60 ? "bg-amber-500" : "bg-rose-500"}`}
+                        style={{ width: `${createdClaim.aiScore}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono font-bold text-cyan-300 whitespace-nowrap">
+                      {createdClaim.aiScore}% Match
+                    </span>
+                  </div>
+                  <p className="text-[8px] text-slate-500 leading-normal italic">
+                    "{createdClaim.aiReason}"
+                  </p>
+                </div>
+              </div>
+
+              {/* Magic Link Area */}
+              <div className="space-y-1.5 text-left">
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  Magic Link (Track across devices)
+                </label>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    readOnly
+                    value={getMagicLink()}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-400 outline-none truncate"
+                  />
+                  <button
+                    onClick={handleCopyMagicLink}
+                    className="px-3 py-2 rounded-xl bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer whitespace-nowrap border border-cyan-500/20"
                   >
-                    Contact Finder on WhatsApp <ExternalLink size={12} />
-                  </a>
-                )}
+                    <Copy size={12} /> {copiedLink ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <button
                   onClick={onClose}
-                  className="w-full py-2.5 rounded-xl bg-slate-950 border border-slate-900 text-slate-400 hover:text-white transition text-xs font-bold cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white transition text-xs font-bold cursor-pointer"
                 >
-                  Close Window
+                  Close &amp; Check Back Later
                 </button>
               </div>
             </div>

@@ -25,6 +25,7 @@ interface PostCardProps {
   onSharePost: (post: Post, e: React.MouseEvent) => void;
   onShareAsImage: (post: Post, e: React.MouseEvent) => void;
   onShowQrCode: (post: Post, e: React.MouseEvent) => void;
+  onManageClaims: (post: Post) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -40,6 +41,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onSharePost,
   onShareAsImage,
   onShowQrCode,
+  onManageClaims,
 }) => {
   const isLost = post.type === "Lost";
   const itemCat = CATEGORIES.find((c) => c.id === post.category);
@@ -167,37 +169,33 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Action Buttons: WhatsApp and Claim */}
       <div className="flex gap-2">
-        {!isUnlocked ? (
+        {!isResolved ? (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              alert(`Please click '${isLost ? "Verify" : "Claim"}' and pass the AI verification quiz to unlock contact!`);
+              onStartClaim(post, e);
             }}
-            className="flex-1 py-2 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-500 hover:text-slate-400 transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center select-none cursor-not-allowed"
+            className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-slate-950 font-extrabold hover:text-black transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer shadow-lg shadow-violet-950/20"
           >
-            🔒 WhatsApp Locked ({isLost ? "Verify" : "Claim"} first)
+            🔒 {isLost ? "Verify Ownership" : "Submit Claim"}
           </button>
         ) : (
-          <a
-            href={`https://wa.me/91${decryptedContacts[post.id] || post.contact}?text=Hi! I saw your ${post.type} item listing on LINCO for '${post.item}'. Let's connect!`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold hover:text-black transition duration-150 flex items-center justify-center gap-1.5 text-xs text-center shadow shadow-emerald-950/20"
-          >
-            💬 Contact on WhatsApp
-          </a>
+          <div className="flex-1 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold text-xs text-center select-none flex items-center justify-center gap-1.5">
+            🎉 Reclaimed &amp; Resolved
+          </div>
         )}
 
-        {/* Claim Ownership verification Flow button */}
-        {!isResolved && !isUnlocked && (
-          <button
-            onClick={(e) => onStartClaim(post, e)}
-            className="px-3 py-2 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-xs font-bold text-violet-300 hover:text-violet-100 transition duration-150 flex items-center justify-center gap-1 text-center cursor-pointer"
-          >
-            <ShieldCheck size={14} /> {isLost ? "Verify" : "Claim"}
-          </button>
-        )}
+        {/* Manage Claims button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onManageClaims(post);
+          }}
+          title="Manage Claims &amp; Approve/Reject"
+          className="px-3 py-2 rounded-xl bg-cyan-400/10 hover:bg-cyan-400/20 border border-cyan-500/20 text-xs font-bold text-cyan-300 hover:text-cyan-100 transition duration-150 flex items-center justify-center gap-1.5 text-center cursor-pointer"
+        >
+          <ShieldCheck size={14} /> Claims
+        </button>
 
         {/* Share button */}
         <button
