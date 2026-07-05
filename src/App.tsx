@@ -22,6 +22,7 @@ import { CountUpStat } from "./components/CountUpStat";
 import { PostForm } from "./components/PostForm";
 import { FeedList } from "./components/FeedList";
 import { AboutTab } from "./components/AboutTab";
+import { LandingPage } from "./components/LandingPage";
 import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 
 // Modals
@@ -53,7 +54,7 @@ export default function App() {
 
   const form = usePostForm();
 
-  const [activeTab, setActiveTab] = useState<"home" | "feed" | "about">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about">("home");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
   
@@ -797,91 +798,101 @@ export default function App() {
       </div>
 
       {/* HERO CONTAINER */}
-      <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center select-none overflow-visible">
-        <div className="absolute inset-0 -top-40 max-h-[500px] bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-pink-500/5 blur-[120px] animate-pulse pointer-events-none z-0 opacity-80" />
-        <div className="absolute left-1/4 top-10 w-[50%] h-[260px] bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-[100px] filter blur-[80px] animate-orb-slow-1 opacity-70 pointer-events-none z-0" />
+      {activeTab !== "home" && (
+        <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center select-none overflow-visible">
+          <div className="absolute inset-0 -top-40 max-h-[500px] bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-pink-500/5 blur-[120px] animate-pulse pointer-events-none z-0 opacity-80" />
+          <div className="absolute left-1/4 top-10 w-[50%] h-[260px] bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-[100px] filter blur-[80px] animate-orb-slow-1 opacity-70 pointer-events-none z-0" />
 
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/40 to-violet-950/40 border border-cyan-500/30 text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest mb-5 shadow-lg shadow-cyan-950/50 backdrop-blur-md relative overflow-hidden group"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
-          </span>
-          <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost &amp; Found Directory</span>
-        </motion.div>
-
-        <div className="relative inline-block my-1.5 z-10">
-          <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl pointer-events-none" />
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter leading-none bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-500 bg-[size:200%] animate-shimmer text-transparent bg-clip-text relative z-10"
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/40 to-violet-950/40 border border-cyan-500/30 text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest mb-5 shadow-lg shadow-cyan-950/50 backdrop-blur-md relative overflow-hidden group"
           >
-            LINCO
-          </motion.h1>
-        </div>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
+            </span>
+            <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost &amp; Found Directory</span>
+          </motion.div>
 
-        <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-2 mb-4">
-          Locate · Identify · Notify · Connect · Owner
-        </p>
+          <div className="relative inline-block my-1.5 z-10">
+            <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl pointer-events-none" />
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter leading-none bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-500 bg-[size:200%] animate-shimmer text-transparent bg-clip-text relative z-10"
+            >
+              LINCO
+            </motion.h1>
+          </div>
 
-        {/* Typewriter text */}
-        <div className="h-6 flex justify-center items-center mb-1">
-          <p className="text-xs text-slate-400 font-medium">
-            {typewriterText}
-            <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
+          <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-2 mb-4">
+            Locate · Identify · Notify · Connect · Owner
           </p>
-        </div>
 
-        {/* Statistics Counters */}
-        <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto mt-6">
-          {[
-            { label: "Total", value: stats.total, color: "text-slate-100" },
-            { label: "Lost", value: stats.lost, color: "text-rose-400" },
-            { label: "Found", value: stats.found, color: "text-emerald-400" },
-            { label: "Resolved", value: stats.resolved, color: "text-violet-400" },
-          ].map((stat, idx) => (
-            <div key={idx} className="bg-slate-950/40 border border-slate-900 rounded-xl p-2.5 text-center transition hover:border-slate-800/80 shadow-md">
-              <CountUpStat value={stat.value} color={stat.color} />
-              <span className="text-[8px] tracking-wider text-slate-500 uppercase block font-semibold mt-0.5">{stat.label}</span>
-            </div>
-          ))}
-        </div>
-      </header>
+          {/* Typewriter text */}
+          <div className="h-6 flex justify-center items-center mb-1">
+            <p className="text-xs text-slate-400 font-medium">
+              {typewriterText}
+              <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
+            </p>
+          </div>
+
+          {/* Statistics Counters */}
+          <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto mt-6">
+            {[
+              { label: "Total", value: stats.total, color: "text-slate-100" },
+              { label: "Lost", value: stats.lost, color: "text-rose-400" },
+              { label: "Found", value: stats.found, color: "text-emerald-400" },
+              { label: "Resolved", value: stats.resolved, color: "text-violet-400" },
+            ].map((stat, idx) => (
+              <div key={idx} className="bg-slate-950/40 border border-slate-900 rounded-xl p-2.5 text-center transition hover:border-slate-800/80 shadow-md">
+                <CountUpStat value={stat.value} color={stat.color} />
+                <span className="text-[8px] tracking-wider text-slate-500 uppercase block font-semibold mt-0.5">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </header>
+      )}
 
       {/* Sticky Tab Navigation */}
-      <nav className="sticky top-0 z-35 max-w-2xl mx-auto px-4 py-4 mt-6">
-        <div className="flex gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-900 backdrop-blur-xl shadow-xl">
+      <nav className="sticky top-1.5 z-35 max-w-2xl mx-auto px-4 py-3">
+        <div className="flex gap-1 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-900/90 backdrop-blur-xl shadow-2xl">
           <button
             onClick={() => setActiveTab("home")}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "home" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "home" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Plus size={14} /> Post Item
+            🏠 Home
+          </button>
+          <button
+            onClick={() => setActiveTab("report")}
+            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "report" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            ➕ Report
           </button>
           <button
             onClick={() => {
               setActiveTab("feed");
               loadPosts(true);
             }}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "feed" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "feed" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Search size={14} /> Feed ({posts.length})
+            🔍 Feed ({posts.length})
           </button>
           <button
             onClick={() => setActiveTab("about")}
-            className={`flex-1 py-2 rounded-lg font-display text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "about" ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "about" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Info size={14} /> About LINCO
+            ℹ️ About
           </button>
         </div>
       </nav>
@@ -902,133 +913,160 @@ export default function App() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 space-y-6">
-            <AnimatePresence mode="wait">
-              {activeTab === "home" && (
-                <motion.div
-                  key="home-tab"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                >
-                  <PostForm form={form} onSubmit={handleCreatePost} />
-                </motion.div>
-              )}
+        <AnimatePresence mode="wait">
+          {activeTab === "home" ? (
+            <motion.div
+              key="landing-page"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="w-full"
+            >
+              <LandingPage
+                stats={stats}
+                onNavigateToReport={() => setActiveTab("report")}
+                onNavigateToFeed={() => {
+                  setActiveTab("feed");
+                  loadPosts(true);
+                }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="app-core-grid"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+            >
+              <div className="lg:col-span-8 space-y-6">
+                <AnimatePresence mode="wait">
+                  {activeTab === "report" && (
+                    <motion.div
+                      key="report-tab"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                    >
+                      <PostForm form={form} onSubmit={handleCreatePost} />
+                    </motion.div>
+                  )}
 
-              {activeTab === "feed" && (
-                <motion.div
-                  key="feed-tab"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                >
-                  <FeedList
-                    posts={posts}
-                    matches={matches}
-                    loadingPosts={loadingPosts}
-                    unlockedPosts={unlockedPosts}
-                    decryptedContacts={decryptedContacts}
-                    onIncrementViews={incrementPostViews}
-                    onMarkResolved={handleMarkResolvedTrigger}
-                    onDeletePost={handleDeletePostTrigger}
-                    onStartClaim={handleStartClaimTrigger}
-                    onSharePost={handleSharePostText}
-                    onShareAsImage={handleShareAsImage}
-                    onShowQrCode={handleShowQrCodeTrigger}
-                  />
-                </motion.div>
-              )}
+                  {activeTab === "feed" && (
+                    <motion.div
+                      key="feed-tab"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                    >
+                      <FeedList
+                        posts={posts}
+                        matches={matches}
+                        loadingPosts={loadingPosts}
+                        unlockedPosts={unlockedPosts}
+                        decryptedContacts={decryptedContacts}
+                        onIncrementViews={incrementPostViews}
+                        onMarkResolved={handleMarkResolvedTrigger}
+                        onDeletePost={handleDeletePostTrigger}
+                        onStartClaim={handleStartClaimTrigger}
+                        onSharePost={handleSharePostText}
+                        onShareAsImage={handleShareAsImage}
+                        onShowQrCode={handleShowQrCodeTrigger}
+                      />
+                    </motion.div>
+                  )}
 
-              {activeTab === "about" && (
-                <motion.div
-                  key="about-tab"
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                >
-                  <AboutTab />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Persistent Sidebar Info Card & LincoSaathii Chatbot */}
-          <div className="lg:col-span-4 space-y-6">
-            <LincoSaathiiChat
-              onFieldUpdate={(fields) => {
-                if (fields.type) form.setFType(fields.type);
-                if (fields.item) form.setFItem(fields.item);
-                if (fields.category) form.setFCategory(fields.category);
-                if (fields.details) form.setFDetails(fields.details);
-                if (fields.urgency) form.setFUrgency(fields.urgency as any);
-                if (fields.address) form.setFAddress(fields.address);
-                if (fields.contact) form.setFContact(fields.contact);
-              }}
-              triggerSubmit={async () => {
-                if (!form.validateStep1()) {
-                  addToast("Please fill in Step 1 (Basic Details) first!", "error");
-                  form.setStep(1);
-                  return;
-                }
-                if (!form.validateStep2()) {
-                  addToast("Please choose a 4-Digit Security PIN in Step 2!", "error");
-                  form.setStep(2);
-                  return;
-                }
-                
-                const postData = {
-                  item: form.fItem,
-                  details: form.fDetails,
-                  type: form.fType,
-                  address: form.fAddress,
-                  reward: form.fReward,
-                  contact: form.fContact,
-                  category: form.fCategory,
-                  urgency: form.fUrgency,
-                  image: form.fImage,
-                  timeline: form.fTimeline,
-                  latitude: form.fLat,
-                  longitude: form.fLng,
-                  securityPin: form.fSecurityPin || "0000",
-                };
-
-                try {
-                  const res = await handleCreatePost(postData);
-                  if (res && res.success) {
-                    form.resetForm();
-                  }
-                } catch (e) {
-                  console.error("Auto submit failed:", e);
-                }
-              }}
-              currentState={{
-                type: (form.fType || "Lost") as "Lost" | "Found",
-                item: form.fItem,
-                category: form.fCategory,
-                details: form.fDetails,
-                urgency: form.fUrgency,
-                address: form.fAddress,
-                contact: form.fContact,
-              }}
-            />
-
-            <div className="bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
-              <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
-                💡 Platform Health
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
-              </p>
-              <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
-                <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
-                <span className="text-slate-300">
-                  Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
-                </span>
+                  {activeTab === "about" && (
+                    <motion.div
+                      key="about-tab"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                    >
+                      <AboutTab />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
-          </div>
-        </div>
+
+              {/* Persistent Sidebar Info Card & LincoSaathii Chatbot */}
+              <div className="lg:col-span-4 space-y-6">
+                <LincoSaathiiChat
+                  onFieldUpdate={(fields) => {
+                    if (fields.type) form.setFType(fields.type);
+                    if (fields.item) form.setFItem(fields.item);
+                    if (fields.category) form.setFCategory(fields.category);
+                    if (fields.details) form.setFDetails(fields.details);
+                    if (fields.urgency) form.setFUrgency(fields.urgency as any);
+                    if (fields.address) form.setFAddress(fields.address);
+                    if (fields.contact) form.setFContact(fields.contact);
+                  }}
+                  triggerSubmit={async () => {
+                    if (!form.validateStep1()) {
+                      addToast("Please fill in Step 1 (Basic Details) first!", "error");
+                      form.setStep(1);
+                      return;
+                    }
+                    if (!form.validateStep2()) {
+                      addToast("Please choose a 4-Digit Security PIN in Step 2!", "error");
+                      form.setStep(2);
+                      return;
+                    }
+                    
+                    const postData = {
+                      item: form.fItem,
+                      details: form.fDetails,
+                      type: form.fType,
+                      address: form.fAddress,
+                      reward: form.fReward,
+                      contact: form.fContact,
+                      category: form.fCategory,
+                      urgency: form.fUrgency,
+                      image: form.fImage,
+                      timeline: form.fTimeline,
+                      latitude: form.fLat,
+                      longitude: form.fLng,
+                      securityPin: form.fSecurityPin || "0000",
+                    };
+
+                    try {
+                      const res = await handleCreatePost(postData);
+                      if (res && res.success) {
+                        form.resetForm();
+                      }
+                    } catch (e) {
+                      console.error("Auto submit failed:", e);
+                    }
+                  }}
+                  currentState={{
+                    type: (form.fType || "Lost") as "Lost" | "Found",
+                    item: form.fItem,
+                    category: form.fCategory,
+                    details: form.fDetails,
+                    urgency: form.fUrgency,
+                    address: form.fAddress,
+                    contact: form.fContact,
+                  }}
+                />
+
+                <div className="bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
+                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
+                    💡 Platform Health
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
+                    <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
+                    <span className="text-slate-300">
+                      Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Verification Modals */}
@@ -1052,13 +1090,25 @@ export default function App() {
         onClose={() => setShowQrModal(false)}
       />
 
-      <footer className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center text-slate-600 border-t border-slate-900/40 select-none">
-        <h4 className="text-sm font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-500 mb-1">
-          LINCO AI
-        </h4>
-        <p className="text-[10px] text-slate-500 font-medium">
-          © 2026 Prakash Pathak · Proudly Empowering Secure Communities.
-        </p>
+      <footer className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-16 pb-12 text-center text-slate-600 border-t border-slate-900/40 select-none">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 text-slate-500 text-xs font-medium max-w-4xl mx-auto">
+          <div className="text-center md:text-left space-y-1">
+            <p className="text-slate-400 font-bold tracking-wider font-sans uppercase text-[10px]">LINCO</p>
+            <p className="text-[11px] text-slate-500 font-medium">
+              © 2026 LINCO. All rights reserved.
+            </p>
+            <p className="text-[10px] text-slate-600">
+              Created by Prakash Pathak.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center md:justify-end gap-6 text-[11px] text-slate-400 font-medium font-sans">
+            <a href="#privacy" className="hover:text-cyan-400 transition-colors">Privacy</a>
+            <a href="#terms" className="hover:text-cyan-400 transition-colors">Terms</a>
+            <a href="#contact" className="hover:text-cyan-400 transition-colors">Contact</a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">GitHub</a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">LinkedIn</a>
+          </div>
+        </div>
       </footer>
     </div>
   );

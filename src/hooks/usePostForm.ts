@@ -25,7 +25,9 @@ export function usePostForm() {
   const [fAddress, setFAddress] = useState("");
   const [fReward, setFReward] = useState("");
   const [fContact, setFContact] = useState("");
-  const [fSecurityPin, setFSecurityPin] = useState("");
+  const [fSecurityPin, setFSecurityPin] = useState(() => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  });
   const [fCategory, setFCategory] = useState("");
   const [fUrgency, setFUrgency] = useState<UrgencyType>("Normal");
   const [fImage, setFImage] = useState<string | null>(null);
@@ -50,6 +52,7 @@ export function usePostForm() {
       if (draft.timeline) setFTimeline(draft.timeline);
       if (draft.lat) setFLat(draft.lat);
       if (draft.lng) setFLng(draft.lng);
+      if (draft.securityPin) setFSecurityPin(draft.securityPin);
     }
   }, []);
 
@@ -69,9 +72,10 @@ export function usePostForm() {
         timeline: fTimeline,
         lat: fLat,
         lng: fLng,
-      });
+        securityPin: fSecurityPin,
+      } as any);
     }
-  }, [fItem, fDetails, fType, fAddress, fReward, fContact, fCategory, fUrgency, fImage, fTimeline, fLat, fLng]);
+  }, [fItem, fDetails, fType, fAddress, fReward, fContact, fCategory, fUrgency, fImage, fTimeline, fLat, fLng, fSecurityPin]);
 
   const validateStep1 = useCallback(() => {
     const newErrors: FormErrors = {};
@@ -84,14 +88,13 @@ export function usePostForm() {
       newErrors.contact = "Contact must be a valid 10-digit mobile number";
     }
     if (!fAddress.trim()) newErrors.address = "Location/address is required";
-    if (!fDetails.trim()) newErrors.details = "Description is required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [fType, fItem, fCategory, fContact, fAddress, fDetails]);
+    // Auto-fill description if not specified to prevent typing blocker
+    if (!fDetails.trim()) {
+      const autoDetails = `${fType || "Lost"} ${fItem || "item"} reported at ${fAddress || "specified location"}.`;
+      setFDetails(autoDetails);
+    }
 
-  const validateStep2 = useCallback(() => {
-    const newErrors: FormErrors = {};
     if (!fSecurityPin) {
       newErrors.securityPin = "A 4-digit Security PIN is required to edit/resolve later";
     } else if (!/^\d{4}$/.test(fSecurityPin)) {
@@ -100,7 +103,11 @@ export function usePostForm() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fSecurityPin]);
+  }, [fType, fItem, fCategory, fContact, fAddress, fDetails, fSecurityPin]);
+
+  const validateStep2 = useCallback(() => {
+    return true; // Step 2 is the receipt review step, validation is already complete in Step 1
+  }, []);
 
   const resetForm = useCallback(() => {
     setFItem("");
@@ -109,7 +116,7 @@ export function usePostForm() {
     setFAddress("");
     setFReward("");
     setFContact("");
-    setFSecurityPin("");
+    setFSecurityPin(Math.floor(1000 + Math.random() * 9000).toString());
     setFCategory("");
     setFUrgency("Normal");
     setFImage(null);
@@ -124,12 +131,8 @@ export function usePostForm() {
   const nextStep = useCallback(() => {
     if (step === 1) {
       if (validateStep1()) setStep(2);
-    } else if (step === 2) {
-      if (validateStep2()) setStep(3);
-    } else if (step === 3) {
-      setStep(4);
     }
-  }, [step, validateStep1, validateStep2]);
+  }, [step, validateStep1]);
 
   const prevStep = useCallback(() => {
     setStep((s) => Math.max(1, s - 1));
