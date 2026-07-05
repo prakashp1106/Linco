@@ -1002,6 +1002,79 @@ app.delete("/api/posts/:id", async (req, res) => {
   }
 });
 
+// --- GEMINI PRODUCTION ROBUSTNESS HELPERS ---
+
+// Global Cache for verification questions to avoid duplicate API calls and support reuse
+const verificationQuestionsCache = new Map<string, string[]>();
+
+function getCacheKey(item: string, description: string): string {
+  const normItem = (item || "").trim().toLowerCase();
+  const normDesc = (description || "").trim().toLowerCase();
+  return `${normItem}||${normDesc}`;
+}
+
+// Professional human-friendly contextual fallbacks (no raw JSON/technical messages)
+function getProfessionalFallbackMessage(context: string): string {
+  switch (context) {
+    case "photo-fill":
+      return "The AI was temporarily unable to read the details of this image. Please double-check your connection or enter the details manually.";
+    case "voice-fill":
+      return "The AI was temporarily unable to process your voice transcript. Please try again or enter the details manually.";
+    case "enhance-description":
+      return "The description enhancement service is temporarily busy. Your original description has been saved and is ready.";
+    case "reconstruct-timeline":
+      return "The AI timeline assistant is temporarily unreachable. Please trace your steps manually to locate your item.";
+    case "suggest-reward":
+      return "AI reward recommendations are temporarily unavailable. We suggest using a community-recommended range of ₹500 - ₹2,000 based on standard item values.";
+    case "generate-verification":
+      return "AI question generation is temporarily offline. We have prepared two general verification questions for you to use.";
+    case "verify-claim":
+      return "AI automated claim verification is temporarily unavailable. Your claim answers have been securely saved, and the owner will review them manually.";
+    case "linco-saathii":
+      return "LincoSaathii is currently taking a short breather. Please try typing your message again, or use the manual forms to report your item.";
+    default:
+      return "We are experiencing a temporary high volume of requests. Please try again in a moment, or continue manually.";
+  }
+}
+
+// Reusable call wrapper with graceful 429 exponential backoff handling (2s, 5s, 10s)
+async function callGeminiWithRetry<T>(
+  apiCall: () => Promise<T>,
+  fallbackValue: T | (() => T),
+  contextName: string
+): Promise<T> {
+  const delays = [2000, 5000, 10000];
+  let lastError: any = null;
+
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      return await apiCall();
+    } catch (err: any) {
+      lastError = err;
+      const errMsg = String(err.message || err);
+      const isRateLimit = errMsg.includes("429") || 
+                          errMsg.toUpperCase().includes("RESOURCE_EXHAUSTED") ||
+                          err.status === 429 || 
+                          err.statusCode === 429;
+      
+      if (isRateLimit && attempt < delays.length) {
+        const delay = delays[attempt];
+        console.warn(`[GEMINI-RETRY] Rate limit (429) hit in ${contextName}. Attempt ${attempt + 1} failed. Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        break; // Non-429 or exhausted all retries
+      }
+    }
+  }
+
+  console.error(`[GEMINI-FAILURE] Permanent failure in ${contextName}:`, lastError);
+  
+  if (typeof fallbackValue === "function") {
+    return (fallbackValue as Function)();
+  }
+  return fallbackValue;
+}
+
 // --- SECURE SYSTEM-MEDIATED CLAIM WORKFLOW ENDPOINTS ---
 
 // Helper to generate a 6-digit tracking code
@@ -1060,14 +1133,26 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
   "message": "A concise 1-2 sentence explanation of your decision."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
+    const defaultFallback = JSON.stringify({
+      verified: false,
+      confidence: 50,
+      message: "AI automated verification is temporarily offline. Your claim was successfully registered, and the item reporter will review your answers manually."
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "claims-submission"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    let parsedResult = { verified: false, confidence: 0, message: "AI verification failed to parse" };
+    let parsedResult = { verified: false, confidence: 50, message: "AI verification is temporarily busy. The owner will review your answers manually." };
     try {
       parsedResult = JSON.parse(cleanedText);
     } catch (parseErr) {
@@ -1114,7 +1199,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
     res.json({ success: true, claim: newClaim });
   } catch (err: any) {
     console.error("Failed to submit claim:", err);
-    res.status(500).json({ error: err.message || "Failed to submit claim" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("verify-claim") });
   }
 });
 
@@ -1402,17 +1487,33 @@ The JSON object MUST have exactly these keys:
   "description": "Specific visual description under 60 words focusing on colors, brand names, size, unique marks, textures, stickers, or scratches."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [imagePart, { text: prompt }],
+    const defaultFallback = JSON.stringify({
+      item: "Lost/Found Item",
+      category: "Other",
+      description: "Photo analysis is temporarily busy. Please enter the details manually."
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: [imagePart, { text: prompt }],
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "photo-fill"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    try {
+      res.json(JSON.parse(cleanedText));
+    } catch (err) {
+      res.json(JSON.parse(defaultFallback));
+    }
   } catch (err: any) {
     console.error("AI photo analyze error:", err);
-    res.status(500).json({ error: err.message || "AI image reading failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("photo-fill") });
   }
 });
 
@@ -1433,17 +1534,33 @@ The JSON object MUST have exactly these keys:
   "description": "Specific, grammatically polished description under 70 words focusing on colors, brands, unique markings mentioned."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
+    const defaultFallback = JSON.stringify({
+      item: "Spoken Item",
+      category: "Other",
+      description: transcript
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "voice-fill"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    try {
+      res.json(JSON.parse(cleanedText));
+    } catch (err) {
+      res.json(JSON.parse(defaultFallback));
+    }
   } catch (err: any) {
     console.error("AI voice fill error:", err);
-    res.status(500).json({ error: err.message || "AI voice decoding failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("voice-fill") });
   }
 });
 
@@ -1460,15 +1577,22 @@ Original Raw Description: "${description}"
 
 Return ONLY the final enhanced description. Do not include introductory text, headers, or markdown backticks.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
+    const enhancedText = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text?.trim() || description;
+      },
+      description,
+      "enhance-description"
+    );
 
-    res.json({ description: response.text?.trim() || description });
+    res.json({ description: enhancedText });
   } catch (err: any) {
     console.error("AI enhance error:", err);
-    res.status(500).json({ error: err.message || "AI enhancement failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("enhance-description") });
   }
 });
 
@@ -1489,15 +1613,22 @@ Perform a step-by-step logical reconstruction of their day to identify:
 
 Be positive, logical, and concise. Keep your answer under 4 sentences total. Return the answer as clean plain text.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
+    const analysisText = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text?.trim() || "";
+      },
+      "Timeline analysis is temporarily offline. Please trace your steps manually or try again in a bit.",
+      "reconstruct-timeline"
+    );
 
-    res.json({ analysis: response.text?.trim() || "" });
+    res.json({ analysis: analysisText });
   } catch (err: any) {
     console.error("AI timeline error:", err);
-    res.status(500).json({ error: err.message || "AI timeline analysis failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("reconstruct-timeline") });
   }
 });
 
@@ -1519,17 +1650,33 @@ Return ONLY a valid JSON object (no markdown backticks):
   "reason": "Brief, 1-sentence logical reason for this suggestion in Rupees (e.g., standard replacement is around ₹8,000, so a ₹1,000 finder reward is highly motivating)."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
+    const defaultFallback = JSON.stringify({
+      min: 500,
+      max: 1500,
+      reason: "Reward suggest service is temporarily offline. We recommend ₹500 - ₹1,500 based on average lost item valuations."
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "suggest-reward"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    try {
+      res.json(JSON.parse(cleanedText));
+    } catch (err) {
+      res.json(JSON.parse(defaultFallback));
+    }
   } catch (err: any) {
     console.error("AI reward suggest error:", err);
-    res.status(500).json({ error: err.message || "AI reward suggestion failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("suggest-reward") });
   }
 });
 
@@ -1538,6 +1685,13 @@ app.post("/api/ai/generate-verification", requireGeminiApiKey, async (req, res) 
   try {
     const { item, description } = req.body;
     if (!item || !description) return res.status(400).json({ error: "Item and description required" });
+
+    // Check Cache first to prevent duplicates and support reuse
+    const cacheKey = getCacheKey(item, description);
+    if (verificationQuestionsCache.has(cacheKey)) {
+      console.log(`[VERIFICATION-QUESTIONS-CACHE] Cache HIT for: "${item}"`);
+      return res.json(verificationQuestionsCache.get(cacheKey));
+    }
 
     const prompt = `Generate exactly 2 or 3 short, highly clever and specific ownership verification questions for this item.
 The questions MUST be directly based on the unique details mentioned in the item's description (for example, if the description mentions colors, brands, specific cards inside, scratch marks, stickers, patterns, or exact locations, generate questions testing the claimant on those specific physical details, like "What is the color of the wallet's interior?" or "Which specific identification card was present inside?").
@@ -1552,17 +1706,40 @@ Format:
   "Specific Question 2?"
 ]`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
+    const defaultFallback = JSON.stringify([
+      "Can you describe any unique scratches, contents, or branding?",
+      "Where and around what time did you lose or find this item?"
+    ]);
 
-    const text = response.text || "[]";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "[]";
+      },
+      defaultFallback,
+      "generate-verification"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    let questions: string[];
+    try {
+      questions = JSON.parse(cleanedText);
+      if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error("Invalid format");
+      }
+    } catch (err) {
+      questions = JSON.parse(defaultFallback);
+    }
+
+    // Cache the result so each post generates them only once and they're reused for future claims
+    verificationQuestionsCache.set(cacheKey, questions);
+    res.json(questions);
   } catch (err: any) {
     console.error("AI generate verification error:", err);
-    res.status(500).json({ error: err.message || "AI verification generator failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("generate-verification") });
   }
 });
 
@@ -1589,17 +1766,33 @@ Return ONLY a valid JSON object (no markdown backticks):
   "message": "A concise 1-2 sentence explanation of your matching decision and whether their answers aligned with the item details."
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
+    const defaultFallback = JSON.stringify({
+      verified: false,
+      confidence: 50,
+      message: "AI automated claim verification is temporarily offline. Your claim answers have been securely saved, and the owner will review them manually."
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "verify-claim"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    try {
+      res.json(JSON.parse(cleanedText));
+    } catch (err) {
+      res.json(JSON.parse(defaultFallback));
+    }
   } catch (err: any) {
     console.error("AI claim verify error:", err);
-    res.status(500).json({ error: err.message || "AI claim verification failed" });
+    res.status(500).json({ error: getProfessionalFallbackMessage("verify-claim") });
   }
 });
 
@@ -1657,20 +1850,37 @@ Task: Output a single, strictly valid JSON response containing exactly these key
   "shouldAutoSubmit": true | false
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: systemInstruction,
-      config: {
-        responseMimeType: "application/json"
-      }
+    const defaultFallback = JSON.stringify({
+      reply: "Suno bhai, server thoda busy lag raha hai. Par tum chinta mat karo, tension mat lo dost! Hum yahi hain, tum apna form manually bhi fill kar sakte ho ya thodi der me mujhse baat kar sakte ho.",
+      extractedFields: null,
+      isReadyToPublish: false,
+      shouldAutoSubmit: false
     });
 
-    const text = response.text || "{}";
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: systemInstruction,
+          config: {
+            responseMimeType: "application/json"
+          }
+        });
+        return response.text || "{}";
+      },
+      defaultFallback,
+      "linco-saathii"
+    );
+
     const cleanedText = text.replace(/```json|```/gi, "").trim();
-    res.json(JSON.parse(cleanedText));
+    try {
+      res.json(JSON.parse(cleanedText));
+    } catch (err) {
+      res.json(JSON.parse(defaultFallback));
+    }
   } catch (err: any) {
     console.error("LincoSaathii Error:", err);
-    res.status(500).json({ error: err.message || "LincoSaathii had an issue." });
+    res.status(500).json({ error: getProfessionalFallbackMessage("linco-saathii") });
   }
 });
 
