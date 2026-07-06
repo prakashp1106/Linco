@@ -689,13 +689,14 @@ app.post("/api/posts", async (req, res) => {
       status: "Active",
       views: 0,
       created: now,
-      timestamp: new Date().toLocaleString("en-IN", {
+      timestamp: new Date(now).toLocaleString("en-US", {
         day: "numeric",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       }),
     };
 
@@ -1110,6 +1111,10 @@ app.post("/api/posts/:id/claims", requireGeminiApiKey, async (req, res) => {
       return res.status(404).json({ error: "Associated post not found" });
     }
 
+    if (post.status === "Resolved") {
+      return res.status(400).json({ error: "This post has already been resolved and is closed to new claims." });
+    }
+
     // Call Gemini API to verify ownership based on answers
     const prompt = `Verify if a claimant is the true owner of a lost/found item based on their answers to verification questions.
 Item Name: "${post.item}"
@@ -1172,13 +1177,14 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
       aiReason: parsedResult.message,
       status: "Pending",
       created: Date.now(),
-      timestamp: new Date().toLocaleString("en-IN", {
+      timestamp: new Date().toLocaleString("en-US", {
         day: "numeric",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       }),
       trackingCode,
     };
@@ -1375,9 +1381,6 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
     // Update claim status & owner contact details
     claim.status = "Approved";
     claim.revealedOwnerContact = revealedOwnerContact;
-
-    // Resolve post
-    post.status = "Resolved";
 
     if (useLocalFallback) {
       // Find and update claim

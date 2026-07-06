@@ -15,6 +15,7 @@ import { encryptContact } from "./services/encryptionService";
 import { Post, AIMatch } from "./types";
 import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
 import { apiService } from "./services/api";
+import { formatKolkataTimestamp } from "./utils/date";
 
 // UI Components
 import { CanvasParticles } from "./components/CanvasParticles";
@@ -425,7 +426,8 @@ export default function App() {
 
       // Metadata section (Location & Date)
       const locLinesCol = wrapTextToArray(shortAddr, 280, metaValueFont);
-      const dateLinesCol = wrapTextToArray(p.timestamp, 280, metaValueFont);
+      const formattedDate = formatKolkataTimestamp(p.created || p.timestamp);
+      const dateLinesCol = wrapTextToArray(formattedDate, 280, metaValueFont);
 
       // Switch column format dynamically if scale is small or text wraps too much (avoid collision)
       const useSingleColumn = S < 0.85 || locLinesCol.length > 1 || dateLinesCol.length > 1;
@@ -435,7 +437,7 @@ export default function App() {
 
       if (useSingleColumn) {
         locLinesToRender = wrapTextToArray(shortAddr, 640, metaValueFont);
-        dateLinesToRender = wrapTextToArray(p.timestamp, 640, metaValueFont);
+        dateLinesToRender = wrapTextToArray(formattedDate, 640, metaValueFont);
         metadataHeight = metaHeaderFontSize + 4 + (locLinesToRender.length * metaValueLineHeight) + 12 + metaHeaderFontSize + 4 + (dateLinesToRender.length * metaValueLineHeight);
       } else {
         locLinesToRender = locLinesCol;

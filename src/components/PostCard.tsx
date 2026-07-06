@@ -11,6 +11,7 @@ import { CATEGORIES } from "../constants";
 import { LiveMissingTimer } from "./LiveMissingTimer";
 import { MiniMap } from "./LeafletMap";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { formatKolkataTimestamp } from "../utils/date";
 
 interface PostCardProps {
   post: Post;
@@ -150,7 +151,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       {/* Spacers & Views Row */}
       <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold text-slate-500 mb-4 font-mono">
         <span className="flex items-center gap-1"><MapPin size={11} className="text-slate-600" /> {post.address}</span>
-        <span className="flex items-center gap-1"><Calendar size={11} className="text-slate-600" /> {post.timestamp}</span>
+        <span className="flex items-center gap-1"><Calendar size={11} className="text-slate-600" /> {formatKolkataTimestamp(post.created || post.timestamp)}</span>
         <span>👀 {post.views || 0} views</span>
         {post.reward && <span className="text-amber-400 font-bold">💰 Reward Offered: ₹{post.reward}</span>}
         <span className="flex items-center gap-1">

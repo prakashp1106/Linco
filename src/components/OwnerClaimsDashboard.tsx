@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";
 import { apiService } from "../services/api";
 import { decryptContact } from "../services/encryptionService";
+import { formatKolkataTimestamp } from "../utils/date";
 
 interface OwnerClaimsDashboardProps {
   isOpen: boolean;
@@ -110,6 +111,24 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
     }
   };
 
+  const handleResolvePost = async () => {
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      const res = await apiService.resolvePost(post.id, pin);
+      if (res.success) {
+        if (onPostUpdated && res.post) {
+          onPostUpdated(res.post);
+        }
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to resolve listing");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -195,6 +214,35 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
             ) : (
               /* Claims List View */
               <div className="space-y-4">
+                {/* Resolve Action Banner */}
+                {post.status !== "Resolved" ? (
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <div className="space-y-0.5 text-center md:text-left">
+                      <h4 className="text-xs font-bold text-amber-400">Reclaim &amp; Resolve Listing</h4>
+                      <p className="text-[10px] text-slate-400 leading-normal">
+                        Once you have successfully reclaimed your item and exchanged contact with the claimant, mark this listing as Resolved. This will close it to any future claims.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleResolvePost}
+                      disabled={loading}
+                      className="w-full md:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      {loading ? <RefreshCw size={12} className="animate-spin" /> : "Mark as Reclaimed & Resolved"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-3">
+                    <Check className="text-emerald-400 shrink-0" size={16} />
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-bold text-emerald-400">This Listing is Resolved</h4>
+                      <p className="text-[10px] text-slate-400 leading-normal">
+                        This post is closed and is no longer accepting new claims. Existing claim history remains visible below.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {claims.length === 0 ? (
                   <div className="text-center py-12 text-slate-400 space-y-2">
                     <Calendar className="mx-auto text-slate-600 animate-pulse" size={28} />
@@ -225,7 +273,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                               Claimant: {claim.claimantName}
                             </h4>
                             <p className="text-[9px] text-slate-500 flex items-center gap-1 mt-0.5">
-                              Submitted: {claim.timestamp}
+                              Submitted: {formatKolkataTimestamp(claim.created || claim.timestamp)}
                             </p>
                           </div>
 
