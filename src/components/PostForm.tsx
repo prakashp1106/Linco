@@ -89,7 +89,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
       const res = await ai.runPhotoAnalyzer(compressedBase64);
 
       let count = 0;
-      if (res.item) { form.setFItem(res.item); count++; }
+      if (res.item && !form.fItem.trim()) { form.setFItem(res.item); count++; }
       if (res.category) { form.setFCategory(res.category); count++; }
       if (res.details) { form.setFDetails(res.details); count++; }
       if (res.urgency) { form.setFUrgency(res.urgency as any); count++; }
@@ -148,7 +148,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
       try {
         const res = await ai.runVoiceAnalyzer(transcript);
         let count = 0;
-        if (res.item) { form.setFItem(res.item); count++; }
+        if (res.item && !form.fItem.trim()) { form.setFItem(res.item); count++; }
         if (res.category) { form.setFCategory(res.category); count++; }
         if (res.details) { form.setFDetails(res.details); count++; }
         if (res.urgency) { form.setFUrgency(res.urgency as any); count++; }
@@ -178,7 +178,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
     try {
       const res = await ai.runVoiceAnalyzer(text);
       let count = 0;
-      if (res.item) { form.setFItem(res.item); count++; }
+      if (res.item && !form.fItem.trim()) { form.setFItem(res.item); count++; }
       if (res.category) { form.setFCategory(res.category); count++; }
       if (res.details) { form.setFDetails(res.details); count++; }
       if (res.urgency) { form.setFUrgency(res.urgency as any); count++; }

@@ -199,36 +199,37 @@ export default function App() {
 
   // Form Submission callback
   const handleCreatePost = async (postFormInput: any) => {
-    let finalItem = postFormInput.item;
+    let finalItem = postFormInput.item ? postFormInput.item.trim() : "";
     let finalCategory = postFormInput.category;
 
-    const isUnspecified =
-      !finalItem ||
-      finalItem.trim() === "" ||
-      finalItem.toLowerCase().includes("unspecified") ||
-      finalItem.toLowerCase().includes("personal item") ||
-      finalItem === "Item Name";
+    // Manual Item Name always has highest priority.
+    const hasManualItem = finalItem !== "" && 
+                           finalItem !== "Item Name" && 
+                           !finalItem.toLowerCase().includes("unspecified");
 
-    if (postFormInput.details) {
-      addToast("Analyzing details & extracting real object name with AI...", "info");
-      try {
-        const aiRes = await apiService.quickFillVoice(postFormInput.details);
-        if (aiRes && aiRes.item && !aiRes.item.toLowerCase().includes("unspecified")) {
-          finalItem = capitalizeItemName(aiRes.item);
-          if (aiRes.category) {
-            finalCategory = aiRes.category;
+    if (!hasManualItem) {
+      // Voice transcript should only be used if Item Name is completely empty.
+      if (postFormInput.details && postFormInput.details.trim() !== "") {
+        addToast("Analyzing details & extracting real object name with AI...", "info");
+        try {
+          const aiRes = await apiService.quickFillVoice(postFormInput.details);
+          if (aiRes && aiRes.item && !aiRes.item.toLowerCase().includes("unspecified") && !aiRes.item.toLowerCase().includes("spoken item")) {
+            finalItem = capitalizeItemName(aiRes.item);
+            if (aiRes.category) {
+              finalCategory = aiRes.category;
+            }
+          } else {
+            const localItem = extractItemLocal(postFormInput.details);
+            if (localItem) {
+              finalItem = capitalizeItemName(localItem);
+            }
           }
-        } else {
+        } catch (err) {
+          console.error("AI extraction failed, using local fallback:", err);
           const localItem = extractItemLocal(postFormInput.details);
           if (localItem) {
             finalItem = capitalizeItemName(localItem);
           }
-        }
-      } catch (err) {
-        console.error("AI extraction failed, using local fallback:", err);
-        const localItem = extractItemLocal(postFormInput.details);
-        if (localItem) {
-          finalItem = capitalizeItemName(localItem);
         }
       }
     }
@@ -240,21 +241,9 @@ export default function App() {
       finalCategory = detectedCategory;
     }
 
-    // Ensure we NEVER save as "Unspecified personal item" or blank if details have some text
-    if (!finalItem || finalItem.toLowerCase().includes("unspecified")) {
-      const localItem = extractItemLocal(postFormInput.details || "");
-      if (localItem) {
-        finalItem = capitalizeItemName(localItem);
-      } else if (postFormInput.details) {
-        const words = postFormInput.details.trim().split(/\s+/).filter((w: string) => !w.toLowerCase().includes("lost") && !w.toLowerCase().includes("found"));
-        if (words.length > 0) {
-          finalItem = capitalizeItemName(words.slice(0, 3).join(" ").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ""));
-        } else {
-          finalItem = "Personal Item";
-        }
-      } else {
-        finalItem = "Personal Item";
-      }
+    // If both are empty then display "Untitled Item".
+    if (!finalItem || finalItem.trim() === "" || finalItem.toLowerCase().includes("unspecified") || finalItem === "Item Name") {
+      finalItem = "Untitled Item";
     }
 
     const enrichedFormInput = {
@@ -956,6 +945,20 @@ export default function App() {
             )}
           </button>
           <button
+            onClick={() => setNotificationsOpen(true)}
+            className="px-2.5 sm:px-3.5 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
+            title="Notification Center"
+            id="top-nav-bell-button"
+          >
+            <Bell className="text-rose-500 hover:scale-110 transition duration-300" size={15} />
+            <span className="hidden sm:inline">Alerts</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab("about")}
             className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "about" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
@@ -1209,22 +1212,6 @@ export default function App() {
         post={qrModalPost}
         onClose={() => setShowQrModal(false)}
       />
-
-      {/* FLOATING BELL NOTIFICATION CENTER TOGGLE */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          onClick={() => setNotificationsOpen(true)}
-          className="h-12 w-12 rounded-full bg-slate-950 border border-slate-900 hover:border-slate-800 shadow-2xl flex items-center justify-center relative cursor-pointer group transition duration-300"
-          id="floating-bell-button"
-        >
-          <Bell className="text-cyan-400 group-hover:scale-110 transition duration-300" size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-black text-slate-950 shadow-[0_0_10px_#06b6d4]">
-              {unreadCount}
-            </span>
-          )}
-        </button>
-      </div>
 
       <NotificationCenter
         unlockedPosts={unlockedPosts}
