@@ -523,24 +523,68 @@ Extract and output ONLY a valid JSON object matching the following structure. Do
   }
 }
 
+const STOP_WORDS = new Set([
+  "a", "an", "the", "in", "on", "at", "with", "of", "for", "and", "or", "is", "was", "to", "from", "by", "about", "that", "this", "my", "your", "their", "our", "mine", "some", "any"
+]);
+
 const SYNONYM_GROUPS = [
-  ["wallet", "purse", "pouch", "clutch", "handbag", "pocketbook", "leather wallet", "money bag"],
-  ["phone", "mobile", "smartphone", "cellphone", "cell", "device", "iphone", "android"],
-  ["earbuds", "earphones", "headphones", "pods", "airpods", "buds"],
-  ["watch", "wristwatch", "wrist watch", "wrist"],
-  ["backpack", "schoolbag", "rucksack", "bag", "pack", "school bag"],
-  ["laptop", "notebook", "computer", "macbook"],
-  ["key", "keys", "keychain", "fob"],
-  ["card", "id", "license", "badge", "passport", "cardholder"],
-  ["glasses", "sunglasses", "spectacles", "eyeglasses", "goggles"]
+  ["wallet", "purse", "pouch", "clutch", "handbag", "pocketbook", "leather wallet", "money bag", "billfold", "cardholder", "bifold", "trifold"],
+  ["phone", "mobile", "smartphone", "cellphone", "cell", "device", "iphone", "android", "galaxy", "pixel", "telephone"],
+  ["earbuds", "earphones", "headphones", "pods", "airpods", "buds", "headset"],
+  ["watch", "wristwatch", "wrist watch", "wrist", "smartwatch", "tracker", "fitbit", "applewatch"],
+  ["backpack", "schoolbag", "rucksack", "bag", "pack", "school bag", "duffel", "suitcase", "satchel"],
+  ["laptop", "notebook", "computer", "macbook", "chromebook", "tablet", "ipad"],
+  ["key", "keys", "keychain", "fob", "car key", "house key"],
+  ["card", "id", "license", "badge", "passport", "cardholder", "permit", "document"],
+  ["glasses", "sunglasses", "spectacles", "eyeglasses", "goggles", "shades", "specs"],
+  ["ring", "band", "wedding ring", "engagement ring", "jewelry", "jewel"],
+  ["necklace", "chain", "pendant", "choker"],
+  ["bottle", "flask", "thermos", "tumbler", "canteen", "mug", "cup"],
+  ["jacket", "coat", "hoodie", "sweater", "cardigan", "blazer", "outerwear", "windbreaker"]
 ];
 
 const DESCRIPTORS = new Set([
   "leather", "canvas", "plastic", "metal", "silicone", "gold", "silver", "wooden", "cotton", "polyester",
   "black", "white", "blue", "red", "green", "yellow", "pink", "purple", "orange", "brown", "grey", "gray",
   "small", "large", "medium", "big", "little", "tiny", "brand", "new", "old", "used", "school", "office", "work",
-  "wrist", "smart"
+  "wrist", "smart", "metallic", "fabric", "nylon", "steel", "brass", "copper", "aluminum", "glass", "denim", "wool",
+  "light", "dark", "bright", "matte", "glossy", "clear", "transparent"
 ]);
+
+const BRAND_WORDS = new Set([
+  "samsung", "apple", "iphone", "galaxy", "sony", "google", "pixel", "nike", "adidas", "dell", "hp", "lenovo", "asus", 
+  "nintendo", "playstation", "xbox", "ps4", "ps5", "casio", "rolex", "fossil", "seiko", "citizen", "bose", "sony", 
+  "sennheiser", "beats", "jbl", "anker", "fitbit", "garmin", "gopro", "canon", "nikon", "fujifilm", "gucci", "prada", 
+  "louis", "vuitton", "chanel", "hermes", "coach", "michael", "kors", "kate", "spade"
+]);
+
+function stem(word: string): string {
+  let w = word.toLowerCase().trim();
+  if (w.length <= 2) return w;
+  
+  if (w.endsWith("ies")) {
+    w = w.slice(0, -3) + "y";
+  } else if (w.endsWith("es") && !w.endsWith("aes") && !w.endsWith("ees") && !w.endsWith("oes")) {
+    w = w.slice(0, -2);
+  } else if (w.endsWith("s") && !w.endsWith("ss") && !w.endsWith("as") && !w.endsWith("us") && !w.endsWith("is") && !w.endsWith("os")) {
+    w = w.slice(0, -1);
+  }
+  
+  if (w.endsWith("ing")) {
+    w = w.slice(0, -3);
+    if (w.endsWith("at") || w.endsWith("bl") || w.endsWith("iz")) {
+      w += "e";
+    }
+  } else if (w.endsWith("ed")) {
+    w = w.slice(0, -2);
+  } else if (w.endsWith("ly")) {
+    w = w.slice(0, -2);
+  } else if (w.endsWith("er") && w.length > 4) {
+    w = w.slice(0, -2);
+  }
+  
+  return w;
+}
 
 function levenshteinDistance(a: string, b: string): number {
   const tmp: number[][] = [];
@@ -564,16 +608,46 @@ function levenshteinDistance(a: string, b: string): number {
   return tmp[a.length][b.length];
 }
 
+function calculateJaccardSimilarity(tokens1: string[], tokens2: string[]): number {
+  if (tokens1.length === 0 || tokens2.length === 0) return 0;
+  const set1 = new Set(tokens1);
+  const set2 = new Set(tokens2);
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  return intersection.size / union.size;
+}
+
+function extractBrandAndModel(tokens: string[]): { brand?: string; model?: string } {
+  let brand: string | undefined;
+  let model: string | undefined;
+  
+  const modelRegex = /[a-z]\d|\d[a-z]|\d{2,}/i;
+  
+  for (const token of tokens) {
+    if (BRAND_WORDS.has(token)) {
+      brand = token;
+    } else if (modelRegex.test(token)) {
+      model = token;
+    }
+  }
+  return { brand, model };
+}
+
 function areWordsRelated(w1: string, w2: string): boolean {
-  if (w1 === w2) return true;
+  const s1 = stem(w1);
+  const s2 = stem(w2);
+  if (s1 === s2) return true;
+  
   for (const group of SYNONYM_GROUPS) {
-    if (group.includes(w1) && group.includes(w2)) {
+    const groupStems = group.map(stem);
+    if (groupStems.includes(s1) && groupStems.includes(s2)) {
       return true;
     }
   }
-  if (w1.length > 3 && w2.length > 3) {
-    if (w1.includes(w2) || w2.includes(w1)) return true;
-    if (levenshteinDistance(w1, w2) <= 1) return true;
+  
+  if (s1.length > 3 && s2.length > 3) {
+    if (s1.includes(s2) || s2.includes(s1)) return true;
+    if (levenshteinDistance(s1, s2) <= 1) return true;
   }
   return false;
 }
@@ -583,7 +657,27 @@ function cleanAndTokenize(text: string): string[] {
     .toLowerCase()
     .replace(/[^\w\s]/g, " ")
     .split(/\s+/)
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(w => !STOP_WORDS.has(w));
+}
+
+function detectModifierMatch(stemsA: string[], stemsB: string[]): boolean {
+  if (stemsA.length === 0 || stemsB.length === 0) return false;
+  
+  const intersection = stemsA.filter(s => stemsB.some(s2 => areWordsRelated(s, s2)));
+  if (intersection.length === 0) return false;
+  
+  const hasCoreIntersection = intersection.some(s => !DESCRIPTORS.has(s));
+  if (!hasCoreIntersection) return false;
+  
+  const mismatchedA = stemsA.filter(s => !stemsB.some(s2 => areWordsRelated(s, s2)));
+  const mismatchedB = stemsB.filter(s => !stemsA.some(s2 => areWordsRelated(s, s2)));
+  
+  const allMismatchedAreDescriptors = 
+    mismatchedA.every(s => DESCRIPTORS.has(s) || STOP_WORDS.has(s)) && 
+    mismatchedB.every(s => DESCRIPTORS.has(s) || STOP_WORDS.has(s));
+    
+  return allMismatchedAreDescriptors;
 }
 
 function calculateLocalItemSimilarity(nameA: string, nameB: string): number {
@@ -592,56 +686,45 @@ function calculateLocalItemSimilarity(nameA: string, nameB: string): number {
 
   if (!cleanA || !cleanB) return 0;
 
-  // 1. Direct equal comparison
-  const normTokensA = cleanAndTokenize(cleanA).sort();
-  const normTokensB = cleanAndTokenize(cleanB).sort();
-  if (normTokensA.join(" ") === normTokensB.join(" ")) {
+  const tokensA = cleanAndTokenize(cleanA);
+  const tokensB = cleanAndTokenize(cleanB);
+  
+  const stemsA = tokensA.map(stem);
+  const stemsB = tokensB.map(stem);
+
+  if (stemsA.length === 0 || stemsB.length === 0) return 0;
+
+  if (stemsA.sort().join(" ") === stemsB.sort().join(" ")) {
     return 100;
   }
 
-  // 2. Whole phrase synonym group matching
   for (const group of SYNONYM_GROUPS) {
-    const hasA = group.some(phrase => cleanA === phrase || cleanA.includes(phrase));
-    const hasB = group.some(phrase => cleanB === phrase || cleanB.includes(phrase));
+    const groupStems = group.map(stem);
+    const hasA = groupStems.some(s => stemsA.includes(s));
+    const hasB = groupStems.some(s => stemsB.includes(s));
     if (hasA && hasB) {
-      return 95;
+      const isAOnlySynonym = stemsA.every(s => groupStems.includes(s) || DESCRIPTORS.has(s));
+      const isBOnlySynonym = stemsB.every(s => groupStems.includes(s) || DESCRIPTORS.has(s));
+      if (isAOnlySynonym && isBOnlySynonym) {
+        return 95;
+      }
     }
   }
 
-  // 3. Token-based synonym & semantic matching
+  if (detectModifierMatch(stemsA, stemsB)) {
+    return 92;
+  }
+
   let matchedCount = 0;
   const usedB = new Set<number>();
 
-  for (let i = 0; i < normTokensA.length; i++) {
-    const tA = normTokensA[i];
-    for (let j = 0; j < normTokensB.length; j++) {
+  for (let i = 0; i < stemsA.length; i++) {
+    const sA = stemsA[i];
+    for (let j = 0; j < stemsB.length; j++) {
       if (usedB.has(j)) continue;
-      const tB = normTokensB[j];
+      const sB = stemsB[j];
 
-      let isMatch = false;
-      if (tA === tB) {
-        isMatch = true;
-      } else {
-        for (const group of SYNONYM_GROUPS) {
-          if (group.includes(tA) && group.includes(tB)) {
-            isMatch = true;
-            break;
-          }
-        }
-      }
-
-      if (!isMatch && tA.length > 3 && tB.length > 3) {
-        if (tA.includes(tB) || tB.includes(tA)) {
-          isMatch = true;
-        } else {
-          const dist = levenshteinDistance(tA, tB);
-          if (dist <= 1 || (dist <= 2 && Math.max(tA.length, tB.length) > 5)) {
-            isMatch = true;
-          }
-        }
-      }
-
-      if (isMatch) {
+      if (areWordsRelated(sA, sB)) {
         matchedCount++;
         usedB.add(j);
         break;
@@ -649,43 +732,28 @@ function calculateLocalItemSimilarity(nameA: string, nameB: string): number {
     }
   }
 
-  const overlapA = normTokensA.length > 0 ? matchedCount / normTokensA.length : 0;
-  const overlapB = normTokensB.length > 0 ? matchedCount / normTokensB.length : 0;
+  const overlapA = stemsA.length > 0 ? matchedCount / stemsA.length : 0;
+  const overlapB = stemsB.length > 0 ? matchedCount / stemsB.length : 0;
   const maxOverlap = Math.max(overlapA, overlapB);
-  const dice = (2 * matchedCount) / (normTokensA.length + normTokensB.length);
+  const jaccard = calculateJaccardSimilarity(stemsA, stemsB);
+  const dice = (2 * matchedCount) / (stemsA.length + stemsB.length);
 
-  let score = Math.max(maxOverlap * 40 + dice * 60, dice * 100);
+  let score = Math.max(maxOverlap * 40 + dice * 60, dice * 100, jaccard * 100);
 
-  // 4. Modifier boost check
-  const mismatchedA = normTokensA.filter(t => !normTokensB.some(t2 => areWordsRelated(t, t2)));
-  const mismatchedB = normTokensB.filter(t => !normTokensA.some(t2 => areWordsRelated(t, t2)));
+  const brandModelA = extractBrandAndModel(tokensA);
+  const brandModelB = extractBrandAndModel(tokensB);
 
-  const allMismatchedAreDescriptors = 
-    mismatchedA.every(t => DESCRIPTORS.has(t)) && 
-    mismatchedB.every(t => DESCRIPTORS.has(t));
-
-  if (allMismatchedAreDescriptors && matchedCount > 0) {
-    score = Math.max(score, 92);
-  }
-
-  // 5. Specific brand + alphanumeric model check
-  const brandRegex = /samsung|apple|iphone|galaxy|sony|google|pixel|nike|adidas|dell|hp|lenovo|asus|nintendo|playstation|xbox|ps4|ps5/i;
-  const modelRegex = /[a-z]\d|\d[a-z]|\d{2,}/i;
-
-  const brandsA = normTokensA.filter(t => brandRegex.test(t));
-  const brandsB = normTokensB.filter(t => brandRegex.test(t));
-  const modelsA = normTokensA.filter(t => modelRegex.test(t));
-  const modelsB = normTokensB.filter(t => modelRegex.test(t));
-
-  const sharedBrands = brandsA.filter(b => brandsB.includes(b));
-  const sharedModels = modelsA.filter(m => modelsB.includes(m));
-
-  if (sharedBrands.length > 0 && sharedModels.length > 0) {
-    score = Math.max(score, 98);
-  } else if (sharedModels.length > 0) {
+  if (brandModelA.brand && brandModelB.brand) {
+    if (brandModelA.brand === brandModelB.brand) {
+      score = Math.max(score, 85);
+      if (brandModelA.model && brandModelB.model && brandModelA.model === brandModelB.model) {
+        return 98;
+      }
+    } else {
+      score = score * 0.5;
+    }
+  } else if (brandModelA.model && brandModelB.model && brandModelA.model === brandModelB.model) {
     score = Math.max(score, 88);
-  } else if (sharedBrands.length > 0 && maxOverlap >= 0.5) {
-    score = Math.max(score, 85);
   }
 
   return Math.max(0, Math.min(100, Math.round(score)));
@@ -778,15 +846,15 @@ async function comparePostsForMatch(postA: Post, postB: Post): Promise<Potential
   const timelineScore = 50;
   const identifiersScore = lostPost.aiFeatures?.uniqueIdentifiers && foundPost.aiFeatures?.uniqueIdentifiers && lostPost.aiFeatures.uniqueIdentifiers !== "none" && foundPost.aiFeatures.uniqueIdentifiers !== "none" ? (lostPost.aiFeatures.uniqueIdentifiers === foundPost.aiFeatures.uniqueIdentifiers ? 100 : 30) : 50;
 
-  // Calculate Heuristic Score using exact weight guidelines:
+  // Calculate Offline/Programmatic Confidence Score using exact weight guidelines:
   // - Item Name semantic similarity (40%)
   // - Category match (20%)
   // - Location proximity (20%)
   // - Date & time proximity (10%)
   // - Image similarity if images exist (10%)
-  let heuristicScore = 0;
+  let offlineScore = 0;
   if (bothHaveImages) {
-    heuristicScore = Math.round(
+    offlineScore = Math.round(
       itemScore * 0.40 +
       catScore * 0.20 +
       locScore * 0.20 +
@@ -794,17 +862,41 @@ async function comparePostsForMatch(postA: Post, postB: Post): Promise<Potential
       imageScore * 0.10
     );
   } else {
-    heuristicScore = Math.round(
+    offlineScore = Math.round(
       (itemScore * 0.40 +
       catScore * 0.20 +
       locScore * 0.20 +
       dateScore * 0.10) / 0.90
     );
   }
-  heuristicScore = Math.max(0, Math.min(100, heuristicScore));
+  offlineScore = Math.max(0, Math.min(100, offlineScore));
 
-  let finalScore = heuristicScore;
-  let finalReason = `LINCO Forensic Engine matched item names with ${itemScore}% semantic similarity. Category match is ${catScore}%. Date proximity score is ${dateScore}%. Location proximity score is ${locScore}%.`;
+  // Refine confidence score programmatically based on secondary signal attributes
+  if (brandScore === 0) {
+    offlineScore = Math.max(0, Math.round(offlineScore * 0.8));
+  } else if (brandScore === 100) {
+    offlineScore = Math.min(100, Math.round(offlineScore * 1.1));
+  }
+
+  if (colorScore === 20) {
+    offlineScore = Math.max(0, Math.round(offlineScore * 0.85));
+  } else if (colorScore === 100) {
+    offlineScore = Math.min(100, Math.round(offlineScore * 1.05));
+  }
+
+  if (materialScore === 30) offlineScore = Math.max(0, Math.round(offlineScore * 0.95));
+  else if (materialScore === 100) offlineScore = Math.min(100, Math.round(offlineScore * 1.02));
+
+  if (sizeScore === 40) offlineScore = Math.max(0, Math.round(offlineScore * 0.95));
+  else if (sizeScore === 100) offlineScore = Math.min(100, Math.round(offlineScore * 1.02));
+
+  if (shapeScore === 40) offlineScore = Math.max(0, Math.round(offlineScore * 0.95));
+  else if (shapeScore === 100) offlineScore = Math.min(100, Math.round(offlineScore * 1.02));
+
+  offlineScore = Math.max(0, Math.min(100, offlineScore));
+
+  let finalScore = offlineScore;
+  let finalReason = `LINCO Offline Semantic Engine matched item names with ${itemScore}% semantic similarity. Category match is ${catScore}%. Date proximity score is ${dateScore}%. Location proximity score is ${locScore}%.`;
   let finalBreakdown = {
     category: catScore,
     item: itemScore,
@@ -821,7 +913,7 @@ async function comparePostsForMatch(postA: Post, postB: Post): Promise<Potential
     identifiers: identifiersScore
   };
 
-  // If Gemini API Key is available, try to run Gemini analysis
+  // If Gemini API Key is available, try to run Gemini analysis to refine the score
   if (process.env.GEMINI_API_KEY) {
     try {
       console.log(`[AI-MATCH-ENGINE] Requesting Gemini flash-3.5 comparison for Match ${lostPost.id}_${foundPost.id}...`);
@@ -893,9 +985,9 @@ Expected JSON format:
           return response.text || "{}";
         },
         JSON.stringify({
-          matchScore: 0,
+          matchScore: offlineScore,
           matchBreakdown: finalBreakdown,
-          reason: "Match analysis timed out"
+          reason: `Gemini refined result unavailable. PROGRAMMATIC HEURISTIC PRESERVED. Reason: ${finalReason}`
         }),
         `compare-match-${lostPost.id}-${foundPost.id}`
       );
@@ -923,10 +1015,12 @@ Expected JSON format:
         };
       }
     } catch (err) {
-      console.error(`[AI-MATCH-ENGINE] Gemini comparison failed for posts ${postA.id} and ${postB.id}. Falling back to programmatic heuristic.`, err);
+      console.error(`[AI-MATCH-ENGINE] Gemini comparison failed for posts ${postA.id} and ${postB.id}. Preserving high-fidelity programmatic score ${offlineScore}%.`, err);
+      finalScore = offlineScore;
     }
   } else {
-    console.log(`[AI-MATCH-ENGINE] GEMINI_API_KEY missing. Using high-fidelity programmatic heuristic matcher for posts ${postA.id} and ${postB.id}.`);
+    console.log(`[AI-MATCH-ENGINE] GEMINI_API_KEY missing. Preserving high-fidelity programmatic score ${offlineScore}%.`);
+    finalScore = offlineScore;
   }
 
   return {
