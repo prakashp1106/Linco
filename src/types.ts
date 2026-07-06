@@ -20,6 +20,7 @@ export interface Post {
   image?: string | null;
   latitude?: number;
   longitude?: number;
+  timeline?: string;
   status: "Active" | "Resolved";
   views: number;
   created: number;

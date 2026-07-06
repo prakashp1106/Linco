@@ -958,31 +958,66 @@ async function runSmartMatchEngine(newPost: Post) {
       console.log(`[AI-MATCH-ENGINE] Extracting AI features for new post ${newPost.id}...`);
       newPost.aiFeatures = await extractAIFeatures(newPost);
       if (useLocalFallback) {
-        const local = readLocalDB();
-        const postIndex = local.posts.findIndex((p: any) => p.id === newPost.id);
-        if (postIndex !== -1) {
-          local.posts[postIndex].aiFeatures = newPost.aiFeatures;
-          writeLocalDB(local);
+        try {
+          const local = readLocalDB();
+          const postIndex = local.posts.findIndex((p: any) => p.id === newPost.id);
+          if (postIndex !== -1) {
+            local.posts[postIndex].aiFeatures = newPost.aiFeatures;
+            writeLocalDB(local);
+            console.log(`[AI-MATCH-ENGINE] Successfully saved new post features to Local Fallback DB.`);
+          }
+        } catch (localErr) {
+          console.error(`[AI-MATCH-ENGINE] Failed to save post features to local fallback DB:`, localErr);
         }
       } else {
         if (db) {
-          await db.collection("posts").doc(newPost.id).update({ aiFeatures: newPost.aiFeatures });
+          try {
+            await db.collection("posts").doc(newPost.id).update({ aiFeatures: newPost.aiFeatures });
+            console.log(`[AI-MATCH-ENGINE] Successfully saved new post features to Firestore.`);
+          } catch (writeErr) {
+            console.error(`[AI-MATCH-ENGINE] Failed to update post ${newPost.id} with aiFeatures in Firestore:`, writeErr);
+            // Graceful fallback to local DB update
+            try {
+              const local = readLocalDB();
+              const postIndex = local.posts.findIndex((p: any) => p.id === newPost.id);
+              if (postIndex !== -1) {
+                local.posts[postIndex].aiFeatures = newPost.aiFeatures;
+                writeLocalDB(local);
+                console.log(`[AI-MATCH-ENGINE] Gracefully fell back and saved post features to Local Fallback DB.`);
+              }
+            } catch (fallbackErr) {
+              console.error(`[AI-MATCH-ENGINE] Local DB fallback saving failed:`, fallbackErr);
+            }
+          }
         }
       }
     }
 
     // 2. Fetch all candidates of the opposite type that are ACTIVE
     let posts: Post[] = [];
-    if (useLocalFallback) {
-      const local = readLocalDB();
-      posts = local.posts || [];
-    } else {
-      if (db) {
+    let fetchedFromFirestore = false;
+    if (!useLocalFallback && db) {
+      try {
         console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Fetching all posts from Firestore collection 'posts' for opposite-type candidates scan...");
         const snapshot = await db.collection("posts").get();
         snapshot.forEach(doc => {
           posts.push(doc.data() as Post);
         });
+        fetchedFromFirestore = true;
+        console.log(`[AI-MATCH-ENGINE] Fetched ${posts.length} posts from Firestore.`);
+      } catch (firestoreErr) {
+        console.error("[AI-MATCH-ENGINE] Firestore fetch posts failed, falling back to local DB fetch:", firestoreErr);
+      }
+    }
+
+    if (!fetchedFromFirestore) {
+      try {
+        console.log("[AI-MATCH-ENGINE] Reading posts from local fallback database...");
+        const local = readLocalDB();
+        posts = local.posts || [];
+        console.log(`[AI-MATCH-ENGINE] Loaded ${posts.length} posts from Local Fallback DB.`);
+      } catch (localErr) {
+        console.error("[AI-MATCH-ENGINE] Critical: Failed to load posts from Local Fallback DB:", localErr);
       }
     }
 
@@ -1011,15 +1046,33 @@ async function runSmartMatchEngine(newPost: Post) {
         console.log(`[AI-MATCH-ENGINE] Extracting missing AI features for candidate ${cand.id}...`);
         cand.aiFeatures = await extractAIFeatures(cand);
         if (useLocalFallback) {
-          const local = readLocalDB();
-          const postIndex = local.posts.findIndex((p: any) => p.id === cand.id);
-          if (postIndex !== -1) {
-            local.posts[postIndex].aiFeatures = cand.aiFeatures;
-            writeLocalDB(local);
+          try {
+            const local = readLocalDB();
+            const postIndex = local.posts.findIndex((p: any) => p.id === cand.id);
+            if (postIndex !== -1) {
+              local.posts[postIndex].aiFeatures = cand.aiFeatures;
+              writeLocalDB(local);
+            }
+          } catch (localErr) {
+            console.error(`[AI-MATCH-ENGINE] Failed to write candidate features to Local Fallback DB:`, localErr);
           }
         } else {
           if (db) {
-            await db.collection("posts").doc(cand.id).update({ aiFeatures: cand.aiFeatures });
+            try {
+              await db.collection("posts").doc(cand.id).update({ aiFeatures: cand.aiFeatures });
+            } catch (writeErr) {
+              console.error(`[AI-MATCH-ENGINE] Failed to update post ${cand.id} features in Firestore:`, writeErr);
+              try {
+                const local = readLocalDB();
+                const postIndex = local.posts.findIndex((p: any) => p.id === cand.id);
+                if (postIndex !== -1) {
+                  local.posts[postIndex].aiFeatures = cand.aiFeatures;
+                  writeLocalDB(local);
+                }
+              } catch (fallbackErr) {
+                console.error(`[AI-MATCH-ENGINE] Local DB fallback features update failed:`, fallbackErr);
+              }
+            }
           }
         }
       }
@@ -1029,12 +1082,27 @@ async function runSmartMatchEngine(newPost: Post) {
       let existingMatch = false;
 
       if (useLocalFallback) {
-        const local = readLocalDB();
-        existingMatch = (local.potentialMatches || []).some((m: any) => m.matchId === matchId);
+        try {
+          const local = readLocalDB();
+          existingMatch = (local.potentialMatches || []).some((m: any) => m.matchId === matchId);
+        } catch (localErr) {
+          console.error(`[AI-MATCH-ENGINE] Failed to read potentialMatches from Local Fallback:`, localErr);
+        }
       } else {
         if (db) {
-          const doc = await db.collection("matches").doc(matchId).get();
-          existingMatch = doc.exists;
+          try {
+            const doc = await db.collection("matches").doc(matchId).get();
+            existingMatch = doc.exists;
+          } catch (getErr) {
+            console.error(`[AI-MATCH-ENGINE] Firestore error checking for existing match ${matchId}:`, getErr);
+            // Safe fallback to local DB check
+            try {
+              const local = readLocalDB();
+              existingMatch = (local.potentialMatches || []).some((m: any) => m.matchId === matchId);
+            } catch (fallbackErr) {
+              console.error(`[AI-MATCH-ENGINE] Local DB fallback match check failed:`, fallbackErr);
+            }
+          }
         }
       }
 
@@ -1059,16 +1127,26 @@ async function runSmartMatchEngine(newPost: Post) {
           console.log(`[AI-MATCH-ENGINE] ACCEPTED MATCH: Score ${score}% meets or exceeds threshold of ${matchThreshold}% for match ${matchId}.`);
           
           // Save potential match
-          if (useLocalFallback) {
-            const local = readLocalDB();
-            if (!local.potentialMatches) local.potentialMatches = [];
-            local.potentialMatches.push(potentialMatch);
-            writeLocalDB(local);
-            console.log(`[AI-MATCH-ENGINE] Match ${matchId} saved successfully to Local Fallback DB.`);
-          } else {
-            if (db) {
+          let savedMatch = false;
+          if (!useLocalFallback && db) {
+            try {
               await db.collection("matches").doc(potentialMatch.matchId).set(potentialMatch);
               console.log(`[AI-MATCH-ENGINE] Match ${matchId} saved successfully to Firestore DB.`);
+              savedMatch = true;
+            } catch (setErr) {
+              console.error(`[AI-MATCH-ENGINE] Failed to save match ${matchId} to Firestore DB:`, setErr);
+            }
+          }
+
+          if (!savedMatch) {
+            try {
+              const local = readLocalDB();
+              if (!local.potentialMatches) local.potentialMatches = [];
+              local.potentialMatches.push(potentialMatch);
+              writeLocalDB(local);
+              console.log(`[AI-MATCH-ENGINE] Match ${matchId} saved successfully to Local Fallback DB.`);
+            } catch (localErr) {
+              console.error(`[AI-MATCH-ENGINE] Failed to save match ${matchId} to Local Fallback DB:`, localErr);
             }
           }
 
@@ -1100,18 +1178,28 @@ async function runSmartMatchEngine(newPost: Post) {
           console.log(`  - Lost User Notification ID: ${notifLost.id}, Message: "${lostUserMsg}"`);
           console.log(`  - Found User Notification ID: ${notifFound.id}, Message: "${foundUserMsg}"`);
 
-          if (useLocalFallback) {
-            const local = readLocalDB();
-            if (!local.notifications) local.notifications = [];
-            local.notifications.push(notifLost);
-            local.notifications.push(notifFound);
-            writeLocalDB(local);
-            console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Local Fallback DB.`);
-          } else {
-            if (db) {
+          let savedNotifications = false;
+          if (!useLocalFallback && db) {
+            try {
               await db.collection("notifications").doc(notifLost.id).set(notifLost);
               await db.collection("notifications").doc(notifFound.id).set(notifFound);
               console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Firestore.`);
+              savedNotifications = true;
+            } catch (notifErr) {
+              console.error(`[AI-MATCH-ENGINE] Failed to save notifications to Firestore:`, notifErr);
+            }
+          }
+
+          if (!savedNotifications) {
+            try {
+              const local = readLocalDB();
+              if (!local.notifications) local.notifications = [];
+              local.notifications.push(notifLost);
+              local.notifications.push(notifFound);
+              writeLocalDB(local);
+              console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Local Fallback DB.`);
+            } catch (localErr) {
+              console.error(`[AI-MATCH-ENGINE] Failed to save notifications to Local Fallback DB:`, localErr);
             }
           }
 
@@ -1175,18 +1263,41 @@ async function updateLegacyMatchesForPost(postId: string, newLegacyMatch: AIMatc
         writeLocalDB(local);
       }
     } else {
-      const docRef = db.collection("matches").doc(postId);
-      const doc = await docRef.get();
-      let list: AIMatch[] = [];
-      if (doc.exists) {
-        const data = doc.data();
-        if (data && Array.isArray(data.list)) {
-          list = data.list;
+      let legacyUpdatedInFirestore = false;
+      if (db) {
+        try {
+          const docRef = db.collection("matches").doc(postId);
+          const doc = await docRef.get();
+          let list: AIMatch[] = [];
+          if (doc.exists) {
+            const data = doc.data();
+            if (data && Array.isArray(data.list)) {
+              list = data.list;
+            }
+          }
+          if (!list.some(m => m.id === newLegacyMatch.id)) {
+            list.push(newLegacyMatch);
+            await docRef.set({ list });
+          }
+          legacyUpdatedInFirestore = true;
+        } catch (firestoreErr) {
+          console.error(`[AI-MATCH-ENGINE] Firestore update legacy matches failed for post ${postId}:`, firestoreErr);
         }
       }
-      if (!list.some(m => m.id === newLegacyMatch.id)) {
-        list.push(newLegacyMatch);
-        await docRef.set({ list });
+      if (!legacyUpdatedInFirestore) {
+        try {
+          const local = readLocalDB();
+          if (!local.matches) local.matches = {};
+          const list = local.matches[postId] || [];
+          if (!list.some((m: any) => m.id === newLegacyMatch.id)) {
+            list.push(newLegacyMatch);
+            local.matches[postId] = list;
+            writeLocalDB(local);
+            console.log(`[AI-MATCH-ENGINE] Gracefully fell back and updated legacy matches for post ${postId} in Local DB.`);
+          }
+        } catch (localErr) {
+          console.error(`[AI-MATCH-ENGINE] Local DB fallback legacy match update failed for post ${postId}:`, localErr);
+        }
       }
     }
   } catch (err) {
@@ -1352,6 +1463,10 @@ const createPostSchema = z.object({
   urgency: z.enum(["Normal", "Urgent", "Contains ID", "Medical"]).optional().nullable(),
   image: z.string().nullable().optional(),
   securityPin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits").optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  timeline: z.string().optional().nullable(),
+  maskedContact: z.string().optional().nullable(),
 });
 
 const actionPinSchema = z.object({
@@ -1487,6 +1602,7 @@ app.get("/api/matches", async (req, res) => {
     if (useLocalFallback) {
       const local = readLocalDB();
       matchesList = local.potentialMatches || [];
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/matches: Read ${matchesList.length} potential matches from Local Fallback JSON.`);
     } else {
       console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' for Potential Matches list");
       const snapshot = await db!.collection("matches").get();
@@ -1497,6 +1613,7 @@ app.get("/api/matches", async (req, res) => {
           matchesList.push(data);
         }
       });
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/matches: Read ${matchesList.length} potential matches from Firestore collection 'matches'.`);
     }
     res.json({ success: true, matches: matchesList });
   } catch (err: any) {
@@ -1543,12 +1660,14 @@ app.get("/api/notifications", async (req, res) => {
     if (useLocalFallback) {
       const local = readLocalDB();
       notificationsList = local.notifications || [];
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Local Fallback JSON.`);
     } else {
       console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'notifications'");
       const snapshot = await db!.collection("notifications").get();
       snapshot.forEach(doc => {
         notificationsList.push(doc.data());
       });
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Firestore collection 'notifications'.`);
     }
     // Sort descending by creation date
     notificationsList.sort((a, b) => b.createdAt - a.createdAt);
@@ -1631,6 +1750,10 @@ app.post("/api/posts", async (req, res) => {
       status: "Active",
       views: 0,
       created: now,
+      latitude: parsedData.latitude ?? undefined,
+      longitude: parsedData.longitude ?? undefined,
+      timeline: parsedData.timeline ?? undefined,
+      maskedContact: parsedData.maskedContact ?? undefined,
       timestamp: new Date(now).toLocaleString("en-US", {
         day: "numeric",
         month: "short",
