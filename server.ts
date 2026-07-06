@@ -523,8 +523,181 @@ Extract and output ONLY a valid JSON object matching the following structure. Do
   }
 }
 
+const SYNONYM_GROUPS = [
+  ["wallet", "purse", "pouch", "clutch", "handbag", "pocketbook", "leather wallet", "money bag"],
+  ["phone", "mobile", "smartphone", "cellphone", "cell", "device", "iphone", "android"],
+  ["earbuds", "earphones", "headphones", "pods", "airpods", "buds"],
+  ["watch", "wristwatch", "wrist watch", "wrist"],
+  ["backpack", "schoolbag", "rucksack", "bag", "pack", "school bag"],
+  ["laptop", "notebook", "computer", "macbook"],
+  ["key", "keys", "keychain", "fob"],
+  ["card", "id", "license", "badge", "passport", "cardholder"],
+  ["glasses", "sunglasses", "spectacles", "eyeglasses", "goggles"]
+];
+
+const DESCRIPTORS = new Set([
+  "leather", "canvas", "plastic", "metal", "silicone", "gold", "silver", "wooden", "cotton", "polyester",
+  "black", "white", "blue", "red", "green", "yellow", "pink", "purple", "orange", "brown", "grey", "gray",
+  "small", "large", "medium", "big", "little", "tiny", "brand", "new", "old", "used", "school", "office", "work",
+  "wrist", "smart"
+]);
+
+function levenshteinDistance(a: string, b: string): number {
+  const tmp: number[][] = [];
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  for (let i = 0; i <= a.length; i++) {
+    tmp[i] = [i];
+  }
+  for (let j = 0; j <= b.length; j++) {
+    tmp[0][j] = j;
+  }
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      tmp[i][j] = Math.min(
+        tmp[i - 1][j] + 1,
+        tmp[i][j - 1] + 1,
+        tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return tmp[a.length][b.length];
+}
+
+function areWordsRelated(w1: string, w2: string): boolean {
+  if (w1 === w2) return true;
+  for (const group of SYNONYM_GROUPS) {
+    if (group.includes(w1) && group.includes(w2)) {
+      return true;
+    }
+  }
+  if (w1.length > 3 && w2.length > 3) {
+    if (w1.includes(w2) || w2.includes(w1)) return true;
+    if (levenshteinDistance(w1, w2) <= 1) return true;
+  }
+  return false;
+}
+
+function cleanAndTokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function calculateLocalItemSimilarity(nameA: string, nameB: string): number {
+  const cleanA = (nameA || "").toLowerCase().trim();
+  const cleanB = (nameB || "").toLowerCase().trim();
+
+  if (!cleanA || !cleanB) return 0;
+
+  // 1. Direct equal comparison
+  const normTokensA = cleanAndTokenize(cleanA).sort();
+  const normTokensB = cleanAndTokenize(cleanB).sort();
+  if (normTokensA.join(" ") === normTokensB.join(" ")) {
+    return 100;
+  }
+
+  // 2. Whole phrase synonym group matching
+  for (const group of SYNONYM_GROUPS) {
+    const hasA = group.some(phrase => cleanA === phrase || cleanA.includes(phrase));
+    const hasB = group.some(phrase => cleanB === phrase || cleanB.includes(phrase));
+    if (hasA && hasB) {
+      return 95;
+    }
+  }
+
+  // 3. Token-based synonym & semantic matching
+  let matchedCount = 0;
+  const usedB = new Set<number>();
+
+  for (let i = 0; i < normTokensA.length; i++) {
+    const tA = normTokensA[i];
+    for (let j = 0; j < normTokensB.length; j++) {
+      if (usedB.has(j)) continue;
+      const tB = normTokensB[j];
+
+      let isMatch = false;
+      if (tA === tB) {
+        isMatch = true;
+      } else {
+        for (const group of SYNONYM_GROUPS) {
+          if (group.includes(tA) && group.includes(tB)) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
+
+      if (!isMatch && tA.length > 3 && tB.length > 3) {
+        if (tA.includes(tB) || tB.includes(tA)) {
+          isMatch = true;
+        } else {
+          const dist = levenshteinDistance(tA, tB);
+          if (dist <= 1 || (dist <= 2 && Math.max(tA.length, tB.length) > 5)) {
+            isMatch = true;
+          }
+        }
+      }
+
+      if (isMatch) {
+        matchedCount++;
+        usedB.add(j);
+        break;
+      }
+    }
+  }
+
+  const overlapA = normTokensA.length > 0 ? matchedCount / normTokensA.length : 0;
+  const overlapB = normTokensB.length > 0 ? matchedCount / normTokensB.length : 0;
+  const maxOverlap = Math.max(overlapA, overlapB);
+  const dice = (2 * matchedCount) / (normTokensA.length + normTokensB.length);
+
+  let score = Math.max(maxOverlap * 40 + dice * 60, dice * 100);
+
+  // 4. Modifier boost check
+  const mismatchedA = normTokensA.filter(t => !normTokensB.some(t2 => areWordsRelated(t, t2)));
+  const mismatchedB = normTokensB.filter(t => !normTokensA.some(t2 => areWordsRelated(t, t2)));
+
+  const allMismatchedAreDescriptors = 
+    mismatchedA.every(t => DESCRIPTORS.has(t)) && 
+    mismatchedB.every(t => DESCRIPTORS.has(t));
+
+  if (allMismatchedAreDescriptors && matchedCount > 0) {
+    score = Math.max(score, 92);
+  }
+
+  // 5. Specific brand + alphanumeric model check
+  const brandRegex = /samsung|apple|iphone|galaxy|sony|google|pixel|nike|adidas|dell|hp|lenovo|asus|nintendo|playstation|xbox|ps4|ps5/i;
+  const modelRegex = /[a-z]\d|\d[a-z]|\d{2,}/i;
+
+  const brandsA = normTokensA.filter(t => brandRegex.test(t));
+  const brandsB = normTokensB.filter(t => brandRegex.test(t));
+  const modelsA = normTokensA.filter(t => modelRegex.test(t));
+  const modelsB = normTokensB.filter(t => modelRegex.test(t));
+
+  const sharedBrands = brandsA.filter(b => brandsB.includes(b));
+  const sharedModels = modelsA.filter(m => modelsB.includes(m));
+
+  if (sharedBrands.length > 0 && sharedModels.length > 0) {
+    score = Math.max(score, 98);
+  } else if (sharedModels.length > 0) {
+    score = Math.max(score, 88);
+  } else if (sharedBrands.length > 0 && maxOverlap >= 0.5) {
+    score = Math.max(score, 85);
+  }
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 // Compare two posts using pre-extracted features
 async function comparePostsForMatch(postA: Post, postB: Post): Promise<PotentialMatch | null> {
+  // Ensure we only compare Lost against Found (and vice versa)
+  if (postA.type === postB.type) {
+    return null;
+  }
+
   const lostPost = postA.type === "Lost" ? postA : postB;
   const foundPost = postA.type === "Found" ? postA : postB;
 
@@ -532,42 +705,128 @@ async function comparePostsForMatch(postA: Post, postB: Post): Promise<Potential
   const dateScore = calculateDateProximityScore(lostPost.created, foundPost.created);
   const locScore = calculateLocationScore(distance);
 
-  const defaultMatch: PotentialMatch = {
-    matchId: `${lostPost.id}_${foundPost.id}`,
-    lostPostId: lostPost.id,
-    foundPostId: foundPost.id,
-    matchScore: 0,
-    matchBreakdown: {
-      category: 0,
-      item: 0,
-      brand: 0,
-      colors: 0,
-      description: 0,
-      image: 0,
-      material: 0,
-      size: 0,
-      shape: 0,
-      location: locScore,
-      dateProximity: dateScore,
-      timeline: 50,
-      identifiers: 0
-    },
-    createdAt: Date.now(),
-    status: "Active",
-    reviewed: false,
-    notificationsSent: true,
-    lastUpdated: Date.now(),
-    reason: "Match analysis unavailable"
-  };
-
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn("[AI-MATCH] GEMINI_API_KEY missing. Skipping smart comparison.");
-    return null;
+  // 1. Category Score (20% weight)
+  const catA = (lostPost.category || "").toLowerCase().trim();
+  const catB = (foundPost.category || "").toLowerCase().trim();
+  let catScore = 0;
+  if (catA && catB) {
+    if (catA === catB) {
+      catScore = 100;
+    } else if (catA.includes(catB) || catB.includes(catA)) {
+      catScore = 85;
+    } else {
+      const catTokensA = cleanAndTokenize(catA);
+      const catTokensB = cleanAndTokenize(catB);
+      const catOverlap = catTokensA.some(t => catTokensB.some(t2 => areWordsRelated(t, t2)));
+      if (catOverlap) {
+        catScore = 75;
+      } else {
+        catScore = 20;
+      }
+    }
   }
 
-  try {
-    const prompt = `You are the Core Forensic Matching Engine of LINCO.
-Compare the following Lost and Found posts and determine if they represent the same physical item.
+  // 2. Item Name Similarity (40% weight)
+  const itemA = (lostPost.item || "").toLowerCase().trim();
+  const itemB = (foundPost.item || "").toLowerCase().trim();
+  const itemScore = calculateLocalItemSimilarity(itemA, itemB);
+
+  // 3. Image similarity if images exist (10% weight)
+  const bothHaveImages = !!(lostPost.image && foundPost.image);
+  let imageScore = 0;
+  if (bothHaveImages) {
+    const descA = lostPost.aiFeatures?.imageDescription || "";
+    const descB = foundPost.aiFeatures?.imageDescription || "";
+    if (descA && descB) {
+      imageScore = calculateLocalItemSimilarity(descA, descB);
+    } else {
+      imageScore = 75; // Neutral positive fallback
+    }
+  }
+
+  // Secondary descriptive matches for breakdown fields
+  const brandA = ((lostPost.aiFeatures?.brand || "").toLowerCase().trim());
+  const brandB = ((foundPost.aiFeatures?.brand || "").toLowerCase().trim());
+  let brandScore = 50;
+  if (brandA && brandB && brandA !== "unknown" && brandB !== "unknown") {
+    brandScore = (brandA === brandB) ? 100 : 0;
+  }
+
+  const colors = ["red", "blue", "green", "yellow", "black", "white", "gold", "silver", "grey", "gray", "orange", "purple", "pink", "brown", "leather"];
+  const detailsA = (lostPost.details || "").toLowerCase();
+  const detailsB = (foundPost.details || "").toLowerCase();
+  let colorScore = 50;
+  const matchedColorsA = colors.filter(c => detailsA.includes(c) || itemA.includes(c));
+  const matchedColorsB = colors.filter(c => detailsB.includes(c) || itemB.includes(c));
+  if (matchedColorsA.length > 0 && matchedColorsB.length > 0) {
+    const hasOverlap = matchedColorsA.some(c => matchedColorsB.includes(c));
+    colorScore = hasOverlap ? 100 : 20;
+  }
+
+  let descScore = 50;
+  const wordsA = detailsA.split(/\s+/).filter(w => w.length > 3);
+  const wordsB = detailsB.split(/\s+/).filter(w => w.length > 3);
+  const commonWords = wordsA.filter(w => wordsB.includes(w));
+  if (wordsA.length > 0 && wordsB.length > 0) {
+    const overlapRatio = (2 * commonWords.length) / (wordsA.length + wordsB.length);
+    descScore = Math.round(50 + (overlapRatio * 50));
+  }
+
+  const materialScore = lostPost.aiFeatures?.material && foundPost.aiFeatures?.material && lostPost.aiFeatures.material !== "unknown" && foundPost.aiFeatures.material !== "unknown" ? (lostPost.aiFeatures.material === foundPost.aiFeatures.material ? 100 : 30) : 50;
+  const sizeScore = lostPost.aiFeatures?.size && foundPost.aiFeatures?.size && lostPost.aiFeatures.size !== "unknown" && foundPost.aiFeatures.size !== "unknown" ? (lostPost.aiFeatures.size === foundPost.aiFeatures.size ? 100 : 40) : 50;
+  const shapeScore = lostPost.aiFeatures?.shape && foundPost.aiFeatures?.shape && lostPost.aiFeatures.shape !== "unknown" && foundPost.aiFeatures.shape !== "unknown" ? (lostPost.aiFeatures.shape === foundPost.aiFeatures.shape ? 100 : 40) : 50;
+  const timelineScore = 50;
+  const identifiersScore = lostPost.aiFeatures?.uniqueIdentifiers && foundPost.aiFeatures?.uniqueIdentifiers && lostPost.aiFeatures.uniqueIdentifiers !== "none" && foundPost.aiFeatures.uniqueIdentifiers !== "none" ? (lostPost.aiFeatures.uniqueIdentifiers === foundPost.aiFeatures.uniqueIdentifiers ? 100 : 30) : 50;
+
+  // Calculate Heuristic Score using exact weight guidelines:
+  // - Item Name semantic similarity (40%)
+  // - Category match (20%)
+  // - Location proximity (20%)
+  // - Date & time proximity (10%)
+  // - Image similarity if images exist (10%)
+  let heuristicScore = 0;
+  if (bothHaveImages) {
+    heuristicScore = Math.round(
+      itemScore * 0.40 +
+      catScore * 0.20 +
+      locScore * 0.20 +
+      dateScore * 0.10 +
+      imageScore * 0.10
+    );
+  } else {
+    heuristicScore = Math.round(
+      (itemScore * 0.40 +
+      catScore * 0.20 +
+      locScore * 0.20 +
+      dateScore * 0.10) / 0.90
+    );
+  }
+  heuristicScore = Math.max(0, Math.min(100, heuristicScore));
+
+  let finalScore = heuristicScore;
+  let finalReason = `LINCO Forensic Engine matched item names with ${itemScore}% semantic similarity. Category match is ${catScore}%. Date proximity score is ${dateScore}%. Location proximity score is ${locScore}%.`;
+  let finalBreakdown = {
+    category: catScore,
+    item: itemScore,
+    brand: brandScore,
+    colors: colorScore,
+    description: descScore,
+    image: imageScore,
+    material: materialScore,
+    size: sizeScore,
+    shape: shapeScore,
+    location: locScore,
+    dateProximity: dateScore,
+    timeline: timelineScore,
+    identifiers: identifiersScore
+  };
+
+  // If Gemini API Key is available, try to run Gemini analysis
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      console.log(`[AI-MATCH-ENGINE] Requesting Gemini flash-3.5 comparison for Match ${lostPost.id}_${foundPost.id}...`);
+      const prompt = `You are the Core Forensic Matching Engine of LINCO.
+Compare the following Lost and Found listings and determine if they represent the same physical item.
 
 Lost Post:
 - Item: ${lostPost.item}
@@ -588,92 +847,115 @@ Additional Pre-computed Metrics:
 - Date Proximity Score: ${dateScore}%
 
 Task:
-Calculate a confidence score (from 0 to 100) and a detailed breakdown of parameters.
-Only match items that share highly compatible descriptions, colors, categories, or unique details. Highly prioritize unique markings, stickers, serial numbers, accessories, or specific scratches/engravings (if they match, score them extremely high). If they clearly represent different items (e.g. a red phone and a black wallet), the overall score should be very low.
+You MUST calculate individual match factor scores from 0 to 100 and combine them into a final overall confidence score.
 
-Return ONLY a valid JSON object. Do NOT include markdown blocks.
+Scoring Criteria and Weights:
+1. Item Name Semantic Similarity (40% weight): Compare the items semantically. Understand synonyms and natural language (e.g., Wallet ↔ Leather Wallet, Samsung Galaxy J8 ↔ Samsung J8 Phone, Wrist Watch ↔ Watch, Backpack ↔ School Bag, Purse ↔ Wallet, Earbuds ↔ Earphones, Mobile ↔ Phone). Ignore casing, punctuation, spacing, and word order (e.g. "Samsung J8 Phone", "Phone Samsung Galaxy J8", and "Galaxy J8 Samsung" are equivalent).
+2. Category Match (20% weight): How closely do their categories match?
+3. Location Proximity (20% weight): Use the pre-computed Location Distance Score.
+4. Date & Time Proximity (10% weight): Use the pre-computed Date Proximity Score.
+5. Image Similarity (10% weight) - ONLY IF BOTH listings have images. If one or both lack images, this factor is excluded.
+
+CONFIDENCE SCORE FORMULA:
+- If BOTH listings have images:
+  matchScore = (itemSimilarity * 0.40) + (categoryMatch * 0.20) + (locationProximity * 0.20) + (dateProximity * 0.10) + (imageSimilarity * 0.10)
+- If one or BOTH listings LACK images:
+  matchScore = ((itemSimilarity * 0.40) + (categoryMatch * 0.20) + (locationProximity * 0.20) + (dateProximity * 0.10)) / 0.90
+
+Return ONLY a valid JSON object. Do NOT include markdown blocks or any other text.
 Expected JSON format:
 {
-  "matchScore": 87,
+  "matchScore": <computed matchScore using the exact formula, rounded to nearest integer>,
   "matchBreakdown": {
-    "category": 95,
-    "item": 90,
-    "brand": 100,
-    "colors": 85,
-    "description": 80,
-    "image": 90,
-    "material": 95,
-    "size": 85,
-    "shape": 90,
-    "location": ${locScore},
-    "dateProximity": ${dateScore},
-    "timeline": 85,
-    "identifiers": 90
+    "item": <item name semantic similarity score 0-100>,
+    "category": <category match score 0-100>,
+    "location": <location score 0-100>,
+    "dateProximity": <date proximity score 0-100>,
+    "image": <image similarity score 0-100, or 0 if images do not exist>,
+    "brand": <brand match score 0-100>,
+    "colors": <colors match score 0-100>,
+    "description": <description/details match score 0-100>,
+    "material": <material match score 0-100>,
+    "size": <size match score 0-100>,
+    "shape": <shape match score 0-100>,
+    "timeline": <timeline match score 0-100>,
+    "identifiers": <unique identifiers match score 0-100>
   },
-  "reason": "Explain in exactly 2 clear, scannable sentences why these listings match. Reference brand name, visual features, unique identifiers, and locations."
+  "reason": "Explain in exactly 2 clear, scannable sentences why these listings match or do not match, referencing brand, visual details, and locations."
 }`;
 
-    const text = await callGeminiWithRetry(
-      async () => {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: prompt,
-        });
-        return response.text || "{}";
-      },
-      JSON.stringify({
-        matchScore: 0,
-        matchBreakdown: defaultMatch.matchBreakdown,
-        reason: "Match analysis timed out"
-      }),
-      `compare-match-${lostPost.id}-${foundPost.id}`
-    );
+      const text = await callGeminiWithRetry(
+        async () => {
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: prompt,
+          });
+          return response.text || "{}";
+        },
+        JSON.stringify({
+          matchScore: 0,
+          matchBreakdown: finalBreakdown,
+          reason: "Match analysis timed out"
+        }),
+        `compare-match-${lostPost.id}-${foundPost.id}`
+      );
 
-    const cleanedText = text.replace(/```json|```/gi, "").trim();
-    const parsed = JSON.parse(cleanedText);
+      const cleanedText = text.replace(/```json|```/gi, "").trim();
+      const parsed = JSON.parse(cleanedText);
 
-    if (typeof parsed.matchScore === "number") {
-      return {
-        matchId: `${lostPost.id}_${foundPost.id}`,
-        lostPostId: lostPost.id,
-        foundPostId: foundPost.id,
-        matchScore: parsed.matchScore,
-        matchBreakdown: {
-          category: parsed.matchBreakdown?.category ?? 50,
-          item: parsed.matchBreakdown?.item ?? 50,
-          brand: parsed.matchBreakdown?.brand ?? 50,
-          colors: parsed.matchBreakdown?.colors ?? 50,
-          description: parsed.matchBreakdown?.description ?? 50,
-          image: parsed.matchBreakdown?.image ?? 0,
-          material: parsed.matchBreakdown?.material ?? 50,
-          size: parsed.matchBreakdown?.size ?? 50,
-          shape: parsed.matchBreakdown?.shape ?? 50,
+      if (typeof parsed.matchScore === "number") {
+        finalScore = Math.max(0, Math.min(100, parsed.matchScore));
+        finalReason = parsed.reason || "Matched by LINCO Smart AI";
+        finalBreakdown = {
+          category: parsed.matchBreakdown?.category ?? catScore,
+          item: parsed.matchBreakdown?.item ?? itemScore,
+          brand: parsed.matchBreakdown?.brand ?? brandScore,
+          colors: parsed.matchBreakdown?.colors ?? colorScore,
+          description: parsed.matchBreakdown?.description ?? descScore,
+          image: parsed.matchBreakdown?.image ?? imageScore,
+          material: parsed.matchBreakdown?.material ?? materialScore,
+          size: parsed.matchBreakdown?.size ?? sizeScore,
+          shape: parsed.matchBreakdown?.shape ?? shapeScore,
           location: parsed.matchBreakdown?.location ?? locScore,
           dateProximity: parsed.matchBreakdown?.dateProximity ?? dateScore,
-          timeline: parsed.matchBreakdown?.timeline ?? 50,
-          identifiers: parsed.matchBreakdown?.identifiers ?? 0
-        },
-        createdAt: Date.now(),
-        status: "Active",
-        reviewed: false,
-        notificationsSent: true,
-        lastUpdated: Date.now(),
-        reason: parsed.reason || "Matched by LINCO Smart AI"
-      };
+          timeline: parsed.matchBreakdown?.timeline ?? timelineScore,
+          identifiers: parsed.matchBreakdown?.identifiers ?? identifiersScore
+        };
+      }
+    } catch (err) {
+      console.error(`[AI-MATCH-ENGINE] Gemini comparison failed for posts ${postA.id} and ${postB.id}. Falling back to programmatic heuristic.`, err);
     }
-  } catch (err) {
-    console.error(`Error comparing posts ${postA.id} and ${postB.id}:`, err);
+  } else {
+    console.log(`[AI-MATCH-ENGINE] GEMINI_API_KEY missing. Using high-fidelity programmatic heuristic matcher for posts ${postA.id} and ${postB.id}.`);
   }
-  return null;
+
+  return {
+    matchId: `${lostPost.id}_${foundPost.id}`,
+    lostPostId: lostPost.id,
+    foundPostId: foundPost.id,
+    matchScore: finalScore,
+    matchBreakdown: finalBreakdown,
+    createdAt: Date.now(),
+    status: "Active",
+    reviewed: false,
+    notificationsSent: true,
+    lastUpdated: Date.now(),
+    reason: finalReason
+  };
 }
 
 // Background matching orchestration engine
 async function runSmartMatchEngine(newPost: Post) {
   try {
-    console.log(`[AI-MATCH-ENGINE] Starting Smart AI Match Engine for post ${newPost.id}...`);
+    console.log(`[AI-MATCH-ENGINE] =======================================================`);
+    console.log(`[AI-MATCH-ENGINE] AI MATCHING STARTED: Starting Smart AI Match Engine`);
+    console.log(`[AI-MATCH-ENGINE] New Post Details: ID=${newPost.id}, Item="${newPost.item}", Type="${newPost.type}", Category="${newPost.category}", Address="${newPost.address}"`);
+    console.log(`[AI-MATCH-ENGINE] Active Match Threshold Configured: ${matchThreshold}%`);
+    console.log(`[AI-MATCH-ENGINE] =======================================================`);
 
     // 1. Extract aiFeatures for the new post if missing
     if (!newPost.aiFeatures) {
+      console.log(`[AI-MATCH-ENGINE] Extracting AI features for new post ${newPost.id}...`);
       newPost.aiFeatures = await extractAIFeatures(newPost);
       if (useLocalFallback) {
         const local = readLocalDB();
@@ -683,7 +965,9 @@ async function runSmartMatchEngine(newPost: Post) {
           writeLocalDB(local);
         }
       } else {
-        await db.collection("posts").doc(newPost.id).update({ aiFeatures: newPost.aiFeatures });
+        if (db) {
+          await db.collection("posts").doc(newPost.id).update({ aiFeatures: newPost.aiFeatures });
+        }
       }
     }
 
@@ -693,10 +977,13 @@ async function runSmartMatchEngine(newPost: Post) {
       const local = readLocalDB();
       posts = local.posts || [];
     } else {
-      const snapshot = await db.collection("posts").get();
-      snapshot.forEach(doc => {
-        posts.push(doc.data() as Post);
-      });
+      if (db) {
+        console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Fetching all posts from Firestore collection 'posts' for opposite-type candidates scan...");
+        const snapshot = await db.collection("posts").get();
+        snapshot.forEach(doc => {
+          posts.push(doc.data() as Post);
+        });
+      }
     }
 
     const oppType = newPost.type === "Lost" ? "Found" : "Lost";
@@ -704,11 +991,24 @@ async function runSmartMatchEngine(newPost: Post) {
       (p) => p.type === oppType && p.status === "Active" && p.id !== newPost.id
     );
 
-    console.log(`[AI-MATCH-ENGINE] Found ${candidates.length} active candidate posts of opposite type (${oppType})`);
+    console.log(`[AI-MATCH-ENGINE] SCAN STATUS: Found ${candidates.length} active opposite-type candidates ("${oppType}") to scan.`);
+    console.log(`[AI-MATCH-ENGINE] NUMBER OF POSTS SCANNED: ${candidates.length}`);
+
+    if (candidates.length === 0) {
+      console.log(`[AI-MATCH-ENGINE] NO MATCH FOUND. Reason: There are no active "${oppType}" posts currently available in the database to compare against.`);
+      console.log(`[AI-MATCH-ENGINE] =======================================================`);
+      return;
+    }
+
+    let matchCount = 0;
+    let maxScoredCandidate: { id: string, item: string, score: number } | null = null;
 
     for (const cand of candidates) {
+      console.log(`[AI-MATCH-ENGINE] Evaluating Candidate ID=${cand.id}, Item="${cand.item}", Category="${cand.category}"`);
+
       // Lazy extract aiFeatures for candidate if missing
       if (!cand.aiFeatures) {
+        console.log(`[AI-MATCH-ENGINE] Extracting missing AI features for candidate ${cand.id}...`);
         cand.aiFeatures = await extractAIFeatures(cand);
         if (useLocalFallback) {
           const local = readLocalDB();
@@ -718,7 +1018,9 @@ async function runSmartMatchEngine(newPost: Post) {
             writeLocalDB(local);
           }
         } else {
-          await db.collection("posts").doc(cand.id).update({ aiFeatures: cand.aiFeatures });
+          if (db) {
+            await db.collection("posts").doc(cand.id).update({ aiFeatures: cand.aiFeatures });
+          }
         }
       }
 
@@ -730,30 +1032,44 @@ async function runSmartMatchEngine(newPost: Post) {
         const local = readLocalDB();
         existingMatch = (local.potentialMatches || []).some((m: any) => m.matchId === matchId);
       } else {
-        const doc = await db.collection("matches").doc(matchId).get();
-        existingMatch = doc.exists;
+        if (db) {
+          const doc = await db.collection("matches").doc(matchId).get();
+          existingMatch = doc.exists;
+        }
       }
 
       if (existingMatch) {
-        console.log(`[AI-MATCH-ENGINE] Match ${matchId} already exists. Skipping.`);
+        console.log(`[AI-MATCH-ENGINE] Match ${matchId} already exists in database. Skipping evaluation.`);
         continue;
       }
 
       // Compare!
       const potentialMatch = await comparePostsForMatch(newPost, cand);
       if (potentialMatch) {
-        const meetsThreshold = potentialMatch.matchScore >= matchThreshold;
-        console.log(`[AI-MATCH-ENGINE] Computed score for ${matchId}: ${potentialMatch.matchScore}% (meets threshold: ${meetsThreshold})`);
+        const score = potentialMatch.matchScore;
+        console.log(`[AI-MATCH-ENGINE] SIMILARITY SCORE: Candidate ID=${cand.id} ("${cand.item}") vs New Post ID=${newPost.id} ("${newPost.item}") -> Score: ${score}% (Threshold is ${matchThreshold}%)`);
+
+        if (!maxScoredCandidate || score > maxScoredCandidate.score) {
+          maxScoredCandidate = { id: cand.id, item: cand.item, score };
+        }
+
+        const meetsThreshold = score >= matchThreshold;
 
         if (meetsThreshold) {
+          console.log(`[AI-MATCH-ENGINE] ACCEPTED MATCH: Score ${score}% meets or exceeds threshold of ${matchThreshold}% for match ${matchId}.`);
+          
           // Save potential match
           if (useLocalFallback) {
             const local = readLocalDB();
             if (!local.potentialMatches) local.potentialMatches = [];
             local.potentialMatches.push(potentialMatch);
             writeLocalDB(local);
+            console.log(`[AI-MATCH-ENGINE] Match ${matchId} saved successfully to Local Fallback DB.`);
           } else {
-            await db.collection("matches").doc(potentialMatch.matchId).set(potentialMatch);
+            if (db) {
+              await db.collection("matches").doc(potentialMatch.matchId).set(potentialMatch);
+              console.log(`[AI-MATCH-ENGINE] Match ${matchId} saved successfully to Firestore DB.`);
+            }
           }
 
           // Build notifications for both users immediately
@@ -780,15 +1096,23 @@ async function runSmartMatchEngine(newPost: Post) {
             matchId: potentialMatch.matchId
           };
 
+          console.log(`[AI-MATCH-ENGINE] NOTIFICATION CREATED: Generating notification alerts for both users:`);
+          console.log(`  - Lost User Notification ID: ${notifLost.id}, Message: "${lostUserMsg}"`);
+          console.log(`  - Found User Notification ID: ${notifFound.id}, Message: "${foundUserMsg}"`);
+
           if (useLocalFallback) {
             const local = readLocalDB();
             if (!local.notifications) local.notifications = [];
             local.notifications.push(notifLost);
             local.notifications.push(notifFound);
             writeLocalDB(local);
+            console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Local Fallback DB.`);
           } else {
-            await db.collection("notifications").doc(notifLost.id).set(notifLost);
-            await db.collection("notifications").doc(notifFound.id).set(notifFound);
+            if (db) {
+              await db.collection("notifications").doc(notifLost.id).set(notifLost);
+              await db.collection("notifications").doc(notifFound.id).set(notifFound);
+              console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Firestore.`);
+            }
           }
 
           // Update legacy matches to keep original card alerts functional!
@@ -813,9 +1137,25 @@ async function runSmartMatchEngine(newPost: Post) {
             reason: potentialMatch.reason
           };
           await updateLegacyMatchesForPost(foundPostObj.id, oppLegacyMatch);
+
+          matchCount++;
+        } else {
+          console.log(`[AI-MATCH-ENGINE] REJECTED MATCH: Score ${score}% is below threshold of ${matchThreshold}% for candidate ID=${cand.id} ("${cand.item}"). Match reason: ${potentialMatch.reason}`);
         }
+      } else {
+        console.log(`[AI-MATCH-ENGINE] Skipping candidate ID=${cand.id} ("${cand.item}"): Comparison engine returned null result.`);
       }
     }
+
+    if (matchCount === 0) {
+      const bestCandidateReason = maxScoredCandidate 
+        ? `None of the candidates scored high enough to meet the threshold. Best evaluated candidate was ID=${maxScoredCandidate.id} ("${maxScoredCandidate.item}") with score ${maxScoredCandidate.score}%, which is less than the active threshold of ${matchThreshold}%.`
+        : `No evaluable matches were found among the candidates.`;
+      console.log(`[AI-MATCH-ENGINE] NO MATCH FOUND. Reason: ${bestCandidateReason}`);
+    } else {
+      console.log(`[AI-MATCH-ENGINE] AI Match Engine complete. Generated ${matchCount} new matching connections.`);
+    }
+    console.log(`[AI-MATCH-ENGINE] =======================================================`);
 
   } catch (err) {
     console.error("[AI-MATCH-ENGINE] Error running smart match engine:", err);
