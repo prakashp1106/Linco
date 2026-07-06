@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface PinModalProps {
   isOpen: boolean;
-  actionType: "delete" | "resolve";
+  actionType: "delete" | "resolve" | "unlock";
   onClose: () => void;
   onSubmit: (pin: string) => Promise<void> | void;
 }
@@ -62,9 +62,9 @@ export const PinModal: React.FC<PinModalProps> = ({
           {/* Header */}
           <div className="p-4 border-b border-slate-900 bg-slate-950 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Lock size={16} className={actionType === "delete" ? "text-red-400" : "text-emerald-400"} />
+              <Lock size={16} className={actionType === "delete" ? "text-red-400" : actionType === "unlock" ? "text-cyan-400" : "text-emerald-400"} />
               <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-                {actionType === "delete" ? "Delete Report" : "Mark Resolved"}
+                {actionType === "delete" ? "Delete Report" : actionType === "unlock" ? "Unlock Connection" : "Mark Resolved"}
               </span>
             </div>
             <button
@@ -78,7 +78,9 @@ export const PinModal: React.FC<PinModalProps> = ({
           {/* Body */}
           <div className="p-6 space-y-4">
             <p className="text-xs text-slate-400 leading-relaxed text-center">
-              Please enter the 4-digit Security PIN you specified when creating this report to complete this action.
+              {actionType === "unlock" 
+                ? "Please enter the 4-digit Security PIN specified when creating this report to securely decrypt connection keys."
+                : "Please enter the 4-digit Security PIN you specified when creating this report to complete this action."}
             </p>
 
             <div className="space-y-1.5">
@@ -111,6 +113,8 @@ export const PinModal: React.FC<PinModalProps> = ({
               className={`w-full py-3.5 rounded-2xl text-xs font-bold tracking-wider flex items-center justify-center gap-2 transition cursor-pointer ${
                 actionType === "delete"
                   ? "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/10"
+                  : actionType === "unlock"
+                  ? "bg-cyan-500 hover:bg-cyan-600 text-slate-950 shadow-lg shadow-cyan-500/10 font-extrabold"
                   : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/10"
               }`}
             >
@@ -119,7 +123,7 @@ export const PinModal: React.FC<PinModalProps> = ({
               ) : (
                 <>
                   <CheckCircle2 size={14} />
-                  Confirm Action
+                  {actionType === "unlock" ? "Unlock Connection" : "Confirm Action"}
                 </>
               )}
             </button>

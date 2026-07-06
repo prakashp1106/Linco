@@ -27,6 +27,7 @@ interface PostCardProps {
   onShareAsImage: (post: Post, e: React.MouseEvent) => void;
   onShowQrCode: (post: Post, e: React.MouseEvent) => void;
   onManageClaims: (post: Post) => void;
+  onUnlockPost?: (id: string, e: React.MouseEvent) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -43,6 +44,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onShareAsImage,
   onShowQrCode,
   onManageClaims,
+  onUnlockPost,
 }) => {
   const isLost = post.type === "Lost";
   const itemCat = CATEGORIES.find((c) => c.id === post.category);
@@ -161,8 +163,20 @@ export const PostCard: React.FC<PostCardProps> = ({
               +91 {decryptedContacts[post.id] || post.contact}
             </span>
           ) : (
-            <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-              {post.maskedContact || "+91 ******" + (post.contact.startsWith("ENC:") ? "XX" : post.contact.slice(-2))}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                {post.maskedContact || "+91 ******" + (post.contact.startsWith("ENC:") ? "XX" : post.contact.slice(-2))}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnlockPost?.(post.id, e);
+                }}
+                title="Unlock connection with Security PIN"
+                className="px-2 py-0.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 font-bold text-[9px] uppercase tracking-wider transition cursor-pointer"
+              >
+                🔓 Unlock Connection
+              </button>
             </span>
           )}
         </span>
@@ -230,39 +244,60 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* ACTIVE GOOGLE GEMINI AI MATCH ALERTS (DISPLAYED INSIDE POST CARD) */}
       {postMatches.length > 0 && (
-        <div className="mt-4 p-3.5 rounded-xl border border-violet-500/30 bg-violet-950/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 px-2 py-0.5 bg-violet-500/20 text-[7px] font-bold tracking-widest text-violet-300 rounded-bl-lg uppercase">
-            AI Match
-          </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-violet-300 uppercase tracking-wider mb-2">
-            <Sparkles size={11} className="text-violet-400" /> Gemini matched this listing!
-          </div>
-          
-          <div className="space-y-2.5">
-            {postMatches.map((match, mIdx) => (
-              <div key={mIdx} className="p-2.5 bg-[#020817]/60 rounded-lg border border-slate-900/80 flex gap-3 items-start">
-                {/* Percentage Circle Ring */}
-                <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center bg-slate-950 border border-slate-800 rounded-full font-mono text-[10px] font-extrabold text-violet-400 shadow-inner">
-                  {match.score}%
+        isUnlocked ? (
+          <div className="mt-4 p-3.5 rounded-xl border border-violet-500/30 bg-violet-950/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 px-2 py-0.5 bg-violet-500/20 text-[7px] font-bold tracking-widest text-violet-300 rounded-bl-lg uppercase">
+              AI Match
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-violet-300 uppercase tracking-wider mb-2">
+              <Sparkles size={11} className="text-violet-400" /> Gemini matched this listing!
+            </div>
+            
+            <div className="space-y-2.5">
+              {postMatches.map((match, mIdx) => (
+                <div key={mIdx} className="p-2.5 bg-[#020817]/60 rounded-lg border border-slate-900/80 flex gap-3 items-start">
+                  {/* Percentage Circle Ring */}
+                  <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center bg-slate-950 border border-slate-800 rounded-full font-mono text-[10px] font-extrabold text-violet-400 shadow-inner">
+                    {match.score}%
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h4 className="text-xs font-bold text-slate-200 mb-0.5">{match.item}</h4>
+                    <p className="text-[10px] text-slate-400 leading-normal mb-1.5">{match.reason}</p>
+                    <a
+                      href={`https://wa.me/91${match.contact}?text=Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold rounded-md bg-violet-600 hover:bg-violet-500 text-slate-950 hover:text-black transition duration-150"
+                    >
+                      Contact Match Owner <ChevronRight size={10} />
+                    </a>
+                  </div>
                 </div>
-                
-                <div className="flex-1">
-                  <h4 className="text-xs font-bold text-slate-200 mb-0.5">{match.item}</h4>
-                  <p className="text-[10px] text-slate-400 leading-normal mb-1.5">{match.reason}</p>
-                  <a
-                    href={`https://wa.me/91${match.contact}?text=Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-bold rounded-md bg-violet-600 hover:bg-violet-500 text-slate-950 hover:text-black transition duration-150"
-                  >
-                    Contact Match Owner <ChevronRight size={10} />
-                  </a>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mt-4 p-3.5 rounded-xl border border-slate-900/80 bg-slate-950/40 text-center space-y-2.5">
+            <div className="text-xs text-slate-300 font-bold flex items-center justify-center gap-1.5">
+              <Sparkles size={13} className="text-violet-400 animate-pulse" />
+              Gemini AI detected {postMatches.length} potential smart match{postMatches.length > 1 ? "es" : ""}!
+            </div>
+            <p className="text-[10px] text-slate-500 max-w-xs mx-auto leading-normal">
+              Only the verified creator of this listing can view similarity breakdowns and contact matching owners.
+            </p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUnlockPost?.(post.id, e);
+              }}
+              className="mx-auto px-3.5 py-1.5 rounded-lg bg-cyan-400 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider hover:bg-cyan-300 transition duration-150 shadow-md flex items-center gap-1 cursor-pointer"
+            >
+              🔓 Unlock to View matches
+            </button>
+          </div>
+        )
       )}
     </motion.div>
   );

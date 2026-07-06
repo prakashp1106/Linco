@@ -25,6 +25,7 @@ interface FeedListProps {
   onShareAsImage: (post: Post, e: React.MouseEvent) => void;
   onShowQrCode: (post: Post, e: React.MouseEvent) => void;
   onManageClaims: (post: Post) => void;
+  onUnlockPost?: (id: string, e: React.MouseEvent) => void;
 }
 
 export const FeedList: React.FC<FeedListProps> = ({
@@ -41,6 +42,7 @@ export const FeedList: React.FC<FeedListProps> = ({
   onShareAsImage,
   onShowQrCode,
   onManageClaims,
+  onUnlockPost,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [feedTypeFilter, setFeedTypeFilter] = useState<"All" | "Lost" | "Found">("All");
@@ -250,6 +252,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               onShareAsImage={onShareAsImage}
               onShowQrCode={onShowQrCode}
               onManageClaims={onManageClaims}
+              onUnlockPost={onUnlockPost}
             />
           ))}
         </div>

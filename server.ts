@@ -2065,6 +2065,51 @@ app.post("/api/posts/:id/view", async (req, res) => {
   }
 });
 
+// Verify ownership PIN of a post without modification
+app.post("/api/posts/:id/verify-pin", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { securityPin } = req.body;
+
+    if (!securityPin) {
+      return res.status(400).json({ error: "Security PIN is required" });
+    }
+
+    let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      post = local.posts.find((p: Post) => p.id === id) || null;
+    } else {
+      if (!db) {
+        throw new Error("Firestore database is not initialized");
+      }
+      console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before verifying PIN for post ${id}`);
+      const doc = await db.collection("posts").doc(id).get();
+      if (doc.exists) {
+        post = doc.data() as Post;
+      }
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Wrong PIN!" });
+    }
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
 // Delete a post directly and exclusively from Firestore
 app.delete("/api/posts/:id", async (req, res) => {
   try {

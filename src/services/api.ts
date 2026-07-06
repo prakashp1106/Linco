@@ -98,6 +98,22 @@ export const apiService = {
   },
 
   /**
+   * Verify post security PIN without executing actions
+   */
+  async verifyPin(id: string, securityPin: string): Promise<{ success: boolean }> {
+    const response = await fetch(`/api/posts/${id}/verify-pin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ securityPin }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Incorrect PIN");
+    }
+    return response.json();
+  },
+
+  /**
    * Record a view on a post
    */
   async incrementView(id: string): Promise<{ success: boolean; views: number }> {

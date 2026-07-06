@@ -11,7 +11,7 @@ import confetti from "canvas-confetti";
 
 import { usePosts } from "./hooks/usePosts";
 import { usePostForm } from "./hooks/usePostForm";
-import { encryptContact } from "./services/encryptionService";
+import { encryptContact, decryptContact } from "./services/encryptionService";
 import { Post, AIMatch, PotentialMatch, LincoNotification } from "./types";
 import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
 import { apiService } from "./services/api";
@@ -72,7 +72,7 @@ export default function App() {
   const [pinModal, setPinModal] = useState<{
     isOpen: boolean;
     postId: string;
-    actionType: "delete" | "resolve";
+    actionType: "delete" | "resolve" | "unlock";
   } | null>(null);
 
   const [claimingPost, setClaimingPost] = useState<Post | null>(null);
@@ -276,6 +276,11 @@ export default function App() {
     try {
       const res = await submitPost(payload);
       if (res.success) {
+        if (res.post?.id) {
+          unlockPost(res.post.id);
+          setDecryptedContacts((prev) => ({ ...prev, [res.post.id]: plainContact }));
+        }
+
         try {
           confetti({
             particleCount: 150,
@@ -319,6 +324,11 @@ export default function App() {
     setPinModal({ isOpen: true, postId: id, actionType: "delete" });
   };
 
+  const handleUnlockTrigger = (postId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setPinModal({ isOpen: true, postId, actionType: "unlock" });
+  };
+
   const handleVerifyPinAndExecute = async (pinEntered: string) => {
     if (!pinModal) return;
     const { postId, actionType } = pinModal;
@@ -334,10 +344,26 @@ export default function App() {
         if (res.success) {
           addToast("Congratulations on recovering this item!", "success");
         }
+      } else if (actionType === "unlock") {
+        const res = await apiService.verifyPin(postId, pinEntered);
+        if (res.success) {
+          const targetPost = posts.find((p) => p.id === postId);
+          if (targetPost) {
+            try {
+              const decryptedNumber = await decryptContact(targetPost.contact, pinEntered);
+              handleUnlockSuccess(postId, decryptedNumber);
+            } catch (decErr) {
+              console.error("Client-side decryption failed:", decErr);
+              addToast("Decryption failed. Please make sure the PIN is correct.", "error");
+              throw new Error("Unable to decrypt contact details.");
+            }
+          }
+        }
       }
       setPinModal(null);
     } catch (err: any) {
       addToast(err.message || "Action failed", "error");
+      throw err; // throw so PinModal error catch can display it in modal UI
     }
   };
 
@@ -1054,6 +1080,7 @@ export default function App() {
                           setManagingPost(post);
                           setShowOwnerClaims(true);
                         }}
+                        onUnlockPost={handleUnlockTrigger}
                       />
                     </motion.div>
                   )}
