@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Info, X } from "lucide-react";
+import { Search, Plus, Info, X, Bell } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
@@ -12,7 +12,7 @@ import confetti from "canvas-confetti";
 import { usePosts } from "./hooks/usePosts";
 import { usePostForm } from "./hooks/usePostForm";
 import { encryptContact } from "./services/encryptionService";
-import { Post, AIMatch } from "./types";
+import { Post, AIMatch, PotentialMatch, LincoNotification } from "./types";
 import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
 import { apiService } from "./services/api";
 import { formatKolkataTimestamp } from "./utils/date";
@@ -25,6 +25,8 @@ import { FeedList } from "./components/FeedList";
 import { AboutTab } from "./components/AboutTab";
 import { LandingPage } from "./components/LandingPage";
 import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
+import { PotentialMatches } from "./components/PotentialMatches";
+import { NotificationCenter } from "./components/NotificationCenter";
 
 // Modals
 import { PinModal } from "./components/PinModal";
@@ -57,9 +59,14 @@ export default function App() {
 
   const form = usePostForm();
 
-  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches">("home");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
+
+  // New AI Match & Notification states
+  const [notifications, setNotifications] = useState<LincoNotification[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   
   // Modals state
   const [pinModal, setPinModal] = useState<{
@@ -82,6 +89,10 @@ export default function App() {
 
   const [qrModalPost, setQrModalPost] = useState<Post | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
+
+  // Computed unread notification count
+  const userNotifications = notifications.filter((n) => unlockedPosts.includes(n.postId));
+  const unreadCount = userNotifications.filter((n) => !n.read).length;
 
   // Banner announcement
   const [banner, setBanner] = useState<{ show: boolean; title: string; subtitle: string; icon: string } | null>(null);
@@ -135,6 +146,24 @@ export default function App() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4500);
   }, []);
+
+  // Fetch notifications
+  const loadNotifications = useCallback(async () => {
+    try {
+      const res = await apiService.getNotifications();
+      if (res.success) {
+        setNotifications(res.notifications);
+      }
+    } catch (err) {
+      console.error("Failed to load notifications:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
 
   // Support deep linking to open a specific post from QR code scans / URLs
   useEffect(() => {
@@ -914,6 +943,19 @@ export default function App() {
             🔍 Feed ({posts.length})
           </button>
           <button
+            onClick={() => setActiveTab("matches")}
+            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+              activeTab === "matches" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            ✨ Matches
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab("about")}
             className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "about" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
@@ -1021,6 +1063,24 @@ export default function App() {
                       exit={{ opacity: 0, y: -15 }}
                     >
                       <AboutTab />
+                    </motion.div>
+                  )}
+
+                  {activeTab === "matches" && (
+                    <motion.div
+                      key="matches-tab"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                    >
+                      <PotentialMatches
+                        posts={posts}
+                        unlockedPosts={unlockedPosts}
+                        onStartClaim={(post) => handleStartClaimTrigger(post, {} as any)}
+                        addToast={addToast}
+                        initialSelectedMatchId={selectedMatchId}
+                        onClearSelectedMatchId={() => setSelectedMatchId(null)}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1148,6 +1208,35 @@ export default function App() {
         isOpen={showQrModal}
         post={qrModalPost}
         onClose={() => setShowQrModal(false)}
+      />
+
+      {/* FLOATING BELL NOTIFICATION CENTER TOGGLE */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setNotificationsOpen(true)}
+          className="h-12 w-12 rounded-full bg-slate-950 border border-slate-900 hover:border-slate-800 shadow-2xl flex items-center justify-center relative cursor-pointer group transition duration-300"
+          id="floating-bell-button"
+        >
+          <Bell className="text-cyan-400 group-hover:scale-110 transition duration-300" size={20} />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-black text-slate-950 shadow-[0_0_10px_#06b6d4]">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <NotificationCenter
+        unlockedPosts={unlockedPosts}
+        onViewMatch={(matchId) => {
+          setActiveTab("matches");
+          setSelectedMatchId(matchId);
+        }}
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        notifications={notifications}
+        onRefreshNotifications={loadNotifications}
+        addToast={addToast}
       />
 
       <footer className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-16 pb-12 text-center text-slate-600 border-t border-slate-900/40 select-none">

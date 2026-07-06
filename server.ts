@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
-import { Post, AIMatch, Claim } from "./src/types.js";
+import { Post, AIMatch, Claim, PotentialMatch, LincoNotification } from "./src/types.js";
 import { Firestore } from "firebase-admin/firestore";
 import { db } from "./src/services/firebaseAdmin.js";
 import { v2 as cloudinary } from "cloudinary";
@@ -370,6 +370,490 @@ Expected format:
   return [];
 }
 
+// --- LINCO SMART AI MATCH ENGINE ---
+let matchThreshold = 80;
+
+interface AIFeatures {
+  itemName: string;
+  category: string;
+  brand: string;
+  primaryColor: string;
+  secondaryColor: string;
+  material: string;
+  size: string;
+  shape: string;
+  uniqueIdentifiers: string;
+  timelineHints: string;
+  imageDescription: string;
+  hasImage: boolean;
+}
+
+// Haversine distance on server
+function calculateHaversineDistance(lat1?: number, lon1?: number, lat2?: number, lon2?: number): number | null {
+  if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return null;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Date proximity score (0 to 100)
+function calculateDateProximityScore(created1: number, created2: number): number {
+  const diffMs = Math.abs(created1 - created2);
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  if (diffDays <= 0.5) return 100;
+  if (diffDays <= 1) return 95;
+  if (diffDays <= 3) return 85;
+  if (diffDays <= 7) return 70;
+  if (diffDays <= 14) return 50;
+  if (diffDays <= 30) return 30;
+  return 15;
+}
+
+// Location score based on distance
+function calculateLocationScore(distance: number | null): number {
+  if (distance === null) return 50; // Neutral fallback if coordinates are missing
+  if (distance <= 0.5) return 100;
+  if (distance <= 1) return 95;
+  if (distance <= 3) return 85;
+  if (distance <= 7) return 70;
+  if (distance <= 15) return 50;
+  if (distance <= 30) return 30;
+  return 10;
+}
+
+// On-demand AI feature extraction
+async function extractAIFeatures(post: Post): Promise<AIFeatures> {
+  const defaultFeatures: AIFeatures = {
+    itemName: post.item,
+    category: post.category,
+    brand: "unknown",
+    primaryColor: "unknown",
+    secondaryColor: "unknown",
+    material: "unknown",
+    size: "unknown",
+    shape: "unknown",
+    uniqueIdentifiers: "none",
+    timelineHints: "none",
+    imageDescription: "",
+    hasImage: !!post.image
+  };
+
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn(`[AI-MATCH] GEMINI_API_KEY missing. Skipping AI-based feature extraction for post ${post.id}.`);
+    return defaultFeatures;
+  }
+
+  try {
+    let parts: any[] = [];
+    if (post.image) {
+      const matches = post.image.match(/^data:(.*?);base64,(.*)$/);
+      if (matches) {
+        parts.push({
+          inlineData: {
+            mimeType: matches[1],
+            data: matches[2]
+          }
+        });
+      }
+    }
+
+    const prompt = `You are a forensic detail extraction engine for a Lost and Found platform called LINCO.
+Analyze the following post details and the optional image. Extract the specific metadata requested in the JSON schema.
+Post Details:
+- Item: ${post.item}
+- Category: ${post.category}
+- Description: ${post.details}
+- Location: ${post.address}
+
+Extract and output ONLY a valid JSON object matching the following structure. Do NOT include markdown blocks.
+{
+  "itemName": "Specific 2-4 word clean name of the item (e.g., iPhone 13 Pro, Casio Watch)",
+  "category": "Standard category matching the item",
+  "brand": "The brand name if discernible, or 'unknown'",
+  "primaryColor": "The dominant color of the item (e.g. Red, Black, Gold, Silver), or 'unknown'",
+  "secondaryColor": "The secondary accent color of the item, or 'unknown'",
+  "material": "The material (e.g. Leather, Plastic, Aluminium, Glass, Canvas), or 'unknown'",
+  "size": "The size details if described (e.g. 6.1-inch, Medium, Size 9, Large), or 'unknown'",
+  "shape": "The general shape (e.g. Rectangular, Round, Square, Oval), or 'unknown'",
+  "uniqueIdentifiers": "Any distinct stickers, scratches, engravings, cracks, serial numbers, keychains, phone cases, or specific accessories mentioned, or 'none'",
+  "timelineHints": "Specific details about when or how it was lost/found (e.g., fell out of bag, left on table 4, active during heavy rain), or 'none'",
+  "imageDescription": "A concise visual description under 40 words based on the attached image if one exists. Focus on logos, specific damage, background, or visual markings."
+}`;
+
+    parts.push({ text: prompt });
+
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: parts,
+        });
+        return response.text || "{}";
+      },
+      JSON.stringify(defaultFeatures),
+      `extract-features-${post.id}`
+    );
+
+    const cleanedText = text.replace(/```json|```/gi, "").trim();
+    const parsed = JSON.parse(cleanedText);
+    return {
+      itemName: parsed.itemName || defaultFeatures.itemName,
+      category: parsed.category || defaultFeatures.category,
+      brand: parsed.brand || defaultFeatures.brand,
+      primaryColor: parsed.primaryColor || defaultFeatures.primaryColor,
+      secondaryColor: parsed.secondaryColor || defaultFeatures.secondaryColor,
+      material: parsed.material || defaultFeatures.material,
+      size: parsed.size || defaultFeatures.size,
+      shape: parsed.shape || defaultFeatures.shape,
+      uniqueIdentifiers: parsed.uniqueIdentifiers || defaultFeatures.uniqueIdentifiers,
+      timelineHints: parsed.timelineHints || defaultFeatures.timelineHints,
+      imageDescription: parsed.imageDescription || defaultFeatures.imageDescription,
+      hasImage: !!post.image
+    };
+
+  } catch (err) {
+    console.error(`[AI-MATCH] Feature extraction failed for post ${post.id}:`, err);
+    return defaultFeatures;
+  }
+}
+
+// Compare two posts using pre-extracted features
+async function comparePostsForMatch(postA: Post, postB: Post): Promise<PotentialMatch | null> {
+  const lostPost = postA.type === "Lost" ? postA : postB;
+  const foundPost = postA.type === "Found" ? postA : postB;
+
+  const distance = calculateHaversineDistance(lostPost.latitude, lostPost.longitude, foundPost.latitude, foundPost.longitude);
+  const dateScore = calculateDateProximityScore(lostPost.created, foundPost.created);
+  const locScore = calculateLocationScore(distance);
+
+  const defaultMatch: PotentialMatch = {
+    matchId: `${lostPost.id}_${foundPost.id}`,
+    lostPostId: lostPost.id,
+    foundPostId: foundPost.id,
+    matchScore: 0,
+    matchBreakdown: {
+      category: 0,
+      item: 0,
+      brand: 0,
+      colors: 0,
+      description: 0,
+      image: 0,
+      material: 0,
+      size: 0,
+      shape: 0,
+      location: locScore,
+      dateProximity: dateScore,
+      timeline: 50,
+      identifiers: 0
+    },
+    createdAt: Date.now(),
+    status: "Active",
+    reviewed: false,
+    notificationsSent: true,
+    lastUpdated: Date.now(),
+    reason: "Match analysis unavailable"
+  };
+
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn("[AI-MATCH] GEMINI_API_KEY missing. Skipping smart comparison.");
+    return null;
+  }
+
+  try {
+    const prompt = `You are the Core Forensic Matching Engine of LINCO.
+Compare the following Lost and Found posts and determine if they represent the same physical item.
+
+Lost Post:
+- Item: ${lostPost.item}
+- Category: ${lostPost.category}
+- Details: ${lostPost.details}
+- Location: ${lostPost.address}
+- Pre-extracted Features: ${JSON.stringify(lostPost.aiFeatures || {})}
+
+Found Post:
+- Item: ${foundPost.item}
+- Category: ${foundPost.category}
+- Details: ${foundPost.details}
+- Location: ${foundPost.address}
+- Pre-extracted Features: ${JSON.stringify(foundPost.aiFeatures || {})}
+
+Additional Pre-computed Metrics:
+- Location Distance Score: ${locScore}% (Distance: ${distance !== null ? distance.toFixed(2) + " km" : "unknown"})
+- Date Proximity Score: ${dateScore}%
+
+Task:
+Calculate a confidence score (from 0 to 100) and a detailed breakdown of parameters.
+Only match items that share highly compatible descriptions, colors, categories, or unique details. Highly prioritize unique markings, stickers, serial numbers, accessories, or specific scratches/engravings (if they match, score them extremely high). If they clearly represent different items (e.g. a red phone and a black wallet), the overall score should be very low.
+
+Return ONLY a valid JSON object. Do NOT include markdown blocks.
+Expected JSON format:
+{
+  "matchScore": 87,
+  "matchBreakdown": {
+    "category": 95,
+    "item": 90,
+    "brand": 100,
+    "colors": 85,
+    "description": 80,
+    "image": 90,
+    "material": 95,
+    "size": 85,
+    "shape": 90,
+    "location": ${locScore},
+    "dateProximity": ${dateScore},
+    "timeline": 85,
+    "identifiers": 90
+  },
+  "reason": "Explain in exactly 2 clear, scannable sentences why these listings match. Reference brand name, visual features, unique identifiers, and locations."
+}`;
+
+    const text = await callGeminiWithRetry(
+      async () => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: prompt,
+        });
+        return response.text || "{}";
+      },
+      JSON.stringify({
+        matchScore: 0,
+        matchBreakdown: defaultMatch.matchBreakdown,
+        reason: "Match analysis timed out"
+      }),
+      `compare-match-${lostPost.id}-${foundPost.id}`
+    );
+
+    const cleanedText = text.replace(/```json|```/gi, "").trim();
+    const parsed = JSON.parse(cleanedText);
+
+    if (typeof parsed.matchScore === "number") {
+      return {
+        matchId: `${lostPost.id}_${foundPost.id}`,
+        lostPostId: lostPost.id,
+        foundPostId: foundPost.id,
+        matchScore: parsed.matchScore,
+        matchBreakdown: {
+          category: parsed.matchBreakdown?.category ?? 50,
+          item: parsed.matchBreakdown?.item ?? 50,
+          brand: parsed.matchBreakdown?.brand ?? 50,
+          colors: parsed.matchBreakdown?.colors ?? 50,
+          description: parsed.matchBreakdown?.description ?? 50,
+          image: parsed.matchBreakdown?.image ?? 0,
+          material: parsed.matchBreakdown?.material ?? 50,
+          size: parsed.matchBreakdown?.size ?? 50,
+          shape: parsed.matchBreakdown?.shape ?? 50,
+          location: parsed.matchBreakdown?.location ?? locScore,
+          dateProximity: parsed.matchBreakdown?.dateProximity ?? dateScore,
+          timeline: parsed.matchBreakdown?.timeline ?? 50,
+          identifiers: parsed.matchBreakdown?.identifiers ?? 0
+        },
+        createdAt: Date.now(),
+        status: "Active",
+        reviewed: false,
+        notificationsSent: true,
+        lastUpdated: Date.now(),
+        reason: parsed.reason || "Matched by LINCO Smart AI"
+      };
+    }
+  } catch (err) {
+    console.error(`Error comparing posts ${postA.id} and ${postB.id}:`, err);
+  }
+  return null;
+}
+
+// Background matching orchestration engine
+async function runSmartMatchEngine(newPost: Post) {
+  try {
+    console.log(`[AI-MATCH-ENGINE] Starting Smart AI Match Engine for post ${newPost.id}...`);
+
+    // 1. Extract aiFeatures for the new post if missing
+    if (!newPost.aiFeatures) {
+      newPost.aiFeatures = await extractAIFeatures(newPost);
+      if (useLocalFallback) {
+        const local = readLocalDB();
+        const postIndex = local.posts.findIndex((p: any) => p.id === newPost.id);
+        if (postIndex !== -1) {
+          local.posts[postIndex].aiFeatures = newPost.aiFeatures;
+          writeLocalDB(local);
+        }
+      } else {
+        await db.collection("posts").doc(newPost.id).update({ aiFeatures: newPost.aiFeatures });
+      }
+    }
+
+    // 2. Fetch all candidates of the opposite type that are ACTIVE
+    let posts: Post[] = [];
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      posts = local.posts || [];
+    } else {
+      const snapshot = await db.collection("posts").get();
+      snapshot.forEach(doc => {
+        posts.push(doc.data() as Post);
+      });
+    }
+
+    const oppType = newPost.type === "Lost" ? "Found" : "Lost";
+    const candidates = posts.filter(
+      (p) => p.type === oppType && p.status === "Active" && p.id !== newPost.id
+    );
+
+    console.log(`[AI-MATCH-ENGINE] Found ${candidates.length} active candidate posts of opposite type (${oppType})`);
+
+    for (const cand of candidates) {
+      // Lazy extract aiFeatures for candidate if missing
+      if (!cand.aiFeatures) {
+        cand.aiFeatures = await extractAIFeatures(cand);
+        if (useLocalFallback) {
+          const local = readLocalDB();
+          const postIndex = local.posts.findIndex((p: any) => p.id === cand.id);
+          if (postIndex !== -1) {
+            local.posts[postIndex].aiFeatures = cand.aiFeatures;
+            writeLocalDB(local);
+          }
+        } else {
+          await db.collection("posts").doc(cand.id).update({ aiFeatures: cand.aiFeatures });
+        }
+      }
+
+      // Check if match already exists
+      const matchId = newPost.type === "Lost" ? `${newPost.id}_${cand.id}` : `${cand.id}_${newPost.id}`;
+      let existingMatch = false;
+
+      if (useLocalFallback) {
+        const local = readLocalDB();
+        existingMatch = (local.potentialMatches || []).some((m: any) => m.matchId === matchId);
+      } else {
+        const doc = await db.collection("matches").doc(matchId).get();
+        existingMatch = doc.exists;
+      }
+
+      if (existingMatch) {
+        console.log(`[AI-MATCH-ENGINE] Match ${matchId} already exists. Skipping.`);
+        continue;
+      }
+
+      // Compare!
+      const potentialMatch = await comparePostsForMatch(newPost, cand);
+      if (potentialMatch) {
+        const meetsThreshold = potentialMatch.matchScore >= matchThreshold;
+        console.log(`[AI-MATCH-ENGINE] Computed score for ${matchId}: ${potentialMatch.matchScore}% (meets threshold: ${meetsThreshold})`);
+
+        if (meetsThreshold) {
+          // Save potential match
+          if (useLocalFallback) {
+            const local = readLocalDB();
+            if (!local.potentialMatches) local.potentialMatches = [];
+            local.potentialMatches.push(potentialMatch);
+            writeLocalDB(local);
+          } else {
+            await db.collection("matches").doc(potentialMatch.matchId).set(potentialMatch);
+          }
+
+          // Build notifications for both users immediately
+          const lostUserMsg = `Great news! LINCO AI found a possible match for your lost '${newPost.type === "Lost" ? newPost.item : cand.item}'.`;
+          const foundUserMsg = `Someone may be looking for the '${newPost.type === "Found" ? newPost.item : cand.item}' you found.`;
+
+          const notifLost: LincoNotification = {
+            id: `notif_lost_${potentialMatch.matchId}`,
+            postId: potentialMatch.lostPostId,
+            message: lostUserMsg,
+            createdAt: Date.now(),
+            read: false,
+            type: "match",
+            matchId: potentialMatch.matchId
+          };
+
+          const notifFound: LincoNotification = {
+            id: `notif_found_${potentialMatch.matchId}`,
+            postId: potentialMatch.foundPostId,
+            message: foundUserMsg,
+            createdAt: Date.now(),
+            read: false,
+            type: "match",
+            matchId: potentialMatch.matchId
+          };
+
+          if (useLocalFallback) {
+            const local = readLocalDB();
+            if (!local.notifications) local.notifications = [];
+            local.notifications.push(notifLost);
+            local.notifications.push(notifFound);
+            writeLocalDB(local);
+          } else {
+            await db.collection("notifications").doc(notifLost.id).set(notifLost);
+            await db.collection("notifications").doc(notifFound.id).set(notifFound);
+          }
+
+          // Update legacy matches to keep original card alerts functional!
+          const lostPostObj = newPost.type === "Lost" ? newPost : cand;
+          const foundPostObj = newPost.type === "Found" ? newPost : cand;
+
+          const legacyMatch: AIMatch = {
+            id: foundPostObj.id,
+            item: foundPostObj.item,
+            contact: foundPostObj.contact,
+            score: potentialMatch.matchScore,
+            reason: potentialMatch.reason
+          };
+
+          await updateLegacyMatchesForPost(lostPostObj.id, legacyMatch);
+          
+          const oppLegacyMatch: AIMatch = {
+            id: lostPostObj.id,
+            item: lostPostObj.item,
+            contact: lostPostObj.contact,
+            score: potentialMatch.matchScore,
+            reason: potentialMatch.reason
+          };
+          await updateLegacyMatchesForPost(foundPostObj.id, oppLegacyMatch);
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error("[AI-MATCH-ENGINE] Error running smart match engine:", err);
+  }
+}
+
+// Helper to append legacy matches
+async function updateLegacyMatchesForPost(postId: string, newLegacyMatch: AIMatch) {
+  try {
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      if (!local.matches) local.matches = {};
+      const list = local.matches[postId] || [];
+      if (!list.some((m: any) => m.id === newLegacyMatch.id)) {
+        list.push(newLegacyMatch);
+        local.matches[postId] = list;
+        writeLocalDB(local);
+      }
+    } else {
+      const docRef = db.collection("matches").doc(postId);
+      const doc = await docRef.get();
+      let list: AIMatch[] = [];
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && Array.isArray(data.list)) {
+          list = data.list;
+        }
+      }
+      if (!list.some(m => m.id === newLegacyMatch.id)) {
+        list.push(newLegacyMatch);
+        await docRef.set({ list });
+      }
+    }
+  } catch (err) {
+    console.error(`[AI-MATCH-ENGINE] Failed to update legacy matches for post ${postId}:`, err);
+  }
+}
+
 // --- API ROUTES ---
 
 // Proxy for MapmyIndia / Nominatim Autocomplete AutoSuggest
@@ -654,6 +1138,124 @@ app.get("/api/posts", async (req, res) => {
   }
 });
 
+// --- NEW SMART AI MATCH ENGINE ENDPOINTS ---
+
+// Fetch potential matches list
+app.get("/api/matches", async (req, res) => {
+  try {
+    let matchesList: any[] = [];
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      matchesList = local.potentialMatches || [];
+    } else {
+      console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' for Potential Matches list");
+      const snapshot = await db!.collection("matches").get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Filter out legacy list documents (they have Array 'list', whereas individual matches have 'lostPostId' and 'foundPostId')
+        if (data && data.lostPostId) {
+          matchesList.push(data);
+        }
+      });
+    }
+    res.json({ success: true, matches: matchesList });
+  } catch (err: any) {
+    console.error("GET /api/matches failed:", err);
+    res.status(500).json({ error: err.message || "Failed to load matches" });
+  }
+});
+
+// Review/Dismiss potential match
+app.post("/api/matches/:matchId/review", async (req, res) => {
+  const { matchId } = req.params;
+  const { reviewed, status } = req.body;
+  try {
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      const match = (local.potentialMatches || []).find((m: any) => m.matchId === matchId);
+      if (match) {
+        if (reviewed !== undefined) match.reviewed = reviewed;
+        if (status !== undefined) match.status = status;
+        match.lastUpdated = Date.now();
+        writeLocalDB(local);
+      }
+    } else {
+      const docRef = db!.collection("matches").doc(matchId);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const updateData: any = { lastUpdated: Date.now() };
+        if (reviewed !== undefined) updateData.reviewed = reviewed;
+        if (status !== undefined) updateData.status = status;
+        await docRef.update(updateData);
+      }
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("Review match failed:", err);
+    res.status(500).json({ error: err.message || "Failed to update match" });
+  }
+});
+
+// Fetch notifications
+app.get("/api/notifications", async (req, res) => {
+  try {
+    let notificationsList: any[] = [];
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      notificationsList = local.notifications || [];
+    } else {
+      console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'notifications'");
+      const snapshot = await db!.collection("notifications").get();
+      snapshot.forEach(doc => {
+        notificationsList.push(doc.data());
+      });
+    }
+    // Sort descending by creation date
+    notificationsList.sort((a, b) => b.createdAt - a.createdAt);
+    res.json({ success: true, notifications: notificationsList });
+  } catch (err: any) {
+    console.error("GET /api/notifications failed:", err);
+    res.status(500).json({ error: err.message || "Failed to load notifications" });
+  }
+});
+
+// Mark notification as read
+app.post("/api/notifications/:id/read", async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      const notif = (local.notifications || []).find((n: any) => n.id === id);
+      if (notif) {
+        notif.read = true;
+        writeLocalDB(local);
+      }
+    } else {
+      await db!.collection("notifications").doc(id).update({ read: true });
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("Mark notification as read failed:", err);
+    res.status(500).json({ error: err.message || "Failed to mark notification as read" });
+  }
+});
+
+// Get Configuration
+app.get("/api/config", (req, res) => {
+  res.json({ success: true, matchThreshold });
+});
+
+// Update Configuration
+app.post("/api/config", (req, res) => {
+  const { threshold } = req.body;
+  if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
+    matchThreshold = threshold;
+    res.json({ success: true, matchThreshold });
+  } else {
+    res.status(400).json({ error: "Invalid threshold value. Must be between 0 and 100." });
+  }
+});
+
 // Submit a new post and save directly/exclusively to Firestore
 app.post("/api/posts", async (req, res) => {
   console.log("[DIAGNOSTIC-POST] POST /api/posts endpoint called.");
@@ -722,38 +1324,13 @@ app.post("/api/posts", async (req, res) => {
     res.json({ success: true, post: newPost });
 
     // Trigger asynchronous AI Match in background
-    console.log("[DIAGNOSTIC-POST] Triggering background runAIMatch matching algorithm...");
+    console.log("[DIAGNOSTIC-POST] Triggering background runSmartMatchEngine matching algorithm...");
     (async () => {
       try {
-        let posts: Post[] = [];
-        if (useLocalFallback) {
-          const local = readLocalDB();
-          posts = local.posts || [];
-        } else {
-          console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before fetching candidates for AI match");
-          const postsSnapshot = await db!.collection("posts").get();
-          postsSnapshot.forEach(doc => {
-            posts.push(doc.data() as Post);
-          });
-        }
-
-        const newMatches = await runAIMatch(newPost, posts);
-        console.log(`[DIAGNOSTIC-POST-BG] AI matching complete. Found matches: ${newMatches.length}`);
-        if (newMatches.length > 0) {
-          if (useLocalFallback) {
-            const local = readLocalDB();
-            local.matches[newPost.id] = newMatches;
-            writeLocalDB(local);
-          } else {
-            console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'matches' before saving matches for post ${newPost.id}`);
-            await db!.collection("matches").doc(newPost.id).set({ list: newMatches });
-          }
-          console.log(`[DIAGNOSTIC-POST-BG] Matches successfully saved.`);
-        } else {
-          console.log("[DIAGNOSTIC-POST-BG] No positive AI matches found.");
-        }
+        await runSmartMatchEngine(newPost);
+        console.log(`[DIAGNOSTIC-POST-BG] Smart AI matching complete.`);
       } catch (bgErr) {
-        console.error("[DIAGNOSTIC-POST-BG] Background matching/saving failed:", bgErr);
+        console.error("[DIAGNOSTIC-POST-BG] Smart background matching failed:", bgErr);
       }
     })();
 

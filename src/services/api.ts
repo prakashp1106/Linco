@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Post, AIMatch, Claim } from "../types";
+import { Post, AIMatch, Claim, PotentialMatch, LincoNotification } from "../types";
 
 export interface DBResponse {
   posts: Post[];
@@ -334,4 +334,80 @@ export const apiService = {
     }
     return response.json();
   },
+
+  /**
+   * Fetch all potential matches
+   */
+  async getMatches(): Promise<{ success: boolean; matches: PotentialMatch[] }> {
+    const response = await fetch("/api/matches");
+    if (!response.ok) {
+      throw new Error("Failed to fetch matches");
+    }
+    return response.json();
+  },
+
+  /**
+   * Review/Dismiss a potential match
+   */
+  async reviewMatch(matchId: string, reviewed: boolean, status?: "Active" | "Dismissed"): Promise<{ success: boolean }> {
+    const response = await fetch(`/api/matches/${matchId}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewed, status }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to review match");
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetch all in-app notifications
+   */
+  async getNotifications(): Promise<{ success: boolean; notifications: LincoNotification[] }> {
+    const response = await fetch("/api/notifications");
+    if (!response.ok) {
+      throw new Error("Failed to fetch notifications");
+    }
+    return response.json();
+  },
+
+  /**
+   * Mark a notification as read
+   */
+  async markNotificationRead(id: string): Promise<{ success: boolean }> {
+    const response = await fetch(`/api/notifications/${id}/read`, {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to mark notification as read");
+    }
+    return response.json();
+  },
+
+  /**
+   * Get match threshold configuration
+   */
+  async getConfig(): Promise<{ success: boolean; matchThreshold: number }> {
+    const response = await fetch("/api/config");
+    if (!response.ok) {
+      throw new Error("Failed to fetch configuration");
+    }
+    return response.json();
+  },
+
+  /**
+   * Update match threshold configuration
+   */
+  async updateConfig(threshold: number): Promise<{ success: boolean; matchThreshold: number }> {
+    const response = await fetch("/api/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threshold }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update configuration");
+    }
+    return response.json();
+  }
 };
