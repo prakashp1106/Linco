@@ -39,8 +39,6 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
     setErrorMsg("");
   }, [post?.id, isOpen]);
 
-  if (!isOpen || !post) return null;
-
   const handleVerifyPinAndLoadClaims = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (pin.length !== 4) {
@@ -131,19 +129,20 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        id="owner-claims-overlay"
-      >
+      {isOpen && post && (
         <motion.div
-          initial={{ scale: 0.95, y: 15 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.95, y: 15 }}
-          className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+          id="owner-claims-overlay"
         >
+          <motion.div
+            initial={{ scale: 0.95, y: 15 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, y: 15 }}
+            className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]"
+          >
           {/* Header */}
           <div className="flex justify-between items-start pb-3 border-b border-slate-800 shrink-0">
             <div>
@@ -428,6 +427,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

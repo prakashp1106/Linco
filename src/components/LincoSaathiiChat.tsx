@@ -1,6 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, MessageSquare, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { 
+  Send, 
+  MessageSquare, 
+  X, 
+  Mic, 
+  MicOff, 
+  Camera, 
+  Image as ImageIcon, 
+  Sparkles, 
+  MapPin, 
+  User, 
+  Phone, 
+  Shield, 
+  CheckCircle2, 
+  ChevronRight, 
+  ChevronLeft, 
+  AlertCircle,
+  HelpCircle,
+  HeartHandshake
+} from "lucide-react";
+import { useChat } from "../hooks/useChat";
 
 interface LincoSaathiiChatProps {
   onFieldUpdate: (fields: {
@@ -11,6 +32,9 @@ interface LincoSaathiiChatProps {
     urgency?: string;
     address?: string;
     contact?: string;
+    reward?: string;
+    securityPin?: string;
+    image?: string | null;
   }) => void;
   triggerSubmit: () => void;
   currentState: {
@@ -21,17 +45,12 @@ interface LincoSaathiiChatProps {
     urgency: string;
     address: string;
     contact: string;
+    reward?: string;
+    securityPin?: string;
+    image?: string | null;
   };
 }
 
-interface ChatMessage {
-  id: string;
-  role: "user" | "model";
-  content: string;
-  timestamp: string;
-}
-
-// Modern, futuristic SVG Robot Avatar component with clean vector styling
 const RobotAvatarIcon = ({ size = 20, className = "text-cyan-400" }: { size?: number; className?: string }) => (
   <svg
     width={size}
@@ -41,57 +60,269 @@ const RobotAvatarIcon = ({ size = 20, className = "text-cyan-400" }: { size?: nu
     xmlns="http://www.w3.org/2000/svg"
     className={className}
   >
-    {/* Antennas */}
     <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     <circle cx="12" cy="1.5" r="1.2" fill="currentColor" />
-    
-    {/* Head/Body container */}
     <rect x="4" y="5.5" width="16" height="13.5" rx="4" fill="#030817" stroke="currentColor" strokeWidth="2" />
-    
-    {/* Side Ear receivers */}
     <rect x="1.5" y="9.5" width="2" height="5.5" rx="1" fill="currentColor" />
     <rect x="20.5" y="9.5" width="2" height="5.5" rx="1" fill="currentColor" />
-    
-    {/* Double glowing eyes with purple-cyan palette */}
     <circle cx="8.5" cy="11" r="1.5" fill="#22d3ee" />
     <circle cx="15.5" cy="11" r="1.5" fill="#a78bfa" />
-    
-    {/* Friendly digital mouth display */}
     <path d="M9 15C10.2 15.8 13.8 15.8 15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    
-    {/* Neck link */}
     <rect x="10" y="19" width="4" height="2" fill="currentColor" />
   </svg>
 );
 
-import { useChat } from "../hooks/useChat";
+const CATEGORIES = [
+  { name: "Electronics", icon: "📱" },
+  { name: "Documents", icon: "📄" },
+  { name: "Wallet / Purse", icon: "👛" },
+  { name: "Keys", icon: "🔑" },
+  { name: "Pet", icon: "🐕" },
+  { name: "Bag / Luggage", icon: "🎒" },
+  { name: "Jewelry", icon: "💎" },
+  { name: "ID / Card", icon: "💳" },
+  { name: "Vehicle", icon: "🚗" },
+  { name: "Clothing", icon: "👕" },
+  { name: "Other", icon: "📦" }
+];
 
-export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
+const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
   onFieldUpdate,
   triggerSubmit,
   currentState,
 }) => {
-  const [isOpen, setIsOpen] = useState(false); // Mobile modal toggle state
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
   const [inputMessage, setInputMessage] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(true);
+  const [voiceLang, setVoiceLang] = useState<"en-IN" | "hi-IN">("en-IN");
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const voiceBaseTextRef = useRef<string>("");
+  const shouldBeListeningRef = useRef<boolean>(false);
+  const isRecognitionRunningRef = useRef<boolean>(false);
+  const lastRestartTimeRef = useRef<number>(0);
 
   const { messages, setMessages, chatLoading, sendMessage: sendChatMessage } = useChat();
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, chatLoading]);
+  }, [messages, isThinking, chatLoading]);
 
-  const sendMessage = async (customText?: string) => {
+  // Lock background scrolling when open and clean up voice session when closed
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      // Stopped chatting, clean up voice session
+      shouldBeListeningRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
+      setIsListening(false);
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  // Cleanup active voice session if component unmounts and check support
+  useEffect(() => {
+    setIsVoiceSupported(checkSpeechSupport());
+    return () => {
+      shouldBeListeningRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // safe ignore
+        }
+      }
+    };
+  }, []);
+
+  // Safe check for Speech Recognition availability
+  const checkSpeechSupport = (): boolean => {
+    if (typeof window === "undefined") return false;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    return !!SpeechRecognition;
+  };
+
+  const toggleListening = () => {
+    setVoiceError(null);
+    if (!checkSpeechSupport()) {
+      setVoiceError("Speech recognition is not supported in this browser. Try Google Chrome or Safari.");
+      setIsVoiceSupported(false);
+      return;
+    }
+
+    try {
+      if (shouldBeListeningRef.current || isListening) {
+        // User manually clicked Stop
+        shouldBeListeningRef.current = false;
+        setIsListening(false);
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch (e) {
+            console.error("Error stopping recognition:", e);
+          }
+        }
+        return;
+      }
+
+      // Start continuous speech recognition session
+      voiceBaseTextRef.current = inputMessage.trim();
+      shouldBeListeningRef.current = true;
+      setIsListening(true);
+
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = voiceLang;
+
+      rec.onstart = () => {
+        isRecognitionRunningRef.current = true;
+        setIsListening(true);
+        setVoiceError(null);
+      };
+
+      rec.onresult = (event: any) => {
+        try {
+          let accumulatedSessionText = "";
+          for (let i = 0; i < event.results.length; i++) {
+            accumulatedSessionText += event.results[i][0].transcript;
+          }
+          const base = voiceBaseTextRef.current;
+          setInputMessage(base ? `${base} ${accumulatedSessionText.trim()}` : accumulatedSessionText.trim());
+        } catch (resErr) {
+          console.error("Speech result parsing error:", resErr);
+        }
+      };
+
+      rec.onerror = (event: any) => {
+        console.error("Speech Recognition Error event:", event);
+        
+        const unrecoverableErrors = ["not-allowed", "service-not-allowed", "language-not-supported"];
+        const isUnrecoverable = unrecoverableErrors.includes(event.error);
+
+        if (isUnrecoverable) {
+          shouldBeListeningRef.current = false;
+          setIsListening(false);
+          if (event.error === "not-allowed") {
+            setVoiceError("Microphone permission denied. Please allow microphone access in your browser settings.");
+          } else {
+            setVoiceError(`Voice input failed: ${event.error || "unavailable"}`);
+          }
+        } else {
+          // Soft errors like no-speech, network or aborted: log it without blocking
+          if (event.error === "no-speech") {
+            console.log("Speech recognition timeout (no-speech).");
+          } else if (event.error === "aborted") {
+            console.log("Speech recognition aborted.");
+          } else {
+            setVoiceError(`Notice: ${event.error || "connection brief interruption"}`);
+          }
+        }
+      };
+
+      rec.onend = () => {
+        isRecognitionRunningRef.current = false;
+        
+        // If we should still be listening, restart the service automatically with a safety cooldown
+        if (shouldBeListeningRef.current) {
+          const now = Date.now();
+          // Throttling restarts to prevent infinite fast-beeping loops
+          const delay = now - lastRestartTimeRef.current < 2000 ? 2000 : 100;
+          
+          console.log(`Speech recognition ended. Auto-restarting in ${delay}ms...`);
+          setTimeout(() => {
+            if (shouldBeListeningRef.current && !isRecognitionRunningRef.current) {
+              try {
+                lastRestartTimeRef.current = Date.now();
+                rec.start();
+              } catch (startErr) {
+                console.error("Error restarting speech recognition:", startErr);
+              }
+            }
+          }, delay);
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognitionRef.current = rec;
+      lastRestartTimeRef.current = Date.now();
+      rec.start();
+    } catch (err: any) {
+      console.error("Failed to start speech recognition:", err);
+      setIsListening(false);
+      shouldBeListeningRef.current = false;
+      isRecognitionRunningRef.current = false;
+      setVoiceError("Could not start microphone module: " + (err.message || "unknown issue"));
+    }
+  };
+
+  // Determine current active step based on empty fields dynamically
+  useEffect(() => {
+    if (!currentState.type) {
+      setActiveStep(1);
+    } else if (!currentState.item || !currentState.category) {
+      setActiveStep(2);
+    } else if (!currentState.address) {
+      setActiveStep(3);
+    } else if (!currentState.details) {
+      setActiveStep(4);
+    } else if (currentState.type === "Lost" && currentState.reward === undefined) {
+      setActiveStep(5);
+    } else if (!currentState.image) {
+      setActiveStep(6);
+    } else if (!currentState.contact || !currentState.securityPin) {
+      setActiveStep(7);
+    } else {
+      setActiveStep(8);
+    }
+  }, [currentState]);
+
+  const handleSendMessage = async (customText?: string) => {
+    // Stop voice recognition when a message is sent
+    if (shouldBeListeningRef.current) {
+      shouldBeListeningRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
+      setIsListening(false);
+    }
+
     const textToSend = customText || inputMessage;
-    if (!textToSend.trim() || chatLoading) return;
+    if (!textToSend.trim() || chatLoading || isThinking) return;
 
     if (!customText) setInputMessage("");
 
+    setIsThinking(true);
+
     try {
+      // Call standard useChat hook to append the user message and query Gemini on server
       const data = await sendChatMessage(textToSend, currentState as any);
 
-      // If fields were extracted, update the main form!
+      // Extract and update fields from Gemini
       if (data.extractedFields) {
         const cleanedFields: any = {};
         Object.keys(data.extractedFields).forEach((key) => {
@@ -101,7 +332,6 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
           }
         });
         
-        // Ensure urgency is mapped correctly to our accepted state
         if (cleanedFields.urgency) {
           const urgLower = String(cleanedFields.urgency).toLowerCase();
           if (urgLower.includes("id")) {
@@ -120,215 +350,724 @@ export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = ({
         }
       }
 
-      // If user approved, auto-submit!
+      // If user approved, auto-submit
       if (data.shouldAutoSubmit) {
         setMessages((prev) => [
           ...prev,
           {
             id: (Date.now() + 2).toString(),
             role: "model",
-            content: "⚡ Perfect! Main aapka post abhi publish kar raha hoon...",
+            content: "⚡ Perfect! I am publishing your report now...",
             timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
         setTimeout(() => {
           triggerSubmit();
-        }, 1500);
+          setIsOpen(false);
+        }, 1200);
       }
-    } catch (err: any) {
-      console.error("Failed to send chatbot message:", err);
+    } catch (err) {
+      console.error("AI Assistant response error:", err);
+    } finally {
+      setIsThinking(false);
     }
   };
 
-  const renderChatContent = () => (
-    <div className="flex flex-col h-full bg-slate-950/45 border border-slate-900/90 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl relative">
-      {/* Top Banner with premium alignment and glow */}
-      <div className="p-3.5 bg-gradient-to-r from-violet-950/20 via-slate-950/50 to-cyan-950/20 border-b border-slate-900/80 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Cyber robot avatar with a breathing glow */}
-          <div className="relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[4px] animate-pulse opacity-60" />
-            <div className="w-9 h-9 rounded-2xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-lg shadow-violet-500/10">
-              <RobotAvatarIcon size={22} className="text-cyan-400 animate-pulse" />
-            </div>
-            {/* Pulsing online badge right on avatar corner */}
-            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-slate-950 bg-emerald-500 z-20"></span>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-display font-extrabold text-xs sm:text-sm text-slate-100 tracking-wide">LincoSaathii</span>
-              <span className="text-[8px] font-black uppercase tracking-wider bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded-md leading-none">
-                AI Friend
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-500 font-semibold mt-0.5 leading-none">Your Lost & Found Guide</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[9px] text-emerald-400 font-mono font-extrabold uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Online</span>
-          
-          {/* Close button for mobile modal layout */}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="lg:hidden p-1 text-slate-400 hover:text-slate-200 transition bg-slate-950/40 rounded-lg border border-slate-900 ml-1"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      </div>
+  const handleSelectType = (type: "Lost" | "Found") => {
+    onFieldUpdate({ type });
+    const userMsg = {
+      id: `user_type_${Date.now()}`,
+      role: "user" as const,
+      content: `I ${type === "Lost" ? "lost" : "found"} an item.`,
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    };
+    const botMsg = {
+      id: `bot_type_${Date.now()}`,
+      role: "model" as const,
+      content: type === "Lost" 
+        ? "Oh no! Pareshan mat ho, we will find it together. What item did you lose? Choose a category or type below."
+        : "Excellent gesture! Helping others is fantastic. What item did you find? Choose a category or type below.",
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    };
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+  };
 
-      {/* Message Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-        {messages.map((m) => {
-          const isModel = m.role === "model";
-          return (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`flex gap-2.5 ${isModel ? "justify-start" : "justify-end"}`}
-            >
-              {isModel && (
-                <div className="relative shrink-0 mt-0.5">
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[2px] opacity-70"></div>
-                  <div className="w-7 h-7 rounded-xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
-                    <RobotAvatarIcon size={15} />
-                  </div>
-                </div>
-              )}
-              <div className="max-w-[85%]">
-                <div
-                  className={`px-4 py-3 rounded-2xl text-xs md:text-[13px] leading-relaxed ${
-                    isModel
-                      ? "bg-slate-900/60 border border-slate-800/80 text-slate-100 rounded-tl-sm shadow-md font-medium"
-                      : "bg-gradient-to-r from-cyan-500/10 to-violet-600/15 border border-cyan-500/20 text-cyan-200 font-semibold rounded-tr-sm shadow-lg shadow-cyan-500/5"
-                  }`}
-                  style={{ whiteSpace: "pre-line" }}
-                >
-                  {m.content}
-                </div>
-                <span className={`text-[8.5px] text-slate-600 font-semibold block mt-1.5 ${!isModel ? "text-right" : ""}`}>
-                  {m.timestamp}
-                </span>
-              </div>
-            </motion.div>
-          );
-        })}
-        {messages.length === 1 && (
-          <div className="flex flex-wrap gap-1.5 pl-9 pt-1 pb-2">
-            <button
-              type="button"
-              onClick={() => sendMessage("Bhai mera wallet kho gaya hai :(")}
-              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              👛 Wallet kho gaya
-            </button>
-            <button
-              type="button"
-              onClick={() => sendMessage("Mujhe ek laptop charger mila hai desk par.")}
-              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              🔌 Charger mila hai
-            </button>
-            <button
-              type="button"
-              onClick={() => sendMessage("Mera dog park se ghum ho gaya hai.")}
-              className="px-3 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/30 text-[10px] text-slate-300 font-bold transition duration-150 shadow-sm cursor-pointer"
-            >
-              🐶 Pet lost status
-            </button>
-          </div>
-        )}
-        {chatLoading && (
-          <div className="flex gap-2.5 justify-start">
-            <div className="relative shrink-0 animate-pulse mt-0.5">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[2px] opacity-70"></div>
-              <div className="w-7 h-7 rounded-xl bg-slate-950 border border-cyan-500/30 p-1 relative z-10 flex items-center justify-center shadow-md">
-                <RobotAvatarIcon size={15} />
-              </div>
-            </div>
-            <div className="px-4 py-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl rounded-tl-sm shadow-md flex items-center gap-1.5 backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
- 
-      {/* Input Form scaled down with custom styling and neat typography */}
-      <div className="p-3.5 bg-slate-950/90 border-t border-slate-900/80">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage();
-          }}
-          className="flex gap-2"
-        >
-          <input
-            type="text"
-            placeholder="LincoSaathii se baat karein..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            disabled={chatLoading}
-            className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 focus:border-cyan-500/40 text-xs text-slate-200 outline-none placeholder:text-slate-600 transition"
-          />
-          <button
-            type="submit"
-            disabled={chatLoading || !inputMessage.trim()}
-            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-150 flex items-center justify-center shrink-0 disabled:opacity-40 cursor-pointer shadow-md"
-          >
-            <Send size={14} />
-          </button>
-        </form>
-        <p className="text-[7.5px] sm:text-[8px] text-slate-600 text-center mt-2.5 font-mono tracking-widest uppercase leading-snug">
-          LINCO SAATHII AUTOMATED INPUT FORM POPULATION SYSTEM
-        </p>
-      </div>
-    </div>
-  );
- 
+  const handleSelectCategory = (category: string) => {
+    onFieldUpdate({ category, item: category });
+    const userMsg = {
+      id: `user_cat_${Date.now()}`,
+      role: "user" as const,
+      content: `Category is ${category}.`,
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    };
+    const botMsg = {
+      id: `bot_cat_${Date.now()}`,
+      role: "model" as const,
+      content: `Got it! Added to ${category}. Now, where did this happen? (approximate location/address)`,
+      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    };
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        onFieldUpdate({ address: `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}` });
+        const userMsg = {
+          id: `user_loc_${Date.now()}`,
+          role: "user" as const,
+          content: `📍 Location coordinate lock: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        };
+        const botMsg = {
+          id: `bot_loc_${Date.now()}`,
+          role: "model" as const,
+          content: "Perfect location lock! Now, can you describe the item briefly? Any colors, brands, unique marks?",
+          timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, userMsg, botMsg]);
+      },
+      (err) => {
+        console.error("GPS Error:", err);
+        alert("Could not retrieve GPS coordinates. Please type the location.");
+      }
+    );
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      onFieldUpdate({ image: base64 });
+      
+      const userMsg = {
+        id: `user_img_${Date.now()}`,
+        role: "user" as const,
+        content: `📸 Uploaded image: ${file.name}`,
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      };
+      const botMsg = {
+        id: `bot_img_${Date.now()}`,
+        role: "model" as const,
+        content: "Awesome, photo received! This will help our backend matching algorithms scan visually. Let's get your contact number next.",
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, userMsg, botMsg]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleManualNextStep = () => {
+    setActiveStep((prev) => Math.min(8, prev + 1));
+  };
+
+  const handleManualPrevStep = () => {
+    setActiveStep((prev) => Math.max(1, prev - 1));
+  };
+
   return (
     <>
-      {/* 1. DESKTOP PERMANENT PANEL SIDEBAR */}
-      <div className="hidden lg:block h-[560px]">
-        {renderChatContent()}
+      {/* 1. SIDEBAR PROMO CARD (REPLACES CRAMPED SIDEBAR CHAT) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-4">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[4px] animate-pulse opacity-50" />
+            <div className="w-10 h-10 rounded-2xl bg-slate-950 border border-cyan-500/30 p-1.5 relative z-10 flex items-center justify-center">
+              <RobotAvatarIcon size={24} className="text-cyan-400" />
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-extrabold text-slate-100 tracking-wide flex items-center gap-1.5 font-sans">
+              LINCO Sathi
+              <span className="text-[9px] font-bold uppercase tracking-widest bg-cyan-400/10 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-400/20">AI Assistant</span>
+            </h4>
+            <p className="text-xs text-slate-500 font-medium">Your Conversational Companion</p>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed font-sans font-medium">
+          Report your lost or found item in under 60 seconds. Speak or type in Hinglish, Hindi, or English. Our AI automatically extracts fields, reverse-geocodes locations, and formats your entry.
+        </p>
+
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-600 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-lg shadow-cyan-500/10 cursor-pointer flex items-center justify-center gap-2 border border-cyan-400/20 active:scale-[0.98]"
+        >
+          <Sparkles size={14} className="animate-pulse" />
+          Start AI Report Assistant
+        </button>
       </div>
- 
-      {/* 2. MOBILE FLOATING ACTION BUTTON */}
-      <div className="lg:hidden fixed bottom-6 right-6 z-50">
+
+      {/* 2. FLOATING ACTION BUTTON FOR MOBILE AND QUICK LAUNCH */}
+      <div className="fixed bottom-6 right-6 z-40">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-violet-600 text-slate-950 flex items-center justify-center shadow-2xl relative group"
+          className="w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-violet-600 text-slate-950 flex items-center justify-center shadow-2xl relative group cursor-pointer border border-cyan-400/30"
+          title="Open AI Assistant"
         >
           <span className="absolute -top-1 -right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
           </span>
-          <RobotAvatarIcon size={24} className="text-[#020817] group-hover:rotate-12 transition-transform duration-200" />
+          <RobotAvatarIcon size={24} className="text-slate-950 group-hover:rotate-12 transition-transform duration-200" />
         </motion.button>
       </div>
- 
-      {/* 3. MOBILE MODAL DRAWER OVERLAY */}
-      <AnimatePresence>
-        {isOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 bg-[#000]/60 backdrop-blur-md flex items-end justify-center p-4">
+
+      {/* Hidden file inputs */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleImageFileChange} 
+        accept="image/*" 
+        className="hidden" 
+      />
+      <input 
+        type="file" 
+        ref={cameraInputRef} 
+        onChange={handleImageFileChange} 
+        accept="image/*" 
+        capture="environment" 
+        className="hidden" 
+      />
+
+      {/* 3. FULL-SCREEN AI ASSISTANT MODAL */}
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {isOpen && (
             <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md h-[460px] sm:h-[520px] max-h-[85vh] relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              id="fullscreen-assistant-overlay"
+              className="fixed inset-0 z-[999999] bg-[#030712] w-screen h-[100dvh] flex flex-col overflow-hidden select-none"
+              style={{
+                height: "100dvh",
+                width: "100vw",
+                paddingTop: "env(safe-area-inset-top, 0px)",
+                paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                paddingLeft: "env(safe-area-inset-left, 0px)",
+                paddingRight: "env(safe-area-inset-right, 0px)",
+              }}
             >
-              {renderChatContent()}
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900 border border-cyan-500/20 flex items-center justify-center">
+                    <RobotAvatarIcon size={20} className="text-cyan-400 animate-pulse" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-slate-100 tracking-wide flex items-center gap-1.5 uppercase font-mono">
+                      🤖 LINCO Sathi
+                    </h2>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Your AI Lost & Found Assistant</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  {/* Step Progress indicator */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">Onboarding Progress</p>
+                      <p className="text-xs text-cyan-400 font-black tracking-widest mt-0.5 font-mono">Step {activeStep} of 8</p>
+                    </div>
+                    <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all duration-300"
+                        style={{ width: `${(activeStep / 8) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Close button */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-100 border border-slate-800 transition duration-200 cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress bar for mobile */}
+              <div className="sm:hidden w-full h-[3px] bg-slate-950 shrink-0">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all duration-300"
+                  style={{ width: `${(activeStep / 8) * 100}%` }}
+                />
+              </div>
+
+              {/* Split Content Pane: Listing preview on Left, Chat window on Right */}
+              <div className="flex-1 flex overflow-hidden">
+                {/* Left Preview Pane (Desktop Only) */}
+                <div className="hidden md:flex w-[320px] border-r border-slate-800/80 bg-slate-950/40 p-6 flex-col justify-between shrink-0 overflow-y-auto">
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 font-mono">Real-time Draft Preview</h3>
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" />
+                    </div>
+
+                    {/* Listing Card */}
+                    <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 space-y-4 shadow-xl">
+                      {/* Image preview */}
+                      <div className="aspect-video w-full rounded-xl bg-slate-950 border border-slate-800/50 flex items-center justify-center overflow-hidden relative group">
+                        {currentState.image ? (
+                          <img src={currentState.image} alt="Draft uploaded" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center text-slate-600">
+                            <ImageIcon size={24} className="opacity-60 mb-1" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest font-mono">No Image Uploaded</span>
+                          </div>
+                        )}
+                        <span className="absolute top-2 left-2 text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950/80 border border-slate-800 text-slate-400">
+                          {currentState.type || "Lost"}
+                        </span>
+                      </div>
+
+                      {/* Info details */}
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">Item / Category</p>
+                          <h4 className="text-xs font-extrabold text-slate-200 mt-0.5 truncate">
+                            {currentState.item || "Untitled Item Draft"}
+                          </h4>
+                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 bg-slate-950 rounded text-slate-400 mt-1">
+                            {currentState.category || "Unassigned"}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">📍 Location</p>
+                          <p className="text-[11px] text-slate-300 font-semibold mt-0.5 truncate flex items-center gap-1">
+                            <MapPin size={10} className="text-cyan-400 shrink-0" />
+                            {currentState.address || "Not specified yet"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">📝 Details</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">
+                            {currentState.details || "Provide additional markings or descriptors..."}
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-800/50 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                          <span className="text-slate-500">Security PIN</span>
+                          <span className="text-slate-300 font-mono tracking-widest">
+                            {currentState.securityPin ? "****" : "Unset"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[9px] text-slate-600 font-mono tracking-widest text-center mt-4">
+                    LINCO AI ENCRYPTION STANDARD
+                  </div>
+                </div>
+
+                {/* Right Chat Area (Main Window) */}
+                <div className="flex-1 flex flex-col bg-slate-950/20 overflow-hidden relative">
+                  {/* Messages container */}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin select-text">
+                    
+                    {/* Welcome message wrapper */}
+                    <div className="max-w-2xl mx-auto space-y-4">
+                      {messages.map((m) => {
+                        const isModel = m.role === "model";
+                        return (
+                          <div 
+                            key={m.id}
+                            className={`flex gap-3.5 ${isModel ? "justify-start" : "justify-end"}`}
+                          >
+                            {isModel && (
+                              <div className="w-8 h-8 rounded-lg bg-slate-900 border border-cyan-500/10 flex items-center justify-center shrink-0 shadow">
+                                <RobotAvatarIcon size={16} />
+                              </div>
+                            )}
+                            <div className="max-w-[80%]">
+                              <div 
+                                className={`px-4 py-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+                                  isModel 
+                                    ? "bg-slate-900 text-slate-100 border border-slate-800/60 rounded-tl-sm font-medium" 
+                                    : "bg-gradient-to-r from-cyan-500/15 to-violet-600/15 border border-cyan-500/20 text-cyan-100 font-semibold rounded-tr-sm"
+                                }`}
+                                style={{ whiteSpace: "pre-line" }}
+                              >
+                                {m.content}
+                              </div>
+                              <span className={`text-[9px] text-slate-600 mt-1 block font-mono ${!isModel ? "text-right" : ""}`}>
+                                {m.timestamp}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Display Guided onboarding interactive pills based on current step */}
+                      <div className="pl-11 pt-1">
+                        {activeStep === 1 && (
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={() => handleSelectType("Lost")}
+                              className="px-5 py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow-md"
+                            >
+                              🔴 Lost Item
+                            </button>
+                            <button
+                              onClick={() => handleSelectType("Found")}
+                              className="px-5 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow-md"
+                            >
+                              🟢 Found Item
+                            </button>
+                          </div>
+                        )}
+
+                        {activeStep === 2 && (
+                          <div className="space-y-3">
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Suggested item categories</p>
+                            <div className="flex flex-wrap gap-2">
+                              {CATEGORIES.map((cat) => (
+                                <button
+                                  key={cat.name}
+                                  onClick={() => handleSelectCategory(cat.name)}
+                                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800/80 border border-slate-800/80 text-slate-300 hover:text-slate-100 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+                                >
+                                  <span>{cat.icon}</span>
+                                  <span>{cat.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {activeStep === 3 && (
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={handleUseCurrentLocation}
+                              className="px-4 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow"
+                            >
+                              <MapPin size={14} className="animate-pulse" />
+                              Use My Current GPS Location
+                            </button>
+                            <button
+                              onClick={() => setInputMessage("Pune Station")}
+                              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 text-xs font-bold transition cursor-pointer"
+                            >
+                              Pune Station
+                            </button>
+                            <button
+                              onClick={() => setInputMessage("Baner, Pune")}
+                              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 text-xs font-bold transition cursor-pointer"
+                            >
+                              Baner, Pune
+                            </button>
+                          </div>
+                        )}
+
+                        {activeStep === 5 && (
+                          <div className="space-y-3">
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Set Urgency Level</p>
+                            <div className="flex flex-wrap gap-2">
+                              {["Normal", "Contains ID", "Urgent", "Critical"].map((urg) => (
+                                <button
+                                  key={urg}
+                                  onClick={() => {
+                                    onFieldUpdate({ urgency: urg });
+                                    handleSendMessage(`Set urgency level to ${urg}`);
+                                  }}
+                                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+                                >
+                                  {urg}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {activeStep === 6 && (
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              onClick={() => cameraInputRef.current?.click()}
+                              className="px-4 py-3 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 text-violet-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2"
+                            >
+                              <Camera size={14} />
+                              Take Live Photo
+                            </button>
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2"
+                            >
+                              <ImageIcon size={14} />
+                              Choose from Gallery
+                            </button>
+                            <button
+                              onClick={() => {
+                                onFieldUpdate({ image: null });
+                                handleSendMessage("Skip photo upload");
+                              }}
+                              className="px-4 py-3 rounded-xl bg-slate-950/40 hover:bg-slate-900 border border-transparent text-slate-500 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer"
+                            >
+                              Skip Photo
+                            </button>
+                          </div>
+                        )}
+
+                        {activeStep === 8 && (
+                          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md space-y-4 shadow-xl">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 size={18} className="text-emerald-400" />
+                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">Onboarding Review Completed!</h4>
+                            </div>
+                            
+                            <div className="space-y-1.5 text-xs text-slate-400 leading-relaxed font-sans">
+                              <p>• <span className="font-bold text-slate-300">Type:</span> {currentState.type}</p>
+                              <p>• <span className="font-bold text-slate-300">Item:</span> {currentState.item}</p>
+                              <p>• <span className="font-bold text-slate-300">Category:</span> {currentState.category}</p>
+                              <p>• <span className="font-bold text-slate-300">Location:</span> {currentState.address}</p>
+                              <p>• <span className="font-bold text-slate-300">Contact:</span> {currentState.contact}</p>
+                              <p>• <span className="font-bold text-slate-300">Security PIN:</span> {currentState.securityPin || "0000"}</p>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setMessages((prev) => [
+                                  ...prev,
+                                  {
+                                    id: `confirm_${Date.now()}`,
+                                    role: "user",
+                                    content: "Yes, publish my lost and found listing!",
+                                    timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+                                  },
+                                ]);
+                                setTimeout(() => {
+                                  triggerSubmit();
+                                  setIsOpen(false);
+                                }, 800);
+                              }}
+                              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-lg cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                            >
+                              ⚡ Publish Post Now
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Thinking Shimmer Loading Indicator */}
+                      {(isThinking || chatLoading) && (
+                        <div className="flex gap-3.5 justify-start">
+                          <div className="w-8 h-8 rounded-lg bg-slate-900 border border-cyan-500/10 flex items-center justify-center shrink-0">
+                            <RobotAvatarIcon size={16} />
+                          </div>
+                          <div className="max-w-[80%]">
+                            <div className="px-4 py-3 bg-slate-900 border border-slate-800/80 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2">
+                              <span className="text-xs text-slate-400 font-mono font-medium animate-pulse">LINCO Sathi is thinking...</span>
+                              <div className="flex gap-1 items-center">
+                                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                                <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Manual pagination/navigation bar for conversational steps */}
+                  <div className="px-6 py-2 border-t border-b border-slate-900 bg-slate-950/45 flex items-center justify-between text-xs font-bold text-slate-500 shrink-0">
+                    <button
+                      onClick={handleManualPrevStep}
+                      disabled={activeStep === 1}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800/40 text-slate-400 disabled:opacity-30 cursor-pointer"
+                    >
+                      <ChevronLeft size={14} />
+                      Back
+                    </button>
+                    <span className="font-mono text-[10px] tracking-widest uppercase">Conversational step {activeStep} of 8</span>
+                    <button
+                      onClick={handleManualNextStep}
+                      disabled={activeStep === 8}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800/40 text-slate-400 disabled:opacity-30 cursor-pointer"
+                    >
+                      Next
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+
+                  {/* Input Form Area */}
+                  <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/85 backdrop-blur shrink-0">
+                    <div className="max-w-2xl mx-auto">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }}
+                        className="relative flex items-center"
+                      >
+                        {/* Dynamic Exception-safe Voice Error Banner */}
+                        {voiceError && (
+                          <div className="absolute bottom-full mb-3 left-0 right-0 mx-auto w-max max-w-[95%] bg-rose-950/95 border border-rose-500/40 px-4 py-2 rounded-2xl text-rose-200 text-xs font-semibold flex items-center gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-20">
+                            <AlertCircle size={14} className="text-rose-400 shrink-0" />
+                            <span>{voiceError}</span>
+                            <button
+                              type="button"
+                              onClick={() => setVoiceError(null)}
+                              className="p-0.5 rounded hover:bg-rose-900/50 text-rose-400 hover:text-rose-200 transition duration-150 ml-2"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        )}
+                        {/* Interactive Left Side Actions (Voice, Camera, Upload) */}
+                        <div className="absolute left-3 flex items-center gap-1.5 sm:gap-2 z-10">
+                          {/* Microphone Voice Button */}
+                          <button
+                            type="button"
+                            onClick={toggleListening}
+                            disabled={!isVoiceSupported}
+                            className={`p-2 rounded-xl transition duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                              isListening 
+                                ? "bg-rose-500 text-slate-100 animate-pulse shadow-md shadow-rose-500/20" 
+                                : "bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                            }`}
+                            title={!isVoiceSupported ? "Voice input not supported in this browser" : isListening ? "Stop Listening" : "Speak Message"}
+                          >
+                            {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+                          </button>
+
+                          {/* Language selector toggle if voice supported */}
+                          {isVoiceSupported && (
+                            <button
+                              type="button"
+                              onClick={() => setVoiceLang((prev) => (prev === "en-IN" ? "hi-IN" : "en-IN"))}
+                              className="text-[9px] font-black tracking-wider px-1.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-slate-850 rounded-lg select-none transition duration-150 shrink-0"
+                              title="Toggle Language: English (en-IN) / Hindi (hi-IN)"
+                            >
+                              {voiceLang === "en-IN" ? "EN" : "HI"}
+                            </button>
+                          )}
+
+                          {/* Camera Button */}
+                          <button
+                            type="button"
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition duration-200 cursor-pointer"
+                            title="Take Live Camera Shot"
+                          >
+                            <Camera size={15} />
+                          </button>
+
+                          {/* Gallery Button */}
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition duration-200 cursor-pointer"
+                            title="Upload from Gallery"
+                          >
+                            <ImageIcon size={15} />
+                          </button>
+                        </div>
+
+                        {/* Input Area */}
+                        <input
+                          type="text"
+                          placeholder={isListening ? "Listening... Speak your message now." : "Bhai lost/found item details type kijiye ya míc use karein..."}
+                          value={inputMessage}
+                          onChange={(e) => setInputMessage(e.target.value)}
+                          disabled={isThinking || chatLoading}
+                          className="w-full pl-36 pr-14 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
+                        />
+
+                        {/* Send Button */}
+                        <button
+                          type="submit"
+                          disabled={isThinking || chatLoading || !inputMessage.trim()}
+                          className="absolute right-3 p-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-200 disabled:opacity-30 cursor-pointer shadow"
+                          title="Send Message"
+                        >
+                          <Send size={14} />
+                        </button>
+                      </form>
+
+                      {/* Small Info line */}
+                      <p className="text-[8px] text-slate-600 text-center mt-2.5 font-mono tracking-widest uppercase select-none">
+                        LINCO Conversational Intelligence Core Model 3.5
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
+  );
+};
+
+class LincoSaathiiErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("LincoSaathiiChat caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-rose-950/20 border border-rose-500/30 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center gap-2 text-rose-400">
+            <AlertCircle size={20} />
+            <h4 className="font-bold text-sm">LINCO Sathi Error</h4>
+          </div>
+          <p className="text-xs text-rose-300">
+            Something went wrong while loading the chatbot assistant. Please refresh the page or try again.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-xl text-xs transition duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export const LincoSaathiiChat: React.FC<LincoSaathiiChatProps> = (props) => {
+  return (
+    <LincoSaathiiErrorBoundary>
+      <LincoSaathiiChatInner {...props} />
+    </LincoSaathiiErrorBoundary>
   );
 };

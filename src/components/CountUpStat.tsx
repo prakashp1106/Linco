@@ -35,5 +35,5 @@ export const CountUpStat: React.FC<CountUpStatProps> = ({ value, color }) => {
     return () => clearInterval(timer);
   }, [value]);
 
-  return <span className={`text-xl font-extrabold block ${color}`}>{displayValue}</span>;
+  return <span className={`text-xl font-extrabold block tabular-nums ${color}`}>{displayValue}</span>;
 };

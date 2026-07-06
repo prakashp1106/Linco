@@ -42,23 +42,22 @@ export const PinModal: React.FC<PinModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        id="pin-modal-overlay"
-      >
+      {isOpen && (
         <motion.div
-          initial={{ scale: 0.95, y: 15 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.95, y: 15 }}
-          className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-900 overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+          id="pin-modal-overlay"
         >
+          <motion.div
+            initial={{ scale: 0.95, y: 15 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, y: 15 }}
+            className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-900 overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]"
+          >
           {/* Header */}
           <div className="p-4 border-b border-slate-900 bg-slate-950 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -130,6 +129,7 @@ export const PinModal: React.FC<PinModalProps> = ({
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

@@ -908,7 +908,7 @@ export default function App() {
           </p>
 
           {/* Typewriter text */}
-          <div className="h-6 flex justify-center items-center mb-1">
+          <div className="min-h-[2rem] sm:min-h-[1.5rem] flex justify-center items-center mb-1">
             <p className="text-xs text-slate-400 font-medium">
               {typewriterText}
               <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
@@ -1132,6 +1132,9 @@ export default function App() {
                     if (fields.urgency) form.setFUrgency(fields.urgency as any);
                     if (fields.address) form.setFAddress(fields.address);
                     if (fields.contact) form.setFContact(fields.contact);
+                    if (fields.reward !== undefined) form.setFReward(fields.reward || "");
+                    if (fields.securityPin) form.setFSecurityPin(fields.securityPin);
+                    if (fields.image !== undefined) form.setFImage(fields.image);
                   }}
                   triggerSubmit={async () => {
                     if (!form.validateStep1()) {
@@ -1178,6 +1181,9 @@ export default function App() {
                     urgency: form.fUrgency,
                     address: form.fAddress,
                     contact: form.fContact,
+                    reward: form.fReward,
+                    securityPin: form.fSecurityPin,
+                    image: form.fImage,
                   }}
                 />
 

@@ -256,9 +256,32 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
       {/* Main Grid View */}
       {loading ? (
-        <div className="py-20 text-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 font-mono">Running forensic comparison loops...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="bg-slate-950/80 rounded-2xl border border-slate-900 p-5 space-y-4 animate-pulse relative overflow-hidden flex flex-col justify-between h-[280px]">
+              <div className="absolute top-0 left-0 w-full h-[1.5px] bg-slate-800" />
+              <div className="flex justify-between items-center pb-2 border-b border-slate-900/40">
+                <div className="h-4 w-16 bg-slate-900 rounded" />
+                <div className="h-4 w-20 bg-slate-900 rounded" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-900/60">
+                <div className="p-2.5 rounded-xl border border-slate-900 space-y-2.5">
+                  <div className="h-3 w-10 bg-slate-900 rounded" />
+                  <div className="h-16 bg-slate-900 rounded-lg" />
+                  <div className="h-3 w-16 bg-slate-900 rounded" />
+                </div>
+                <div className="p-2.5 rounded-xl border border-slate-900 space-y-2.5">
+                  <div className="h-3 w-10 bg-slate-900 rounded" />
+                  <div className="h-16 bg-slate-900 rounded-lg" />
+                  <div className="h-3 w-16 bg-slate-900 rounded" />
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <div className="h-4 w-24 bg-slate-900 rounded" />
+                <div className="h-8 w-24 bg-slate-900 rounded-lg" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredMatches.length === 0 ? (
         <div className="bg-slate-950/30 border border-slate-900/60 rounded-3xl p-12 text-center max-w-xl mx-auto space-y-4">

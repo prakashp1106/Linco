@@ -62,7 +62,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end" id="notification-center-overlay">
+        <motion.div className="fixed inset-0 z-50 flex justify-end" id="notification-center-overlay">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -77,7 +77,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
             className="relative w-full max-w-md bg-slate-950 border-l border-slate-900 h-full flex flex-col shadow-2xl z-10"
           >
             {/* Header */}
@@ -199,7 +199,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               )}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

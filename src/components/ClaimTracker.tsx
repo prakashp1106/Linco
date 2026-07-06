@@ -88,23 +88,22 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        id="claim-tracker-overlay"
-      >
+      {isOpen && (
         <motion.div
-          initial={{ scale: 0.95, y: 15 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.95, y: 15 }}
-          className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 w-full max-w-md shadow-2xl relative overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+          id="claim-tracker-overlay"
         >
+          <motion.div
+            initial={{ scale: 0.95, y: 15 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, y: 15 }}
+            className="bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 w-full max-w-md shadow-2xl relative overflow-hidden"
+          >
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -322,6 +321,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
           )}
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };
