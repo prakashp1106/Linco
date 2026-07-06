@@ -266,7 +266,7 @@ export const apiService = {
    */
   async submitClaim(
     postId: string,
-    claimData: { claimantName: string; claimantContact: string; questions: string[]; answers: string[] }
+    claimData: { claimantName: string; claimantContact: string; questions: string[]; answers: string[]; matchedPostId?: string }
   ): Promise<{ success: boolean; claim: Claim }> {
     const response = await fetch(`/api/posts/${postId}/claims`, {
       method: "POST",

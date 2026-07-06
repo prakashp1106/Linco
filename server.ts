@@ -1945,11 +1945,33 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
       const idx = local.posts.findIndex((p: Post) => p.id === id);
       if (idx !== -1) {
         local.posts[idx] = post;
-        writeLocalDB(local);
       }
+      
+      // Cascade resolved status to approved or contact-unlocked claims
+      if (local.claims) {
+        for (const cl of local.claims) {
+          if (cl.postId === id && (cl.status === "Approved" || cl.status === "Contact Unlocked")) {
+            const oldStatus = cl.status;
+            cl.status = "Resolved";
+            await createAuditLog(cl.id, oldStatus, "Resolved", "Owner", "Post was marked Resolved; claim completed successfully");
+          }
+        }
+      }
+      writeLocalDB(local);
     } else {
       console.log(`[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'posts' before saving resolved status for post ${id}`);
       await db!.collection("posts").doc(id).set(post); // Update ONLY Firestore, wait for it to succeed
+
+      // Cascade resolved status to approved or contact-unlocked claims
+      const claimsSnapshot = await db!.collection("claims").where("postId", "==", id).get();
+      for (const doc of claimsSnapshot.docs) {
+        const cl = doc.data() as Claim;
+        if (cl.status === "Approved" || cl.status === "Contact Unlocked") {
+          const oldStatus = cl.status;
+          await db!.collection("claims").doc(cl.id).update({ status: "Resolved" });
+          await createAuditLog(cl.id, oldStatus, "Resolved", "Owner", "Post was marked Resolved; claim completed successfully");
+        }
+      }
     }
 
     res.json({ success: true, post });
@@ -2254,6 +2276,42 @@ async function callGeminiWithRetry<T>(
 
 // --- SECURE SYSTEM-MEDIATED CLAIM WORKFLOW ENDPOINTS ---
 
+// Helper to save structural audit logs in Firestore or Local fallback
+async function createAuditLog(claimId: string, previousStatus: string, newStatus: string, actor: string, details: string) {
+  const logId = "log_" + Date.now().toString() + "_" + Math.random().toString().slice(2, 6);
+  const log = {
+    id: logId,
+    claimId,
+    previousStatus,
+    newStatus,
+    actor,
+    details,
+    timestamp: Date.now(),
+    timestampStr: new Date().toLocaleString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata"
+    })
+  };
+  try {
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      if (!local.auditLogs) local.auditLogs = [];
+      local.auditLogs.push(log);
+      writeLocalDB(local);
+    } else {
+      await db!.collection("audit_logs").doc(logId).set(log);
+    }
+    console.log(`[AUDIT-LOG] ${actor} transitioned claim ${claimId} from ${previousStatus} to ${newStatus}`);
+  } catch (err) {
+    console.error(`[AUDIT-LOG-ERROR] Failed to save audit log:`, err);
+  }
+}
+
 // Helper to generate a 6-digit tracking code
 function generateTrackingCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // readable chars (no ambiguous ones like I, O, 0, 1)
@@ -2268,7 +2326,7 @@ function generateTrackingCode(): string {
 app.post("/api/posts/:id/claims", requireGeminiApiKey, async (req, res) => {
   try {
     const { id } = req.params;
-    const { claimantName, claimantContact, questions, answers } = req.body;
+    const { claimantName, claimantContact, questions, answers, matchedPostId } = req.body;
 
     if (!claimantName || !claimantContact || !questions || !answers) {
       return res.status(400).json({ error: "Missing required claim fields" });
@@ -2346,6 +2404,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
     const newClaim: Claim = {
       id: claimId,
       postId: post.id,
+      matchedPostId: matchedPostId || undefined,
       postTitle: post.item,
       postType: post.type,
       claimantName,
@@ -2377,7 +2436,32 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
       await db!.collection("claims").doc(claimId).set(newClaim);
     }
 
-    console.log(`[CLAIM-SUBMIT] Claim ${claimId} submitted successfully with trackingCode: ${trackingCode}`);
+    // Save Initial Audit Log
+    await createAuditLog(claimId, "None", "Pending", "Claimant", `Claim submitted by claimant "${claimantName}" with AI matching confidence of ${parsedResult.confidence}%`);
+
+    // Create a target notification ONLY for the opposite post owner
+    const notificationId = "notif_" + Date.now().toString() + "_" + Math.random().toString().slice(2, 6);
+    const newNotification = {
+      id: notificationId,
+      postId: post.id, // Linked only to their post
+      message: `New Secure Claim submitted for your item "${post.item}" by ${claimantName} with AI Confidence: ${parsedResult.confidence}%!`,
+      createdAt: Date.now(),
+      read: false,
+      type: "claim",
+      claimId: claimId,
+      matchedPostId: matchedPostId || null
+    };
+
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      if (!local.notifications) local.notifications = [];
+      local.notifications.push(newNotification);
+      writeLocalDB(local);
+    } else {
+      await db!.collection("notifications").doc(notificationId).set(newNotification);
+    }
+
+    console.log(`[CLAIM-SUBMIT] Claim ${claimId} submitted successfully. Notification created only for owner of post ${post.id}.`);
     res.json({ success: true, claim: newClaim });
   } catch (err: any) {
     console.error("Failed to submit claim:", err);
@@ -2385,7 +2469,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
   }
 });
 
-// 2. Get claims for a post (Requires Owner PIN)
+// 2. Get claims for a post (Requires Owner PIN & Transitions Pending claims to Under Review)
 app.post("/api/posts/:id/claims/list", async (req, res) => {
   try {
     const { id } = req.params;
@@ -2397,8 +2481,9 @@ app.post("/api/posts/:id/claims/list", async (req, res) => {
 
     // Load parent post
     let post: Post | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
     if (useLocalFallback) {
-      const local = readLocalDB();
       post = local.posts.find((p: Post) => p.id === id) || null;
     } else {
       const doc = await db!.collection("posts").doc(id).get();
@@ -2424,7 +2509,6 @@ app.post("/api/posts/:id/claims/list", async (req, res) => {
     // Fetch claims for this post
     let allClaims: Claim[] = [];
     if (useLocalFallback) {
-      const local = readLocalDB();
       allClaims = local.claims || [];
     } else {
       const claimsSnapshot = await db!.collection("claims").where("postId", "==", id).get();
@@ -2434,14 +2518,50 @@ app.post("/api/posts/:id/claims/list", async (req, res) => {
     }
 
     const postClaims = allClaims.filter(c => c.postId === id);
-    res.json({ success: true, claims: postClaims });
+    let updatedAny = false;
+
+    // Transition claims from Pending -> Under Review upon owner viewing them
+    for (const c of postClaims) {
+      if (c.status === "Pending") {
+        const prevStatus = c.status;
+        c.status = "Under Review";
+        updatedAny = true;
+        await createAuditLog(c.id, prevStatus, "Under Review", "Owner", "Owner unlocked dashboard and reviewed this verification report");
+        
+        if (useLocalFallback) {
+          const idx = local.claims.findIndex((cl: Claim) => cl.id === c.id);
+          if (idx !== -1) local.claims[idx] = c;
+        } else {
+          await db!.collection("claims").doc(c.id).update({ status: "Under Review" });
+        }
+      }
+    }
+
+    if (updatedAny && useLocalFallback) {
+      writeLocalDB(local);
+    }
+
+    // STRICT PII PROTECTION: Mask claimant's phone number unless claim is explicitly approved/resolved!
+    const sanitizedClaims = postClaims.map(c => {
+      const isApprovedOrResolved = c.status === "Approved" || c.status === "Contact Unlocked" || c.status === "Resolved";
+      if (isApprovedOrResolved) {
+        return c;
+      }
+      // Return a copy with claimant's contact details masked completely
+      return {
+        ...c,
+        claimantContact: c.claimantContact.slice(0, 4) + "******" + c.claimantContact.slice(-2)
+      };
+    });
+
+    res.json({ success: true, claims: sanitizedClaims });
   } catch (err: any) {
     console.error("Failed to list claims:", err);
     res.status(500).json({ error: err.message || "Failed to list claims" });
   }
 });
 
-// 3. Track a Claim (Supports multi-device via Claim ID + Tracking Code)
+// 3. Track a Claim (Supports multi-device via Claim ID + Tracking Code & transitions Approved to Contact Unlocked)
 app.get("/api/claims/track", async (req, res) => {
   try {
     const claimId = req.query.claimId as string;
@@ -2453,8 +2573,9 @@ app.get("/api/claims/track", async (req, res) => {
     }
 
     let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
     if (useLocalFallback) {
-      const local = readLocalDB();
       claim = local.claims?.find((c: Claim) => {
         if (postId && c.postId !== postId) return false;
         return c.id === claimId;
@@ -2487,6 +2608,29 @@ app.get("/api/claims/track", async (req, res) => {
 
     if (claim.trackingCode.toUpperCase() !== code.trim().toUpperCase()) {
       return res.status(403).json({ error: "Incorrect Claim Tracking Code. Access denied." });
+    }
+
+    // Transition Approved -> Contact Unlocked upon claimant viewing it
+    if (claim.status === "Approved") {
+      const prevStatus = claim.status;
+      claim.status = "Contact Unlocked";
+      await createAuditLog(claim.id, prevStatus, "Contact Unlocked", "Claimant", "Claimant tracked status and successfully unlocked contact information");
+      
+      if (useLocalFallback) {
+        const idx = local.claims.findIndex((cl: Claim) => cl.id === claim!.id);
+        if (idx !== -1) local.claims[idx] = claim;
+        writeLocalDB(local);
+      } else {
+        await db!.collection("claims").doc(claim.id).update({ status: "Contact Unlocked" });
+      }
+    }
+
+    // STRICT PII PROTECTION: Strip raw contacts unless approved, unlocked, or resolved
+    const isApprovedOrUnlocked = (claim.status as string) === "Approved" || claim.status === "Contact Unlocked" || claim.status === "Resolved";
+    if (!isApprovedOrUnlocked) {
+      delete claim.revealedOwnerContact;
+      // Mask claimant's contact as well just to be safe
+      claim.claimantContact = claim.claimantContact.slice(0, 4) + "******" + claim.claimantContact.slice(-2);
     }
 
     res.json({ success: true, claim });
@@ -2558,6 +2702,7 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
     }
 
     // Update claim status & owner contact details
+    const prevStatus = claim.status;
     claim.status = "Approved";
     claim.revealedOwnerContact = revealedOwnerContact;
 
@@ -2575,6 +2720,9 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
       await db!.collection("claims").doc(claimId).set(claim);
       await db!.collection("posts").doc(post.id).set(post);
     }
+
+    // Write State Transition Audit Log
+    await createAuditLog(claimId, prevStatus, "Approved", "Owner", "Owner verified claimant's answers and approved the ownership claim");
 
     res.json({ success: true, claim, post });
   } catch (err: any) {
@@ -2645,6 +2793,7 @@ app.post("/api/claims/:claimId/reject", async (req, res) => {
     }
 
     // Update claim status
+    const prevStatus = claim.status;
     claim.status = "Rejected";
 
     if (useLocalFallback) {
@@ -2654,6 +2803,9 @@ app.post("/api/claims/:claimId/reject", async (req, res) => {
     } else {
       await db!.collection("claims").doc(claimId).set(claim);
     }
+
+    // Write State Transition Audit Log
+    await createAuditLog(claimId, prevStatus, "Rejected", "Owner", "Owner evaluated verification details and rejected the claim");
 
     res.json({ success: true, claim });
   } catch (err: any) {

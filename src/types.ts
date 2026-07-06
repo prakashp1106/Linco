@@ -51,6 +51,7 @@ export interface UrgencyInfo {
 export interface Claim {
   id: string;
   postId: string;
+  matchedPostId?: string;
   postTitle: string;
   postType: "Lost" | "Found";
   claimantName: string;
@@ -59,7 +60,7 @@ export interface Claim {
   answers: string[];
   aiScore: number;
   aiReason: string;
-  status: "Pending" | "Approved" | "Rejected";
+  status: "Pending" | "Under Review" | "Approved" | "Rejected" | "Contact Unlocked" | "Resolved";
   created: number;
   timestamp: string;
   trackingCode: string;
@@ -102,5 +103,7 @@ export interface LincoNotification {
   read: boolean;
   type: "match" | "system" | "claim";
   matchId?: string;
+  claimId?: string;
+  matchedPostId?: string;
 }
 

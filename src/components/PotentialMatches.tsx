@@ -22,7 +22,7 @@ import { apiService } from "../services/api";
 interface PotentialMatchesProps {
   posts: Post[];
   unlockedPosts: string[];
-  onStartClaim: (p: Post) => void;
+  onStartClaim: (p: Post, matchedPostId?: string) => void;
   addToast: (msg: string, type?: "success" | "warn" | "error" | "info") => void;
   initialSelectedMatchId?: string | null;
   onClearSelectedMatchId?: () => void;
@@ -674,7 +674,8 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       setSelectedMatch(null);
                       // Start claim on the found post if user owns lost post, or vice versa
                       const targetPostToClaim = unlockedPosts.includes(selectedMatch.lostPostId) ? foundPost : lostPost;
-                      onStartClaim(targetPostToClaim);
+                      const oppositePostId = targetPostToClaim.id === lostPost.id ? foundPost.id : lostPost.id;
+                      onStartClaim(targetPostToClaim, oppositePostId);
                     }}
                     className="px-6 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-xs font-black tracking-wider uppercase transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-cyan-950/40"
                   >

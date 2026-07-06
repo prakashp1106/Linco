@@ -13,6 +13,7 @@ import { apiService } from "../services/api";
 interface ClaimModalProps {
   isOpen: boolean;
   claimingPost: Post | null;
+  matchedPostId?: string;
   onClose: () => void;
   onClaimSubmitted?: (claim: Claim) => void;
 }
@@ -20,6 +21,7 @@ interface ClaimModalProps {
 export const ClaimModal: React.FC<ClaimModalProps> = ({
   isOpen,
   claimingPost,
+  matchedPostId,
   onClose,
   onClaimSubmitted,
 }) => {
@@ -92,6 +94,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
         claimantContact,
         questions: claimQuestions,
         answers: claimAnswers,
+        matchedPostId,
       });
 
       if (res.success && res.claim) {

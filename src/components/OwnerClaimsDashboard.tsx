@@ -283,6 +283,18 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                 Approved
                               </span>
+                            ) : claim.status === "Contact Unlocked" ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                Contact Unlocked
+                              </span>
+                            ) : claim.status === "Resolved" ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                                Resolved
+                              </span>
+                            ) : claim.status === "Under Review" ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse">
+                                Under Review
+                              </span>
                             ) : claim.status === "Rejected" ? (
                               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                 Rejected
@@ -331,7 +343,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
 
                         {/* Actions or Contact Reveal */}
                         <div className="pt-2 border-t border-slate-900 flex flex-wrap gap-2 items-center justify-between">
-                          {claim.status === "Pending" ? (
+                          {(claim.status === "Pending" || claim.status === "Under Review") ? (
                             <>
                               <p className="text-[9px] text-slate-500 italic">
                                 Approving reveals contact details to each other.
@@ -361,7 +373,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                 </button>
                               </div>
                             </>
-                          ) : claim.status === "Approved" ? (
+                          ) : (claim.status === "Approved" || claim.status === "Contact Unlocked" || claim.status === "Resolved") ? (
                             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 bg-emerald-950/10 p-3 rounded-xl border border-emerald-500/10">
                               <div className="space-y-1">
                                 <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest">

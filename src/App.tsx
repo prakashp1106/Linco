@@ -76,6 +76,7 @@ export default function App() {
   } | null>(null);
 
   const [claimingPost, setClaimingPost] = useState<Post | null>(null);
+  const [claimingMatchedPostId, setClaimingMatchedPostId] = useState<string | undefined>(undefined);
   const [showClaimModal, setShowClaimModal] = useState(false);
 
   // Owner dashboard state
@@ -817,9 +818,13 @@ export default function App() {
       .catch(() => addToast("Copy failed, please retry", "error"));
   };
 
-  const handleStartClaimTrigger = (p: Post, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleStartClaimTrigger = (p: Post, eventOrMatchedPostId?: React.MouseEvent | string) => {
+    if (eventOrMatchedPostId && typeof eventOrMatchedPostId !== "string") {
+      eventOrMatchedPostId.stopPropagation();
+    }
+    const matchedId = typeof eventOrMatchedPostId === "string" ? eventOrMatchedPostId : undefined;
     setClaimingPost(p);
+    setClaimingMatchedPostId(matchedId);
     setShowClaimModal(true);
   };
 
@@ -1106,7 +1111,7 @@ export default function App() {
                       <PotentialMatches
                         posts={posts}
                         unlockedPosts={unlockedPosts}
-                        onStartClaim={(post) => handleStartClaimTrigger(post, {} as any)}
+                        onStartClaim={(post, matchedPostId) => handleStartClaimTrigger(post, matchedPostId)}
                         addToast={addToast}
                         initialSelectedMatchId={selectedMatchId}
                         onClearSelectedMatchId={() => setSelectedMatchId(null)}
@@ -1207,7 +1212,11 @@ export default function App() {
       <ClaimModal
         isOpen={showClaimModal}
         claimingPost={claimingPost}
-        onClose={() => setShowClaimModal(false)}
+        matchedPostId={claimingMatchedPostId}
+        onClose={() => {
+          setShowClaimModal(false);
+          setClaimingMatchedPostId(undefined);
+        }}
       />
 
       <OwnerClaimsDashboard
