@@ -94,20 +94,13 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [inputMessage, setInputMessage] = useState("");
-  const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [isVoiceSupported, setIsVoiceSupported] = useState(true);
-  const [voiceLang, setVoiceLang] = useState<"en-IN" | "hi-IN">("en-IN");
+  const [showVoiceToast, setShowVoiceToast] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const recognitionRef = useRef<any>(null);
-  const voiceBaseTextRef = useRef<string>("");
-  const shouldBeListeningRef = useRef<boolean>(false);
-  const isRecognitionRunningRef = useRef<boolean>(false);
-  const lastRestartTimeRef = useRef<number>(0);
+  const toastTimeoutRef = useRef<any>(null);
 
   const { messages, setMessages, chatLoading, sendMessage: sendChatMessage } = useChat();
 
@@ -116,164 +109,35 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking, chatLoading]);
 
-  // Lock background scrolling when open and clean up voice session when closed
+  // Lock background scrolling when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
-      // Stopped chatting, clean up voice session
-      shouldBeListeningRef.current = false;
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          // ignore
-        }
-      }
-      setIsListening(false);
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  // Cleanup active voice session if component unmounts and check support
+  // Clean up any pending toast timer on unmount
   useEffect(() => {
-    setIsVoiceSupported(checkSpeechSupport());
     return () => {
-      shouldBeListeningRef.current = false;
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          // safe ignore
-        }
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
       }
     };
   }, []);
 
-  // Safe check for Speech Recognition availability
-  const checkSpeechSupport = (): boolean => {
-    if (typeof window === "undefined") return false;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    return !!SpeechRecognition;
-  };
-
-  const toggleListening = () => {
-    setVoiceError(null);
-    if (!checkSpeechSupport()) {
-      setVoiceError("Speech recognition is not supported in this browser. Try Google Chrome or Safari.");
-      setIsVoiceSupported(false);
-      return;
+  const triggerVoiceToast = () => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
     }
-
-    try {
-      if (shouldBeListeningRef.current || isListening) {
-        // User manually clicked Stop
-        shouldBeListeningRef.current = false;
-        setIsListening(false);
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.stop();
-          } catch (e) {
-            console.error("Error stopping recognition:", e);
-          }
-        }
-        return;
-      }
-
-      // Start continuous speech recognition session
-      voiceBaseTextRef.current = inputMessage.trim();
-      shouldBeListeningRef.current = true;
-      setIsListening(true);
-
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const rec = new SpeechRecognition();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = voiceLang;
-
-      rec.onstart = () => {
-        isRecognitionRunningRef.current = true;
-        setIsListening(true);
-        setVoiceError(null);
-      };
-
-      rec.onresult = (event: any) => {
-        try {
-          let accumulatedSessionText = "";
-          for (let i = 0; i < event.results.length; i++) {
-            accumulatedSessionText += event.results[i][0].transcript;
-          }
-          const base = voiceBaseTextRef.current;
-          setInputMessage(base ? `${base} ${accumulatedSessionText.trim()}` : accumulatedSessionText.trim());
-        } catch (resErr) {
-          console.error("Speech result parsing error:", resErr);
-        }
-      };
-
-      rec.onerror = (event: any) => {
-        console.error("Speech Recognition Error event:", event);
-        
-        const unrecoverableErrors = ["not-allowed", "service-not-allowed", "language-not-supported"];
-        const isUnrecoverable = unrecoverableErrors.includes(event.error);
-
-        if (isUnrecoverable) {
-          shouldBeListeningRef.current = false;
-          setIsListening(false);
-          if (event.error === "not-allowed") {
-            setVoiceError("Microphone permission denied. Please allow microphone access in your browser settings.");
-          } else {
-            setVoiceError(`Voice input failed: ${event.error || "unavailable"}`);
-          }
-        } else {
-          // Soft errors like no-speech, network or aborted: log it without blocking
-          if (event.error === "no-speech") {
-            console.log("Speech recognition timeout (no-speech).");
-          } else if (event.error === "aborted") {
-            console.log("Speech recognition aborted.");
-          } else {
-            setVoiceError(`Notice: ${event.error || "connection brief interruption"}`);
-          }
-        }
-      };
-
-      rec.onend = () => {
-        isRecognitionRunningRef.current = false;
-        
-        // If we should still be listening, restart the service automatically with a safety cooldown
-        if (shouldBeListeningRef.current) {
-          const now = Date.now();
-          // Throttling restarts to prevent infinite fast-beeping loops
-          const delay = now - lastRestartTimeRef.current < 2000 ? 2000 : 100;
-          
-          console.log(`Speech recognition ended. Auto-restarting in ${delay}ms...`);
-          setTimeout(() => {
-            if (shouldBeListeningRef.current && !isRecognitionRunningRef.current) {
-              try {
-                lastRestartTimeRef.current = Date.now();
-                rec.start();
-              } catch (startErr) {
-                console.error("Error restarting speech recognition:", startErr);
-              }
-            }
-          }, delay);
-        } else {
-          setIsListening(false);
-        }
-      };
-
-      recognitionRef.current = rec;
-      lastRestartTimeRef.current = Date.now();
-      rec.start();
-    } catch (err: any) {
-      console.error("Failed to start speech recognition:", err);
-      setIsListening(false);
-      shouldBeListeningRef.current = false;
-      isRecognitionRunningRef.current = false;
-      setVoiceError("Could not start microphone module: " + (err.message || "unknown issue"));
-    }
+    setShowVoiceToast(true);
+    toastTimeoutRef.current = setTimeout(() => {
+      setShowVoiceToast(false);
+    }, 4500);
   };
 
   // Determine current active step based on empty fields dynamically
@@ -298,19 +162,6 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
   }, [currentState]);
 
   const handleSendMessage = async (customText?: string) => {
-    // Stop voice recognition when a message is sent
-    if (shouldBeListeningRef.current) {
-      shouldBeListeningRef.current = false;
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          // ignore
-        }
-      }
-      setIsListening(false);
-    }
-
     const textToSend = customText || inputMessage;
     if (!textToSend.trim() || chatLoading || isThinking) return;
 
@@ -681,6 +532,37 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
 
                 {/* Right Chat Area (Main Window) */}
                 <div className="flex-1 flex flex-col bg-slate-950/20 overflow-hidden relative">
+                  {/* Premium Voice Assistant Toast Message */}
+                  <AnimatePresence>
+                    {showVoiceToast && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000000] w-[90%] max-w-sm bg-slate-950/95 border border-cyan-500/30 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl flex gap-3 items-start"
+                      >
+                        <div className="p-2 bg-cyan-950/80 rounded-xl text-cyan-400 border border-cyan-500/20 shrink-0">
+                          <Mic size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-xs sm:text-sm text-slate-100 flex items-center gap-1.5">
+                            Voice Assistant <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold text-cyan-300">Coming Soon</span>
+                          </h4>
+                          <p className="text-slate-300 text-[11px] sm:text-xs mt-1 leading-relaxed">
+                            Voice conversations are coming soon. We are building a more powerful AI voice experience.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowVoiceToast(false)}
+                          className="text-slate-500 hover:text-slate-300 transition shrink-0 p-1 hover:bg-slate-900 rounded-lg cursor-pointer"
+                        >
+                          <X size={14} />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Messages container */}
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin select-text">
                     
@@ -920,48 +802,17 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         }}
                         className="relative flex items-center"
                       >
-                        {/* Dynamic Exception-safe Voice Error Banner */}
-                        {voiceError && (
-                          <div className="absolute bottom-full mb-3 left-0 right-0 mx-auto w-max max-w-[95%] bg-rose-950/95 border border-rose-500/40 px-4 py-2 rounded-2xl text-rose-200 text-xs font-semibold flex items-center gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-20">
-                            <AlertCircle size={14} className="text-rose-400 shrink-0" />
-                            <span>{voiceError}</span>
-                            <button
-                              type="button"
-                              onClick={() => setVoiceError(null)}
-                              className="p-0.5 rounded hover:bg-rose-900/50 text-rose-400 hover:text-rose-200 transition duration-150 ml-2"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        )}
                         {/* Interactive Left Side Actions (Voice, Camera, Upload) */}
                         <div className="absolute left-3 flex items-center gap-1.5 sm:gap-2 z-10">
-                          {/* Microphone Voice Button */}
+                          {/* Microphone Voice Button (Visually disabled style, triggers premium toast) */}
                           <button
                             type="button"
-                            onClick={toggleListening}
-                            disabled={!isVoiceSupported}
-                            className={`p-2 rounded-xl transition duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
-                              isListening 
-                                ? "bg-rose-500 text-slate-100 animate-pulse shadow-md shadow-rose-500/20" 
-                                : "bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-                            }`}
-                            title={!isVoiceSupported ? "Voice input not supported in this browser" : isListening ? "Stop Listening" : "Speak Message"}
+                            onClick={triggerVoiceToast}
+                            className="p-2 rounded-xl bg-slate-900/60 text-slate-500 hover:text-slate-400 border border-slate-800/20 transition duration-200 cursor-pointer"
+                            title="Voice Assistant (Coming Soon)"
                           >
-                            {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+                            <Mic size={15} />
                           </button>
-
-                          {/* Language selector toggle if voice supported */}
-                          {isVoiceSupported && (
-                            <button
-                              type="button"
-                              onClick={() => setVoiceLang((prev) => (prev === "en-IN" ? "hi-IN" : "en-IN"))}
-                              className="text-[9px] font-black tracking-wider px-1.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-slate-850 rounded-lg select-none transition duration-150 shrink-0"
-                              title="Toggle Language: English (en-IN) / Hindi (hi-IN)"
-                            >
-                              {voiceLang === "en-IN" ? "EN" : "HI"}
-                            </button>
-                          )}
 
                           {/* Camera Button */}
                           <button
@@ -987,11 +838,11 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         {/* Input Area */}
                         <input
                           type="text"
-                          placeholder={isListening ? "Listening... Speak your message now." : "Bhai lost/found item details type kijiye ya míc use karein..."}
+                          placeholder="Bhai lost/found item details type kijiye..."
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
                           disabled={isThinking || chatLoading}
-                          className="w-full pl-36 pr-14 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
+                          className="w-full pl-32 pr-14 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
                         />
 
                         {/* Send Button */}
