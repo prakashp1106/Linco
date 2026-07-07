@@ -37,6 +37,7 @@ import { imageService } from "../services/imageService";
 import { TimelineSection } from "./TimelineSection";
 import { RewardSection } from "./RewardSection";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { RecoveryIntelligenceCard } from "./RecoveryIntelligenceCard";
 
 interface PostFormProps {
   onSubmit: (postData: any) => Promise<any>;
@@ -428,6 +429,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
       }
     }
   };
+
+  if (success) {
+    return (
+      <RecoveryIntelligenceCard
+        form={form}
+        onEnhanceDescription={handleEnhanceDescription}
+        isEnhancing={ai.enhanceLoading}
+        onClose={() => setSuccess(false)}
+      />
+    );
+  }
 
   return (
     <div className="bg-[#07070a] border border-[#161621] rounded-[32px] p-6 sm:p-8 md:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden" id="post-form-card">

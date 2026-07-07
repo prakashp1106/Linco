@@ -149,7 +149,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const faqs = [
     {
       q: "How does LINCO protect my private contact information?",
-      a: "LINCO implements full client-side AES-GCM encryption. When you report an item, you choose a 4-digit PIN. Your mobile number is encrypted inside your browser before it is sent to our server. The server never sees or stores your plaintext contact number, only a secure cryptographic hash of your PIN. Unlocking contact details requires entering the correct PIN directly on the claimant's screen."
+      a: "We keep your personal information completely hidden and isolated. When you report an item, you choose a 4-digit PIN. Your mobile number is shielded from the public feed and is only revealed to a verified claimant when they successfully pass your security check. Our platform is built on data minimization, meaning we don't store plain contact digits for public crawlers to see."
     },
     {
       q: "What is the Timeline Reconstructor and how does it work?",

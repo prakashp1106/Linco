@@ -27,6 +27,8 @@ import { LandingPage } from "./components/LandingPage";
 import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 import { PotentialMatches } from "./components/PotentialMatches";
 import { NotificationCenter } from "./components/NotificationCenter";
+import { PrivacyTrustCenter } from "./components/PrivacyTrustCenter";
+import { CookieConsent } from "./components/CookieConsent";
 
 // Modals
 import { PinModal } from "./components/PinModal";
@@ -59,7 +61,8 @@ export default function App() {
 
   const form = usePostForm();
 
-  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust">("home");
+  const [privacySection, setPrivacySection] = useState<string>("privacy");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
 
@@ -198,6 +201,27 @@ export default function App() {
     }
   }, [addToast]);
 
+  // Support changing tabs programmatically from child components via custom events
+  useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<any>;
+      if (customEvent.detail) {
+        if (typeof customEvent.detail === "string") {
+          setActiveTab(customEvent.detail as any);
+        } else if (typeof customEvent.detail === "object") {
+          if (customEvent.detail.tab) {
+            setActiveTab(customEvent.detail.tab as any);
+          }
+          if (customEvent.detail.section) {
+            setPrivacySection(customEvent.detail.section);
+          }
+        }
+      }
+    };
+    window.addEventListener("change-tab", handleTabChange);
+    return () => window.removeEventListener("change-tab", handleTabChange);
+  }, []);
+
   // Form Submission callback
   const handleCreatePost = async (postFormInput: any) => {
     let finalItem = postFormInput.item ? postFormInput.item.trim() : "";
@@ -303,7 +327,7 @@ export default function App() {
 
         setTimeout(() => {
           setBanner(null);
-          setActiveTab("feed");
+          // Let the user remain on report tab to explore the AI Recovery Intelligence Card
         }, 3200);
 
         return { success: true };
@@ -1070,6 +1094,20 @@ export default function App() {
                 }}
               />
             </motion.div>
+          ) : activeTab === "privacy-trust" ? (
+            <motion.div
+              key="privacy-trust-page"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="w-full"
+            >
+              <PrivacyTrustCenter
+                initialSection={privacySection}
+                addToast={addToast}
+                onClose={() => setActiveTab("home")}
+              />
+            </motion.div>
           ) : (
             <motion.div
               key="app-core-grid"
@@ -1333,18 +1371,56 @@ export default function App() {
           <div className="space-y-1.5">
             <h4 className="text-sm font-black tracking-[0.2em] text-slate-100 font-sans uppercase">LINCO</h4>
             <p className="text-[11px] text-slate-500 font-medium">Recovering what matters.</p>
+            <p className="text-[10px] text-slate-400 font-normal leading-relaxed max-w-xs mx-auto">
+              Trusted by communities.<br />
+              Powered by AI.<br />
+              Built for everyone.
+            </p>
           </div>
 
           <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[11px] text-slate-400 font-medium font-sans">
-            <a href="#privacy" className="hover:text-indigo-400 transition-colors">Privacy</a>
+            <button
+              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("privacy"); }}
+              className="hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Privacy
+            </button>
             <span className="text-slate-700">•</span>
-            <a href="#terms" className="hover:text-indigo-400 transition-colors">Terms</a>
+            <button
+              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("terms"); }}
+              className="hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
             <span className="text-slate-700">•</span>
-            <a href="#contact" className="hover:text-indigo-400 transition-colors">Contact</a>
+            <button
+              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("security"); }}
+              className="hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Security
+            </button>
             <span className="text-slate-700">•</span>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">GitHub</a>
+            <button
+              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("privacy-center"); }}
+              className="hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Trust Center
+            </button>
             <span className="text-slate-700">•</span>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">LinkedIn</a>
+            <button
+              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("contact-team"); }}
+              className="hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Contact
+            </button>
+            <span className="text-slate-700">•</span>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+              GitHub
+            </a>
+            <span className="text-slate-700">•</span>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+              LinkedIn
+            </a>
           </div>
 
           <div className="pt-2 border-t border-[#1c1c26]/40 space-y-1 text-[10px] text-slate-500 font-medium">
@@ -1353,6 +1429,14 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <CookieConsent
+        onLearnMore={() => {
+          setActiveTab("privacy-trust");
+          setPrivacySection("privacy-center");
+        }}
+        addToast={addToast}
+      />
     </div>
   );
 }
