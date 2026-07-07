@@ -4,7 +4,26 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Info, X, Bell, Home, Sparkles, Radar } from "lucide-react";
+import { 
+  Search, 
+  Plus, 
+  Info, 
+  X, 
+  Bell, 
+  Home, 
+  Sparkles, 
+  Radar, 
+  User,
+  Menu,
+  Settings,
+  ShieldCheck,
+  FileText,
+  MessageSquare,
+  Heart,
+  LifeBuoy,
+  ShieldAlert,
+  ChevronRight
+} from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
@@ -28,6 +47,7 @@ import { LincoSaathiiChat } from "./components/LincoSaathiiChat";
 import { PotentialMatches } from "./components/PotentialMatches";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { PrivacyTrustCenter } from "./components/PrivacyTrustCenter";
+import { UserDashboard } from "./components/UserDashboard";
 import { CookieConsent } from "./components/CookieConsent";
 
 // Modals
@@ -61,8 +81,78 @@ export default function App() {
 
   const form = usePostForm();
 
-  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">("home");
   const [privacySection, setPrivacySection] = useState<string>("privacy");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileAvatar, setProfileAvatar] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150");
+  const [profileDetails, setProfileDetails] = useState({
+    fullName: "Rina Pathak",
+    username: "rinapathak",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+    trustLevel: "Gold Guardian"
+  });
+
+  useEffect(() => {
+    const syncProfile = () => {
+      try {
+        const saved = localStorage.getItem("linco_profile_details");
+        const completionsSaved = localStorage.getItem("linco_profile_completions");
+        
+        let completions = { photo: true, email: true, phone: false, bio: true, report: false, review: false };
+        if (completionsSaved) {
+          completions = JSON.parse(completionsSaved);
+        }
+        
+        let score = 350;
+        if (completions.photo) score += 50;
+        if (completions.email) score += 100;
+        if (completions.phone) score += 100;
+        if (completions.bio) score += 50;
+        if (completions.report) score += 100;
+        if (completions.review) score += 150;
+        score = Math.min(score, 900);
+        
+        let levelName = "Gold Guardian";
+        if (score >= 800) levelName = "Ambassador";
+        else if (score >= 650) levelName = "Platinum Guardian";
+        else if (score >= 500) levelName = "Gold Guardian";
+        else if (score >= 400) levelName = "Silver Guardian";
+        else levelName = "Bronze Guardian";
+
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setProfileDetails({
+            fullName: parsed.fullName || "Rina Pathak",
+            username: parsed.username || "rinapathak",
+            avatar: parsed.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+            trustLevel: levelName
+          });
+          setProfileAvatar(parsed.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150");
+        } else {
+          setProfileDetails(prev => ({ ...prev, trustLevel: levelName }));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    syncProfile();
+    window.addEventListener("storage", syncProfile);
+    window.addEventListener("profile-updated", syncProfile);
+    return () => {
+      window.removeEventListener("storage", syncProfile);
+      window.removeEventListener("profile-updated", syncProfile);
+    };
+  }, [activeTab]);
+
+  const [activeMenuId, setActiveMenuId] = useState<string>("home");
+
+  useEffect(() => {
+    if (activeTab === "home") setActiveMenuId("home");
+    else if (activeTab === "feed") setActiveMenuId("feed");
+    else if (activeTab === "matches") setActiveMenuId("matches");
+    else if (activeTab === "privacy-trust") setActiveMenuId("privacy");
+    else if (activeTab === "about") setActiveMenuId("about");
+  }, [activeTab]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [decryptedContacts, setDecryptedContacts] = useState<Record<string, string>>({});
 
@@ -897,151 +987,292 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* HERO CONTAINER */}
-      {activeTab !== "home" && (
-        <header className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-12 pb-6 text-center select-none overflow-visible">
-          <div className="absolute inset-0 -top-40 max-h-[500px] bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-pink-500/5 blur-[120px] animate-pulse pointer-events-none z-0 opacity-80" />
-          <div className="absolute left-1/4 top-10 w-[50%] h-[260px] bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-[100px] filter blur-[80px] animate-orb-slow-1 opacity-70 pointer-events-none z-0" />
-
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/40 to-violet-950/40 border border-cyan-500/30 text-[10px] font-extrabold text-cyan-300 uppercase tracking-widest mb-5 shadow-lg shadow-cyan-950/50 backdrop-blur-md relative overflow-hidden group"
+      {/* TOP APP BAR */}
+      <header className="sticky top-0 z-30 bg-[#08080c]/90 border-b border-[#161621] backdrop-blur-md px-4 py-3 flex items-center justify-between select-none">
+        {/* LEFT */}
+        <div className="flex items-center gap-3 z-10">
+          <button 
+            onClick={() => setDrawerOpen(true)}
+            className="p-2 -ml-1 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
+            aria-label="Open navigation menu"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
-            </span>
-            <span className="bg-gradient-to-r from-cyan-300 to-violet-300 bg-clip-text text-transparent">Realtime Lost &amp; Found Directory</span>
-          </motion.div>
-
-          <div className="relative inline-block my-1.5 z-10">
-            <div className="absolute inset-0 -m-8 bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-pink-500/15 rounded-full blur-3xl pointer-events-none" />
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="text-6xl md:text-7xl font-display font-extrabold tracking-tighter leading-none bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-500 bg-[size:200%] animate-shimmer text-transparent bg-clip-text relative z-10"
-            >
-              LINCO
-            </motion.h1>
-          </div>
-
-          <p className="text-[10px] font-bold tracking-[0.25em] text-cyan-500/50 uppercase mt-2 mb-4">
-            Locate · Identify · Notify · Connect · Owner
-          </p>
-
-          {/* Typewriter text */}
-          <div className="min-h-[2rem] sm:min-h-[1.5rem] flex justify-center items-center mb-1">
-            <p className="text-xs text-slate-400 font-medium">
-              {typewriterText}
-              <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse" />
-            </p>
-          </div>
-
-          {/* Statistics Counters */}
-          <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto mt-6">
-            {[
-              { label: "Total", value: stats.total, color: "text-slate-100" },
-              { label: "Lost", value: stats.lost, color: "text-rose-400" },
-              { label: "Found", value: stats.found, color: "text-emerald-400" },
-              { label: "Resolved", value: stats.resolved, color: "text-violet-400" },
-            ].map((stat, idx) => (
-              <div key={idx} className="bg-slate-950/40 border border-slate-900 rounded-xl p-2.5 text-center transition hover:border-slate-800/80 shadow-md">
-                <CountUpStat value={stat.value} color={stat.color} />
-                <span className="text-[8px] tracking-wider text-slate-500 uppercase block font-semibold mt-0.5">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        </header>
-      )}
-
-      {/* Sticky Tab Navigation */}
-      <nav className="sticky top-2 z-35 max-w-2xl mx-auto px-4 py-2.5">
-        <div className="flex gap-1.5 bg-[#07070a]/90 p-1.5 rounded-2xl border border-[#161621] backdrop-blur-xl shadow-2xl">
-          <button
+            <Menu size={20} />
+          </button>
+          <span 
             onClick={() => setActiveTab("home")}
-            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "home" 
-                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
-            }`}
+            className="font-sans font-black text-lg tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-1.5 cursor-pointer"
           >
-            <Home size={13} className={activeTab === "home" ? "text-indigo-400" : "text-slate-500"} />
-            <span className="hidden sm:inline">Home</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("report")}
-            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "report" 
-                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
-            }`}
-          >
-            <Plus size={13} className={activeTab === "report" ? "text-indigo-400" : "text-slate-500"} />
-            <span className="hidden sm:inline">Report</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("feed");
-              loadPosts(true);
-            }}
-            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "feed" 
-                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
-            }`}
-          >
-            <Search size={13} className={activeTab === "feed" ? "text-indigo-400" : "text-slate-500"} />
-            <span>Feed ({posts.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("matches")}
-            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer relative ${
-              activeTab === "matches" 
-                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
-            }`}
-          >
-            <Sparkles size={13} className={activeTab === "matches" ? "text-indigo-400 animate-pulse" : "text-slate-500"} />
-            <span>Matches</span>
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+            LINCO
+          </span>
+        </div>
+
+        {/* CENTER */}
+        <div className="absolute left-1/2 -translate-x-1/2 font-sans font-black text-xs sm:text-sm tracking-widest text-slate-100 uppercase text-center select-none pointer-events-none">
+          {activeTab === "home" && "Home"}
+          {activeTab === "dashboard" && "Profile"}
+          {activeTab === "report" && "Report"}
+          {activeTab === "feed" && "Feed"}
+          {activeTab === "matches" && "Matches"}
+          {activeTab === "about" && "About"}
+          {activeTab === "privacy-trust" && "Privacy & Security"}
+        </div>
+
+        {/* RIGHT */}
+        <div className="flex items-center gap-3 z-10">
+          {/* Notification Bell */}
           <button
             onClick={() => setNotificationsOpen(true)}
-            className="px-2.5 sm:px-3 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer relative text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
-            title="Activity Center"
-            id="top-nav-bell-button"
+            className="p-2 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-rose-400 transition cursor-pointer relative"
+            aria-label="Open notifications"
           >
-            <Bell className="text-rose-500 hover:scale-105 transition-transform duration-150" size={13} />
-            <span className="hidden sm:inline">Activity Center</span>
+            <Bell size={18} className="text-rose-500 hover:scale-105 transition-transform duration-150" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
+              <span className="absolute top-1 right-1 flex h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_#ef4444]" />
+            )}
+          </button>
+
+          {/* Profile Avatar */}
+          <button
+            onClick={() => {
+              setActiveTab("dashboard");
+              window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
+            }}
+            className="w-8 h-8 rounded-full overflow-hidden border border-[#232332] hover:border-indigo-400 transition cursor-pointer"
+            aria-label="View Profile"
+          >
+            <img 
+              src={profileAvatar} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+            />
+          </button>
+        </div>
+      </header>
+
+      {/* SIDE NAVIGATION DRAWER */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md"
+            />
+
+            {/* Drawer Panel */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-[#08080c] border-r border-[#161621] shadow-2xl flex flex-col justify-between overflow-y-auto"
+            >
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                  <span className="font-sans font-black text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                    LINCO Menu
+                  </span>
+                  <button 
+                    onClick={() => setDrawerOpen(false)}
+                    className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Navigation Items */}
+                <nav className="space-y-1">
+                  {/* Group 1 */}
+                  {[
+                    { id: "home", label: "Home", icon: <Home size={16} />, action: () => setActiveTab("home") },
+                    { id: "feed", label: "Community Feed", icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
+                    { id: "matches", label: "AI Matches", icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
+                    { id: "reports", label: "My Reports", icon: <FileText size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "reports" })), 50); } },
+                    { id: "recovery-rooms", label: "Recovery Rooms", icon: <MessageSquare size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "recovery" })), 50); } },
+                    { id: "saved-searches", label: "Saved Searches", icon: <Heart size={16} />, action: () => { setActiveTab("feed"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-feed", { detail: "saved" })), 50); } },
+                  ].map((item) => {
+                    const isSelected = activeMenuId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveMenuId(item.id);
+                          item.action();
+                          setDrawerOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all ${
+                          isSelected 
+                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 shadow-sm" 
+                            : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50 border border-transparent"
+                        } cursor-pointer`}
+                      >
+                        <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
+                          {item.icon}
+                        </span>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+
+                  <div className="my-4 border-t border-[#161621]" />
+
+                  {/* Group 2 */}
+                  {[
+                    { id: "profile", label: "My Profile", icon: <User size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" })), 50); } },
+                    { id: "activity", label: "Activity Center", icon: <Bell size={16} />, action: () => setNotificationsOpen(true) },
+                    { id: "settings", label: "Settings", icon: <Settings size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "settings" })), 50); } },
+                    { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck size={16} />, action: () => { setActiveTab("privacy-trust"); setPrivacySection("privacy"); } },
+                    { id: "support", label: "Help & Support", icon: <LifeBuoy size={16} />, action: () => { window.dispatchEvent(new CustomEvent("open-linco-chat")); addToast("LincoSaathii Assistant active.", "info"); } },
+                    { id: "about", label: "About LINCO", icon: <Info size={16} />, action: () => setActiveTab("about") },
+                  ].map((item) => {
+                    const isSelected = activeMenuId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          if (item.id !== "activity") {
+                            setActiveMenuId(item.id);
+                          }
+                          item.action();
+                          setDrawerOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all ${
+                          isSelected 
+                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 shadow-sm" 
+                            : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50 border border-transparent"
+                        } cursor-pointer`}
+                      >
+                        <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
+                          {item.icon}
+                        </span>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Drawer Bottom Panel */}
+              <div className="flex flex-col">
+                <div className="px-6 py-2 border-t border-[#161621]">
+                  <button
+                    onClick={() => {
+                      addToast("Successfully logged out from self-sovereign passport.", "success");
+                      setDrawerOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 transition cursor-pointer"
+                  >
+                    <ShieldAlert size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+
+                <div className="p-4 border-t border-[#161621] bg-[#0c0c14]/40">
+                  <button
+                    onClick={() => {
+                      setActiveTab("dashboard");
+                      setActiveMenuId("profile");
+                      window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
+                      setDrawerOpen(false);
+                    }}
+                    className="w-full text-left flex items-center justify-between p-2 rounded-xl hover:bg-slate-900/60 transition group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={profileDetails.avatar} 
+                        alt={profileDetails.fullName} 
+                        className="w-10 h-10 rounded-full object-cover border border-[#232332]"
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-slate-100 truncate">{profileDetails.fullName}</span>
+                        <span className="text-[10px] font-medium text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded mt-0.5 w-max">
+                          {profileDetails.trustLevel}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-500 group-hover:text-indigo-400 transition-colors">
+                      <span className="text-[10px] font-bold hidden xs:inline">View Profile</span>
+                      <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* BOTTOM STICKY NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#07070a]/90 border-t border-[#161621] backdrop-blur-xl px-4 py-2 flex items-center justify-around select-none shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <div className="w-full max-w-md mx-auto flex gap-1 items-center justify-around">
+          <button
+            onClick={() => setActiveTab("home")}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === "home" 
+                ? "text-indigo-400" 
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Home size={18} className={activeTab === "home" ? "text-indigo-400" : "text-slate-500"} />
+            <span>Home</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("report")}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === "report" 
+                ? "text-indigo-400" 
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Plus size={18} className={activeTab === "report" ? "text-indigo-400" : "text-slate-500"} />
+            <span>Report</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("matches")}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer relative ${
+              activeTab === "matches" 
+                ? "text-indigo-400" 
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Sparkles size={18} className={activeTab === "matches" ? "text-indigo-400 animate-pulse" : "text-slate-500"} />
+            <span>Matches</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-400 text-[7px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
                 {unreadCount}
               </span>
             )}
           </button>
+
           <button
-            onClick={() => setActiveTab("about")}
-            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "about" 
-                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
-                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
+            onClick={() => setNotificationsOpen(true)}
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer relative text-slate-400 hover:text-rose-400"
+          >
+            <Bell size={18} className="text-rose-500 hover:scale-105 transition-transform duration-150" />
+            <span>Activity</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === "dashboard" 
+                ? "text-indigo-400" 
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Info size={13} className={activeTab === "about" ? "text-indigo-400" : "text-slate-500"} />
-            <span className="hidden sm:inline">About</span>
-          </button>
-          <button
-            onClick={() => setShowClaimTracker(true)}
-            className="flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-cyan-400 hover:text-cyan-300 bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/15"
-          >
-            <Radar size={13} />
-            <span className="hidden sm:inline">Track</span>
+            <User size={18} className={activeTab === "dashboard" ? "text-indigo-400" : "text-slate-500"} />
+            <span>Profile</span>
           </button>
         </div>
       </nav>
@@ -1106,6 +1337,25 @@ export default function App() {
                 initialSection={privacySection}
                 addToast={addToast}
                 onClose={() => setActiveTab("home")}
+              />
+            </motion.div>
+          ) : activeTab === "dashboard" ? (
+            <motion.div
+              key="user-dashboard-page"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="w-full"
+            >
+              <UserDashboard
+                addToast={addToast}
+                onNavigateToTab={(tab) => {
+                  setActiveTab(tab as any);
+                }}
+                onOpenNotifications={() => {
+                  setNotificationsOpen(true);
+                }}
+                stats={stats}
               />
             </motion.div>
           ) : (
