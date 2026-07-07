@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Info, X, Bell } from "lucide-react";
+import { Search, Plus, Info, X, Bell, Home, Sparkles, Radar } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
 import confetti from "canvas-confetti";
@@ -933,42 +933,54 @@ export default function App() {
       )}
 
       {/* Sticky Tab Navigation */}
-      <nav className="sticky top-1.5 z-35 max-w-2xl mx-auto px-4 py-3">
-        <div className="flex gap-1 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-900/90 backdrop-blur-xl shadow-2xl">
+      <nav className="sticky top-2 z-35 max-w-2xl mx-auto px-4 py-2.5">
+        <div className="flex gap-1.5 bg-[#07070a]/90 p-1.5 rounded-2xl border border-[#161621] backdrop-blur-xl shadow-2xl">
           <button
             onClick={() => setActiveTab("home")}
-            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "home" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "home" 
+                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
             }`}
           >
-            🏠 Home
+            <Home size={13} className={activeTab === "home" ? "text-indigo-400" : "text-slate-500"} />
+            <span className="hidden sm:inline">Home</span>
           </button>
           <button
             onClick={() => setActiveTab("report")}
-            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "report" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "report" 
+                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
             }`}
           >
-            ➕ Report
+            <Plus size={13} className={activeTab === "report" ? "text-indigo-400" : "text-slate-500"} />
+            <span className="hidden sm:inline">Report</span>
           </button>
           <button
             onClick={() => {
               setActiveTab("feed");
               loadPosts(true);
             }}
-            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "feed" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "feed" 
+                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
             }`}
           >
-            🔍 Feed ({posts.length})
+            <Search size={13} className={activeTab === "feed" ? "text-indigo-400" : "text-slate-500"} />
+            <span>Feed ({posts.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("matches")}
-            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
-              activeTab === "matches" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer relative ${
+              activeTab === "matches" 
+                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
             }`}
           >
-            ✨ Matches
+            <Sparkles size={13} className={activeTab === "matches" ? "text-indigo-400 animate-pulse" : "text-slate-500"} />
+            <span>Matches</span>
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
                 {unreadCount}
@@ -977,11 +989,11 @@ export default function App() {
           </button>
           <button
             onClick={() => setNotificationsOpen(true)}
-            className="px-2.5 sm:px-3.5 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer relative text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
+            className="px-2.5 sm:px-3 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer relative text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
             title="Notification Center"
             id="top-nav-bell-button"
           >
-            <Bell className="text-rose-500 hover:scale-110 transition duration-300" size={15} />
+            <Bell className="text-rose-500 hover:scale-105 transition-transform duration-150" size={13} />
             <span className="hidden sm:inline">Alerts</span>
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
@@ -991,17 +1003,21 @@ export default function App() {
           </button>
           <button
             onClick={() => setActiveTab("about")}
-            className={`flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === "about" ? "bg-slate-900 text-white shadow-md border border-slate-800/60" : "text-slate-400 hover:text-slate-200"
+            className={`flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === "about" 
+                ? "bg-[#161622] text-indigo-400 shadow-md border border-[#232332]" 
+                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50"
             }`}
           >
-            ℹ️ About
+            <Info size={13} className={activeTab === "about" ? "text-indigo-400" : "text-slate-500"} />
+            <span className="hidden sm:inline">About</span>
           </button>
           <button
             onClick={() => setShowClaimTracker(true)}
-            className="flex-1 py-2.5 rounded-xl font-sans text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer text-cyan-400 hover:text-cyan-300 bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/15"
+            className="flex-1 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-cyan-400 hover:text-cyan-300 bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/15"
           >
-            🛰️ Track
+            <Radar size={13} />
+            <span className="hidden sm:inline">Track</span>
           </button>
         </div>
       </nav>
@@ -1033,10 +1049,24 @@ export default function App() {
             >
               <LandingPage
                 stats={stats}
-                onNavigateToReport={() => setActiveTab("report")}
+                onNavigateToReport={(type) => {
+                  if (type) {
+                    form.setFType(type);
+                  }
+                  setActiveTab("report");
+                }}
                 onNavigateToFeed={() => {
                   setActiveTab("feed");
                   loadPosts(true);
+                }}
+                onNavigateToMatches={() => {
+                  setActiveTab("matches");
+                }}
+                onOpenNotifications={() => {
+                  setNotificationsOpen(true);
+                }}
+                onFocusAIAssistant={() => {
+                  window.dispatchEvent(new CustomEvent("open-linco-chat"));
                 }}
               />
             </motion.div>

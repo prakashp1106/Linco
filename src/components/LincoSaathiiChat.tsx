@@ -121,6 +121,13 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
     };
   }, [isOpen]);
 
+  // Listen for custom event to open the chat externally
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener("open-linco-chat", handleOpenChat);
+    return () => window.removeEventListener("open-linco-chat", handleOpenChat);
+  }, []);
+
   // Clean up any pending toast timer on unmount
   useEffect(() => {
     return () => {
