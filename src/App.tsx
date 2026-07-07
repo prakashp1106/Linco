@@ -1217,17 +1217,47 @@ export default function App() {
                   }}
                 />
 
-                <div className="bg-slate-950/40 border border-slate-900 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
-                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 uppercase tracking-widest flex items-center gap-1.5">
-                    💡 Platform Health
+                <div className="bg-[#07070a]/90 border border-[#161621] rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
+                  <h3 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                    🛡️ Trusted by Design
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    LINCO AI database is secured using AES-GCM local client encryption. No plaintext mobile numbers are transmitted or stored.
+                  
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-100 leading-snug">
+                      Your identity stays private.
+                    </p>
+                    <p className="text-sm font-bold text-slate-400 leading-snug">
+                      Your item doesn't.
+                    </p>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                    Trusted by communities. Powered by AI. Built for everyone.
                   </p>
-                  <div className="flex items-center gap-2 pt-1 text-[10px] font-bold uppercase tracking-wider">
-                    <span className={`w-2.5 h-2.5 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
-                    <span className="text-slate-300">
-                      Backend Status: {backendStatus === "live" ? "Live" : "Reconnecting..."}
+
+                  <div className="space-y-2 pt-3 text-[11px] font-medium text-slate-300 border-t border-[#1c1c26]/60">
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>Private by Default</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>Verified Claims</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>AI-Assisted Matching</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span>Secure Communication</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-[#1c1c26]/60 text-[10px] font-bold uppercase tracking-wider">
+                    <span className={`w-2 h-2 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
+                    <span className="text-slate-400 font-mono">
+                      {backendStatus === "live" ? "Operational • All Systems Available" : "Reconnecting..."}
                     </span>
                   </div>
                 </div>
@@ -1298,23 +1328,28 @@ export default function App() {
         addToast={addToast}
       />
 
-      <footer className="relative z-10 max-w-5xl lg:max-w-6xl mx-auto px-4 pt-16 pb-12 text-center text-slate-600 border-t border-slate-900/40 select-none">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 text-slate-500 text-xs font-medium max-w-4xl mx-auto">
-          <div className="text-center md:text-left space-y-1">
-            <p className="text-slate-400 font-bold tracking-wider font-sans uppercase text-[10px]">LINCO</p>
-            <p className="text-[11px] text-slate-500 font-medium">
-              © 2026 LINCO. All rights reserved.
-            </p>
-            <p className="text-[10px] text-slate-600">
-              Created by Prakash Pathak.
-            </p>
+      <footer className="relative z-10 border-t border-[#161621] py-12 text-center select-none">
+        <div className="max-w-md mx-auto space-y-6 px-4">
+          <div className="space-y-1.5">
+            <h4 className="text-sm font-black tracking-[0.2em] text-slate-100 font-sans uppercase">LINCO</h4>
+            <p className="text-[11px] text-slate-500 font-medium">Recovering what matters.</p>
           </div>
-          <div className="flex flex-wrap justify-center md:justify-end gap-6 text-[11px] text-slate-400 font-medium font-sans">
-            <a href="#privacy" className="hover:text-cyan-400 transition-colors">Privacy</a>
-            <a href="#terms" className="hover:text-cyan-400 transition-colors">Terms</a>
-            <a href="#contact" className="hover:text-cyan-400 transition-colors">Contact</a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">GitHub</a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">LinkedIn</a>
+
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[11px] text-slate-400 font-medium font-sans">
+            <a href="#privacy" className="hover:text-indigo-400 transition-colors">Privacy</a>
+            <span className="text-slate-700">•</span>
+            <a href="#terms" className="hover:text-indigo-400 transition-colors">Terms</a>
+            <span className="text-slate-700">•</span>
+            <a href="#contact" className="hover:text-indigo-400 transition-colors">Contact</a>
+            <span className="text-slate-700">•</span>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">GitHub</a>
+            <span className="text-slate-700">•</span>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">LinkedIn</a>
+          </div>
+
+          <div className="pt-2 border-t border-[#1c1c26]/40 space-y-1 text-[10px] text-slate-500 font-medium">
+            <p>© 2026 LINCO. All rights reserved.</p>
+            <p className="text-slate-600 font-mono text-[9px]">Founded by Prakash Pathak</p>
           </div>
         </div>
       </footer>

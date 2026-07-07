@@ -1319,12 +1319,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     <ShieldCheck size={11} /> AES Client Decryption Active
                   </span>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">
-                    +91
-                  </span>
+                <div className="flex gap-2">
+                  <div className="flex items-center justify-center h-12 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] text-sm text-slate-300 font-bold select-none shrink-0 gap-1.5">
+                    <span className="text-base">🇮🇳</span>
+                    <span>+91</span>
+                  </div>
                   <input
-                    type="text"
+                    type="tel"
+                    inputMode="tel"
                     maxLength={10}
                     placeholder="9876543210"
                     value={form.fContact}
@@ -1332,7 +1334,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       form.setFContact(e.target.value.replace(/\D/g, ""));
                       setLocalErrors((prev) => ({ ...prev, contact: "" }));
                     }}
-                    className="w-full h-12 pl-14 pr-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-sm text-slate-100 font-semibold tracking-wider placeholder:text-slate-600 shadow-inner"
+                    className="flex-1 h-12 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-sm text-slate-100 font-semibold tracking-wider placeholder:text-slate-600 shadow-inner"
                   />
                 </div>
                 {localErrors.contact && (

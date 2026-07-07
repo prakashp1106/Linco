@@ -169,102 +169,151 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   ];
   return (
-    <div className="space-y-24 select-none overflow-hidden max-w-7xl mx-auto px-4 md:px-6">
+    <div className="space-y-24 select-none overflow-hidden max-w-5xl mx-auto px-4 md:px-6 w-full">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="relative pt-20 pb-12 text-center overflow-visible">
+      <section className="relative pt-28 pb-20 text-center overflow-visible">
         {/* Deep luxurious multi-layered gradient backdrop */}
         <div className="absolute inset-x-0 -top-40 max-h-[600px] bg-gradient-to-b from-indigo-500/5 via-cyan-500/5 to-transparent blur-[130px] pointer-events-none z-0 opacity-90 animate-pulse" />
         <div className="absolute left-1/2 top-12 -translate-x-1/2 w-[70%] h-[320px] bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-cyan-500/10 rounded-full filter blur-[100px] opacity-70 pointer-events-none z-0" />
         
-        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
+        <div className="relative z-10 max-w-5xl mx-auto space-y-8 px-4">
+          {/* Brand & Tagline Header */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#09090c]/95 border border-[#1c1c26] text-[11px] font-mono font-extrabold text-indigo-400 uppercase tracking-wider backdrop-blur-xl shadow-lg relative overflow-hidden group"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-3"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500 shadow-[0_0_8px_#6366f1]"></span>
-            </span>
-            <span className="bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent">
-              Verified Cryptographic Security Protocol
-            </span>
+            <h2 className="text-sm font-black tracking-[0.3em] text-slate-100 font-sans uppercase">
+              LINCO
+            </h2>
+            <p className="text-[10px] md:text-xs font-mono font-bold text-indigo-400 uppercase tracking-[0.2em] max-w-md mx-auto">
+              Locate &bull; Identify &bull; Notify &bull; Connect &bull; Owner
+            </p>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-sans font-extrabold tracking-tight text-white leading-[1.08] pr-2"
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-[clamp(2.5rem,6.5vw,4.5rem)] font-sans font-extrabold tracking-tight text-white leading-[1.1]"
           >
-            Recover What's Lost. <br />
+            Your identity stays private. <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-400 bg-clip-text text-transparent">
-              Shielded by Local Trust.
+              Your item doesn't.
             </span>
           </motion.h1>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-slate-300 text-[13px] md:text-sm max-w-xl mx-auto leading-relaxed font-normal"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="space-y-4 max-w-2xl mx-auto"
           >
-            India's premier secure lost-and-found repository for verified organizations, schools, and enterprise spaces. Enabled by browser-native PIN encryption.
-          </motion.p>
+            <p className="text-slate-200 text-sm md:text-lg font-medium tracking-tight">
+              Never lose what matters. <br className="sm:hidden" />
+              <span className="text-slate-400">Powered by people. Protected by AI.</span>
+            </p>
+            <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-xl mx-auto">
+              Report a lost or found item in under one minute while your identity remains private until ownership is verified.
+            </p>
+          </motion.div>
 
           {/* Action CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
             <button
               onClick={() => onNavigateToReport()}
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition-all duration-300 shadow-xl shadow-indigo-950/20 flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
             >
-              Report Lost or Found Item
+              Start Report
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={onNavigateToFeed}
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#12121a] border border-[#1c1c26] hover:bg-[#1a1a26] text-slate-200 font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
             >
-              Browse Active Feed
+              Browse Community Feed
               <Compass size={14} className="text-slate-400 animate-spin" style={{ animationDuration: '60s' }} />
             </button>
           </motion.div>
         </div>
       </section>
 
-      {/* 2. TRUST STRIP */}
-      <section className="border-y border-[#1a1a24] py-8 bg-[#07070a]/40 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="space-y-1">
-            <div className="text-indigo-400 font-mono text-[11px] font-extrabold tracking-wider flex items-center justify-center gap-1.5">
-              <Users size={14} className="text-indigo-400" /> CLOSED NETWORKS
+      {/* 2. PREMIUM TRUST SECTION */}
+      <section className="relative py-16 bg-[#07070a]/30 border-y border-[#161621] overflow-hidden w-full max-w-5xl mx-auto">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
+        
+        <div className="max-w-5xl mx-auto px-4 relative z-10 space-y-12">
+          {/* Section Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <h3 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-[0.2em] flex items-center justify-center gap-1.5">
+              🛡️ Trusted by Design
+            </h3>
+            
+            <div className="space-y-1">
+              <p className="text-2xl md:text-3xl font-sans font-extrabold text-white leading-tight">
+                Your identity stays private.
+              </p>
+              <p className="text-2xl md:text-3xl font-sans font-extrabold text-slate-400 leading-tight">
+                Your item doesn't.
+              </p>
             </div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Verified environments only</p>
+
+            <p className="text-xs md:text-sm text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
+              Trusted by communities. Powered by AI. Built for everyone.
+            </p>
           </div>
-          <div className="space-y-1">
-            <div className="text-cyan-400 font-mono text-[11px] font-extrabold tracking-wider flex items-center justify-center gap-1.5">
-              <Shield size={14} className="text-cyan-400" /> ANTI-FRAUD ENGINE
-            </div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">AI verification questions</p>
+
+          {/* Asymmetric Grid of Trust Indicators */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: "Private by Default",
+                desc: "Your contact details are kept strictly private and anonymous until a matched claim is successfully verified."
+              },
+              {
+                title: "Verified Claims",
+                desc: "Owner validation uses dynamic, non-revealing questions generated by smart AI to block unauthorized claims."
+              },
+              {
+                title: "AI-Assisted Matching",
+                desc: "Deep correlation matching finds exact similarities between lost reports and found logs instantly."
+              },
+              {
+                title: "Secure Communication",
+                desc: "Direct coordination is enabled only after local security PIN validation to keep conversations protected."
+              }
+            ].map((indicator, idx) => (
+              <div 
+                key={idx}
+                className="p-6 rounded-2xl bg-[#030304]/60 border border-[#161621] space-y-3 hover:border-[#1c1c26] hover:bg-[#07070a]/60 transition-all duration-300"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-extrabold text-sm">✓</span>
+                  <h4 className="text-xs font-bold text-slate-200 tracking-wide font-sans">{indicator.title}</h4>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                  {indicator.desc}
+                </p>
+              </div>
+            ))}
           </div>
-          <div className="space-y-1">
-            <div className="text-violet-400 font-mono text-[11px] font-extrabold tracking-wider flex items-center justify-center gap-1.5">
-              <Lock size={14} className="text-violet-400" /> BROWSER-NATIVE SECURITY
+
+          {/* Operational Status Badge */}
+          <div className="flex justify-center pt-2">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-[10px] font-mono font-bold tracking-wider text-emerald-400 uppercase shadow-md shadow-emerald-950/10">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span>Operational &bull; All Systems Available</span>
             </div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Client-side AES encryption</p>
-          </div>
-          <div className="space-y-1">
-            <div className="text-purple-400 font-mono text-[11px] font-extrabold tracking-wider flex items-center justify-center gap-1.5">
-              <CheckCircle2 size={14} className="text-purple-400" /> SAFE RECOVERY
-            </div>
-            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Coordinated contact handovers</p>
           </div>
         </div>
       </section>
@@ -304,14 +353,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium mb-4">
-              Lost a laptop, wallet, key, or device? File a trace report protected with client-side PIN encryption.
+              Lost a laptop, wallet, key, or device? Create a private search listing to notify your community.
             </p>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/15 uppercase tracking-wide">
                 Start Search
               </span>
               <span className="text-[9px] font-mono text-slate-500">
-                AES-GCM secured
+                Private
               </span>
             </div>
           </motion.div>
@@ -357,7 +406,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Smart Matches
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Explore automatic correlation reports generated by Gemini deep similarity networks.
+              Instantly discover possible matching items found nearby, powered by smart AI.
             </p>
             <span className="text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/15 uppercase tracking-wide">
               AI Powered
@@ -378,7 +427,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Notification Center
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Monitor claim updates, messages, PIN authorization checks, and system dispatches in real-time.
+              Get real-time updates on your active claims, messages, and matches.
             </p>
             <span className="text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/15 uppercase tracking-wide">
               Live Alerts
@@ -409,8 +458,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 3. PLATFORM STATISTICS */}
-      <section className="space-y-8">
-        <div className="text-center space-y-2">
+      <section className="space-y-12">
+        <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#09090c] border border-[#1c1c26] text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -418,38 +467,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </span>
             <span>Platform Pulse</span>
           </div>
-          <p className="text-xl font-sans font-extrabold text-slate-100 tracking-tight">Realtime Cryptographic Recovery Index</p>
+          <p className="text-2xl md:text-3xl font-sans font-extrabold text-slate-100 tracking-tight">Active community recovery counter</p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           {[
             {
               value: stats.total,
-              label: "Assets Protected",
-              desc: "Total cataloged listings",
+              label: "Assets cataloged",
+              desc: "Total listings verified",
               color: "text-white",
               badge: "SECURED"
             },
             {
               value: stats.lost,
-              label: "Active Searches",
+              label: "Active searches",
               desc: "Seeking missing objects",
               color: "text-rose-400",
-              badge: "LIVE TRACE"
+              badge: "ACTIVE SEARCH"
             },
             {
               value: stats.found,
-              label: "Safekeeping Logs",
+              label: "Safekeeping logs",
               desc: "Awaiting safe returns",
               color: "text-emerald-400",
-              badge: "SECURED WARE"
+              badge: "SAFEGUARDED"
             },
             {
               value: `${stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 88}%`,
-              label: "Recovery Rate",
+              label: "Recovery rate",
               desc: "Proven safe return speed",
               color: "text-indigo-400",
-              badge: "PROVEN RATIO"
+              badge: "SUCCESS RATE"
             }
           ].map((item, idx) => (
             <motion.div
@@ -474,7 +523,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 4. FLAGSHIP USP: TIMELINE RECONSTRUCTOR SHOWCASE */}
-      <section className="space-y-12 relative py-12 px-6 md:px-8 rounded-3xl bg-[#07070a]/80 border border-[#1c1c26] shadow-2xl overflow-hidden">
+      <section className="space-y-16 relative py-16 px-6 md:px-8 rounded-[32px] bg-[#07070a]/80 border border-[#1c1c26] shadow-2xl overflow-hidden w-full max-w-5xl mx-auto">
         
         {/* Subtle decorative grid lines and colored ambient circles for centerpiece focus */}
         <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none z-0" />
@@ -483,24 +532,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="text-center space-y-3 max-w-2xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-mono font-bold text-indigo-300 uppercase tracking-widest shadow-inner">
             <Clock size={11} className="animate-pulse" />
-            <span>Community Security Tech</span>
+            <span>Community search tool</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-sans font-extrabold text-white tracking-tight leading-none">
-            AI Timeline Reconstructor
+            Timeline Reconstructor
           </h2>
           <p className="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
-            Our diagnostic engine translates your chronological statements into a structured geospatial perimeter to assist physical search efforts.
+            Translate your daily sequence of events into a travel path, mapping key areas to simplify physical search efforts.
           </p>
         </div>
 
         {/* Interactive Workspace */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
           
           {/* Left Column: Preset Scenarios and Description Input */}
           <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest block">
-                01. SELECT PRESET EVENT TIMELINE:
+                01. CHOOSE A SCENARIO:
               </span>
               <div className="grid grid-cols-1 gap-2.5">
                 {SCENARIOS.map((scen) => (
@@ -536,7 +585,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="space-y-3 pt-4 border-t border-[#161621]">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest block">
-                  02. SIMULATE RECONSTRUCTION DATA:
+                  02. DESCRIBE WHAT HAPPENED:
                 </label>
                 {customResult && (
                   <button 
@@ -562,7 +611,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-950/20 active:scale-95"
               >
                 <Sparkles size={13} className={isAnalyzing ? "animate-spin" : ""} />
-                {isAnalyzing ? "Reconstructing custom trace..." : "Trace Custom Timeline"}
+                {isAnalyzing ? "Reconstructing path..." : "Map Search Path"}
               </button>
             </div>
           </div>
@@ -574,7 +623,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest block">Geospatial Diagnostic Core</span>
+                  <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest block">Smart Path Mapping</span>
                 </div>
                 <span className="text-sm font-extrabold text-slate-200">Reconstructed Path: {currentReconstructData.item}</span>
               </div>
@@ -642,11 +691,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="absolute bottom-3 left-3 bg-[#07070a]/95 border border-[#161621] p-2.5 rounded-xl text-[9px] text-slate-400 font-sans space-y-1 select-none pointer-events-none shadow-xl">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_4px_#06b6d4]" />
-                    <span>Estimated Location</span>
+                    <span>Estimated Checkpoint</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_4px_#6366f1]" />
-                    <span>AI Predicted Loss Hotspot</span>
+                    <span>Likely Search Area</span>
                   </div>
                 </div>
               </div>
@@ -676,7 +725,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="space-y-3">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                 <CheckCircle2 size={13} className="text-indigo-400 animate-pulse" />
-                SUGGESTED RECOVERY PROTOCOLS:
+                SUGGESTED SEARCH STEPS:
               </span>
               <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {currentReconstructData.suggestedActions.map((action, i) => (
@@ -693,54 +742,54 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 5. HOW LINCO WORKS */}
-      <section className="space-y-12">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Procedural Architecture</h2>
-          <p className="text-2xl font-bold text-slate-100">How LINCO Connects People and Belongings</p>
+      <section className="space-y-16 w-full max-w-5xl mx-auto">
+        <div className="text-center space-y-3">
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Simplicity first</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">How it works</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
           
-          <div className="p-6 rounded-2xl bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
+          <div className="p-6 sm:p-8 rounded-[24px] bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:border-[#222230] transition duration-300">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold font-mono">
               01
             </div>
             <h3 className="text-base font-bold text-slate-200">1. Publish Secure Report</h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Describe what was lost or found. Add details, upload an optional photo, and set a private 4-digit security PIN to encrypt your mobile number directly in your browser.
+              Describe what was lost or found. Add details, upload an optional photo, and set a private 4-digit PIN to keep your contact number safe.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
+          <div className="p-6 sm:p-8 rounded-[24px] bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:border-[#222230] transition duration-300">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold font-mono">
               02
             </div>
-            <h3 className="text-base font-bold text-slate-200">2. Realtime AI Cross-Matching</h3>
+            <h3 className="text-base font-bold text-slate-200">2. Smart Cross-Matching</h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Google Gemini matches descriptions, locations, categories, and times. It highlights possible matches and triggers local notifications to relevant users.
+              Our smart matching matches descriptions, locations, and details to find matching items and trigger local alerts immediately.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
+          <div className="p-6 sm:p-8 rounded-[24px] bg-[#07070a]/60 border border-[#161621] space-y-4 relative shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:border-[#222230] transition duration-300">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold font-mono">
               03
             </div>
-            <h3 className="text-base font-bold text-slate-200">3. Claim &amp; Prove Ownership</h3>
+            <h3 className="text-base font-bold text-slate-200">3. Secure Handover</h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Claimants are tested using dynamic ownership questions generated by AI. Upon success, they enter your 4-digit PIN to decrypt contact details and connect.
+              Claimants verify their ownership using smart questions. They unlock your contact info with your 4-digit PIN to coordinate a safe return.
             </p>
           </div>
         </div>
       </section>
 
       {/* 6. CORE FEATURES BENTO GRID */}
-      <section className="space-y-12">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Platform Capabilities</h2>
-          <p className="text-2xl font-bold text-slate-100">High-Fidelity Safeguards for Recovery</p>
+      <section className="space-y-16 w-full max-w-5xl mx-auto">
+        <div className="text-center space-y-3">
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Intelligent design</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">Built for safe, swift recovery.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 max-w-5xl mx-auto">
           
           {/* PRIMARY FEATURE CARD 1: Voice-Powered AI Reporting (md:col-span-8) */}
           <div className="rounded-3xl bg-[#07070a]/60 border border-[#161621] md:col-span-8 p-6 sm:p-8 flex flex-col justify-between space-y-6 relative overflow-hidden group hover:border-[#222230] transition-all duration-300 shadow-[0_12px_24px_rgba(0,0,0,0.4)]">
@@ -751,7 +800,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-md">
                   <Mic size={18} className="animate-pulse" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-100 font-sans tracking-tight">Voice-Powered AI Reporting</h3>
+                <h3 className="text-lg font-extrabold text-slate-100 font-sans tracking-tight">Voice-Powered Reporting</h3>
                 <p className="text-xs text-slate-400 leading-relaxed font-medium">
                   Tap the microphone and describe your situation naturally. Our AI extracts item attributes, tags, locations, and time-ranges to pre-populate your form in real-time.
                 </p>
@@ -760,7 +809,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {/* High-Fidelity Audio Waveform Mockup */}
               <div className="sm:col-span-5 bg-[#030304]/80 border border-[#1c1c26] p-4 rounded-2xl flex flex-col justify-between space-y-3 font-mono text-[9px] text-slate-500">
                 <div className="flex justify-between items-center pb-2 border-b border-[#161621]">
-                  <span className="text-indigo-400 font-bold">SPEECH_INPUT.WAV</span>
+                  <span className="text-indigo-400 font-bold">Audio Recording</span>
                   <span className="text-slate-600">00:04</span>
                 </div>
                 <div className="flex items-center gap-1 h-8 justify-center py-1">
@@ -781,9 +830,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2 border-t border-[#161621]">
-              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Speech-to-Text</span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">JSON Entity Extraction</span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Gemini API</span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Voice Assist</span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Smart Fill</span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Auto Parsing</span>
             </div>
           </div>
 
@@ -796,7 +845,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <Camera size={18} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-extrabold text-slate-100 font-sans tracking-tight">AI Image Recognition</h3>
+                <h3 className="text-lg font-extrabold text-slate-100 font-sans tracking-tight">Photo Match Verification</h3>
                 <p className="text-xs text-slate-400 leading-relaxed font-medium">
                   Snap a photo of any found item to instantly identify objects, brand logos, colors, and physical attributes for streamlined matching.
                 </p>
@@ -817,25 +866,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-2 border-t border-[#161621]">
-              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Vision AI</span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Metadata Predict</span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Photo Scanner</span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#030304] border border-[#161621] text-[10px] text-slate-400 font-mono font-semibold">Auto Tagging</span>
             </div>
           </div>
 
-          {/* SECONDARY FEATURE CARD 3: AES Encryption (md:col-span-4) */}
+          {/* SECONDARY FEATURE CARD 3: Private Contact Safeguards (md:col-span-4) */}
           <div className="rounded-3xl bg-[#07070a]/60 border border-[#161621] md:col-span-4 p-6 flex flex-col justify-between space-y-6 hover:border-[#222230] transition-all duration-300 shadow-[0_12px_24px_rgba(0,0,0,0.4)]">
             <div className="space-y-3">
               <div className="w-9 h-9 rounded-lg bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400">
                 <Lock size={16} />
               </div>
-              <h4 className="text-sm font-extrabold text-slate-200">Local AES-GCM Privacy</h4>
+              <h4 className="text-sm font-extrabold text-slate-200">Secure Local Privacy</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                Contact details are fully encrypted on your local machine using the Web Crypto API before saving. No plaintext number ever touches our databases.
+                Your contact details are encrypted directly in your browser before they are sent to our server, keeping your number private until a match is confirmed.
               </p>
             </div>
             <div className="flex gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Local Crypt</span>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">AES-GCM-256</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Private</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Safe</span>
             </div>
           </div>
 
@@ -851,8 +900,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
             <div className="flex gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Notifications</span>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Geo Match</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Instant Alert</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Nearby Match</span>
             </div>
           </div>
 
@@ -862,14 +911,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="w-9 h-9 rounded-lg bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-indigo-400">
                 <Map size={16} />
               </div>
-              <h4 className="text-sm font-extrabold text-slate-200">Interactive Spatial Map</h4>
+              <h4 className="text-sm font-extrabold text-slate-200">Interactive Area Map</h4>
               <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                Visualize and explore reported lost or found items geographically with precision radius controls and interactive OpenStreetMap markers.
+                See reported lost or found items on a clean map with precision area highlights to track reported sightings easily.
               </p>
             </div>
             <div className="flex gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Geospatial</span>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">OpenStreetMap</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Map View</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-[#030304] border border-[#1c1c26] text-[9px] text-slate-500 font-mono">Local Areas</span>
             </div>
           </div>
 
@@ -877,13 +926,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 7. COMMUNITY IMPACT SECTION */}
-      <section className="space-y-8 max-w-5xl mx-auto">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Community Network</h2>
-          <p className="text-2xl font-bold text-slate-100">Citizen Volunteers &amp; Recovery Badges</p>
+      <section className="space-y-16 max-w-5xl mx-auto w-full">
+        <div className="text-center space-y-3">
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">A collective effort</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">Powered by your community.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="p-6 sm:p-8 rounded-2xl bg-[#07070a]/60 border border-[#161621] space-y-4 shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
             <h3 className="text-base font-bold text-slate-200 flex items-center gap-2">
               <Users size={18} className="text-indigo-400" />
@@ -939,13 +988,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 8. PERSONA TESTIMONIALS */}
-      <section className="space-y-12">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Real Stories</h2>
-          <p className="text-2xl font-bold text-slate-100">Trusted by Real People in Everyday Situations</p>
+      <section className="space-y-16 w-full max-w-5xl mx-auto">
+        <div className="text-center space-y-3">
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Real experiences</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">Stories from our community</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Persona 1: Rahul */}
           <div className="p-6 rounded-2xl bg-[#07070a]/60 border border-[#161621] flex flex-col justify-between shadow-[0_8px_20px_rgba(0,0,0,0.4)]">
             <p className="text-xs text-slate-400 leading-relaxed font-medium italic">
@@ -997,10 +1046,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* 9. FAQ ACCORDION SECTION */}
-      <section className="space-y-8 max-w-3xl mx-auto">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Support Portal</h2>
-          <p className="text-2xl font-bold text-slate-100">Frequently Answered Queries</p>
+      <section className="space-y-12 max-w-3xl mx-auto">
+        <div className="text-center space-y-3">
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Have questions?</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">Common questions</p>
         </div>
 
         <div className="space-y-4">
@@ -1036,6 +1085,85 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           ))}
         </div>
       </section>
+
+      {/* 10. PREMIUM FOOTER */}
+      <footer className="pt-24 pb-8 border-t border-[#161621] mt-24">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16">
+          <div className="md:col-span-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-black tracking-tight text-white font-mono">LINCO</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[#12121a] border border-[#1c1c26] text-indigo-400 font-bold uppercase tracking-wider">
+                V2.0
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed max-w-sm font-medium">
+              A private, simple, and community-driven path mapping and item recovery network.
+            </p>
+            <div className="text-[10px] text-slate-500 font-mono font-medium">
+              "Your identity stays private. Your item doesn't."
+            </div>
+          </div>
+
+          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            <div className="space-y-4">
+              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                Product
+              </span>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <button onClick={onNavigateToFeed} className="text-slate-500 hover:text-slate-300 font-medium transition text-left cursor-pointer">
+                    Recover Feed
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigateToReport()} className="text-slate-500 hover:text-slate-300 font-medium transition text-left cursor-pointer">
+                    Report Lost / Found
+                  </button>
+                </li>
+                <li>
+                  <span className="text-slate-600 font-medium select-none">
+                    Timeline Reconstructor
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                Resources
+              </span>
+              <ul className="space-y-2 text-xs font-medium">
+                <li><span className="text-slate-500">Community Guidelines</span></li>
+                <li><span className="text-slate-500">Privacy Standards</span></li>
+                <li><span className="text-slate-500">Support Center</span></li>
+              </ul>
+            </div>
+
+            <div className="space-y-4 col-span-2 sm:col-span-1">
+              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                Network Status
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-medium text-emerald-400">All systems operational</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-[#161621] flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-slate-500 font-medium">
+          <div>
+            &copy; {new Date().getFullYear()} LINCO. Built for safe, swift community returns.
+          </div>
+          <div className="flex gap-6">
+            <span className="hover:text-slate-300 cursor-pointer transition">Terms of Service</span>
+            <span className="hover:text-slate-300 cursor-pointer transition">Privacy Policy</span>
+          </div>
+        </div>
+      </footer>
 
     </div>
   );

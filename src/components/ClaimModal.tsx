@@ -370,13 +370,21 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                         <label className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
                           <Phone size={11} className="text-slate-500" /> WhatsApp Mobile
                         </label>
-                        <input
-                          type="tel"
-                          placeholder="E.g., 9876543210"
-                          value={claimantContact}
-                          onChange={(e) => setClaimantContact(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-200 transition"
-                        />
+                        <div className="flex gap-2">
+                          <div className="flex items-center justify-center px-3 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] text-xs text-slate-400 font-bold select-none shrink-0 gap-1">
+                            <span>🇮🇳</span>
+                            <span>+91</span>
+                          </div>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={10}
+                            placeholder="9876543210"
+                            value={claimantContact}
+                            onChange={(e) => setClaimantContact(e.target.value.replace(/\D/g, ""))}
+                            className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-200 transition"
+                          />
+                        </div>
                       </div>
                     </div>
 
