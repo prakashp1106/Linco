@@ -297,10 +297,13 @@ export const apiService = {
   },
 
   /**
-   * Track a claim using claim ID and tracking code (Magic Link / code lookup)
+   * Track a claim using claim ID and optional tracking code (Magic Link / code lookup)
    */
-  async trackClaim(claimId: string, code: string, postId?: string): Promise<{ success: boolean; claim: Claim }> {
-    let url = `/api/claims/track?claimId=${encodeURIComponent(claimId)}&code=${encodeURIComponent(code)}`;
+  async trackClaim(claimId: string, code?: string, postId?: string): Promise<{ success: boolean; claim: Claim }> {
+    let url = `/api/claims/track?claimId=${encodeURIComponent(claimId)}`;
+    if (code) {
+      url += `&code=${encodeURIComponent(code)}`;
+    }
     if (postId) {
       url += `&postId=${encodeURIComponent(postId)}`;
     }
@@ -423,6 +426,54 @@ export const apiService = {
     });
     if (!response.ok) {
       throw new Error("Failed to update configuration");
+    }
+    return response.json();
+  },
+
+  /**
+   * Send a chat message inside the Recovery Room
+   */
+  async sendChatMessage(claimId: string, sender: "Claimant" | "Finder", text: string): Promise<{ success: boolean; claim: Claim }> {
+    const response = await fetch(`/api/claims/${claimId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sender, text }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to send chat message");
+    }
+    return response.json();
+  },
+
+  /**
+   * Confirm mutual trust inside the Recovery Room
+   */
+  async confirmTrust(claimId: string, role: "Claimant" | "Finder"): Promise<{ success: boolean; claim: Claim }> {
+    const response = await fetch(`/api/claims/${claimId}/trust`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to confirm trust");
+    }
+    return response.json();
+  },
+
+  /**
+   * Confirm handover completed inside the Recovery Room
+   */
+  async completeHandover(claimId: string, role: "Claimant" | "Finder"): Promise<{ success: boolean; claim: Claim; post?: Post }> {
+    const response = await fetch(`/api/claims/${claimId}/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to complete recovery");
     }
     return response.json();
   }

@@ -17,7 +17,10 @@ import {
   Phone, 
   Calendar,
   Lock,
-  Delete
+  Delete,
+  Send,
+  LockOpen,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";
@@ -46,8 +49,35 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
   const [errorMsg, setErrorMsg] = useState("");
   const [shaking, setShaking] = useState(false);
 
+  // Recovery Room states
+  const [chatInputs, setChatInputs] = useState<Record<string, string>>({});
+  const [sendingMsg, setSendingMsg] = useState<Record<string, boolean>>({});
+
   const inputRefs = useRef<HTMLInputElement[]>([]);
   const pin = pinDigits.join("").trim();
+
+  // Sync active Recovery Room status and messages in background
+  const refreshClaims = async () => {
+    if (!post || !pin || !isPinVerified) return;
+    try {
+      const res = await apiService.listClaims(post.id, pin);
+      if (res.success && res.claims) {
+        setClaims(res.claims);
+      }
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isOpen && isPinVerified && post) {
+      interval = setInterval(() => {
+        refreshClaims();
+      }, 5000); // Polling every 5s
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isOpen, isPinVerified, post?.id]);
 
   // Clear claim and PIN state whenever another post is opened or modal is closed
   useEffect(() => {
@@ -228,6 +258,53 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
       setErrorMsg(err.message || "Rejection failed");
     } finally {
       setActioningClaimId(null);
+    }
+  };
+
+  const handleSendFinderMessage = async (claimId: string, text: string) => {
+    if (!text.trim()) return;
+    setSendingMsg((prev) => ({ ...prev, [claimId]: true }));
+    try {
+      const res = await apiService.sendChatMessage(claimId, "Finder", text);
+      if (res.success) {
+        setClaims((prev) =>
+          prev.map((c) => (c.id === claimId ? res.claim : c))
+        );
+        setChatInputs((prev) => ({ ...prev, [claimId]: "" }));
+      }
+    } catch (err: any) {
+      setErrorMsg("Failed to send message: " + err.message);
+    } finally {
+      setSendingMsg((prev) => ({ ...prev, [claimId]: false }));
+    }
+  };
+
+  const handleFinderConfirmTrust = async (claimId: string) => {
+    try {
+      const res = await apiService.confirmTrust(claimId, "Finder");
+      if (res.success) {
+        setClaims((prev) =>
+          prev.map((c) => (c.id === claimId ? res.claim : c))
+        );
+      }
+    } catch (err: any) {
+      setErrorMsg("Failed to confirm trust: " + err.message);
+    }
+  };
+
+  const handleFinderConfirmReturn = async (claimId: string) => {
+    try {
+      const res = await apiService.completeHandover(claimId, "Finder");
+      if (res.success) {
+        setClaims((prev) =>
+          prev.map((c) => (c.id === claimId ? res.claim : c))
+        );
+        if (onPostUpdated && res.post) {
+          onPostUpdated(res.post);
+        }
+      }
+    } catch (err: any) {
+      setErrorMsg("Failed to complete recovery: " + err.message);
     }
   };
 
@@ -514,12 +591,12 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                             ))}
                           </div>
 
-                          {/* Actions or Contact Reveal */}
-                          <div className="pt-2 border-t border-[#12121a] flex flex-wrap gap-2 items-center justify-between">
+                          {/* Actions or Contact Reveal / Recovery Room workspace */}
+                          <div className="pt-3 border-t border-[#12121a] text-left space-y-4">
                             {(claim.status === "Pending" || claim.status === "Under Review") ? (
-                              <>
-                                <p className="text-[9px] text-slate-500 italic font-mono">
-                                  Approving reveals connection details securely.
+                              <div className="flex flex-wrap gap-2 items-center justify-between">
+                                <p className="text-[10px] text-slate-500 italic font-mono">
+                                  Review answers. Approving activates the Secure Recovery Room.
                                 </p>
                                 <div className="flex gap-2">
                                   <button
@@ -540,40 +617,172 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                       </>
                                     ) : (
                                       <>
-                                        <Check size={14} /> Approve Claim
+                                        <Check size={14} /> Approve & Chat
                                       </>
                                     )}
                                   </button>
                                 </div>
-                              </>
-                            ) : (claim.status === "Approved" || claim.status === "Contact Unlocked" || claim.status === "Resolved") ? (
-                              <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-950/10 p-3 rounded-xl border border-emerald-500/10">
-                                <div className="space-y-1">
-                                  <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-                                    Your Unlocked Contact Details
-                                  </span>
-                                  <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1">
-                                    <Phone size={10} /> {claim.revealedOwnerContact || "Revealed successfully"}
-                                  </span>
+                              </div>
+                            ) : claim.status === "Rejected" ? (
+                              <p className="text-[10px] text-slate-500 italic font-mono">
+                                Claim declined. Connection room deactivated.
+                              </p>
+                            ) : (
+                              /* Active Recovery Room workspace for approved claims */
+                              <div className="space-y-4 bg-[#050508] p-4 rounded-2xl border border-[#161621]">
+                                <div className="flex items-center gap-2 text-cyan-400 font-mono text-[10px] font-black uppercase tracking-widest">
+                                  <ShieldCheck size={12} /> Secure Recovery Room Workspace
                                 </div>
-                                <div className="space-y-1">
-                                  <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest font-mono">
-                                    Claimant Contact Details
-                                  </span>
-                                  <a
-                                    href={`https://wa.me/91${claim.claimantContact}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs font-mono font-extrabold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
-                                  >
-                                    <MessageSquare size={12} /> +91 {claim.claimantContact} <ExternalLink size={10} />
-                                  </a>
+
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+                                  
+                                  {/* Left: Chat Module (7/12) */}
+                                  <div className="md:col-span-7 bg-[#030304]/60 border border-[#14141d] rounded-xl flex flex-col h-[280px]">
+                                    <div className="px-3 py-1.5 bg-[#08080f] border-b border-[#111119] flex items-center gap-1.5">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                      <span className="text-[9px] font-mono font-bold text-slate-400">Handover Chat</span>
+                                    </div>
+                                    
+                                    {/* Messages list */}
+                                    <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                                      {!claim.messages || claim.messages.length === 0 ? (
+                                        <div className="text-center py-12 text-slate-600 text-[10px] font-mono">
+                                          Room active. Send a greeting to start.
+                                        </div>
+                                      ) : (
+                                        claim.messages.map((msg) => {
+                                          const isMe = msg.sender === "Finder";
+                                          return (
+                                            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                                              <div className={`max-w-[85%] rounded-xl px-3 py-1.5 text-[11px] ${
+                                                isMe 
+                                                  ? "bg-cyan-500 text-slate-950 font-medium rounded-tr-none" 
+                                                  : "bg-[#0c0c14] border border-[#1e1e2d] text-slate-200 rounded-tl-none"
+                                              }`}>
+                                                <span className="block text-[7px] opacity-65 font-bold font-mono">
+                                                  {isMe ? "You (Finder)" : "Claimant"}
+                                                </span>
+                                                <p className="leading-snug whitespace-pre-wrap">{msg.text}</p>
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+
+                                    {/* Sender Form */}
+                                    <form 
+                                      onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const text = chatInputs[claim.id] || "";
+                                        handleSendFinderMessage(claim.id, text);
+                                      }}
+                                      className="p-2 bg-[#08080f] border-t border-[#111119] flex gap-1.5"
+                                    >
+                                      <input
+                                        type="text"
+                                        placeholder="Type secure meeting coordinates..."
+                                        value={chatInputs[claim.id] || ""}
+                                        onChange={(e) => setChatInputs({ ...chatInputs, [claim.id]: e.target.value })}
+                                        disabled={sendingMsg[claim.id]}
+                                        className="flex-1 px-3 py-1.5 bg-[#030304] border border-[#1c1c2b] focus:border-cyan-500 outline-none rounded-lg text-[11px] text-slate-200"
+                                      />
+                                      <button
+                                        type="submit"
+                                        disabled={!(chatInputs[claim.id] || "").trim() || sendingMsg[claim.id]}
+                                        className="p-1.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-950 disabled:text-slate-800 text-slate-950 rounded-lg transition"
+                                      >
+                                        <Send size={11} />
+                                      </button>
+                                    </form>
+                                  </div>
+
+                                  {/* Right: Verification Checkpoints & Handover (5/12) */}
+                                  <div className="md:col-span-5 space-y-3.5 flex flex-col justify-between">
+                                    
+                                    {/* 1. Trust Confirmation Check */}
+                                    <div className="p-3 bg-[#08080f] rounded-xl border border-[#13131f] space-y-2">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-[9px] font-bold font-display text-slate-300">Mutual Trust status</span>
+                                        <Lock size={10} className="text-slate-500" />
+                                      </div>
+                                      
+                                      <div className="space-y-1 text-[9px] font-mono">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-500">Claimant:</span>
+                                          <span className={claim.claimantTrusted ? "text-emerald-400 font-bold" : "text-amber-500"}>
+                                            {claim.claimantTrusted ? "✓ Confirmed" : "Pending"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-500">Finder (You):</span>
+                                          <span className={claim.finderTrusted ? "text-emerald-400 font-bold" : "text-amber-500"}>
+                                            {claim.finderTrusted ? "✓ Confirmed" : "Pending"}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {!claim.finderTrusted && (
+                                        <button
+                                          onClick={() => handleFinderConfirmTrust(claim.id)}
+                                          className="w-full py-1.5 text-[10px] bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 hover:border-cyan-400 text-cyan-400 font-bold uppercase rounded-lg transition"
+                                        >
+                                          Confirm I Trust Claimant
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* 2. Contacts (Visible if unlocked) */}
+                                    {(claim.status === "Contact Unlocked" || claim.status === "Resolved" || (claim.claimantTrusted && claim.finderTrusted)) ? (
+                                      <div className="p-3 bg-emerald-950/10 rounded-xl border border-emerald-500/10 space-y-1.5">
+                                        <span className="block text-[8px] font-mono font-bold text-emerald-400 uppercase tracking-wider">Unlocked Claimant Contact</span>
+                                        <a
+                                          href={`https://wa.me/91${claim.claimantContact}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[11px] font-mono font-black text-slate-200 hover:text-emerald-400 flex items-center gap-1"
+                                        >
+                                          <MessageSquare size={10} /> +91 {claim.claimantContact} <ExternalLink size={9} />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <div className="p-2.5 bg-[#030304] rounded-xl border border-[#161622] text-center text-[9px] text-slate-500 font-mono">
+                                        🔒 Confirm trust to reveal contact details
+                                      </div>
+                                    )}
+
+                                    {/* 3. Handover Receipts confirmations */}
+                                    <div className="p-3 bg-[#08080f] rounded-xl border border-[#13131f] space-y-2">
+                                      <span className="block text-[9px] font-bold text-slate-300">Complete Handover</span>
+                                      
+                                      <div className="space-y-1 text-[9px] font-mono">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-500">You returned:</span>
+                                          <span className={claim.finderConfirmedReturned ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                                            {claim.finderConfirmedReturned ? "✓ Yes" : "No"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-slate-500">Claimant received:</span>
+                                          <span className={claim.ownerConfirmedReceived ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                                            {claim.ownerConfirmedReceived ? "✓ Yes" : "No"}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {!claim.finderConfirmedReturned && (
+                                        <button
+                                          onClick={() => handleFinderConfirmReturn(claim.id)}
+                                          className="w-full py-1.5 text-[10px] bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase rounded-lg transition"
+                                        >
+                                          Confirm I Returned Item
+                                        </button>
+                                      )}
+                                    </div>
+
+                                  </div>
                                 </div>
                               </div>
-                            ) : (
-                              <p className="text-[10px] text-slate-500 italic font-mono">
-                                Claim declined. No contact details were shared.
-                              </p>
                             )}
                           </div>
                         </div>

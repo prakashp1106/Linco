@@ -424,10 +424,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Bell size={16} />
             </div>
             <h4 className="text-sm font-bold text-slate-100 group-hover:text-amber-400 transition-colors mb-1.5">
-              Notification Center
+              Activity Center
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Get real-time updates on your active claims, messages, and matches.
+              Track active claims, secure handovers, AI matches, and trust levels.
             </p>
             <span className="text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/15 uppercase tracking-wide">
               Live Alerts

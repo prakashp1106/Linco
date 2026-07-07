@@ -1014,11 +1014,11 @@ export default function App() {
           <button
             onClick={() => setNotificationsOpen(true)}
             className="px-2.5 sm:px-3 py-2 rounded-xl font-sans text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer relative text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
-            title="Notification Center"
+            title="Activity Center"
             id="top-nav-bell-button"
           >
             <Bell className="text-rose-500 hover:scale-105 transition-transform duration-150" size={13} />
-            <span className="hidden sm:inline">Alerts</span>
+            <span className="hidden sm:inline">Activity Center</span>
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
                 {unreadCount}
@@ -1344,7 +1344,6 @@ export default function App() {
           setTrackerCode("");
         }}
         initialClaimId={trackerClaimId}
-        initialCode={trackerCode}
       />
 
       <QRModal
@@ -1364,9 +1363,21 @@ export default function App() {
         notifications={notifications}
         onRefreshNotifications={loadNotifications}
         addToast={addToast}
+        posts={posts}
+        onOpenClaimTracker={(claimId) => {
+          setTrackerClaimId(claimId);
+          setShowClaimTracker(true);
+        }}
+        onOpenOwnerClaims={(post) => {
+          setManagingPost(post);
+          setShowOwnerClaims(true);
+        }}
+        onNavigateToTab={(tab) => {
+          setActiveTab(tab as any);
+        }}
       />
 
-      <footer className="relative z-10 border-t border-[#161621] py-12 text-center select-none">
+      <footer className="relative z-10 border-t border-[#161621] py-12 text-center select-none" id="app-footer">
         <div className="max-w-md mx-auto space-y-6 px-4">
           <div className="space-y-1.5">
             <h4 className="text-sm font-black tracking-[0.2em] text-slate-100 font-sans uppercase">LINCO</h4>
@@ -1378,50 +1389,56 @@ export default function App() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[11px] text-slate-400 font-medium font-sans">
+          <nav 
+            className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[11px] text-slate-400 font-medium font-sans"
+            aria-label="Footer Navigation"
+          >
             <button
+              type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("privacy"); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
+              className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
+              aria-label="View Privacy Policy"
             >
               Privacy
             </button>
-            <span className="text-slate-700">•</span>
+            <span className="text-slate-700" aria-hidden="true">•</span>
             <button
+              type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("terms"); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
+              className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
+              aria-label="View Terms and Conditions"
             >
               Terms
             </button>
-            <span className="text-slate-700">•</span>
+            <span className="text-slate-700" aria-hidden="true">•</span>
             <button
+              type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("security"); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
+              className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
+              aria-label="View Security and Sessions"
             >
               Security
             </button>
-            <span className="text-slate-700">•</span>
+            <span className="text-slate-700" aria-hidden="true">•</span>
             <button
-              onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("privacy-center"); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              Trust Center
-            </button>
-            <span className="text-slate-700">•</span>
-            <button
+              type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("contact-team"); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
+              className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
+              aria-label="View Contact Support"
             >
               Contact
             </button>
-            <span className="text-slate-700">•</span>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
-              GitHub
-            </a>
-            <span className="text-slate-700">•</span>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+            <span className="text-slate-700" aria-hidden="true">•</span>
+            <a 
+              href="https://www.linkedin.com/in/prakashpathak1306" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
+              aria-label="Connect with Prakash Pathak on LinkedIn (opens in a new tab)"
+            >
               LinkedIn
             </a>
-          </div>
+          </nav>
 
           <div className="pt-2 border-t border-[#1c1c26]/40 space-y-1 text-[10px] text-slate-500 font-medium">
             <p>© 2026 LINCO. All rights reserved.</p>

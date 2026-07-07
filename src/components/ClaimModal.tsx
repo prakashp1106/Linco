@@ -157,29 +157,29 @@ export const TrustScoreCard: React.FC<{ aiScore: number }> = ({ aiScore }) => {
 export const SecurityExplanationCard: React.FC = () => {
   return (
     <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0c0c14] to-[#08080c] border border-[#161621] space-y-3 shadow-md" id="security-explanation-card">
-      <h4 className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
-        <ShieldCheck size={12} /> Cryptographic Security Protocols
+      <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+        <ShieldCheck size={14} /> Safe Ownership Verification
       </h4>
       <p className="text-[11px] text-slate-400 leading-relaxed">
-        LINCO operates a state-of-the-art secure routing workflow to prevent phishing &amp; fraud during handovers.
+        We use secure, private steps to ensure handovers are completely safe, authentic, and trouble-free.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[10px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[10px] sm:text-[11px]">
         <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🔒 Encrypted Storage</span>
-          <span className="text-slate-500 block leading-normal">Your phone number is encrypted. Only verified users can unlock contact details.</span>
+          <span className="font-bold text-slate-200 block">🔒 Your information stays protected</span>
+          <span className="text-slate-400 block leading-normal text-[10px]">Your contact details are fully protected. Only verified matched parties can unlock them.</span>
         </div>
         <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🛡 Access Guardrails</span>
-          <span className="text-slate-500 block leading-normal">Contact info is only unlocked for matched parties. Your phone is never exposed to the public feed.</span>
+          <span className="font-bold text-slate-200 block">🛡 Secure Contact Sharing</span>
+          <span className="text-slate-400 block leading-normal text-[10px]">Contact options are only unlocked once mutual ownership is verified. Your phone is never shown publicly.</span>
         </div>
         <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🤖 Semantic AI Vetting</span>
-          <span className="text-slate-500 block leading-normal">Our AI models analyze reports to detect fraudulent patterns and fake claims, keeping the platform secure.</span>
+          <span className="font-bold text-slate-200 block">🤖 AI helps verify genuine matches</span>
+          <span className="text-slate-400 block leading-normal text-[10px]">Our AI evaluates claims to confirm genuine details and protect against fraudulent claims.</span>
         </div>
         <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🔑 PIN Validation Check</span>
-          <span className="text-slate-500 block leading-normal">Security tracking code PINs prevent malicious claims and allow only authorized parties to follow status.</span>
+          <span className="font-bold text-slate-200 block">🔑 Safe Handover Code</span>
+          <span className="text-slate-400 block leading-normal text-[10px]">Unique verification tracking codes protect both parties and let you coordinate a safe, easy meeting.</span>
         </div>
       </div>
     </div>
@@ -282,7 +282,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
 
   const getMagicLink = () => {
     if (!createdClaim) return "";
-    return `${window.location.origin}?claimId=${createdClaim.id}&code=${createdClaim.trackingCode}`;
+    return `${window.location.origin}?claimId=${createdClaim.id}`;
   };
 
   const handleCopyMagicLink = () => {
@@ -323,7 +323,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#12121a] pb-3">
                   <div>
                     <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-indigo-400 uppercase tracking-widest bg-indigo-950/30 px-3 py-1 rounded-full border border-indigo-500/10 w-fit mb-1.5">
-                      <ShieldCheck size={12} className="text-indigo-400" /> Ownership Verification Protocol
+                      <ShieldCheck size={12} className="text-indigo-400" /> Safe Ownership Verification
                     </div>
                     <h3 className="text-base sm:text-lg font-display font-black text-slate-100">
                       Prove Ownership: {claimingPost.item}
@@ -334,17 +334,17 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 {/* PREMIUM TIMELINE */}
                 <VerificationTimeline currentStep={2} />
 
-                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed font-mono">
-                  To prevent unauthorized claims, LINCO mandates verification before contact exchange. 
-                  Provide your recovery credentials and complete the Gemini AI ownership questions below.
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed font-sans">
+                  To ensure items are returned to their rightful owners, we verify matches before sharing contact details.
+                  Please answer the simple verification questions below.
                 </p>
 
                 {/* Loader */}
                 {loading && (
                   <div className="py-14 text-center text-[12px] text-slate-400 font-medium space-y-3.5 bg-[#030304]/60 rounded-2xl border border-[#161621] p-6">
                     <RefreshCw className="animate-spin inline-block text-indigo-400" size={24} />
-                    <p className="font-mono tracking-wider text-[10px] uppercase text-slate-500 animate-pulse">
-                      Generating semantic verification questionnaire with Gemini AI...
+                    <p className="font-sans tracking-wide text-[11px] text-slate-400 animate-pulse">
+                      AI is helping prepare your verification questions...
                     </p>
                   </div>
                 )}
@@ -391,7 +391,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                     {/* AI Questions */}
                     <div className="space-y-3.5">
                       <div className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest border-b border-[#12121a] pb-1.5 flex items-center gap-1.5">
-                        <Sparkles size={11} className="text-indigo-400" /> AI Ownership Verification Queries
+                        <Sparkles size={11} className="text-indigo-400" /> Verify Item Details
                       </div>
                       {claimQuestions.map((q, idx) => (
                         <div key={idx} className="space-y-2 bg-[#030304]/30 border border-[#161621] p-3.5 rounded-2xl">
@@ -437,7 +437,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                       >
                         {submitting ? (
                           <>
-                            <RefreshCw className="animate-spin text-white" size={13} /> encrypting...
+                            <RefreshCw className="animate-spin text-white" size={13} /> submitting...
                           </>
                         ) : (
                           "Submit Verification"
@@ -457,9 +457,9 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-base sm:text-lg font-display font-black text-slate-100">Claim Handshake Initiated</h3>
-                  <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-1 font-mono">
-                    Ownership credentials recorded &amp; successfully encrypted. You have passed AI vetting.
+                  <h3 className="text-base sm:text-lg font-display font-black text-slate-100">Verification Registered</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-1 font-sans">
+                    Your details have been saved securely. Our AI helper has matched your description.
                   </p>
                 </div>
 
@@ -473,28 +473,16 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 <div className="bg-[#030304]/60 border border-[#161621] p-4 rounded-2xl text-left space-y-3 shadow-inner">
                   <div className="flex justify-between items-center pb-2 border-b border-[#12121a]">
                     <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-                      Secure Handshake ID
+                      Verification ID (Claim ID)
                     </span>
                     <span className="text-xs font-mono font-bold text-slate-300">
                       {createdClaim.id}
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center pb-2 border-b border-[#12121a]">
-                    <div>
-                      <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest block">
-                        Tracking Security PIN
-                      </span>
-                      <span className="text-[8px] text-slate-500 font-mono block">Use this code to check status &amp; unlock contact</span>
-                    </div>
-                    <span className="text-base font-mono font-extrabold text-indigo-400 tracking-widest bg-indigo-950/30 border border-indigo-500/20 px-3 py-1 rounded-lg">
-                      {createdClaim.trackingCode}
-                    </span>
-                  </div>
-
                   <div className="space-y-1.5 pt-1">
                     <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-                      Gemini Match Evaluation
+                      AI Match Details
                     </div>
                     <p className="text-[11px] text-slate-300 leading-relaxed font-mono italic bg-[#07070a] p-3 rounded-xl border border-[#1c1c26] pl-3 border-l-2 border-indigo-500/50">
                       "{createdClaim.aiReason}"
@@ -505,7 +493,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 {/* Magic Link Area */}
                 <div className="space-y-1.5 text-left bg-[#030304]/30 p-3 rounded-xl border border-[#161621]">
                   <label className="block text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider">
-                    Direct handoff link (Bookmark this)
+                    Direct check-in link (bookmark this to return later)
                   </label>
                   <div className="flex gap-2">
                     <input

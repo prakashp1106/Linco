@@ -29,7 +29,9 @@ import {
   FileCheck2,
   ChevronRight,
   ShieldAlert,
-  UserX
+  UserX,
+  Linkedin,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -59,7 +61,7 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
   // Simulated security log
   const [securityLogs, setSecurityLogs] = useState([
     { id: 1, action: "PIN Verification Passed", date: "2026-07-07 11:24:05", status: "success" },
-    { id: 2, action: "Claim Handshake Requested", date: "2026-07-07 09:12:15", status: "success" },
+    { id: 2, action: "Recovery Room Activated", date: "2026-07-07 09:12:15", status: "success" },
     { id: 3, action: "Consent Settings Updated", date: "2026-07-06 18:44:12", status: "success" }
   ]);
 
@@ -79,7 +81,7 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
       // Simulate real download by triggering a small JSON file download
       const userData = {
         app: "LINCO Lost & Found Platform",
-        user_identifier: "rinapathak470@gmail.com",
+        user_identifier: "lincoindia00@gmail.com",
         timestamp: "2026-07-07T09:43:47-07:00",
         rights_claimed: "GDPR / CCPA Data Access Right",
         active_consent_modes: {
@@ -146,7 +148,7 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
     { id: "security", label: "Security & Sessions", icon: <Lock size={14} /> },
     { id: "retention", label: "Data Retention", icon: <Calendar size={14} /> },
     { id: "rights", label: "Your Rights & Controls", icon: <UserCheck size={14} /> },
-    { id: "contact-team", label: "Privacy Contacts", icon: <Mail size={14} /> }
+    { id: "contact-team", label: "Contact Us", icon: <Mail size={14} /> }
   ];
 
   useEffect(() => {
@@ -700,52 +702,88 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
                 </div>
               )}
 
-              {/* SECTION 7: PRIVACY TEAM */}
+              {/* SECTION 7: CONTACT US & SUPPORT HUB */}
               {activeSection === "contact-team" && (
-                <div className="space-y-6">
-                  <div className="border-b border-[#1c1c26] pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                      <Mail size={18} className="text-indigo-400" />
-                      Contact Privacy Team &amp; Grievance
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Direct escalations regarding spatiotemporal rights, local privacy protocols, or compliance queries.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
-                      <div className="flex items-center gap-2">
-                        <ShieldAlert size={14} className="text-indigo-400" />
-                        <span className="text-xs font-bold text-white block">Chief Privacy &amp; Trust Officer</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        For deep structural inquiries, audits, spatiotemporal mapping overrides, and third-party API isolation compliance questions.
+                <div className="space-y-8" id="contact-support-hub">
+                  {/* Header Introduction Card */}
+                  <div className="p-6 sm:p-8 rounded-3xl bg-[#07070a]/90 border border-slate-800/80 relative overflow-hidden">
+                    <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full" />
+                    <div className="relative space-y-4">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-indigo-400">
+                        Help &amp; Assistance
+                      </span>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                        We're here to help.
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
+                        Whether you've lost something, found something, or simply have a question, our team is ready to assist.
                       </p>
-                      <div className="bg-slate-950 border border-slate-900/60 p-2 rounded-lg text-[10px] font-mono font-bold text-indigo-300">
-                        privacy@linco.community
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
-                      <div className="flex items-center gap-2">
-                        <UserCheck size={14} className="text-cyan-400" />
-                        <span className="text-xs font-bold text-white block">Grievance Redressal Officer</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
-                        For immediate dispute overrides, fraudulent post reporting, reward extortion claims, and direct data-purging escalation procedures.
-                      </p>
-                      <div className="bg-slate-950 border border-slate-900/60 p-2 rounded-lg text-[10px] font-mono font-bold text-cyan-300">
-                        grievance@linco.community
-                      </div>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#030304]/60 border border-slate-800/40 space-y-2 text-xs text-slate-400">
-                    <span className="font-bold text-white block">Radical Accountability Response:</span>
-                    <p className="leading-relaxed">
-                      We guarantee our Privacy support desk will respond to any verified citizen sovereign request within <strong>24 Hours</strong>.
-                    </p>
+                  {/* Contact Options Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Option 1: Email Support */}
+                    <div className="p-6 rounded-3xl bg-slate-950/40 border border-slate-800/80 space-y-4 flex flex-col justify-between focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
+                      <div className="space-y-2.5">
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                          <Mail size={18} />
+                        </div>
+                        <h4 className="text-base font-bold text-white">Email Support</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Reach our dedicated support team directly. We are happy to help resolve claims, questions, or issues.
+                        </p>
+                      </div>
+                      <div className="pt-4">
+                        <a
+                          href="mailto:lincoindia00@gmail.com?subject=LINCO%20Support%20Request&body=Hello%20LINCO%20Team%2C%0A%0AI%20need%20assistance%20regarding%3A%0A%0A_____________________%0A%0AThank%20you."
+                          className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#030304] border border-slate-800 hover:border-indigo-500 hover:text-white text-slate-300 font-mono font-semibold text-xs rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          aria-label="Email support at lincoindia00@gmail.com"
+                        >
+                          lincoindia00@gmail.com
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Option 2: LinkedIn Connection */}
+                    <div className="p-6 rounded-3xl bg-slate-950/40 border border-slate-800/80 space-y-4 flex flex-col justify-between focus-within:ring-2 focus-within:ring-cyan-500/50 transition-all">
+                      <div className="space-y-2.5">
+                        <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                          <Linkedin size={18} />
+                        </div>
+                        <h4 className="text-base font-bold text-white">LinkedIn Support</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Connect directly with our founder on our official professional network profile for escalation, feedback, or partnerships.
+                        </p>
+                      </div>
+                      <div className="pt-4">
+                        <a
+                          href="https://www.linkedin.com/in/prakashpathak1306"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#030304] border border-slate-800 hover:border-cyan-500 hover:text-white text-slate-300 font-semibold text-xs rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                          aria-label="Connect with Prakash Pathak on LinkedIn"
+                        >
+                          Connect on LinkedIn
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expected Response Time Card */}
+                  <div className="p-5 rounded-3xl bg-slate-950/40 border border-slate-800/80 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                      <Clock size={18} />
+                    </div>
+                    <div className="space-y-0.5 text-left">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">
+                        Response Guarantee
+                      </span>
+                      <h4 className="text-xs font-bold text-white">Expected Response Time</h4>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Our support team reviews every request and guarantees a response in <strong className="text-white">Under 24 Hours</strong>.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

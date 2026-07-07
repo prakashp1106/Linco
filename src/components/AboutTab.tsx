@@ -80,12 +80,16 @@ export const AboutTab: React.FC = () => {
           LINCO operates as a community utility. If you experience issues or would like to integrate LINCO into your local college campus, residential society, or office complex, please contact our support desk:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#030304]/80 border border-[#161621]">
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#030304]/80 border border-[#161621] focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all">
             <Mail size={16} className="text-violet-400 shrink-0" />
             <div>
               <p className="text-slate-500 text-[10px]">Email Support</p>
-              <a href="mailto:rinapathak470@gmail.com" className="text-slate-300 hover:text-cyan-400 font-mono transition">
-                rinapathak470@gmail.com
+              <a
+                href="mailto:lincoindia00@gmail.com?subject=LINCO%20Support%20Request&body=Hello%20LINCO%20Team%2C%0A%0AI%20need%20assistance%20regarding%3A%0A%0A_____________________%0A%0AThank%20you."
+                className="text-slate-300 hover:text-cyan-400 font-mono transition focus:outline-none focus:underline"
+                aria-label="Email support at lincoindia00@gmail.com"
+              >
+                lincoindia00@gmail.com
               </a>
             </div>
           </div>

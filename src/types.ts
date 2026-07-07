@@ -60,11 +60,16 @@ export interface Claim {
   answers: string[];
   aiScore: number;
   aiReason: string;
-  status: "Pending" | "Under Review" | "Approved" | "Rejected" | "Contact Unlocked" | "Resolved";
+  status: "Pending" | "Under Review" | "Approved" | "Rejected" | "Contact Unlocked" | "Resolved" | "Recovery Room";
   created: number;
   timestamp: string;
   trackingCode: string;
   revealedOwnerContact?: string;
+  claimantTrusted?: boolean;
+  finderTrusted?: boolean;
+  ownerConfirmedReceived?: boolean;
+  finderConfirmedReturned?: boolean;
+  messages?: { id: string; sender: "Claimant" | "Finder"; text: string; timestamp: number }[];
 }
 
 export interface PotentialMatch {

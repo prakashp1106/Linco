@@ -2561,15 +2561,14 @@ app.post("/api/posts/:id/claims/list", async (req, res) => {
   }
 });
 
-// 3. Track a Claim (Supports multi-device via Claim ID + Tracking Code & transitions Approved to Contact Unlocked)
+// 3. Track a Claim (Supports multi-device via Claim ID, enters the Recovery Room when approved)
 app.get("/api/claims/track", async (req, res) => {
   try {
     const claimId = req.query.claimId as string;
-    const code = req.query.code as string;
     const postId = req.query.postId as string;
 
-    if (!claimId || !code) {
-      return res.status(400).json({ error: "Claim ID and Tracking Code are required" });
+    if (!claimId) {
+      return res.status(400).json({ error: "Claim ID is required" });
     }
 
     let claim: Claim | null = null;
@@ -2606,28 +2605,9 @@ app.get("/api/claims/track", async (req, res) => {
       return res.status(403).json({ error: "Claim does not belong to the specified post" });
     }
 
-    if (claim.trackingCode.toUpperCase() !== code.trim().toUpperCase()) {
-      return res.status(403).json({ error: "Incorrect Claim Tracking Code. Access denied." });
-    }
-
-    // Transition Approved -> Contact Unlocked upon claimant viewing it
-    if (claim.status === "Approved") {
-      const prevStatus = claim.status;
-      claim.status = "Contact Unlocked";
-      await createAuditLog(claim.id, prevStatus, "Contact Unlocked", "Claimant", "Claimant tracked status and successfully unlocked contact information");
-      
-      if (useLocalFallback) {
-        const idx = local.claims.findIndex((cl: Claim) => cl.id === claim!.id);
-        if (idx !== -1) local.claims[idx] = claim;
-        writeLocalDB(local);
-      } else {
-        await db!.collection("claims").doc(claim.id).update({ status: "Contact Unlocked" });
-      }
-    }
-
     // STRICT PII PROTECTION: Strip raw contacts unless approved, unlocked, or resolved
-    const isApprovedOrUnlocked = (claim.status as string) === "Approved" || claim.status === "Contact Unlocked" || claim.status === "Resolved";
-    if (!isApprovedOrUnlocked) {
+    const isUnlocked = claim.status === "Contact Unlocked" || claim.status === "Resolved" || (claim.claimantTrusted && claim.finderTrusted);
+    if (!isUnlocked) {
       delete claim.revealedOwnerContact;
       // Mask claimant's contact as well just to be safe
       claim.claimantContact = claim.claimantContact.slice(0, 4) + "******" + claim.claimantContact.slice(-2);
@@ -2701,10 +2681,22 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
       return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
     }
 
-    // Update claim status & owner contact details
+    // Update claim status & owner contact details for Recovery Room
     const prevStatus = claim.status;
-    claim.status = "Approved";
+    claim.status = "Recovery Room";
     claim.revealedOwnerContact = revealedOwnerContact;
+    claim.claimantTrusted = false;
+    claim.finderTrusted = false;
+    claim.ownerConfirmedReceived = false;
+    claim.finderConfirmedReturned = false;
+    claim.messages = [
+      {
+        id: "msg_init",
+        sender: "Finder",
+        text: "Hello! I have approved your verification answers. Welcome to our secure Recovery Room. Let's arrange a safe handover here.",
+        timestamp: Date.now()
+      }
+    ];
 
     if (useLocalFallback) {
       // Find and update claim
@@ -2722,7 +2714,7 @@ app.post("/api/claims/:claimId/approve", async (req, res) => {
     }
 
     // Write State Transition Audit Log
-    await createAuditLog(claimId, prevStatus, "Approved", "Owner", "Owner verified claimant's answers and approved the ownership claim");
+    await createAuditLog(claimId, prevStatus, "Recovery Room", "Owner", "Owner verified claimant's answers and approved opening the Recovery Room");
 
     res.json({ success: true, claim, post });
   } catch (err: any) {
@@ -2811,6 +2803,196 @@ app.post("/api/claims/:claimId/reject", async (req, res) => {
   } catch (err: any) {
     console.error("Failed to reject claim:", err);
     res.status(500).json({ error: err.message || "Failed to reject claim" });
+  }
+});
+
+// 6. Send Chat Message in Recovery Room
+app.post("/api/claims/:claimId/chat", async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const { sender, text } = req.body;
+
+    if (!sender || !text) {
+      return res.status(400).json({ error: "Sender and text are required" });
+    }
+
+    let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    if (!claim.messages) {
+      claim.messages = [];
+    }
+
+    claim.messages.push({
+      id: "msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      sender: sender,
+      text: text,
+      timestamp: Date.now()
+    });
+
+    if (useLocalFallback) {
+      const claimIdx = local.claims.findIndex((c: Claim) => c.id === claimId);
+      if (claimIdx !== -1) local.claims[claimIdx] = claim;
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(claim);
+    }
+
+    res.json({ success: true, claim });
+  } catch (err: any) {
+    console.error("Failed to post chat message:", err);
+    res.status(500).json({ error: err.message || "Failed to post chat message" });
+  }
+});
+
+// 7. Confirm Trust in Recovery Room
+app.post("/api/claims/:claimId/trust", async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const { role } = req.body; // "Claimant" or "Finder"
+
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
+    }
+
+    let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    const prevStatus = claim.status;
+
+    if (role === "Claimant") {
+      claim.claimantTrusted = true;
+    } else if (role === "Finder") {
+      claim.finderTrusted = true;
+    }
+
+    // If both trusted, automatically unlock contact details!
+    if (claim.claimantTrusted && claim.finderTrusted) {
+      claim.status = "Contact Unlocked";
+      await createAuditLog(claimId, prevStatus, "Contact Unlocked", "System", "Mutual Trust Confirmed: Contact information unlocked safely");
+    } else {
+      await createAuditLog(claimId, prevStatus, claim.status, role, `${role} confirmed trust in the other party`);
+    }
+
+    if (useLocalFallback) {
+      const claimIdx = local.claims.findIndex((c: Claim) => c.id === claimId);
+      if (claimIdx !== -1) local.claims[claimIdx] = claim;
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(claim);
+    }
+
+    res.json({ success: true, claim });
+  } catch (err: any) {
+    console.error("Failed to confirm trust:", err);
+    res.status(500).json({ error: err.message || "Failed to confirm trust" });
+  }
+});
+
+// 8. Confirm Receipt/Return in Recovery Room
+app.post("/api/claims/:claimId/complete", async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const { role } = req.body; // "Claimant" or "Finder"
+
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
+    }
+
+    let claim: Claim | null = null;
+    let local = useLocalFallback ? readLocalDB() : null;
+
+    if (useLocalFallback) {
+      claim = local.claims?.find((c: Claim) => c.id === claimId) || null;
+    } else {
+      const doc = await db!.collection("claims").doc(claimId).get();
+      if (doc.exists) {
+        claim = doc.data() as Claim;
+      }
+    }
+
+    if (!claim) {
+      return res.status(404).json({ error: "Claim not found" });
+    }
+
+    const prevStatus = claim.status;
+
+    if (role === "Claimant") {
+      claim.ownerConfirmedReceived = true;
+    } else if (role === "Finder") {
+      claim.finderConfirmedReturned = true;
+    }
+
+    let postUpdated: Post | null = null;
+
+    // If both confirmed, complete the recovery!
+    if (claim.ownerConfirmedReceived && claim.finderConfirmedReturned) {
+      claim.status = "Resolved";
+      await createAuditLog(claimId, prevStatus, "Resolved", "System", "Recovery Completed: Both parties confirmed successful handover");
+
+      // Also resolve parent post
+      let post: Post | null = null;
+      if (useLocalFallback) {
+        post = local.posts.find((p: Post) => p.id === claim!.postId) || null;
+      } else {
+        const doc = await db!.collection("posts").doc(claim.postId).get();
+        if (doc.exists) {
+          post = doc.data() as Post;
+        }
+      }
+
+      if (post) {
+        post.status = "Resolved";
+        if (useLocalFallback) {
+          const postIdx = local.posts.findIndex((p: Post) => p.id === post!.id);
+          if (postIdx !== -1) local.posts[postIdx] = post;
+        } else {
+          await db!.collection("posts").doc(post.id).set(post);
+        }
+        postUpdated = post;
+      }
+    } else {
+      await createAuditLog(claimId, prevStatus, claim.status, role, `${role} confirmed completion of handover`);
+    }
+
+    if (useLocalFallback) {
+      const claimIdx = local.claims.findIndex((c: Claim) => c.id === claimId);
+      if (claimIdx !== -1) local.claims[claimIdx] = claim;
+      writeLocalDB(local);
+    } else {
+      await db!.collection("claims").doc(claimId).set(claim);
+    }
+
+    res.json({ success: true, claim, post: postUpdated });
+  } catch (err: any) {
+    console.error("Failed to complete recovery:", err);
+    res.status(500).json({ error: err.message || "Failed to complete recovery" });
   }
 });
 
