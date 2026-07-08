@@ -133,7 +133,10 @@ textarea {
   border: 1px solid #1a1a22 !important;
   color: #f4f4f5 !important;
   border-radius: 12px !important;
-  padding: 10px 14px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  padding-left: 14px;
+  padding-right: 14px;
   font-size: 13px !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   outline: none !important;

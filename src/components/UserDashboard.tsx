@@ -33,6 +33,9 @@ import {
   Link2
 } from "lucide-react";
 import { imageService } from "../services/imageService";
+import { auth, db } from "../services/firebaseClient";
+import { signOut } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
 
 interface UserDashboardProps {
   addToast: (msg: string, type: "success" | "info" | "warn" | "error") => void;
@@ -159,6 +162,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         banner: PRESET_BANNERS[0]
       });
     }
+    if (auth.currentUser) {
+      setSettingsEmail(auth.currentUser.email || "user@example.com");
+      setSettingsPhone(auth.currentUser.phoneNumber || "");
+    }
   }, [profile]);
 
   // Sync to global App.tsx state whenever profile changes
@@ -167,9 +174,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     if (newProfile) {
       localStorage.setItem("linco_profile_details", JSON.stringify(newProfile));
       localStorage.setItem("linco_profile_is_logged_in", "true");
+      if (auth.currentUser) {
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        updateDoc(userRef, {
+          displayName: newProfile.fullName,
+          username: newProfile.username,
+          city: newProfile.location,
+          bio: newProfile.bio,
+          photoURL: newProfile.avatar
+        }).catch(err => console.error("Error updating Firestore on profile save:", err));
+      }
     } else {
       localStorage.removeItem("linco_profile_details");
       localStorage.removeItem("linco_profile_is_logged_in");
+      signOut(auth).catch(err => console.error("Error during Firebase signOut:", err));
     }
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("profile-updated"));
@@ -527,62 +545,62 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
             <form onSubmit={handleCreateProfileSubmit} className="space-y-4 text-left">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Full Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Liam Smith"
                   value={editForm.fullName}
                   onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full px-4 py-3 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username</label>
+                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Username</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. liamsmith"
                   value={editForm.username}
                   onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-4 py-3 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bio (Optional)</label>
+                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Bio (Optional)</label>
                 <textarea
                   placeholder="e.g. Ready to help find and return lost items."
                   value={editForm.bio}
                   onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                   rows={2}
-                  className="w-full px-4 py-3 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition resize-none"
+                  className="w-full px-4 py-3 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition resize-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">City</label>
+                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">City</label>
                 <input
                   type="text"
                   placeholder="e.g. Kolkata, India"
                   value={editForm.location}
                   onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="pt-2 space-y-2">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-xl text-xs tracking-wide transition cursor-pointer"
+                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold rounded-xl text-xs tracking-wide transition cursor-pointer flex items-center justify-center"
                 >
                   Create Profile
                 </button>
                 <button
                   type="button"
                   onClick={handleSkipProfile}
-                  className="w-full py-3 bg-transparent border border-slate-800 hover:border-slate-700 hover:bg-slate-900/40 text-slate-400 font-bold rounded-xl text-xs tracking-wide transition cursor-pointer"
+                  className="w-full h-11 bg-transparent border border-slate-900 hover:border-slate-850 hover:bg-[#0c0d14]/40 text-slate-400 font-bold rounded-xl text-xs tracking-wide transition cursor-pointer flex items-center justify-center"
                 >
                   Skip for Now
                 </button>
