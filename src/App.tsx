@@ -84,12 +84,34 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">("home");
   const [privacySection, setPrivacySection] = useState<string>("privacy");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [profileAvatar, setProfileAvatar] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150");
-  const [profileDetails, setProfileDetails] = useState({
-    fullName: "Rina Pathak",
-    username: "rinapathak",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-    trustLevel: "Gold Guardian"
+  const [profileAvatar, setProfileAvatar] = useState(() => {
+    try {
+      const saved = localStorage.getItem("linco_profile_details");
+      if (saved) {
+        return JSON.parse(saved).avatar || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)";
+      }
+    } catch {}
+    return "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)";
+  });
+  const [profileDetails, setProfileDetails] = useState(() => {
+    try {
+      const saved = localStorage.getItem("linco_profile_details");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          fullName: parsed.fullName || "",
+          username: parsed.username || "",
+          avatar: parsed.avatar || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          trustLevel: "Bronze Guardian"
+        };
+      }
+    } catch {}
+    return {
+      fullName: "",
+      username: "",
+      avatar: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+      trustLevel: "Bronze Guardian"
+    };
   });
 
   useEffect(() => {
@@ -112,7 +134,7 @@ export default function App() {
         if (completions.review) score += 150;
         score = Math.min(score, 900);
         
-        let levelName = "Gold Guardian";
+        let levelName = "Bronze Guardian";
         if (score >= 800) levelName = "Ambassador";
         else if (score >= 650) levelName = "Platinum Guardian";
         else if (score >= 500) levelName = "Gold Guardian";
@@ -122,14 +144,20 @@ export default function App() {
         if (saved) {
           const parsed = JSON.parse(saved);
           setProfileDetails({
-            fullName: parsed.fullName || "Rina Pathak",
-            username: parsed.username || "rinapathak",
-            avatar: parsed.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+            fullName: parsed.fullName || "",
+            username: parsed.username || "",
+            avatar: parsed.avatar || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
             trustLevel: levelName
           });
-          setProfileAvatar(parsed.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150");
+          setProfileAvatar(parsed.avatar || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)");
         } else {
-          setProfileDetails(prev => ({ ...prev, trustLevel: levelName }));
+          setProfileDetails({
+            fullName: "",
+            username: "",
+            avatar: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+            trustLevel: levelName
+          });
+          setProfileAvatar("linear-gradient(135deg, #6366f1 0%, #a855f7 100%)");
         }
       } catch (e) {
         console.error(e);
@@ -988,7 +1016,13 @@ export default function App() {
       </div>
 
       {/* TOP APP BAR */}
-      <header className="sticky top-0 z-30 bg-[#08080c]/90 border-b border-[#161621] backdrop-blur-md px-4 py-3 flex items-center justify-between select-none">
+      <header 
+        className="fixed top-0 left-0 right-0 z-40 bg-[#08080c]/95 border-b border-[#161621] backdrop-blur-md px-4 py-3 flex items-center justify-between select-none"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+          height: "calc(env(safe-area-inset-top, 0px) + 3.75rem)",
+        }}
+      >
         {/* LEFT */}
         <div className="flex items-center gap-3 z-10">
           <button 
@@ -1037,14 +1071,22 @@ export default function App() {
               setActiveTab("dashboard");
               window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
             }}
-            className="w-8 h-8 rounded-full overflow-hidden border border-[#232332] hover:border-indigo-400 transition cursor-pointer"
+            className="w-8 h-8 rounded-full overflow-hidden border border-[#232332] hover:border-indigo-400 transition cursor-pointer flex items-center justify-center text-slate-100 text-[10px] font-black uppercase"
             aria-label="View Profile"
+            style={profileAvatar.startsWith("linear-gradient") ? { background: profileAvatar } : {}}
           >
-            <img 
-              src={profileAvatar} 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-            />
+            {profileAvatar.startsWith("linear-gradient") ? (
+              profileDetails.fullName ? profileDetails.fullName.charAt(0) : "U"
+            ) : (
+              <img 
+                src={profileAvatar} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
           </button>
         </div>
       </header>
@@ -1068,11 +1110,11 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-[#08080c] border-r border-[#161621] shadow-2xl flex flex-col justify-between overflow-y-auto"
+              className="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-[#08080c] border-r border-[#161621] shadow-2xl flex flex-col justify-between overflow-hidden"
             >
-              <div className="p-6">
+              <div className="p-6 flex-1 overflow-y-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-2">
                   <span className="font-sans font-black text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
                     LINCO Menu
                   </span>
@@ -1084,94 +1126,71 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Navigation Items */}
-                <nav className="space-y-1">
-                  {/* Group 1 */}
-                  {[
-                    { id: "home", label: "Home", icon: <Home size={16} />, action: () => setActiveTab("home") },
-                    { id: "feed", label: "Community Feed", icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
-                    { id: "matches", label: "AI Matches", icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
-                    { id: "reports", label: "My Reports", icon: <FileText size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "reports" })), 50); } },
-                    { id: "recovery-rooms", label: "Recovery Rooms", icon: <MessageSquare size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "recovery" })), 50); } },
-                    { id: "saved-searches", label: "Saved Searches", icon: <Heart size={16} />, action: () => { setActiveTab("feed"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-feed", { detail: "saved" })), 50); } },
-                  ].map((item) => {
-                    const isSelected = activeMenuId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveMenuId(item.id);
-                          item.action();
-                          setDrawerOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all ${
-                          isSelected 
-                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 shadow-sm" 
-                            : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50 border border-transparent"
-                        } cursor-pointer`}
-                      >
-                        <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
-                          {item.icon}
-                        </span>
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
-
-                  <div className="my-4 border-t border-[#161621]" />
-
-                  {/* Group 2 */}
-                  {[
-                    { id: "profile", label: "My Profile", icon: <User size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" })), 50); } },
-                    { id: "activity", label: "Activity Center", icon: <Bell size={16} />, action: () => setNotificationsOpen(true) },
-                    { id: "settings", label: "Settings", icon: <Settings size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "settings" })), 50); } },
-                    { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck size={16} />, action: () => { setActiveTab("privacy-trust"); setPrivacySection("privacy"); } },
-                    { id: "support", label: "Help & Support", icon: <LifeBuoy size={16} />, action: () => { window.dispatchEvent(new CustomEvent("open-linco-chat")); addToast("LincoSaathii Assistant active.", "info"); } },
-                    { id: "about", label: "About LINCO", icon: <Info size={16} />, action: () => setActiveTab("about") },
-                  ].map((item) => {
-                    const isSelected = activeMenuId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          if (item.id !== "activity") {
-                            setActiveMenuId(item.id);
-                          }
-                          item.action();
-                          setDrawerOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide transition-all ${
-                          isSelected 
-                            ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 shadow-sm" 
-                            : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/50 border border-transparent"
-                        } cursor-pointer`}
-                      >
-                        <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
-                          {item.icon}
-                        </span>
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </nav>
+                {/* Grouped Sidebar Sections */}
+                {[
+                  {
+                    title: "DISCOVER",
+                    items: [
+                      { id: "home", label: "Home", icon: <Home size={16} />, action: () => setActiveTab("home") },
+                      { id: "feed", label: "Community Feed", icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
+                      { id: "matches", label: "AI Matches", icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
+                    ]
+                  },
+                  {
+                    title: "RECOVERY",
+                    items: [
+                      { id: "reports", label: "My Reports", icon: <FileText size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "reports" })), 50); } },
+                      { id: "recovery-rooms", label: "Recovery Rooms", icon: <MessageSquare size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "recovery" })), 50); } },
+                      { id: "saved-searches", label: "Saved Searches", icon: <Heart size={16} />, action: () => { setActiveTab("feed"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-feed", { detail: "saved" })), 50); } },
+                    ]
+                  },
+                  {
+                    title: "ACCOUNT",
+                    items: [
+                      { id: "settings", label: "Settings", icon: <Settings size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "settings" })), 50); } },
+                      { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck size={16} />, action: () => { setActiveTab("privacy-trust"); setPrivacySection("privacy"); } },
+                      { id: "help", label: "Help & Support", icon: <LifeBuoy size={16} />, action: () => { window.dispatchEvent(new CustomEvent("open-linco-chat")); addToast("LincoSaathii Assistant active.", "info"); } },
+                      { id: "about", label: "About LINCO", icon: <Info size={16} />, action: () => setActiveTab("about") },
+                    ]
+                  }
+                ].map((section) => (
+                  <div key={section.title} className="space-y-1.5">
+                    <h4 className="text-[10px] font-black tracking-widest text-slate-500 font-mono px-3">
+                      {section.title}
+                    </h4>
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => {
+                        const isSelected = activeMenuId === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              setActiveMenuId(item.id);
+                              item.action();
+                              setDrawerOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                              isSelected 
+                                ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/10 shadow-sm" 
+                                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/30 border border-transparent"
+                            } cursor-pointer`}
+                          >
+                            <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
+                              {item.icon}
+                            </span>
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Drawer Bottom Panel */}
-              <div className="flex flex-col">
-                <div className="px-6 py-2 border-t border-[#161621]">
-                  <button
-                    onClick={() => {
-                      addToast("Successfully logged out from self-sovereign passport.", "success");
-                      setDrawerOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-xs font-bold tracking-wide text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 transition cursor-pointer"
-                  >
-                    <ShieldAlert size={16} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-
-                <div className="p-4 border-t border-[#161621] bg-[#0c0c14]/40">
+              <div className="flex flex-col border-t border-[#161621] bg-[#0c0c14]/30 p-4 space-y-3">
+                {/* Profile Card */}
+                {profileDetails.fullName ? (
                   <button
                     onClick={() => {
                       setActiveTab("dashboard");
@@ -1181,25 +1200,66 @@ export default function App() {
                     }}
                     className="w-full text-left flex items-center justify-between p-2 rounded-xl hover:bg-slate-900/60 transition group cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={profileDetails.avatar} 
-                        alt={profileDetails.fullName} 
-                        className="w-10 h-10 rounded-full object-cover border border-[#232332]"
-                      />
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {profileDetails.avatar.startsWith("linear-gradient") ? (
+                        <div 
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-100 text-xs font-black uppercase border border-[#232332]"
+                          style={{ background: profileDetails.avatar }}
+                        >
+                          {profileDetails.fullName.charAt(0)}
+                        </div>
+                      ) : (
+                        <img 
+                          src={profileDetails.avatar} 
+                          alt={profileDetails.fullName} 
+                          className="w-9 h-9 rounded-full object-cover border border-[#232332]"
+                        />
+                      )}
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-slate-100 truncate">{profileDetails.fullName}</span>
-                        <span className="text-[10px] font-medium text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded mt-0.5 w-max">
-                          {profileDetails.trustLevel}
+                        <span className="text-xs font-bold text-slate-200 truncate leading-tight">
+                          {profileDetails.fullName}
+                        </span>
+                        <span className="text-[10px] text-slate-500 mt-0.5 group-hover:text-indigo-400 transition-colors flex items-center gap-0.5 font-bold">
+                          View Profile <ChevronRight size={10} className="transition-transform group-hover:translate-x-0.5" />
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-slate-500 group-hover:text-indigo-400 transition-colors">
-                      <span className="text-[10px] font-bold hidden xs:inline">View Profile</span>
-                      <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setActiveTab("dashboard");
+                      setActiveMenuId("profile");
+                      window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
+                      setDrawerOpen(false);
+                    }}
+                    className="w-full text-left flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900/60 transition group cursor-pointer"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 border border-[#232332]">
+                      <User size={14} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-200">Complete Profile</span>
+                      <span className="text-[10px] text-slate-500">View Profile →</span>
                     </div>
                   </button>
-                </div>
+                )}
+
+                {/* Logout Option */}
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("linco_profile_details");
+                    localStorage.removeItem("linco_profile_is_logged_in");
+                    window.dispatchEvent(new Event("storage"));
+                    window.dispatchEvent(new Event("profile-updated"));
+                    addToast("Successfully logged out.", "success");
+                    setDrawerOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold tracking-wide text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 transition cursor-pointer"
+                >
+                  <ShieldAlert size={16} />
+                  <span>Logout</span>
+                </button>
               </div>
             </motion.div>
           </>
@@ -1278,7 +1338,12 @@ export default function App() {
       </nav>
 
       {/* Main Content Layout */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 pb-12">
+      <main 
+        className="relative z-10 max-w-7xl mx-auto px-4 pb-12"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 4.75rem)",
+        }}
+      >
         {banner && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}

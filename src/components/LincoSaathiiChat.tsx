@@ -422,7 +422,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
               }}
             >
               {/* Header */}
-              <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between shrink-0">
+              <div className="px-6 py-4 border-b border-slate-800 bg-[#08080c]/95 backdrop-blur-md flex items-center justify-between shrink-0 relative z-20">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-slate-900 border border-cyan-500/20 flex items-center justify-center">
                     <RobotAvatarIcon size={20} className="text-cyan-400 animate-pulse" />
