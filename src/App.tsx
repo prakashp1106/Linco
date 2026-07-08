@@ -52,7 +52,7 @@ import { CookieConsent } from "./components/CookieConsent";
 import { AuthFlow } from "./components/AuthFlow";
 import { auth, db } from "./services/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 // Modals
 import { PinModal } from "./components/PinModal";
@@ -187,9 +187,33 @@ export default function App() {
       if (user) {
         const userDocRef = doc(db, "users", user.uid);
         try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
+          let userDoc = await getDoc(userDocRef);
+          let userData = userDoc.exists() ? userDoc.data() : null;
+          
+          if (!userDoc.exists()) {
+            // Auto-create missing Firestore document
+            const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
+            const defaultProfile = {
+              uid: user.uid,
+              displayName: user.displayName || "Verified User",
+              username: defaultUsername,
+              bio: "Lost & Found helper on LINCO",
+              city: "Kolkata, India",
+              photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+              createdAt: Date.now()
+            };
+            try {
+              await setDoc(userDocRef, defaultProfile);
+              userDoc = await getDoc(userDocRef);
+              userData = userDoc.exists() ? userDoc.data() : defaultProfile;
+            } catch (writeErr) {
+              console.error("Failed to auto-create user document in Firestore:", writeErr);
+              // Fallback if rules or write fails initially
+              userData = defaultProfile;
+            }
+          }
+          
+          if (userData) {
             const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
             const localProfile = {
               fullName: userData.displayName || user.displayName || "Verified User",
@@ -204,9 +228,6 @@ export default function App() {
             localStorage.setItem("linco_profile_is_logged_in", "true");
             setIsLoggedIn(true);
             window.dispatchEvent(new Event("profile-updated"));
-          } else {
-            // User exists but has no Firestore profile setup, let AuthFlow handle onboarding
-            setIsLoggedIn(false);
           }
         } catch (e) {
           console.error("Error reading Firestore profile:", e);

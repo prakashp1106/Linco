@@ -25,13 +25,15 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   sendPasswordResetEmail,
   RecaptchaVerifier,
   signInWithPhoneNumber
 } from "firebase/auth";
-import { auth, db } from "../services/firebaseClient";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db, isConfigValid } from "../services/firebaseClient";
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { imageService } from "../services/imageService";
 
 interface AuthFlowProps {
@@ -122,6 +124,95 @@ export function AuthFlow({
     setScreen(nextScreen);
   };
 
+  const getAuthErrorMessage = (err: any): string => {
+    if (!err || !err.code) return err?.message || "An unexpected error occurred.";
+    switch (err.code) {
+      case "auth/invalid-email":
+        return "The email address is not valid.";
+      case "auth/user-disabled":
+        return "This account has been disabled. Please contact support.";
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        return "Incorrect email or password. Please try again.";
+      case "auth/email-already-in-use":
+        return "An account with this email address already exists.";
+      case "auth/weak-password":
+        return "The password is too weak. It must be at least 6 characters.";
+      case "auth/network-request-failed":
+        return "Network connection error. Please check your internet connection.";
+      case "auth/too-many-requests":
+        return "Too many failed login attempts. Please try again later or reset your password.";
+      case "auth/operation-not-allowed":
+        return "This authentication method is not enabled. Please enable it in the Firebase Console.";
+      case "auth/requires-recent-login":
+        return "This action requires recent authentication. Please log in again.";
+      default:
+        return err.message || "An error occurred during authentication.";
+    }
+  };
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const user = result.user;
+          addToast("Signed in successfully with Google!", "success");
+          
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+            const localProfile = {
+              fullName: userData.displayName || user.displayName || "Verified User",
+              username: userData.username || user.email?.split("@")[0] || "user",
+              bio: userData.bio || "Lost & Found helper on LINCO",
+              location: userData.city || "Kolkata, India",
+              memberSince: formattedDate,
+              avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+              banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+            };
+            localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+            localStorage.setItem("linco_profile_is_logged_in", "true");
+            onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
+          } else {
+            const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
+            const defaultProfile = {
+              uid: user.uid,
+              displayName: user.displayName || "Verified User",
+              username: defaultUsername,
+              bio: "Lost & Found helper on LINCO",
+              city: "Kolkata, India",
+              photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+              createdAt: Date.now()
+            };
+            await setDoc(userDocRef, defaultProfile);
+            
+            const localProfile = {
+              fullName: defaultProfile.displayName,
+              username: defaultProfile.username,
+              bio: defaultProfile.bio,
+              location: defaultProfile.city,
+              memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+              avatar: defaultProfile.photoURL,
+              banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+            };
+            localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+            localStorage.setItem("linco_profile_is_logged_in", "true");
+            onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
+          }
+        }
+      } catch (err: any) {
+        console.error("Redirect Result Error:", err);
+        addToast(getAuthErrorMessage(err), "error");
+      }
+    };
+    checkRedirect();
+  }, []);
+
   const validateEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
   };
@@ -171,16 +262,36 @@ export function AuthFlow({
         addToast("Successfully signed in!", "success");
         onLoginSuccess(localProfile.fullName, email);
       } else {
-        addToast("Welcome! Please set up your LINCO profile.", "info");
-        navigateTo("profile_setup");
+        // Auto-create missing user doc since we got logged in!
+        const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
+        const defaultProfile = {
+          uid: user.uid,
+          displayName: user.displayName || "Verified User",
+          username: defaultUsername,
+          bio: "Lost & Found helper on LINCO",
+          city: "Kolkata, India",
+          photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          createdAt: Date.now()
+        };
+        await setDoc(userDocRef, defaultProfile);
+        
+        const localProfile = {
+          fullName: defaultProfile.displayName,
+          username: defaultProfile.username,
+          bio: defaultProfile.bio,
+          location: defaultProfile.city,
+          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+          avatar: defaultProfile.photoURL,
+          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+        };
+        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+        localStorage.setItem("linco_profile_is_logged_in", "true");
+        addToast("Successfully signed in!", "success");
+        onLoginSuccess(defaultProfile.displayName, email);
       }
     } catch (err: any) {
       console.error("Email Login Error:", err);
-      let errMsg = "Invalid email or password. Please try again.";
-      if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
-        errMsg = "No account found or invalid credentials.";
-      }
-      addToast(errMsg, "error");
+      addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -218,17 +329,41 @@ export function AuthFlow({
 
     try {
       setLoading(true);
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Auto-create initial user doc
+      const defaultUsername = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+      const userDocRef = doc(db, "users", user.uid);
+      const defaultProfile = {
+        uid: user.uid,
+        displayName: fullName.trim(),
+        username: defaultUsername,
+        bio: "Lost & Found helper on LINCO",
+        city: "Kolkata, India",
+        photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+        createdAt: Date.now()
+      };
+      await setDoc(userDocRef, defaultProfile);
+      
+      const localProfile = {
+        fullName: defaultProfile.displayName,
+        username: defaultProfile.username,
+        bio: defaultProfile.bio,
+        location: defaultProfile.city,
+        memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+        avatar: defaultProfile.photoURL,
+        banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+      };
+      localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+      localStorage.setItem("linco_profile_is_logged_in", "true");
+      
       addToast("Account registered! Now let's set up your profile.", "success");
-      setUsername(email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, ""));
+      setUsername(defaultUsername);
       navigateTo("profile_setup");
     } catch (err: any) {
       console.error("Signup Error:", err);
-      let errMsg = "Failed to create account. Please try again.";
-      if (err.code === "auth/email-already-in-use") {
-        errMsg = "An account with this email already exists.";
-      }
-      addToast(errMsg, "error");
+      addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -268,7 +403,7 @@ export function AuthFlow({
       navigateTo("otp_verification");
     } catch (error: any) {
       console.error("Phone Auth Error:", error);
-      addToast(error.message || "Failed to send OTP. Try again.", "error");
+      addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
     }
@@ -336,12 +471,36 @@ export function AuthFlow({
         addToast("Phone verified and signed in successfully!", "success");
         onLoginSuccess(localProfile.fullName, `${localProfile.username}@linco.org`);
       } else {
-        addToast("Phone verified! Please set up your profile details.", "success");
-        navigateTo("profile_setup");
+        // Auto-create missing user doc since we got logged in!
+        const defaultUsername = `user_${user.uid.slice(0, 5)}`;
+        const defaultProfile = {
+          uid: user.uid,
+          displayName: "Phone User",
+          username: defaultUsername,
+          bio: "Lost & Found helper on LINCO",
+          city: "Kolkata, India",
+          photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          createdAt: Date.now()
+        };
+        await setDoc(userDocRef, defaultProfile);
+        
+        const localProfile = {
+          fullName: defaultProfile.displayName,
+          username: defaultProfile.username,
+          bio: defaultProfile.bio,
+          location: defaultProfile.city,
+          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+          avatar: defaultProfile.photoURL,
+          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+        };
+        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+        localStorage.setItem("linco_profile_is_logged_in", "true");
+        addToast("Phone verified and signed in successfully!", "success");
+        onLoginSuccess(defaultProfile.displayName, `${defaultProfile.username}@linco.org`);
       }
     } catch (error: any) {
       console.error("OTP Verification Error:", error);
-      addToast(error.message || "Invalid OTP code. Please try again.", "error");
+      addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
     }
@@ -369,7 +528,7 @@ export function AuthFlow({
       navigateTo("login");
     } catch (err: any) {
       console.error("Password reset error:", err);
-      addToast(err.message || "Failed to send reset link. Try again.", "error");
+      addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -379,39 +538,65 @@ export function AuthFlow({
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-        const localProfile = {
-          fullName: userData.displayName || user.displayName || "Verified User",
-          username: userData.username || user.email?.split("@")[0] || "user",
-          bio: userData.bio || "Lost & Found helper on LINCO",
-          location: userData.city || "Kolkata, India",
-          memberSince: formattedDate,
-          avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Successfully signed in with Google!", "success");
-        onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
       } else {
-        if (user.displayName) setFullName(user.displayName);
-        if (user.email) setUsername(user.email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, ""));
-        if (user.photoURL) setAvatarUrl(user.photoURL);
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
         
-        addToast("Welcome! Let's set up your profile details.", "info");
-        navigateTo("profile_setup");
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+          const localProfile = {
+            fullName: userData.displayName || user.displayName || "Verified User",
+            username: userData.username || user.email?.split("@")[0] || "user",
+            bio: userData.bio || "Lost & Found helper on LINCO",
+            location: userData.city || "Kolkata, India",
+            memberSince: formattedDate,
+            avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+            banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+          };
+          localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+          localStorage.setItem("linco_profile_is_logged_in", "true");
+          addToast("Successfully signed in with Google!", "success");
+          onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
+        } else {
+          // Auto-create missing user doc since we got logged in!
+          const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
+          const defaultProfile = {
+            uid: user.uid,
+            displayName: user.displayName || "Verified User",
+            username: defaultUsername,
+            bio: "Lost & Found helper on LINCO",
+            city: "Kolkata, India",
+            photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+            createdAt: Date.now()
+          };
+          await setDoc(userDocRef, defaultProfile);
+          
+          const localProfile = {
+            fullName: defaultProfile.displayName,
+            username: defaultProfile.username,
+            bio: defaultProfile.bio,
+            location: defaultProfile.city,
+            memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+            avatar: defaultProfile.photoURL,
+            banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+          };
+          localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+          localStorage.setItem("linco_profile_is_logged_in", "true");
+          addToast("Successfully signed in with Google!", "success");
+          onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
+        }
       }
     } catch (err: any) {
       console.error("Google Login Error:", err);
-      addToast(err.message || "Failed to sign in with Google.", "error");
+      addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -482,7 +667,8 @@ export function AuthFlow({
 
   const handleProfileSetupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !username.trim() || !city.trim()) {
+    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, "");
+    if (!fullName.trim() || !cleanUsername || !city.trim()) {
       addToast("Full Name, Username, and City are required.", "error");
       return;
     }
@@ -494,11 +680,29 @@ export function AuthFlow({
         throw new Error("No active user session found.");
       }
 
+      // Unique username validation
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", cleanUsername));
+      const querySnapshot = await getDocs(q);
+      
+      let isUnique = true;
+      querySnapshot.forEach((doc) => {
+        if (doc.id !== user.uid) {
+          isUnique = false;
+        }
+      });
+      
+      if (!isUnique) {
+        addToast("This username is already taken. Please choose another one.", "error");
+        setErrors(prev => ({ ...prev, username: "Username is already taken" }));
+        return;
+      }
+
       const userDocRef = doc(db, "users", user.uid);
       const profilePayload = {
         uid: user.uid,
         displayName: fullName.trim(),
-        username: username.trim().toLowerCase().replace(/\s+/g, ""),
+        username: cleanUsername,
         city: city.trim(),
         bio: bio.trim(),
         photoURL: avatarUrl,
@@ -525,7 +729,7 @@ export function AuthFlow({
       onLoginSuccess(profilePayload.displayName, user.email || `${profilePayload.username}@linco.org`);
     } catch (err: any) {
       console.error("Profile Setup Error:", err);
-      addToast(err.message || "Failed to finalize profile. Try again.", "error");
+      addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -539,6 +743,16 @@ export function AuthFlow({
 
       {/* Main card viewport */}
       <div className="relative w-full max-w-[420px] bg-[#08080c]/80 border border-[#161621] rounded-[2.5rem] backdrop-blur-xl overflow-hidden shadow-2xl flex flex-col justify-center min-h-[520px] z-10">
+        
+        {!isConfigValid && (
+          <div className="absolute top-0 inset-x-0 bg-red-950/40 border-b border-red-800/30 px-6 py-3 text-xs text-red-200 backdrop-blur-md z-30 flex items-center space-x-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+            <div className="flex-1">
+              <span className="font-semibold block">Firebase Config Missing</span>
+              <span className="text-red-300/80">Please verify <code className="font-mono bg-red-950/60 px-1 rounded">firebase-applet-config.json</code> in workspace.</span>
+            </div>
+          </div>
+        )}
         
         <AnimatePresence mode="wait">
           
