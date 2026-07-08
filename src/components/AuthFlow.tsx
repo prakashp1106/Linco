@@ -154,17 +154,25 @@ export function AuthFlow({
 
   useEffect(() => {
     const checkRedirect = async () => {
+      console.log("[AuthFlow] [checkRedirect] Checking Google redirect authentication result...");
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
           const user = result.user;
+          console.log("[AuthFlow] [checkRedirect] User verified from Google redirect:", {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName
+          });
           addToast("Signed in successfully with Google!", "success");
           
           const userDocRef = doc(db, "users", user.uid);
+          console.log("[AuthFlow] [checkRedirect] Fetching user doc in Firestore for UID:", user.uid);
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            console.log("[AuthFlow] [checkRedirect] User Firestore doc exists:", userData);
             const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
             const localProfile = {
               fullName: userData.displayName || user.displayName || "Verified User",
@@ -179,6 +187,7 @@ export function AuthFlow({
             localStorage.setItem("linco_profile_is_logged_in", "true");
             onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
           } else {
+            console.log("[AuthFlow] [checkRedirect] User Firestore doc does not exist, creating default profile.");
             const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
             const defaultProfile = {
               uid: user.uid,
@@ -190,6 +199,7 @@ export function AuthFlow({
               createdAt: Date.now()
             };
             await setDoc(userDocRef, defaultProfile);
+            console.log("[AuthFlow] [checkRedirect] Created Firestore default profile at path:", `users/${user.uid}`);
             
             const localProfile = {
               fullName: defaultProfile.displayName,
@@ -204,9 +214,11 @@ export function AuthFlow({
             localStorage.setItem("linco_profile_is_logged_in", "true");
             onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
           }
+        } else {
+          console.log("[AuthFlow] [checkRedirect] No pending redirect credentials or user found.");
         }
       } catch (err: any) {
-        console.error("Redirect Result Error:", err);
+        console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", err);
         addToast(getAuthErrorMessage(err), "error");
       }
     };
@@ -219,6 +231,7 @@ export function AuthFlow({
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AuthFlow] [handleEmailLogin] Attempting sign-in with email:", email);
     const newErrors: Record<string, string> = {};
 
     if (!email) {
@@ -232,6 +245,7 @@ export function AuthFlow({
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.warn("[AuthFlow] [handleEmailLogin] Validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please check your login details.", "error");
       return;
@@ -239,14 +253,22 @@ export function AuthFlow({
 
     try {
       setLoading(true);
+      console.log("[AuthFlow] [handleEmailLogin] Requesting Firebase Auth email/password verification...");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("[AuthFlow] [handleEmailLogin] Firebase Auth successful. User details:", {
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.emailVerified
+      });
       
       const userDocRef = doc(db, "users", user.uid);
+      console.log("[AuthFlow] [handleEmailLogin] Fetching user profile from Firestore at users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        console.log("[AuthFlow] [handleEmailLogin] Firestore profile found:", userData);
         const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
         const localProfile = {
           fullName: userData.displayName || user.displayName || "Verified User",
@@ -262,7 +284,7 @@ export function AuthFlow({
         addToast("Successfully signed in!", "success");
         onLoginSuccess(localProfile.fullName, email);
       } else {
-        // Auto-create missing user doc since we got logged in!
+        console.log("[AuthFlow] [handleEmailLogin] Firestore profile does not exist. Creating default profile...");
         const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
         const defaultProfile = {
           uid: user.uid,
@@ -274,6 +296,7 @@ export function AuthFlow({
           createdAt: Date.now()
         };
         await setDoc(userDocRef, defaultProfile);
+        console.log("[AuthFlow] [handleEmailLogin] Default profile saved successfully to Firestore.");
         
         const localProfile = {
           fullName: defaultProfile.displayName,
@@ -290,7 +313,7 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, email);
       }
     } catch (err: any) {
-      console.error("Email Login Error:", err);
+      console.error("[AuthFlow] [handleEmailLogin] Email Login failed with exception:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -299,6 +322,7 @@ export function AuthFlow({
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AuthFlow] [handleSignup] Initiating Email Registration. Full Name:", fullName, "Email:", email);
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) {
@@ -322,6 +346,7 @@ export function AuthFlow({
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.warn("[AuthFlow] [handleSignup] Registration validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please resolve all validation errors.", "error");
       return;
@@ -329,8 +354,10 @@ export function AuthFlow({
 
     try {
       setLoading(true);
+      console.log("[AuthFlow] [handleSignup] Dispatching createUserWithEmailAndPassword command to Firebase...");
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("[AuthFlow] [handleSignup] Firebase registration successful. User UID:", user.uid);
       
       // Auto-create initial user doc
       const defaultUsername = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -344,7 +371,10 @@ export function AuthFlow({
         photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
         createdAt: Date.now()
       };
+      
+      console.log("[AuthFlow] [handleSignup] Writing default user profile to Firestore path: users/" + user.uid);
       await setDoc(userDocRef, defaultProfile);
+      console.log("[AuthFlow] [handleSignup] Default profile created successfully in database.");
       
       const localProfile = {
         fullName: defaultProfile.displayName,
@@ -362,7 +392,7 @@ export function AuthFlow({
       setUsername(defaultUsername);
       navigateTo("profile_setup");
     } catch (err: any) {
-      console.error("Signup Error:", err);
+      console.error("[AuthFlow] [handleSignup] Email Registration failed with exception:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -371,6 +401,7 @@ export function AuthFlow({
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AuthFlow] [handlePhoneSubmit] Requesting SMS verification for Country Code:", countryCode, "Phone:", phoneNumber);
     const newErrors: Record<string, string> = {};
 
     const cleanPhone = phoneNumber.replace(/\D/g, "");
@@ -381,6 +412,7 @@ export function AuthFlow({
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.warn("[AuthFlow] [handlePhoneSubmit] Phone submission validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please enter a valid phone number.", "error");
       return;
@@ -388,13 +420,16 @@ export function AuthFlow({
 
     try {
       setLoading(true);
+      console.log("[AuthFlow] [handlePhoneSubmit] Initializing invisible RecaptchaVerifier...");
       if (!(window as any).recaptchaVerifier) {
         (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible"
         });
+        console.log("[AuthFlow] [handlePhoneSubmit] RecaptchaVerifier constructed successfully.");
       }
       const appVerifier = (window as any).recaptchaVerifier;
       const formatPhone = countryCode + cleanPhone;
+      console.log("[AuthFlow] [handlePhoneSubmit] Sending Firebase OTP verification to number:", formatPhone);
       
       const confirmation = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       (window as any).confirmationResult = confirmation;
@@ -437,8 +472,10 @@ export function AuthFlow({
   const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
+    console.log("[AuthFlow] [handleOtpVerify] Attempting OTP Verification. Submitted Code:", enteredOtp);
     
     if (enteredOtp.length < 6) {
+      console.warn("[AuthFlow] [handleOtpVerify] Code is less than 6 digits:", enteredOtp);
       addToast("Please enter the full 6-digit verification code.", "error");
       return;
     }
@@ -446,16 +483,22 @@ export function AuthFlow({
     try {
       setLoading(true);
       const confirmation = (window as any).confirmationResult;
+      console.log("[AuthFlow] [handleOtpVerify] Fetching active phone authentication confirmation session...");
       if (!confirmation) {
-        throw new Error("No active phone verification session found.");
+        console.error("[AuthFlow] [handleOtpVerify] confirmationResult is missing from window global object.");
+        throw new Error("No active phone verification session found. Please request a new OTP.");
       }
+      console.log("[AuthFlow] [handleOtpVerify] Sending confirmation.confirm with code to Firebase Auth...");
       const result = await confirmation.confirm(enteredOtp);
       const user = result.user;
+      console.log("[AuthFlow] [handleOtpVerify] Phone code verified successfully! User UID:", user.uid, "Phone:", user.phoneNumber);
       
       const userDocRef = doc(db, "users", user.uid);
+      console.log("[AuthFlow] [handleOtpVerify] Checking Firestore for existing phone profile at users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        console.log("[AuthFlow] [handleOtpVerify] Firestore profile found:", userData);
         const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
         const localProfile = {
           fullName: userData.displayName || user.displayName || "Verified User",
@@ -471,7 +514,7 @@ export function AuthFlow({
         addToast("Phone verified and signed in successfully!", "success");
         onLoginSuccess(localProfile.fullName, `${localProfile.username}@linco.org`);
       } else {
-        // Auto-create missing user doc since we got logged in!
+        console.log("[AuthFlow] [handleOtpVerify] Firestore profile does not exist. Creating default profile...");
         const defaultUsername = `user_${user.uid.slice(0, 5)}`;
         const defaultProfile = {
           uid: user.uid,
@@ -483,6 +526,7 @@ export function AuthFlow({
           createdAt: Date.now()
         };
         await setDoc(userDocRef, defaultProfile);
+        console.log("[AuthFlow] [handleOtpVerify] Default phone user profile created successfully in database.");
         
         const localProfile = {
           fullName: defaultProfile.displayName,
@@ -499,7 +543,7 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, `${defaultProfile.username}@linco.org`);
       }
     } catch (error: any) {
-      console.error("OTP Verification Error:", error);
+      console.error("[AuthFlow] [handleOtpVerify] OTP Verification failed with exception:", error);
       addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
@@ -508,6 +552,7 @@ export function AuthFlow({
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AuthFlow] [handleForgotPasswordSubmit] Requesting password reset email for:", email);
     const newErrors: Record<string, string> = {};
 
     if (!email) {
@@ -517,17 +562,20 @@ export function AuthFlow({
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.warn("[AuthFlow] [handleForgotPasswordSubmit] Forgot password validation failed:", newErrors);
       setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
+      console.log("[AuthFlow] [handleForgotPasswordSubmit] Contacting Firebase sendPasswordResetEmail...");
       await sendPasswordResetEmail(auth, email);
+      console.log("[AuthFlow] [handleForgotPasswordSubmit] Firebase successfully sent reset link email to:", email);
       addToast("Password reset link sent! Check your inbox.", "success");
       navigateTo("login");
     } catch (err: any) {
-      console.error("Password reset error:", err);
+      console.error("[AuthFlow] [handleForgotPasswordSubmit] Password reset failed with exception:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -535,22 +583,28 @@ export function AuthFlow({
   };
 
   const handleGoogleLogin = async () => {
+    console.log("[AuthFlow] [handleGoogleLogin] Requesting Google authentication...");
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       if (isMobile) {
+        console.log("[AuthFlow] [handleGoogleLogin] Mobile platform detected. Using signInWithRedirect...");
         await signInWithRedirect(auth, provider);
       } else {
+        console.log("[AuthFlow] [handleGoogleLogin] Desktop platform detected. Triggering signInWithPopup...");
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
+        console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
         
         const userDocRef = doc(db, "users", user.uid);
+        console.log("[AuthFlow] [handleGoogleLogin] Checking Firestore for Google user at users/" + user.uid);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          console.log("[AuthFlow] [handleGoogleLogin] Existing Google profile found:", userData);
           const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
           const localProfile = {
             fullName: userData.displayName || user.displayName || "Verified User",
@@ -566,7 +620,7 @@ export function AuthFlow({
           addToast("Successfully signed in with Google!", "success");
           onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
         } else {
-          // Auto-create missing user doc since we got logged in!
+          console.log("[AuthFlow] [handleGoogleLogin] Google profile does not exist. Creating default Google user profile...");
           const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
           const defaultProfile = {
             uid: user.uid,
@@ -595,7 +649,7 @@ export function AuthFlow({
         }
       }
     } catch (err: any) {
-      console.error("Google Login Error:", err);
+      console.error("[AuthFlow] [handleGoogleLogin] Google Login failed with exception:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);

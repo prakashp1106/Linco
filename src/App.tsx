@@ -51,7 +51,7 @@ import { UserDashboard } from "./components/UserDashboard";
 import { CookieConsent } from "./components/CookieConsent";
 import { AuthFlow } from "./components/AuthFlow";
 import { auth, db } from "./services/firebaseClient";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 // Modals
@@ -1395,13 +1395,26 @@ export default function App() {
 
                 {/* Logout Option */}
                 <button
-                  onClick={() => {
-                    localStorage.removeItem("linco_profile_details");
-                    localStorage.removeItem("linco_profile_is_logged_in");
-                    window.dispatchEvent(new Event("storage"));
-                    window.dispatchEvent(new Event("profile-updated"));
-                    addToast("Successfully logged out.", "success");
-                    setDrawerOpen(false);
+                  onClick={async () => {
+                    try {
+                      console.log("[App] [Logout] Initiating Firebase Auth signOut...");
+                      await signOut(auth);
+                      console.log("[App] [Logout] Firebase Auth signOut complete.");
+                      localStorage.removeItem("linco_profile_details");
+                      localStorage.removeItem("linco_profile_is_logged_in");
+                      window.dispatchEvent(new Event("storage"));
+                      window.dispatchEvent(new Event("profile-updated"));
+                      addToast("Successfully logged out.", "success");
+                      setDrawerOpen(false);
+                    } catch (err) {
+                      console.error("[App] [Logout] Firebase Auth signOut failed:", err);
+                      addToast("Error during sign out. Cleared local session.", "warn");
+                      localStorage.removeItem("linco_profile_details");
+                      localStorage.removeItem("linco_profile_is_logged_in");
+                      window.dispatchEvent(new Event("storage"));
+                      window.dispatchEvent(new Event("profile-updated"));
+                      setDrawerOpen(false);
+                    }
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold tracking-wide text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 transition cursor-pointer"
                 >
