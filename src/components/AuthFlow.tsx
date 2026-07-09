@@ -119,6 +119,7 @@ export function AuthFlow({
 
   // Clear errors on screen change
   const navigateTo = (nextScreen: ScreenType) => {
+    console.log(`[AuthFlow] [navigateTo] Transitioning from "${screen}" to "${nextScreen}"`);
     setErrors({});
     setLoading(false);
     setScreen(nextScreen);
@@ -796,7 +797,7 @@ export function AuthFlow({
       <div className="fixed -bottom-[20%] -right-[20%] w-[60vw] h-[60vw] bg-radial from-cyan-500/10 via-transparent to-transparent blur-[130px] pointer-events-none z-0" />
 
       {/* Main card viewport */}
-      <div className="relative w-full max-w-[420px] bg-[#08080c]/80 border border-[#161621] rounded-[2.5rem] backdrop-blur-xl overflow-hidden shadow-2xl flex flex-col justify-center min-h-[520px] z-10">
+      <div className="relative w-full max-w-[420px] bg-[#08080c]/80 border border-[#161621] rounded-[2.5rem] backdrop-blur-xl overflow-hidden shadow-2xl flex flex-col justify-center min-h-[520px] z-10 pointer-events-auto">
         
         {!isConfigValid && (
           <div className="absolute top-0 inset-x-0 bg-red-950/40 border-b border-red-800/30 px-6 py-3 text-xs text-red-200 backdrop-blur-md z-30 flex items-center space-x-2">
@@ -818,7 +819,7 @@ export function AuthFlow({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center p-8 text-center space-y-8"
+              className="flex flex-col items-center justify-center p-8 text-center space-y-8 relative z-20 pointer-events-auto"
             >
               <div className="relative flex flex-col items-center">
                 {/* Subtle Glow Ring */}
@@ -860,7 +861,7 @@ export function AuthFlow({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="flex flex-col justify-between p-8 space-y-10 h-full"
+              className="flex flex-col justify-between p-8 space-y-10 h-full relative z-20 pointer-events-auto"
             >
               {/* Header */}
               <div className="text-center space-y-3 pt-4">
@@ -885,8 +886,11 @@ export function AuthFlow({
                 {/* Google */}
                 <button
                   disabled={loading}
-                  onClick={handleGoogleLogin}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [Welcome] Google button clicked!");
+                    handleGoogleLogin();
+                  }}
+                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
                 >
                   {loading ? (
                     <Loader2 size={16} className="animate-spin text-indigo-400" />
@@ -903,8 +907,11 @@ export function AuthFlow({
 
                 {/* Email */}
                 <button
-                  onClick={() => navigateTo("signup")}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [Welcome] Email button clicked!");
+                    navigateTo("signup");
+                  }}
+                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
                 >
                   <Mail size={16} className="text-cyan-400 shrink-0" />
                   <span>Continue with Email</span>
@@ -912,8 +919,11 @@ export function AuthFlow({
 
                 {/* Phone */}
                 <button
-                  onClick={() => navigateTo("phone_login")}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [Welcome] Phone button clicked!");
+                    navigateTo("phone_login");
+                  }}
+                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
                 >
                   <Phone size={16} className="text-violet-400 shrink-0" />
                   <span>Continue with Phone Number</span>
@@ -925,8 +935,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already have an account?{" "}
                   <button 
-                    onClick={() => navigateTo("login")}
-                    className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1"
+                    onClick={(e) => {
+                      console.log("[AuthFlow] [Welcome] Already registered Sign In clicked!");
+                      navigateTo("login");
+                    }}
+                    className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
                   >
                     Sign In
                   </button>
@@ -942,12 +955,15 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-6"
+              className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
-                onClick={() => navigateTo("welcome")}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a]"
+                onClick={(e) => {
+                  console.log("[AuthFlow] [Login] Back button clicked!");
+                  navigateTo("welcome");
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -957,7 +973,10 @@ export function AuthFlow({
                 <p className="text-xs text-slate-400">Sign in to your LINCO account to resume tracking.</p>
               </div>
 
-              <form onSubmit={handleEmailLogin} className="space-y-4 pt-1">
+              <form onSubmit={(e) => {
+                console.log("[AuthFlow] [Login] Form submitted!");
+                handleEmailLogin(e);
+              }} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Email Address</label>
@@ -1035,8 +1054,11 @@ export function AuthFlow({
               {/* Alternate Login Buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={handleGoogleLogin}
-                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [Login] Alternate Google button clicked!");
+                    handleGoogleLogin();
+                  }}
+                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
                 >
                   <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -1047,8 +1069,11 @@ export function AuthFlow({
                   <span>Google</span>
                 </button>
                 <button
-                  onClick={() => navigateTo("phone_login")}
-                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [Login] Alternate Phone button clicked!");
+                    navigateTo("phone_login");
+                  }}
+                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
                 >
                   <Phone size={13} className="text-violet-400 shrink-0" />
                   <span>Phone</span>
@@ -1060,8 +1085,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   New to LINCO?{" "}
                   <button
-                    onClick={() => navigateTo("signup")}
-                    className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer hover:underline ml-1"
+                    onClick={(e) => {
+                      console.log("[AuthFlow] [Login] Create Account footer button clicked!");
+                      navigateTo("signup");
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
                   >
                     Create Account
                   </button>
@@ -1077,12 +1105,15 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-5"
+              className="p-8 space-y-5 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
-                onClick={() => navigateTo("welcome")}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a]"
+                onClick={(e) => {
+                  console.log("[AuthFlow] [Signup] Back button clicked!");
+                  navigateTo("welcome");
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -1202,7 +1233,7 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer"
+                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer pointer-events-auto"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Create Account</span>
@@ -1214,8 +1245,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already registered?{" "}
                   <button
-                    onClick={() => navigateTo("login")}
-                    className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1"
+                    onClick={(e) => {
+                      console.log("[AuthFlow] [Signup] Already registered Sign In clicked!");
+                      navigateTo("login");
+                    }}
+                    className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
                   >
                     Sign In
                   </button>
@@ -1231,12 +1265,15 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-6"
+              className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
-                onClick={() => navigateTo("welcome")}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a]"
+                onClick={(e) => {
+                  console.log("[AuthFlow] [PhoneLogin] Back button clicked!");
+                  navigateTo("welcome");
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -1302,8 +1339,11 @@ export function AuthFlow({
               {/* Footer link to Welcome */}
               <div className="text-center pt-2">
                 <button
-                  onClick={() => navigateTo("welcome")}
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [PhoneLogin] Change login option clicked!");
+                    navigateTo("welcome");
+                  }}
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer pointer-events-auto"
                 >
                   Change login option
                 </button>
@@ -1318,12 +1358,15 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-6"
+              className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
-                onClick={() => navigateTo("phone_login")}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a]"
+                onClick={(e) => {
+                  console.log("[AuthFlow] [OTP] Back button clicked!");
+                  navigateTo("phone_login");
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -1394,12 +1437,15 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-6"
+              className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
-                onClick={() => navigateTo("login")}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a]"
+                onClick={(e) => {
+                  console.log("[AuthFlow] [ForgotPassword] Back button clicked!");
+                  navigateTo("login");
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
               >
                 <ArrowLeft size={14} />
               </button>
@@ -1444,8 +1490,11 @@ export function AuthFlow({
               {/* Back to sign in option */}
               <div className="text-center pt-2">
                 <button
-                  onClick={() => navigateTo("login")}
-                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    console.log("[AuthFlow] [ForgotPassword] Return to Sign In clicked!");
+                    navigateTo("login");
+                  }}
+                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer pointer-events-auto"
                 >
                   Return to Sign In
                 </button>
@@ -1460,7 +1509,7 @@ export function AuthFlow({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="p-8 space-y-5"
+              className="p-8 space-y-5 relative z-20 pointer-events-auto"
             >
               <div className="space-y-1 text-center">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center mx-auto mb-1.5 shadow-sm animate-pulse">
