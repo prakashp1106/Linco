@@ -813,12 +813,8 @@ export function AuthFlow({
           
           {/* 1. SPLASH SCREEN */}
           {screen === "splash" && (
-            <motion.div
+            <div
               key="splash"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center p-8 text-center space-y-8 relative z-20 pointer-events-auto"
             >
               <div className="relative flex flex-col items-center">
@@ -843,24 +839,18 @@ export function AuthFlow({
 
               {/* Progress Indicator */}
               <div className="w-28 h-1 bg-[#12121a] rounded-full overflow-hidden relative">
-                <motion.div 
-                  initial={{ left: "-100%" }}
-                  animate={{ left: "100%" }}
-                  transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-                  className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full"
+                <div 
+                  className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full animate-pulse"
+                  style={{ left: "25%" }}
                 />
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 2. WELCOME SCREEN */}
           {screen === "welcome" && (
-            <motion.div
+            <div
               key="welcome"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="flex flex-col justify-between p-8 space-y-10 h-full relative z-20 pointer-events-auto"
             >
               {/* Header */}
@@ -886,8 +876,11 @@ export function AuthFlow({
                 {/* Google */}
                 <button
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [Google Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Google Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Google Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [Welcome] Google button clicked!");
+                    console.log("[DEBUG] [Google Button] onClick/handleGoogleLogin clicked!");
                     handleGoogleLogin();
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -907,8 +900,11 @@ export function AuthFlow({
 
                 {/* Email */}
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [Email Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Email Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Email Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [Welcome] Email button clicked!");
+                    console.log("[DEBUG] [Email Button] onClick clicked!");
                     navigateTo("signup");
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -919,8 +915,11 @@ export function AuthFlow({
 
                 {/* Phone */}
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [Phone Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Phone Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Phone Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [Welcome] Phone button clicked!");
+                    console.log("[DEBUG] [Phone Button] onClick clicked!");
                     navigateTo("phone_login");
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -935,8 +934,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already have an account?{" "}
                   <button 
+                    onPointerDown={() => console.log("[DEBUG] [SignIn Link] onPointerDown")}
+                    onTouchStart={() => console.log("[DEBUG] [SignIn Link] onTouchStart")}
+                    onMouseDown={() => console.log("[DEBUG] [SignIn Link] onMouseDown")}
                     onClick={(e) => {
-                      console.log("[AuthFlow] [Welcome] Already registered Sign In clicked!");
+                      console.log("[DEBUG] [SignIn Link] onClick clicked!");
                       navigateTo("login");
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
@@ -945,22 +947,22 @@ export function AuthFlow({
                   </button>
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 3. LOGIN SCREEN */}
           {screen === "login" && (
-            <motion.div
+            <div
               key="login"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
+                onPointerDown={() => console.log("[DEBUG] [Login Back Button] onPointerDown")}
+                onTouchStart={() => console.log("[DEBUG] [Login Back Button] onTouchStart")}
+                onMouseDown={() => console.log("[DEBUG] [Login Back Button] onMouseDown")}
                 onClick={(e) => {
-                  console.log("[AuthFlow] [Login] Back button clicked!");
+                  console.log("[DEBUG] [Login Back Button] onClick clicked!");
                   navigateTo("welcome");
                 }}
                 className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
@@ -974,7 +976,7 @@ export function AuthFlow({
               </div>
 
               <form onSubmit={(e) => {
-                console.log("[AuthFlow] [Login] Form submitted!");
+                console.log("[DEBUG] [Login Form] onSubmit triggered!");
                 handleEmailLogin(e);
               }} className="space-y-4 pt-1">
                 {/* Email Field */}
@@ -1003,7 +1005,13 @@ export function AuthFlow({
                     <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Password</label>
                     <button
                       type="button"
-                      onClick={() => navigateTo("forgot_password")}
+                      onPointerDown={() => console.log("[DEBUG] [ForgotPassword Link] onPointerDown")}
+                      onTouchStart={() => console.log("[DEBUG] [ForgotPassword Link] onTouchStart")}
+                      onMouseDown={() => console.log("[DEBUG] [ForgotPassword Link] onMouseDown")}
+                      onClick={() => {
+                        console.log("[DEBUG] [ForgotPassword Link] onClick clicked!");
+                        navigateTo("forgot_password");
+                      }}
                       className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer"
                     >
                       Forgot Password?
@@ -1037,6 +1045,10 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [Login Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Login Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Login Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [Login Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
@@ -1054,8 +1066,11 @@ export function AuthFlow({
               {/* Alternate Login Buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [Login Alt Google Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Login Alt Google Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Login Alt Google Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [Login] Alternate Google button clicked!");
+                    console.log("[DEBUG] [Login Alt Google Button] onClick clicked!");
                     handleGoogleLogin();
                   }}
                   className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
@@ -1069,8 +1084,11 @@ export function AuthFlow({
                   <span>Google</span>
                 </button>
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [Login Alt Phone Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Login Alt Phone Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Login Alt Phone Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [Login] Alternate Phone button clicked!");
+                    console.log("[DEBUG] [Login Alt Phone Button] onClick clicked!");
                     navigateTo("phone_login");
                   }}
                   className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
@@ -1085,8 +1103,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   New to LINCO?{" "}
                   <button
+                    onPointerDown={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onPointerDown")}
+                    onTouchStart={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onTouchStart")}
+                    onMouseDown={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onMouseDown")}
                     onClick={(e) => {
-                      console.log("[AuthFlow] [Login] Create Account footer button clicked!");
+                      console.log("[DEBUG] [Login Footer CreateAccount Link] onClick clicked!");
                       navigateTo("signup");
                     }}
                     className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
@@ -1095,22 +1116,22 @@ export function AuthFlow({
                   </button>
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 4. SIGNUP SCREEN */}
           {screen === "signup" && (
-            <motion.div
+            <div
               key="signup"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-5 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
+                onPointerDown={() => console.log("[DEBUG] [Signup Back Button] onPointerDown")}
+                onTouchStart={() => console.log("[DEBUG] [Signup Back Button] onTouchStart")}
+                onMouseDown={() => console.log("[DEBUG] [Signup Back Button] onMouseDown")}
                 onClick={(e) => {
-                  console.log("[AuthFlow] [Signup] Back button clicked!");
+                  console.log("[DEBUG] [Signup Back Button] onClick clicked!");
                   navigateTo("welcome");
                 }}
                 className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
@@ -1123,7 +1144,10 @@ export function AuthFlow({
                 <p className="text-xs text-slate-400">Join the smart local guardian network.</p>
               </div>
 
-              <form onSubmit={handleSignup} className="space-y-3.5 pt-1">
+              <form onSubmit={(e) => {
+                console.log("[DEBUG] [Signup Form] onSubmit triggered!");
+                handleSignup(e);
+              }} className="space-y-3.5 pt-1">
                 {/* Full Name */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Full Name</label>
@@ -1233,6 +1257,10 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [Signup Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Signup Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Signup Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [Signup Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer pointer-events-auto"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
@@ -1245,8 +1273,11 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already registered?{" "}
                   <button
+                    onPointerDown={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onPointerDown")}
+                    onTouchStart={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onTouchStart")}
+                    onMouseDown={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onMouseDown")}
                     onClick={(e) => {
-                      console.log("[AuthFlow] [Signup] Already registered Sign In clicked!");
+                      console.log("[DEBUG] [Signup AlreadyRegistered Button] onClick clicked!");
                       navigateTo("login");
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer hover:underline ml-1 pointer-events-auto"
@@ -1255,22 +1286,22 @@ export function AuthFlow({
                   </button>
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 5. PHONE LOGIN SCREEN */}
           {screen === "phone_login" && (
-            <motion.div
+            <div
               key="phone_login"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
+                onPointerDown={() => console.log("[DEBUG] [PhoneLogin Back Button] onPointerDown")}
+                onTouchStart={() => console.log("[DEBUG] [PhoneLogin Back Button] onTouchStart")}
+                onMouseDown={() => console.log("[DEBUG] [PhoneLogin Back Button] onMouseDown")}
                 onClick={(e) => {
-                  console.log("[AuthFlow] [PhoneLogin] Back button clicked!");
+                  console.log("[DEBUG] [PhoneLogin Back Button] onClick clicked!");
                   navigateTo("welcome");
                 }}
                 className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
@@ -1283,7 +1314,10 @@ export function AuthFlow({
                 <p className="text-xs text-slate-400">We will transmit a 6-digit one-time password code to verify your profile.</p>
               </div>
 
-              <form onSubmit={handlePhoneSubmit} className="space-y-4 pt-1">
+              <form onSubmit={(e) => {
+                console.log("[DEBUG] [PhoneLogin Form] onSubmit triggered!");
+                handlePhoneSubmit(e);
+              }} className="space-y-4 pt-1">
                 {/* Phone Form Field */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Mobile Phone Number</label>
@@ -1329,6 +1363,10 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [PhoneLogin Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [PhoneLogin Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [PhoneLogin Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [PhoneLogin Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
@@ -1339,8 +1377,11 @@ export function AuthFlow({
               {/* Footer link to Welcome */}
               <div className="text-center pt-2">
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [PhoneLogin] Change login option clicked!");
+                    console.log("[DEBUG] [PhoneLogin ChangeOption Button] onClick clicked!");
                     navigateTo("welcome");
                   }}
                   className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer pointer-events-auto"
@@ -1348,22 +1389,22 @@ export function AuthFlow({
                   Change login option
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 6. OTP VERIFICATION SCREEN */}
           {screen === "otp_verification" && (
-            <motion.div
+            <div
               key="otp_verification"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
+                onPointerDown={() => console.log("[DEBUG] [Otp Back Button] onPointerDown")}
+                onTouchStart={() => console.log("[DEBUG] [Otp Back Button] onTouchStart")}
+                onMouseDown={() => console.log("[DEBUG] [Otp Back Button] onMouseDown")}
                 onClick={(e) => {
-                  console.log("[AuthFlow] [OTP] Back button clicked!");
+                  console.log("[DEBUG] [Otp Back Button] onClick clicked!");
                   navigateTo("phone_login");
                 }}
                 className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
@@ -1378,7 +1419,10 @@ export function AuthFlow({
                 </p>
               </div>
 
-              <form onSubmit={handleOtpVerify} className="space-y-5">
+              <form onSubmit={(e) => {
+                console.log("[DEBUG] [Otp Form] onSubmit triggered!");
+                handleOtpVerify(e);
+              }} className="space-y-5">
                 {/* 6-Digit input layout */}
                 <div className="flex gap-2 justify-between">
                   {otp.map((digit, index) => (
@@ -1402,7 +1446,11 @@ export function AuthFlow({
                   <span className="text-slate-400">Didn't receive code?</span>
                   <button
                     type="button"
+                    onPointerDown={() => console.log("[DEBUG] [Otp Resend Button] onPointerDown")}
+                    onTouchStart={() => console.log("[DEBUG] [Otp Resend Button] onTouchStart")}
+                    onMouseDown={() => console.log("[DEBUG] [Otp Resend Button] onMouseDown")}
                     onClick={() => {
+                      console.log("[DEBUG] [Otp Resend Button] onClick clicked!");
                       addToast("New code dispatched!", "info");
                     }}
                     className="text-cyan-400 font-bold hover:underline cursor-pointer"
@@ -1421,28 +1469,32 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [Otp Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [Otp Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [Otp Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [Otp Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg cursor-pointer"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Verify OTP</span>
                 </button>
               </form>
-            </motion.div>
+            </div>
           )}
 
           {/* 7. FORGOT PASSWORD SCREEN */}
           {screen === "forgot_password" && (
-            <motion.div
+            <div
               key="forgot_password"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-6 relative z-20 pointer-events-auto"
             >
               {/* Back Button */}
               <button 
+                onPointerDown={() => console.log("[DEBUG] [ForgotPassword Back Button] onPointerDown")}
+                onTouchStart={() => console.log("[DEBUG] [ForgotPassword Back Button] onTouchStart")}
+                onMouseDown={() => console.log("[DEBUG] [ForgotPassword Back Button] onMouseDown")}
                 onClick={(e) => {
-                  console.log("[AuthFlow] [ForgotPassword] Back button clicked!");
+                  console.log("[DEBUG] [ForgotPassword Back Button] onClick clicked!");
                   navigateTo("login");
                 }}
                 className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
@@ -1455,7 +1507,10 @@ export function AuthFlow({
                 <p className="text-xs text-slate-400">We'll transmit a secure recovery connection link to retrieve control of your profile.</p>
               </div>
 
-              <form onSubmit={handleForgotPasswordSubmit} className="space-y-4 pt-1">
+              <form onSubmit={(e) => {
+                console.log("[DEBUG] [ForgotPassword Form] onSubmit triggered!");
+                handleForgotPasswordSubmit(e);
+              }} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Email Address</label>
@@ -1480,6 +1535,10 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [ForgotPassword Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [ForgotPassword Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [ForgotPassword Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [ForgotPassword Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
@@ -1490,8 +1549,11 @@ export function AuthFlow({
               {/* Back to sign in option */}
               <div className="text-center pt-2">
                 <button
+                  onPointerDown={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onMouseDown")}
                   onClick={(e) => {
-                    console.log("[AuthFlow] [ForgotPassword] Return to Sign In clicked!");
+                    console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onClick clicked!");
                     navigateTo("login");
                   }}
                   className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer pointer-events-auto"
@@ -1499,16 +1561,13 @@ export function AuthFlow({
                   Return to Sign In
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* 8. PROFILE SETUP SCREEN */}
           {screen === "profile_setup" && (
-            <motion.div
+            <div
               key="profile_setup"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="p-8 space-y-5 relative z-20 pointer-events-auto"
             >
               <div className="space-y-1 text-center">
@@ -1581,7 +1640,13 @@ export function AuthFlow({
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                      onPointerDown={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onPointerDown")}
+                      onTouchStart={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onTouchStart")}
+                      onMouseDown={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onMouseDown")}
+                      onClick={() => {
+                        console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onClick clicked!");
+                        fileInputRef.current?.click();
+                      }}
                       className="px-2.5 py-1 bg-[#101118] border border-[#1f202c] text-slate-300 font-bold rounded-lg text-[10px] cursor-pointer hover:border-slate-700 flex items-center gap-1"
                     >
                       <Upload size={10} className="text-cyan-400" />
@@ -1599,7 +1664,10 @@ export function AuthFlow({
                 />
               </div>
 
-              <form onSubmit={handleProfileSetupSubmit} className="space-y-4">
+              <form onSubmit={(e) => {
+                console.log("[DEBUG] [ProfileSetup Form] onSubmit triggered!");
+                handleProfileSetupSubmit(e);
+              }} className="space-y-4">
                 {/* Full Name */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Full Name (Required)</label>
@@ -1673,13 +1741,17 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
+                  onPointerDown={() => console.log("[DEBUG] [ProfileSetup Submit Button] onPointerDown")}
+                  onTouchStart={() => console.log("[DEBUG] [ProfileSetup Submit Button] onTouchStart")}
+                  onMouseDown={() => console.log("[DEBUG] [ProfileSetup Submit Button] onMouseDown")}
+                  onClick={() => console.log("[DEBUG] [ProfileSetup Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Complete Profile Setup</span>
                 </button>
               </form>
-            </motion.div>
+            </div>
           )}
 
         </AnimatePresence>
