@@ -64,7 +64,17 @@ app.use(
           "https://nominatim.openstreetmap.org", 
           "https://apis.mappls.com", 
           "https://*.mappls.com", 
-          "https://generativelanguage.googleapis.com"
+          "https://generativelanguage.googleapis.com",
+          "https://*.firebase.com",
+          "https://*.firebaseapp.com",
+          "https://*.googleapis.com",
+          "https://*.firebaseio.com",
+          "wss://*.firebaseio.com"
+        ],
+        frameSrc: [
+          "'self'",
+          "https://*.firebaseapp.com",
+          "https://*.google.com"
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         frameAncestors: ["'self'", "*"], // Required for AI Studio iframe preview
@@ -82,6 +92,7 @@ const apiLimiter = rateLimit({
   max: 150, // Limit each IP to 150 requests per window
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: { error: "Too many requests from this IP, please try again later." },
 });
 
@@ -189,13 +200,9 @@ try {
   if (!db) {
     throw new Error("Firestore client not initialized.");
   }
-  console.log("[DIAGNOSTIC-STARTUP] Firebase production Firestore instance loaded. Testing collection access...");
 } catch (error: any) {
   lastFirestoreError = error.message || String(error);
-  if (error && typeof error === "object") {
-    lastFirestoreErrorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
-  }
-  console.error("[DIAGNOSTIC-STARTUP] Failed to load production Firestore instance, enabling local fallback:", error);
+  console.error("[DIAGNOSTIC-STARTUP] Firebase production Firestore client not loaded:", error);
   useLocalFallback = true;
 }
 
@@ -3439,6 +3446,22 @@ Task: Output a single, strictly valid JSON response containing exactly these key
 // --- VITE MIDDLEWARE AND STATIC SERVING ---
 
 async function startServer() {
+  // Initialize and verify Firestore actively inside async block
+  try {
+    if (!useLocalFallback && db) {
+      console.log("[DIAGNOSTIC-STARTUP] Firebase production Firestore instance loaded. Testing collection access...");
+      await db.collection("posts").limit(1).get();
+      console.log("[DIAGNOSTIC-STARTUP] Firestore connection and permissions verified successfully!");
+    }
+  } catch (error: any) {
+    lastFirestoreError = error.message || String(error);
+    if (error && typeof error === "object") {
+      lastFirestoreErrorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
+    }
+    console.error("[DIAGNOSTIC-STARTUP] Failed to load production Firestore instance, enabling local fallback:", error);
+    useLocalFallback = true;
+  }
+
   // Vite dev server setup
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
