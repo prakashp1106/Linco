@@ -5,11 +5,26 @@
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
+import fs from "fs";
+import path from "path";
 
 let db: Firestore;
+let configDatabaseId = "";
 
 try {
   console.log("[FIREBASE-INIT] Initializing single production Firebase Admin instance...");
+
+  let configProjectId = "";
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      configProjectId = config.projectId || "";
+      configDatabaseId = config.firestoreDatabaseId || "";
+    }
+  } catch (e) {
+    console.error("[FIREBASE-INIT] Error reading firebase-applet-config.json:", e);
+  }
 
   let app;
   const existingApps = getApps();
@@ -40,6 +55,10 @@ try {
     }
     const privateKey = rawPrivateKey?.replace(/\\n/g, "\n").trim();
 
+    if (!projectId && configProjectId) {
+      projectId = configProjectId;
+    }
+
     if (projectId && clientEmail && privateKey) {
       console.log(`[FIREBASE-INIT] Initializing with Service Account credentials. Project ID: ${projectId}`);
       app = initializeApp({
@@ -64,9 +83,9 @@ try {
   }
 
   // Use only getFirestore() with the default database
-  console.log("[FIREBASE-INIT] Instantiating Firestore on DEFAULT database...");
-  db = getFirestore(app);
-  console.log("[FIREBASE-INIT] Firestore DEFAULT database client ready.");
+  console.log(`[FIREBASE-INIT] Instantiating Firestore on database: ${configDatabaseId || "default"}...`);
+  db = getFirestore(app, configDatabaseId || undefined);
+  console.log("[FIREBASE-INIT] Firestore database client ready.");
 } catch (error: any) {
   console.error("[FIREBASE-INIT] Critical Error initializing Firebase:", error);
   throw error;

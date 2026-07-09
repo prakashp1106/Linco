@@ -36,6 +36,7 @@ const ai = new GoogleGenAI({
 });
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = 3000;
 
 // Secure Headers with Helmet configured for iframe embedding & Leaflet map tile rendering

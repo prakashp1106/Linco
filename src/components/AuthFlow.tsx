@@ -588,66 +588,59 @@ export function AuthFlow({
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log("[AuthFlow] [handleGoogleLogin] Triggering signInWithPopup...");
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
       
-      if (isMobile) {
-        console.log("[AuthFlow] [handleGoogleLogin] Mobile platform detected. Using signInWithRedirect...");
-        await signInWithRedirect(auth, provider);
+      const userDocRef = doc(db, "users", user.uid);
+      console.log("[AuthFlow] [handleGoogleLogin] Checking Firestore for Google user at users/" + user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("[AuthFlow] [handleGoogleLogin] Existing Google profile found:", userData);
+        const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+        const localProfile = {
+          fullName: userData.displayName || user.displayName || "Verified User",
+          username: userData.username || user.email?.split("@")[0] || "user",
+          bio: userData.bio || "Lost & Found helper on LINCO",
+          location: userData.city || "Kolkata, India",
+          memberSince: formattedDate,
+          avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+        };
+        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+        localStorage.setItem("linco_profile_is_logged_in", "true");
+        addToast("Successfully signed in with Google!", "success");
+        onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
       } else {
-        console.log("[AuthFlow] [handleGoogleLogin] Desktop platform detected. Triggering signInWithPopup...");
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
+        console.log("[AuthFlow] [handleGoogleLogin] Google profile does not exist. Creating default Google user profile...");
+        const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
+        const defaultProfile = {
+          uid: user.uid,
+          displayName: user.displayName || "Verified User",
+          username: defaultUsername,
+          bio: "Lost & Found helper on LINCO",
+          city: "Kolkata, India",
+          photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          createdAt: Date.now()
+        };
+        await setDoc(userDocRef, defaultProfile);
         
-        const userDocRef = doc(db, "users", user.uid);
-        console.log("[AuthFlow] [handleGoogleLogin] Checking Firestore for Google user at users/" + user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log("[AuthFlow] [handleGoogleLogin] Existing Google profile found:", userData);
-          const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-          const localProfile = {
-            fullName: userData.displayName || user.displayName || "Verified User",
-            username: userData.username || user.email?.split("@")[0] || "user",
-            bio: userData.bio || "Lost & Found helper on LINCO",
-            location: userData.city || "Kolkata, India",
-            memberSince: formattedDate,
-            avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-            banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-          };
-          localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-          localStorage.setItem("linco_profile_is_logged_in", "true");
-          addToast("Successfully signed in with Google!", "success");
-          onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
-        } else {
-          console.log("[AuthFlow] [handleGoogleLogin] Google profile does not exist. Creating default Google user profile...");
-          const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
-          const defaultProfile = {
-            uid: user.uid,
-            displayName: user.displayName || "Verified User",
-            username: defaultUsername,
-            bio: "Lost & Found helper on LINCO",
-            city: "Kolkata, India",
-            photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-            createdAt: Date.now()
-          };
-          await setDoc(userDocRef, defaultProfile);
-          
-          const localProfile = {
-            fullName: defaultProfile.displayName,
-            username: defaultProfile.username,
-            bio: defaultProfile.bio,
-            location: defaultProfile.city,
-            memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
-            avatar: defaultProfile.photoURL,
-            banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-          };
-          localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-          localStorage.setItem("linco_profile_is_logged_in", "true");
-          addToast("Successfully signed in with Google!", "success");
-          onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
-        }
+        const localProfile = {
+          fullName: defaultProfile.displayName,
+          username: defaultProfile.username,
+          bio: defaultProfile.bio,
+          location: defaultProfile.city,
+          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
+          avatar: defaultProfile.photoURL,
+          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+        };
+        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+        localStorage.setItem("linco_profile_is_logged_in", "true");
+        addToast("Successfully signed in with Google!", "success");
+        onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
       }
     } catch (err: any) {
       console.error("[AuthFlow] [handleGoogleLogin] Google Login failed with exception:", err);
@@ -876,9 +869,6 @@ export function AuthFlow({
                 {/* Google */}
                 <button
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [Google Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Google Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Google Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [Google Button] onClick/handleGoogleLogin clicked!");
                     handleGoogleLogin();
@@ -900,9 +890,6 @@ export function AuthFlow({
 
                 {/* Email */}
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [Email Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Email Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Email Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [Email Button] onClick clicked!");
                     navigateTo("signup");
@@ -915,9 +902,6 @@ export function AuthFlow({
 
                 {/* Phone */}
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [Phone Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Phone Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Phone Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [Phone Button] onClick clicked!");
                     navigateTo("phone_login");
@@ -934,9 +918,6 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already have an account?{" "}
                   <button 
-                    onPointerDown={() => console.log("[DEBUG] [SignIn Link] onPointerDown")}
-                    onTouchStart={() => console.log("[DEBUG] [SignIn Link] onTouchStart")}
-                    onMouseDown={() => console.log("[DEBUG] [SignIn Link] onMouseDown")}
                     onClick={(e) => {
                       console.log("[DEBUG] [SignIn Link] onClick clicked!");
                       navigateTo("login");
@@ -958,9 +939,6 @@ export function AuthFlow({
             >
               {/* Back Button */}
               <button 
-                onPointerDown={() => console.log("[DEBUG] [Login Back Button] onPointerDown")}
-                onTouchStart={() => console.log("[DEBUG] [Login Back Button] onTouchStart")}
-                onMouseDown={() => console.log("[DEBUG] [Login Back Button] onMouseDown")}
                 onClick={(e) => {
                   console.log("[DEBUG] [Login Back Button] onClick clicked!");
                   navigateTo("welcome");
@@ -1005,9 +983,6 @@ export function AuthFlow({
                     <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Password</label>
                     <button
                       type="button"
-                      onPointerDown={() => console.log("[DEBUG] [ForgotPassword Link] onPointerDown")}
-                      onTouchStart={() => console.log("[DEBUG] [ForgotPassword Link] onTouchStart")}
-                      onMouseDown={() => console.log("[DEBUG] [ForgotPassword Link] onMouseDown")}
                       onClick={() => {
                         console.log("[DEBUG] [ForgotPassword Link] onClick clicked!");
                         navigateTo("forgot_password");
@@ -1045,9 +1020,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [Login Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Login Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Login Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [Login Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
@@ -1066,9 +1038,6 @@ export function AuthFlow({
               {/* Alternate Login Buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [Login Alt Google Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Login Alt Google Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Login Alt Google Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [Login Alt Google Button] onClick clicked!");
                     handleGoogleLogin();
@@ -1084,9 +1053,6 @@ export function AuthFlow({
                   <span>Google</span>
                 </button>
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [Login Alt Phone Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Login Alt Phone Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Login Alt Phone Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [Login Alt Phone Button] onClick clicked!");
                     navigateTo("phone_login");
@@ -1103,9 +1069,6 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   New to LINCO?{" "}
                   <button
-                    onPointerDown={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onPointerDown")}
-                    onTouchStart={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onTouchStart")}
-                    onMouseDown={() => console.log("[DEBUG] [Login Footer CreateAccount Link] onMouseDown")}
                     onClick={(e) => {
                       console.log("[DEBUG] [Login Footer CreateAccount Link] onClick clicked!");
                       navigateTo("signup");
@@ -1127,9 +1090,6 @@ export function AuthFlow({
             >
               {/* Back Button */}
               <button 
-                onPointerDown={() => console.log("[DEBUG] [Signup Back Button] onPointerDown")}
-                onTouchStart={() => console.log("[DEBUG] [Signup Back Button] onTouchStart")}
-                onMouseDown={() => console.log("[DEBUG] [Signup Back Button] onMouseDown")}
                 onClick={(e) => {
                   console.log("[DEBUG] [Signup Back Button] onClick clicked!");
                   navigateTo("welcome");
@@ -1257,9 +1217,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [Signup Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Signup Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Signup Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [Signup Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer pointer-events-auto"
                 >
@@ -1273,9 +1230,6 @@ export function AuthFlow({
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already registered?{" "}
                   <button
-                    onPointerDown={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onPointerDown")}
-                    onTouchStart={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onTouchStart")}
-                    onMouseDown={() => console.log("[DEBUG] [Signup AlreadyRegistered Button] onMouseDown")}
                     onClick={(e) => {
                       console.log("[DEBUG] [Signup AlreadyRegistered Button] onClick clicked!");
                       navigateTo("login");
@@ -1297,9 +1251,6 @@ export function AuthFlow({
             >
               {/* Back Button */}
               <button 
-                onPointerDown={() => console.log("[DEBUG] [PhoneLogin Back Button] onPointerDown")}
-                onTouchStart={() => console.log("[DEBUG] [PhoneLogin Back Button] onTouchStart")}
-                onMouseDown={() => console.log("[DEBUG] [PhoneLogin Back Button] onMouseDown")}
                 onClick={(e) => {
                   console.log("[DEBUG] [PhoneLogin Back Button] onClick clicked!");
                   navigateTo("welcome");
@@ -1363,9 +1314,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [PhoneLogin Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [PhoneLogin Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [PhoneLogin Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [PhoneLogin Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
@@ -1377,9 +1325,6 @@ export function AuthFlow({
               {/* Footer link to Welcome */}
               <div className="text-center pt-2">
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [PhoneLogin ChangeOption Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [PhoneLogin ChangeOption Button] onClick clicked!");
                     navigateTo("welcome");
@@ -1400,9 +1345,6 @@ export function AuthFlow({
             >
               {/* Back Button */}
               <button 
-                onPointerDown={() => console.log("[DEBUG] [Otp Back Button] onPointerDown")}
-                onTouchStart={() => console.log("[DEBUG] [Otp Back Button] onTouchStart")}
-                onMouseDown={() => console.log("[DEBUG] [Otp Back Button] onMouseDown")}
                 onClick={(e) => {
                   console.log("[DEBUG] [Otp Back Button] onClick clicked!");
                   navigateTo("phone_login");
@@ -1446,9 +1388,6 @@ export function AuthFlow({
                   <span className="text-slate-400">Didn't receive code?</span>
                   <button
                     type="button"
-                    onPointerDown={() => console.log("[DEBUG] [Otp Resend Button] onPointerDown")}
-                    onTouchStart={() => console.log("[DEBUG] [Otp Resend Button] onTouchStart")}
-                    onMouseDown={() => console.log("[DEBUG] [Otp Resend Button] onMouseDown")}
                     onClick={() => {
                       console.log("[DEBUG] [Otp Resend Button] onClick clicked!");
                       addToast("New code dispatched!", "info");
@@ -1469,9 +1408,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [Otp Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [Otp Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [Otp Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [Otp Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg cursor-pointer"
                 >
@@ -1490,9 +1426,6 @@ export function AuthFlow({
             >
               {/* Back Button */}
               <button 
-                onPointerDown={() => console.log("[DEBUG] [ForgotPassword Back Button] onPointerDown")}
-                onTouchStart={() => console.log("[DEBUG] [ForgotPassword Back Button] onTouchStart")}
-                onMouseDown={() => console.log("[DEBUG] [ForgotPassword Back Button] onMouseDown")}
                 onClick={(e) => {
                   console.log("[DEBUG] [ForgotPassword Back Button] onClick clicked!");
                   navigateTo("login");
@@ -1535,9 +1468,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [ForgotPassword Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [ForgotPassword Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [ForgotPassword Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [ForgotPassword Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
@@ -1549,9 +1479,6 @@ export function AuthFlow({
               {/* Back to sign in option */}
               <div className="text-center pt-2">
                 <button
-                  onPointerDown={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onMouseDown")}
                   onClick={(e) => {
                     console.log("[DEBUG] [ForgotPassword BackToSignIn Button] onClick clicked!");
                     navigateTo("login");
@@ -1640,9 +1567,6 @@ export function AuthFlow({
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onPointerDown={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onPointerDown")}
-                      onTouchStart={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onTouchStart")}
-                      onMouseDown={() => console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onMouseDown")}
                       onClick={() => {
                         console.log("[DEBUG] [ProfileSetup ChoosePhoto Button] onClick clicked!");
                         fileInputRef.current?.click();
@@ -1741,9 +1665,6 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  onPointerDown={() => console.log("[DEBUG] [ProfileSetup Submit Button] onPointerDown")}
-                  onTouchStart={() => console.log("[DEBUG] [ProfileSetup Submit Button] onTouchStart")}
-                  onMouseDown={() => console.log("[DEBUG] [ProfileSetup Submit Button] onMouseDown")}
                   onClick={() => console.log("[DEBUG] [ProfileSetup Submit Button] onClick clicked!")}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer"
                 >
