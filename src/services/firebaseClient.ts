@@ -1,22 +1,41 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { 
+  getAuth, 
+  initializeAuth, 
+  browserLocalPersistence, 
+  browserPopupRedirectResolver 
+} from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
 import fileConfig from "../../firebase-applet-config.json";
 
 // Merge environment variables and fallback JSON configuration
 const metaEnv = (import.meta as any).env || {};
 
-const firebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey,
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain,
-  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId,
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket,
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId,
-  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId,
-  firestoreDatabaseId: metaEnv.VITE_FIREBASE_FIRESTORE_DATABASE_ID || fileConfig.firestoreDatabaseId || "ai-studio-lincoailostfound-abf2a1c3-66b5-4e75-b14f-eeee113d7949"
+// Helper to cleanse environment variables that might be literally "undefined", "null" or empty strings
+const cleanConfigValue = (envVal: any, fileVal: any): string => {
+  if (
+    envVal === undefined || 
+    envVal === null || 
+    envVal === "undefined" || 
+    envVal === "null" || 
+    String(envVal).trim() === ""
+  ) {
+    return fileVal || "";
+  }
+  return String(envVal);
 };
 
-console.log("[FirebaseClient] Active configuration loaded:", {
+const firebaseConfig = {
+  apiKey: cleanConfigValue(metaEnv.VITE_FIREBASE_API_KEY, fileConfig.apiKey),
+  authDomain: cleanConfigValue(metaEnv.VITE_FIREBASE_AUTH_DOMAIN, fileConfig.authDomain),
+  projectId: cleanConfigValue(metaEnv.VITE_FIREBASE_PROJECT_ID, fileConfig.projectId),
+  storageBucket: cleanConfigValue(metaEnv.VITE_FIREBASE_STORAGE_BUCKET, fileConfig.storageBucket),
+  messagingSenderId: cleanConfigValue(metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID, fileConfig.messagingSenderId),
+  appId: cleanConfigValue(metaEnv.VITE_FIREBASE_APP_ID, fileConfig.appId),
+  firestoreDatabaseId: cleanConfigValue(metaEnv.VITE_FIREBASE_FIRESTORE_DATABASE_ID, fileConfig.firestoreDatabaseId) || "ai-studio-lincoailostfound-abf2a1c3-66b5-4e75-b14f-eeee113d7949"
+};
+
+console.log("[FirebaseClient] Active configuration loaded and sanitized:", {
   apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.slice(0, 6)}...` : "MISSING",
   authDomain: firebaseConfig.authDomain || "MISSING",
   projectId: firebaseConfig.projectId || "MISSING",
@@ -43,7 +62,20 @@ if (!isConfigValid) {
 }
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+
+// Explicitly initialize Auth using modern Firebase v10+ initializeAuth pattern with injected dependencies
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: browserLocalPersistence,
+    popupRedirectResolver: browserPopupRedirectResolver,
+  });
+  console.log("[FirebaseClient] Auth initialized successfully via initializeAuth with browserLocalPersistence and browserPopupRedirectResolver.");
+} catch (e) {
+  auth = getAuth(app);
+  console.log("[FirebaseClient] Auth instance retrieved via getAuth(app) - already initialized.");
+}
+
 const db = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId);
 
 export { app, auth, db, isConfigValid };

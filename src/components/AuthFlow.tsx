@@ -463,7 +463,7 @@ export function AuthFlow({
       }
 
       if (!(window as any).recaptchaVerifier) {
-        console.log("[AuthFlow] [handlePhoneSubmit] Creating new RecaptchaVerifier instance...");
+        console.log("[AuthFlow] [handlePhoneSubmit] Creating new RecaptchaVerifier instance with correct parameters (auth, container, config)...");
         (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible"
         });
@@ -482,11 +482,13 @@ export function AuthFlow({
       addToast(`OTP code sent successfully to ${countryCode} ${cleanPhone}!`, "success");
       navigateTo("otp_verification");
     } catch (error: any) {
-      console.error("Phone Auth Error:", {
-        code: error.code,
-        message: error.message,
-        error: error
-      });
+      console.error("Firebase Auth Error");
+      console.error("Code:", error.code);
+      console.error("Message:", error.message);
+      console.error("Custom Data:", error.customData);
+      console.error("Stack:", error.stack);
+      // Clear instance on error so next attempt can retry fresh
+      (window as any).recaptchaVerifier = null;
       alert("handlePhoneSubmit ERROR: " + (error.message || String(error)));
       addToast(getAuthErrorMessage(error), "error");
     } finally {
@@ -663,10 +665,12 @@ export function AuthFlow({
   };
 
   const handleGoogleLogin = async () => {
+    console.log("STEP 1: Google button clicked");
     console.log("[AuthFlow] [handleGoogleLogin] Requesting Google authentication...");
     alert("Entered handleGoogleLogin");
     try {
       setLoading(true);
+      console.log("STEP 2: Creating GoogleAuthProvider");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: 'select_account'
@@ -676,6 +680,7 @@ export function AuthFlow({
       console.log(`[AuthFlow] [handleGoogleLogin] Device detection: isMobile=${isMobile}, userAgent="${navigator.userAgent}"`);
 
       if (isMobile) {
+        console.log("STEP 3: Starting authentication");
         console.log("[AuthFlow] [handleGoogleLogin] Mobile browser detected. Triggering signInWithRedirect...");
         alert("handleGoogleLogin: BEFORE signInWithRedirect");
         await signInWithRedirect(auth, provider);
@@ -683,10 +688,12 @@ export function AuthFlow({
         return;
       }
 
+      console.log("STEP 3: Starting authentication");
       console.log("[AuthFlow] [handleGoogleLogin] Desktop browser detected. Triggering signInWithPopup...");
       alert("handleGoogleLogin: BEFORE signInWithPopup");
       const result = await signInWithPopup(auth, provider);
       alert("handleGoogleLogin: AFTER signInWithPopup");
+      console.log("STEP 4: Authentication success");
       const user = result.user;
       console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
       
@@ -744,11 +751,22 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
       }
     } catch (err: any) {
-      console.error("[AuthFlow] [handleGoogleLogin] Google Login failed with exception:", {
-        code: err.code,
-        message: err.message,
-        error: err
-      });
+      console.error("Firebase Auth Error");
+      console.error("Code:", err.code);
+      console.error("Message:", err.message);
+      console.error("Custom Data:", err.customData);
+      console.error("Stack:", err.stack);
+
+      // Programmatically check if error is due to unauthorized domain or iframe/cookies block
+      const currentHost = typeof window !== "undefined" ? window.location.hostname : "";
+      if (err.code === "auth/internal-error" || err.code === "auth/unauthorized-domain") {
+        console.warn(
+          `[AuthFlow] PROD ALERT: If you are seeing '${err.code}' on domain '${currentHost}', ` +
+          `please verify that '${currentHost}' (e.g., lincoindia.onrender.com) is fully added ` +
+          `to the "Authorized domains" list in your Firebase Console under Authentication > Settings > Authorized domains.`
+        );
+      }
+
       alert("handleGoogleLogin ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
@@ -901,7 +919,7 @@ export function AuthFlow({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030304] overflow-y-auto px-4 py-8">
       {/* Invisible Recaptcha Container for Phone Authentication */}
-      <div id="recaptcha-container" className="hidden pointer-events-none absolute w-0 h-0 opacity-0 overflow-hidden"></div>
+      <div id="recaptcha-container" className="pointer-events-none absolute w-0 h-0 opacity-0 overflow-hidden"></div>
 
       {/* Decorative Blur Backgrounds */}
       <div className="fixed -top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-radial from-indigo-600/15 via-transparent to-transparent blur-[130px] pointer-events-none z-0" />
