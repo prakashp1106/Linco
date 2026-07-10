@@ -141,6 +141,9 @@ export function AuthFlow({
       case "auth/weak-password":
         return "The password is too weak. It must be at least 6 characters.";
       case "auth/network-request-failed":
+        if (typeof window !== "undefined" && window.self !== window.top) {
+          return "Google Sign-In is restricted inside preview panels due to third-party cookie restrictions. Please click the 'Open in New Tab' icon at the top right of the preview panel to sign in successfully.";
+        }
         return "Network connection error. Please check your internet connection.";
       case "auth/too-many-requests":
         return "Too many failed login attempts. Please try again later or reset your password.";
@@ -155,6 +158,11 @@ export function AuthFlow({
 
   useEffect(() => {
     const checkRedirect = async () => {
+      const isIframe = typeof window !== "undefined" && window.self !== window.top;
+      if (isIframe) {
+        console.log("[AuthFlow] [checkRedirect] Skipping Google redirect check inside iframe due to cross-origin / third-party cookie restrictions.");
+        return;
+      }
       console.log("[AuthFlow] [checkRedirect] Checking Google redirect authentication result...");
       try {
         const result = await getRedirectResult(auth);
@@ -219,12 +227,16 @@ export function AuthFlow({
           console.log("[AuthFlow] [checkRedirect] No pending redirect credentials or user found.");
         }
       } catch (err: any) {
-        console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", {
-          code: err.code,
-          message: err.message,
-          error: err
-        });
-        addToast(getAuthErrorMessage(err), "error");
+        if (isIframe && err.code === "auth/network-request-failed") {
+          console.warn("[AuthFlow] [checkRedirect] Network request failed inside iframe context as expected due to cookie restrictions.");
+        } else {
+          console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", {
+            code: err.code,
+            message: err.message,
+            error: err
+          });
+          addToast(getAuthErrorMessage(err), "error");
+        }
       }
     };
     checkRedirect();

@@ -24,6 +24,7 @@ import {
 import { useChat } from "../hooks/useChat";
 
 interface LincoSaathiiChatProps {
+  addToast?: (message: string, type: "info" | "success" | "warn" | "error") => void;
   onFieldUpdate: (fields: {
     type?: "Lost" | "Found";
     item?: string;
@@ -90,6 +91,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
   onFieldUpdate,
   triggerSubmit,
   currentState,
+  addToast,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
@@ -269,7 +271,11 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      if (addToast) {
+        addToast("Geolocation is not supported by your browser", "error");
+      } else {
+        console.error("Geolocation is not supported by your browser");
+      }
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -292,7 +298,11 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
       },
       (err) => {
         console.error("GPS Error:", err);
-        alert("Could not retrieve GPS coordinates. Please type the location.");
+        if (addToast) {
+          addToast("Could not retrieve GPS coordinates. Please type the location.", "error");
+        } else {
+          console.error("Could not retrieve GPS coordinates. Please type the location.");
+        }
       }
     );
   };

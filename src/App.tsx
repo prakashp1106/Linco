@@ -1668,6 +1668,7 @@ export default function App() {
               {/* Persistent Sidebar Info Card & LincoSaathii Chatbot */}
               <div className="lg:col-span-4 space-y-6">
                 <LincoSaathiiChat
+                  addToast={addToast}
                   onFieldUpdate={(fields) => {
                     if (fields.type) form.setFType(fields.type);
                     if (fields.item) form.setFItem(fields.item);
