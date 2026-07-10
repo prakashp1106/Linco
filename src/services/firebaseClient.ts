@@ -5,7 +5,7 @@ import {
   browserLocalPersistence, 
   browserPopupRedirectResolver 
 } from "firebase/auth";
-import { initializeFirestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import fileConfig from "../../firebase-applet-config.json";
 
 // Merge environment variables and fallback JSON configuration
@@ -31,8 +31,7 @@ const firebaseConfig = {
   projectId: cleanConfigValue(metaEnv.VITE_FIREBASE_PROJECT_ID, fileConfig.projectId),
   storageBucket: cleanConfigValue(metaEnv.VITE_FIREBASE_STORAGE_BUCKET, fileConfig.storageBucket),
   messagingSenderId: cleanConfigValue(metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID, fileConfig.messagingSenderId),
-  appId: cleanConfigValue(metaEnv.VITE_FIREBASE_APP_ID, fileConfig.appId),
-  firestoreDatabaseId: cleanConfigValue(metaEnv.VITE_FIREBASE_FIRESTORE_DATABASE_ID, fileConfig.firestoreDatabaseId) || "ai-studio-lincoailostfound-abf2a1c3-66b5-4e75-b14f-eeee113d7949"
+  appId: cleanConfigValue(metaEnv.VITE_FIREBASE_APP_ID, fileConfig.appId)
 };
 
 console.log("[FirebaseClient] Active configuration loaded and sanitized:", {
@@ -42,7 +41,6 @@ console.log("[FirebaseClient] Active configuration loaded and sanitized:", {
   storageBucket: firebaseConfig.storageBucket || "MISSING",
   messagingSenderId: firebaseConfig.messagingSenderId || "MISSING",
   appId: firebaseConfig.appId ? `${firebaseConfig.appId.slice(0, 10)}...` : "MISSING",
-  firestoreDatabaseId: firebaseConfig.firestoreDatabaseId,
   source: metaEnv.VITE_FIREBASE_API_KEY ? "environment_variables" : "config_file"
 });
 
@@ -76,7 +74,7 @@ try {
   console.log("[FirebaseClient] Auth instance retrieved via getAuth(app) - already initialized.");
 }
 
-const db = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId);
+const db = getFirestore(app);
 
 export { app, auth, db, isConfigValid };
 
