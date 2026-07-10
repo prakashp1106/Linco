@@ -688,16 +688,8 @@ export function AuthFlow({
       const isMobile = isMobileBrowser();
       console.log(`[AuthFlow] [handleGoogleLogin] Device detection: isMobile=${isMobile}, userAgent="${navigator.userAgent}"`);
 
-      if (isMobile) {
-        console.log("STEP 3: Starting authentication");
-        console.log("[AuthFlow] [handleGoogleLogin] Mobile browser detected. Triggering signInWithRedirect...");
-        await signInWithRedirect(auth, provider);
-        // Page will redirect, code execution stops here.
-        return;
-      }
-
       console.log("STEP 3: Starting authentication");
-      console.log("[AuthFlow] [handleGoogleLogin] Desktop browser detected. Triggering signInWithPopup...");
+      console.log("[AuthFlow] [handleGoogleLogin] Triggering signInWithPopup...");
       const result = await signInWithPopup(auth, provider);
       console.log("STEP 4: Authentication success");
       const user = result.user;
