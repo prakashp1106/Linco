@@ -676,121 +676,38 @@ export function AuthFlow({
 
   const handleGoogleLogin = async () => {
     console.log("STEP 1: Google button clicked");
-    console.log("[AuthFlow] [handleGoogleLogin] Requesting Google authentication...");
     try {
+      console.log("STEP 2: Setting loading to true");
       setLoading(true);
-      console.log("STEP 2: Creating GoogleAuthProvider");
+
+      console.log("STEP 3: Instantiating GoogleAuthProvider");
       const provider = new GoogleAuthProvider();
+
+      console.log("STEP 4: Setting prompt custom parameters");
       provider.setCustomParameters({
-        prompt: 'select_account'
+        prompt: "select_account"
       });
 
+      console.log("STEP 5: Checking device type");
       const isMobile = isMobileBrowser();
       console.log(`[AuthFlow] [handleGoogleLogin] Device detection: isMobile=${isMobile}, userAgent="${navigator.userAgent}"`);
 
-      console.log("STEP 3: Starting authentication");
-      console.log("[AuthFlow] [handleGoogleLogin] Triggering signInWithPopup...");
-      const result = await signInWithPopup(auth, provider);
-      console.log("STEP 4: Authentication success");
-      const user = result.user;
-      console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
-      
-      const userDocRef = doc(db, "users", user.uid);
-      let userDoc;
+      console.log("STEP 6: Entering popup authentication block");
       try {
-        console.log("[AuthFlow] [handleGoogleLogin] [getDoc] Executing getDoc for userDocRef:", userDocRef.path);
-        userDoc = await getDoc(userDocRef);
-        console.log("[AuthFlow] [handleGoogleLogin] [getDoc] Completed getDoc successfully. Exists:", userDoc.exists());
-      } catch (fsErr: any) {
-        console.error("[AuthFlow] [handleGoogleLogin] Firestore getDoc failed:", {
-          code: fsErr.code,
-          message: fsErr.message,
-          stack: fsErr.stack,
-          error: fsErr
-        });
-        throw fsErr;
-      }
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("[AuthFlow] [handleGoogleLogin] Existing Google profile found:", userData);
-        const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-        const localProfile = {
-          fullName: userData.displayName || user.displayName || "Verified User",
-          username: userData.username || user.email?.split("@")[0] || "user",
-          bio: userData.bio || "Lost & Found helper on LINCO",
-          location: userData.city || "Kolkata, India",
-          memberSince: formattedDate,
-          avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        console.log("[AuthFlow] [handleGoogleLogin] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Successfully signed in with Google!", "success");
-        console.log("[AuthFlow] [handleGoogleLogin] Executing onLoginSuccess with user.email:", user.email);
-        onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
-      } else {
-        console.log("[AuthFlow] [handleGoogleLogin] Google profile does not exist. Creating default Google user profile...");
-        const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
-        const defaultProfile = {
-          uid: user.uid,
-          displayName: user.displayName || "Verified User",
-          username: defaultUsername,
-          bio: "Lost & Found helper on LINCO",
-          city: "Kolkata, India",
-          photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          createdAt: Date.now()
-        };
-        try {
-          console.log("[AuthFlow] [handleGoogleLogin] [setDoc] Executing setDoc for userDocRef:", userDocRef.path);
-          await setDoc(userDocRef, defaultProfile);
-          console.log("[AuthFlow] [handleGoogleLogin] [setDoc] Completed setDoc successfully.");
-        } catch (fsErr: any) {
-          console.error("[AuthFlow] [handleGoogleLogin] Firestore setDoc failed:", {
-            code: fsErr.code,
-            message: fsErr.message,
-            stack: fsErr.stack,
-            error: fsErr
-          });
-          throw fsErr;
-        }
-        
-        const localProfile = {
-          fullName: defaultProfile.displayName,
-          username: defaultProfile.username,
-          bio: defaultProfile.bio,
-          location: defaultProfile.city,
-          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
-          avatar: defaultProfile.photoURL,
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        console.log("[AuthFlow] [handleGoogleLogin] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Successfully signed in with Google!", "success");
-        console.log("[AuthFlow] [handleGoogleLogin] Executing onLoginSuccess with user.email:", user.email);
-        onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
+        console.log("STEP 7: Invoking signInWithPopup");
+        const result = await signInWithPopup(auth, provider);
+        console.log("POPUP SUCCESS", result.user);
+        alert("POPUP SUCCESS: " + (result.user?.email || "No email"));
+        return;
+      } catch (e: any) {
+        console.error("POPUP FAILED", e.code, e.message, e);
+        alert("POPUP ERROR: " + e.code + " " + e.message);
+        return;
       }
     } catch (err: any) {
-      console.error("Firebase Auth Error");
-      console.error("Code:", err.code);
-      console.error("Message:", err.message);
-      console.error("Custom Data:", err.customData);
-      console.error("Stack:", err.stack);
-
-      // Programmatically check if error is due to unauthorized domain or iframe/cookies block
-      const currentHost = typeof window !== "undefined" ? window.location.hostname : "";
-      if (err.code === "auth/internal-error" || err.code === "auth/unauthorized-domain") {
-        console.warn(
-          `[AuthFlow] PROD ALERT: If you are seeing '${err.code}' on domain '${currentHost}', ` +
-          `please verify that '${currentHost}' (e.g., lincoindia.onrender.com) is fully added ` +
-          `to the "Authorized domains" list in your Firebase Console under Authentication > Settings > Authorized domains.`
-        );
-      }
-
-      addToast(getAuthErrorMessage(err), "error");
+      console.error("STEP 9: General try-catch wrapper caught an exception:", err);
     } finally {
+      console.log("STEP 10: Setting loading to false in finally block");
       setLoading(false);
     }
   };
