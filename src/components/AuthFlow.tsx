@@ -237,7 +237,6 @@ export function AuthFlow({
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[AuthFlow] [handleEmailLogin] Attempting sign-in with email:", email);
-    alert("Entered handleEmailLogin");
     const newErrors: Record<string, string> = {};
 
     if (!email) {
@@ -260,9 +259,7 @@ export function AuthFlow({
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleEmailLogin] Requesting Firebase Auth email/password verification...");
-      alert("handleEmailLogin: BEFORE signInWithEmailAndPassword");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      alert("handleEmailLogin: AFTER signInWithEmailAndPassword");
       const user = userCredential.user;
       console.log("[AuthFlow] [handleEmailLogin] Firebase Auth successful. User details:", {
         uid: user.uid,
@@ -272,9 +269,7 @@ export function AuthFlow({
       
       const userDocRef = doc(db, "users", user.uid);
       console.log("[AuthFlow] [handleEmailLogin] Fetching user profile from Firestore at users/" + user.uid);
-      alert("handleEmailLogin: BEFORE getDoc for users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
-      alert("handleEmailLogin: AFTER getDoc for users/" + user.uid);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -305,9 +300,7 @@ export function AuthFlow({
           photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
-        alert("handleEmailLogin: BEFORE setDoc for users/" + user.uid);
         await setDoc(userDocRef, defaultProfile);
-        alert("handleEmailLogin: AFTER setDoc for users/" + user.uid);
         console.log("[AuthFlow] [handleEmailLogin] Default profile saved successfully to Firestore.");
         
         const localProfile = {
@@ -330,7 +323,6 @@ export function AuthFlow({
         message: err.message,
         error: err
       });
-      alert("handleEmailLogin ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -340,7 +332,6 @@ export function AuthFlow({
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[AuthFlow] [handleSignup] Initiating Email Registration. Full Name:", fullName, "Email:", email);
-    alert("Entered handleSignup");
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) {
@@ -373,9 +364,7 @@ export function AuthFlow({
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleSignup] Dispatching createUserWithEmailAndPassword command to Firebase...");
-      alert("handleSignup: BEFORE createUserWithEmailAndPassword");
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      alert("handleSignup: AFTER createUserWithEmailAndPassword");
       const user = userCredential.user;
       console.log("[AuthFlow] [handleSignup] Firebase registration successful. User UID:", user.uid);
       
@@ -393,9 +382,7 @@ export function AuthFlow({
       };
       
       console.log("[AuthFlow] [handleSignup] Writing default user profile to Firestore path: users/" + user.uid);
-      alert("handleSignup: BEFORE setDoc for users/" + user.uid);
       await setDoc(userDocRef, defaultProfile);
-      alert("handleSignup: AFTER setDoc for users/" + user.uid);
       console.log("[AuthFlow] [handleSignup] Default profile created successfully in database.");
       
       const localProfile = {
@@ -419,7 +406,6 @@ export function AuthFlow({
         message: err.message,
         error: err
       });
-      alert("handleSignup ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -429,7 +415,6 @@ export function AuthFlow({
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[AuthFlow] [handlePhoneSubmit] Requesting SMS verification for Country Code:", countryCode, "Phone:", phoneNumber);
-    alert("Entered handlePhoneSubmit");
     const newErrors: Record<string, string> = {};
 
     const cleanPhone = phoneNumber.replace(/\D/g, "");
@@ -474,9 +459,7 @@ export function AuthFlow({
       const appVerifier = (window as any).recaptchaVerifier;
       
       console.log("[AuthFlow] [handlePhoneSubmit] Sending Firebase OTP verification to number:", formatPhone);
-      alert("handlePhoneSubmit: BEFORE signInWithPhoneNumber");
       const confirmation = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
-      alert("handlePhoneSubmit: AFTER signInWithPhoneNumber");
       (window as any).confirmationResult = confirmation;
       
       addToast(`OTP code sent successfully to ${countryCode} ${cleanPhone}!`, "success");
@@ -489,7 +472,6 @@ export function AuthFlow({
       console.error("Stack:", error.stack);
       // Clear instance on error so next attempt can retry fresh
       (window as any).recaptchaVerifier = null;
-      alert("handlePhoneSubmit ERROR: " + (error.message || String(error)));
       addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
@@ -525,7 +507,6 @@ export function AuthFlow({
     e.preventDefault();
     const enteredOtp = otp.join("");
     console.log("[AuthFlow] [handleOtpVerify] Attempting OTP Verification. Submitted Code:", enteredOtp);
-    alert("Entered handleOtpVerify");
     
     if (enteredOtp.length < 6) {
       console.warn("[AuthFlow] [handleOtpVerify] Code is less than 6 digits:", enteredOtp);
@@ -543,18 +524,14 @@ export function AuthFlow({
       }
       console.log("[AuthFlow] [handleOtpVerify] Sending confirmation.confirm with code to Firebase Auth...");
       
-      alert("handleOtpVerify: BEFORE confirmation.confirm");
       const result = await confirmation.confirm(enteredOtp);
-      alert("handleOtpVerify: AFTER confirmation.confirm");
       const user = result.user;
       console.log("[AuthFlow] [handleOtpVerify] Phone code verified successfully! User UID:", user.uid, "Phone:", user.phoneNumber);
       
       const userDocRef = doc(db, "users", user.uid);
       console.log("[AuthFlow] [handleOtpVerify] Checking Firestore for existing phone profile at users/" + user.uid);
       
-      alert("handleOtpVerify: BEFORE getDoc for users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
-      alert("handleOtpVerify: AFTER getDoc for users/" + user.uid);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -585,9 +562,7 @@ export function AuthFlow({
           photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
-        alert("handleOtpVerify: BEFORE setDoc for users/" + user.uid);
         await setDoc(userDocRef, defaultProfile);
-        alert("handleOtpVerify: AFTER setDoc for users/" + user.uid);
         console.log("[AuthFlow] [handleOtpVerify] Default phone user profile created successfully in database.");
         
         const localProfile = {
@@ -610,7 +585,6 @@ export function AuthFlow({
         message: error.message,
         error: error
       });
-      alert("handleOtpVerify ERROR: " + (error.message || String(error)));
       addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
@@ -620,7 +594,6 @@ export function AuthFlow({
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[AuthFlow] [handleForgotPasswordSubmit] Requesting password reset email for:", email);
-    alert("Entered handleForgotPasswordSubmit");
     const newErrors: Record<string, string> = {};
 
     if (!email) {
@@ -638,9 +611,7 @@ export function AuthFlow({
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleForgotPasswordSubmit] Contacting Firebase sendPasswordResetEmail...");
-      alert("handleForgotPasswordSubmit: BEFORE sendPasswordResetEmail");
       await sendPasswordResetEmail(auth, email);
-      alert("handleForgotPasswordSubmit: AFTER sendPasswordResetEmail");
       console.log("[AuthFlow] [handleForgotPasswordSubmit] Firebase successfully sent reset link email to:", email);
       addToast("Password reset link sent! Check your inbox.", "success");
       navigateTo("login");
@@ -650,7 +621,6 @@ export function AuthFlow({
         message: err.message,
         error: err
       });
-      alert("handleForgotPasswordSubmit ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -667,7 +637,6 @@ export function AuthFlow({
   const handleGoogleLogin = async () => {
     console.log("STEP 1: Google button clicked");
     console.log("[AuthFlow] [handleGoogleLogin] Requesting Google authentication...");
-    alert("Entered handleGoogleLogin");
     try {
       setLoading(true);
       console.log("STEP 2: Creating GoogleAuthProvider");
@@ -682,7 +651,6 @@ export function AuthFlow({
       if (isMobile) {
         console.log("STEP 3: Starting authentication");
         console.log("[AuthFlow] [handleGoogleLogin] Mobile browser detected. Triggering signInWithRedirect...");
-        alert("handleGoogleLogin: BEFORE signInWithRedirect");
         await signInWithRedirect(auth, provider);
         // Page will redirect, code execution stops here.
         return;
@@ -690,18 +658,14 @@ export function AuthFlow({
 
       console.log("STEP 3: Starting authentication");
       console.log("[AuthFlow] [handleGoogleLogin] Desktop browser detected. Triggering signInWithPopup...");
-      alert("handleGoogleLogin: BEFORE signInWithPopup");
       const result = await signInWithPopup(auth, provider);
-      alert("handleGoogleLogin: AFTER signInWithPopup");
       console.log("STEP 4: Authentication success");
       const user = result.user;
       console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
       
       const userDocRef = doc(db, "users", user.uid);
       console.log("[AuthFlow] [handleGoogleLogin] Checking Firestore for Google user at users/" + user.uid);
-      alert("handleGoogleLogin: BEFORE getDoc for users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
-      alert("handleGoogleLogin: AFTER getDoc for users/" + user.uid);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -732,9 +696,7 @@ export function AuthFlow({
           photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
-        alert("handleGoogleLogin: BEFORE setDoc for users/" + user.uid);
         await setDoc(userDocRef, defaultProfile);
-        alert("handleGoogleLogin: AFTER setDoc for users/" + user.uid);
         
         const localProfile = {
           fullName: defaultProfile.displayName,
@@ -767,7 +729,6 @@ export function AuthFlow({
         );
       }
 
-      alert("handleGoogleLogin ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -846,7 +807,6 @@ export function AuthFlow({
     }
 
     console.log("[AuthFlow] [handleProfileSetupSubmit] Attempting profile setup submit...");
-    alert("Entered handleProfileSetupSubmit");
 
     try {
       setLoading(true);
@@ -859,9 +819,7 @@ export function AuthFlow({
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("username", "==", cleanUsername));
       
-      alert("handleProfileSetupSubmit: BEFORE getDocs for unique username");
       const querySnapshot = await getDocs(q);
-      alert("handleProfileSetupSubmit: AFTER getDocs for unique username");
       
       let isUnique = true;
       querySnapshot.forEach((doc) => {
@@ -887,9 +845,7 @@ export function AuthFlow({
         createdAt: Date.now()
       };
 
-      alert("handleProfileSetupSubmit: BEFORE setDoc for profile");
       await setDoc(userDocRef, profilePayload);
-      alert("handleProfileSetupSubmit: AFTER setDoc for profile");
 
       const formattedDate = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
       const localProfile = {
@@ -909,7 +865,6 @@ export function AuthFlow({
       onLoginSuccess(profilePayload.displayName, user.email || `${profilePayload.username}@linco.org`);
     } catch (err: any) {
       console.error("Profile Setup Error:", err);
-      alert("handleProfileSetupSubmit ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -1007,7 +962,6 @@ export function AuthFlow({
                   disabled={loading}
                   onClick={(e) => {
                     console.log("[DEBUG] [Google Button] onClick/handleGoogleLogin clicked!");
-                    alert("[DEBUG] [Google Button] onClick/handleGoogleLogin clicked!");
                     handleGoogleLogin();
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -1029,7 +983,6 @@ export function AuthFlow({
                 <button
                   onClick={(e) => {
                     console.log("[DEBUG] [Email Button] onClick clicked!");
-                    alert("[DEBUG] [Email Button] onClick clicked!");
                     navigateTo("signup");
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -1042,7 +995,6 @@ export function AuthFlow({
                 <button
                   onClick={(e) => {
                     console.log("[DEBUG] [Phone Button] onClick clicked!");
-                    alert("[DEBUG] [Phone Button] onClick clicked!");
                     navigateTo("phone_login");
                   }}
                   className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
@@ -1161,7 +1113,6 @@ export function AuthFlow({
                   disabled={loading}
                   onClick={() => {
                     console.log("[DEBUG] [Login Submit Button] onClick clicked!");
-                    alert("[DEBUG] [Login Submit Button] onClick clicked!");
                   }}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
                 >
@@ -1182,7 +1133,6 @@ export function AuthFlow({
                 <button
                   onClick={(e) => {
                     console.log("[DEBUG] [Login Alt Google Button] onClick clicked!");
-                    alert("[DEBUG] [Login Alt Google Button] onClick clicked!");
                     handleGoogleLogin();
                   }}
                   className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
@@ -1198,7 +1148,6 @@ export function AuthFlow({
                 <button
                   onClick={(e) => {
                     console.log("[DEBUG] [Login Alt Phone Button] onClick clicked!");
-                    alert("[DEBUG] [Login Alt Phone Button] onClick clicked!");
                     navigateTo("phone_login");
                   }}
                   className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
@@ -1363,7 +1312,6 @@ export function AuthFlow({
                   disabled={loading}
                   onClick={() => {
                     console.log("[DEBUG] [Signup Submit Button] onClick clicked!");
-                    alert("[DEBUG] [Signup Submit Button] onClick clicked!");
                   }}
                   className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-3 cursor-pointer pointer-events-auto"
                 >
