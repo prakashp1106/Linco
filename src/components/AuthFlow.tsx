@@ -219,7 +219,11 @@ export function AuthFlow({
           console.log("[AuthFlow] [checkRedirect] No pending redirect credentials or user found.");
         }
       } catch (err: any) {
-        console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", err);
+        console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", {
+          code: err.code,
+          message: err.message,
+          error: err
+        });
         addToast(getAuthErrorMessage(err), "error");
       }
     };
@@ -321,7 +325,11 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, email);
       }
     } catch (err: any) {
-      console.error("[AuthFlow] [handleEmailLogin] Email Login failed with exception:", err);
+      console.error("[AuthFlow] [handleEmailLogin] Email Login failed with exception:", {
+        code: err.code,
+        message: err.message,
+        error: err
+      });
       alert("handleEmailLogin ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
@@ -406,7 +414,11 @@ export function AuthFlow({
       setUsername(defaultUsername);
       navigateTo("profile_setup");
     } catch (err: any) {
-      console.error("[AuthFlow] [handleSignup] Email Registration failed with exception:", err);
+      console.error("[AuthFlow] [handleSignup] Email Registration failed with exception:", {
+        code: err.code,
+        message: err.message,
+        error: err
+      });
       alert("handleSignup ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
@@ -436,17 +448,32 @@ export function AuthFlow({
 
     try {
       setLoading(true);
-      console.log("[AuthFlow] [handlePhoneSubmit] Initializing invisible RecaptchaVerifier...");
+      const formatPhone = countryCode + cleanPhone;
+      console.log("[AuthFlow] [handlePhoneSubmit] Initializing invisible RecaptchaVerifier...", {
+        authType: typeof auth,
+        authExists: !!auth,
+        formatPhone,
+        recaptchaId: "recaptcha-container",
+        containerExists: !!document.getElementById("recaptcha-container")
+      });
+
+      const recaptchaContainer = document.getElementById("recaptcha-container");
+      if (!recaptchaContainer) {
+        throw new Error("Critical Error: recaptcha-container element not found in DOM.");
+      }
+
       if (!(window as any).recaptchaVerifier) {
+        console.log("[AuthFlow] [handlePhoneSubmit] Creating new RecaptchaVerifier instance...");
         (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible"
         });
         console.log("[AuthFlow] [handlePhoneSubmit] RecaptchaVerifier constructed successfully.");
+      } else {
+        console.log("[AuthFlow] [handlePhoneSubmit] Reusing existing RecaptchaVerifier instance from window.");
       }
       const appVerifier = (window as any).recaptchaVerifier;
-      const formatPhone = countryCode + cleanPhone;
-      console.log("[AuthFlow] [handlePhoneSubmit] Sending Firebase OTP verification to number:", formatPhone);
       
+      console.log("[AuthFlow] [handlePhoneSubmit] Sending Firebase OTP verification to number:", formatPhone);
       alert("handlePhoneSubmit: BEFORE signInWithPhoneNumber");
       const confirmation = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
       alert("handlePhoneSubmit: AFTER signInWithPhoneNumber");
@@ -455,7 +482,11 @@ export function AuthFlow({
       addToast(`OTP code sent successfully to ${countryCode} ${cleanPhone}!`, "success");
       navigateTo("otp_verification");
     } catch (error: any) {
-      console.error("Phone Auth Error:", error);
+      console.error("Phone Auth Error:", {
+        code: error.code,
+        message: error.message,
+        error: error
+      });
       alert("handlePhoneSubmit ERROR: " + (error.message || String(error)));
       addToast(getAuthErrorMessage(error), "error");
     } finally {
@@ -572,7 +603,11 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, `${defaultProfile.username}@linco.org`);
       }
     } catch (error: any) {
-      console.error("[AuthFlow] [handleOtpVerify] OTP Verification failed with exception:", error);
+      console.error("[AuthFlow] [handleOtpVerify] OTP Verification failed with exception:", {
+        code: error.code,
+        message: error.message,
+        error: error
+      });
       alert("handleOtpVerify ERROR: " + (error.message || String(error)));
       addToast(getAuthErrorMessage(error), "error");
     } finally {
@@ -608,12 +643,23 @@ export function AuthFlow({
       addToast("Password reset link sent! Check your inbox.", "success");
       navigateTo("login");
     } catch (err: any) {
-      console.error("[AuthFlow] [handleForgotPasswordSubmit] Password reset failed with exception:", err);
+      console.error("[AuthFlow] [handleForgotPasswordSubmit] Password reset failed with exception:", {
+        code: err.code,
+        message: err.message,
+        error: err
+      });
       alert("handleForgotPasswordSubmit ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const isMobileBrowser = (): boolean => {
+    if (typeof window === "undefined" || !window.navigator) return false;
+    const ua = window.navigator.userAgent || "";
+    console.log("[AuthFlow] [isMobileBrowser] UserAgent string detected:", ua);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SamsungBrowser|Mobile|CriOS/i.test(ua);
   };
 
   const handleGoogleLogin = async () => {
@@ -622,7 +668,22 @@ export function AuthFlow({
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      console.log("[AuthFlow] [handleGoogleLogin] Triggering signInWithPopup...");
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      const isMobile = isMobileBrowser();
+      console.log(`[AuthFlow] [handleGoogleLogin] Device detection: isMobile=${isMobile}, userAgent="${navigator.userAgent}"`);
+
+      if (isMobile) {
+        console.log("[AuthFlow] [handleGoogleLogin] Mobile browser detected. Triggering signInWithRedirect...");
+        alert("handleGoogleLogin: BEFORE signInWithRedirect");
+        await signInWithRedirect(auth, provider);
+        // Page will redirect, code execution stops here.
+        return;
+      }
+
+      console.log("[AuthFlow] [handleGoogleLogin] Desktop browser detected. Triggering signInWithPopup...");
       alert("handleGoogleLogin: BEFORE signInWithPopup");
       const result = await signInWithPopup(auth, provider);
       alert("handleGoogleLogin: AFTER signInWithPopup");
@@ -683,7 +744,11 @@ export function AuthFlow({
         onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
       }
     } catch (err: any) {
-      console.error("[AuthFlow] [handleGoogleLogin] Google Login failed with exception:", err);
+      console.error("[AuthFlow] [handleGoogleLogin] Google Login failed with exception:", {
+        code: err.code,
+        message: err.message,
+        error: err
+      });
       alert("handleGoogleLogin ERROR: " + (err.message || String(err)));
       addToast(getAuthErrorMessage(err), "error");
     } finally {
@@ -835,6 +900,9 @@ export function AuthFlow({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030304] overflow-y-auto px-4 py-8">
+      {/* Invisible Recaptcha Container for Phone Authentication */}
+      <div id="recaptcha-container" className="hidden pointer-events-none absolute w-0 h-0 opacity-0 overflow-hidden"></div>
+
       {/* Decorative Blur Backgrounds */}
       <div className="fixed -top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-radial from-indigo-600/15 via-transparent to-transparent blur-[130px] pointer-events-none z-0" />
       <div className="fixed -bottom-[20%] -right-[20%] w-[60vw] h-[60vw] bg-radial from-cyan-500/10 via-transparent to-transparent blur-[130px] pointer-events-none z-0" />
