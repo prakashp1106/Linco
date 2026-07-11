@@ -167,90 +167,11 @@ export function AuthFlow({
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
-          const user = result.user;
           console.log("[AuthFlow] [checkRedirect] User verified from Google redirect:", {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName
+            uid: result.user.uid,
+            email: result.user.email
           });
-          addToast("Signed in successfully with Google!", "success");
-          
-          const userDocRef = doc(db, "users", user.uid);
-          let userDoc;
-          try {
-            console.log("[AuthFlow] [checkRedirect] [getDoc] Executing getDoc for userDocRef:", userDocRef.path);
-            userDoc = await getDoc(userDocRef);
-            console.log("[AuthFlow] [checkRedirect] [getDoc] Completed getDoc successfully. Exists:", userDoc.exists());
-          } catch (fsErr: any) {
-            console.error("[AuthFlow] [checkRedirect] Firestore getDoc failed:", {
-              code: fsErr.code,
-              message: fsErr.message,
-              stack: fsErr.stack,
-              error: fsErr
-            });
-            throw fsErr;
-          }
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            console.log("[AuthFlow] [checkRedirect] User Firestore doc exists:", userData);
-            const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-            const localProfile = {
-              fullName: userData.displayName || user.displayName || "Verified User",
-              username: userData.username || user.email?.split("@")[0] || "user",
-              bio: userData.bio || "Lost & Found helper on LINCO",
-              location: userData.city || "Kolkata, India",
-              memberSince: formattedDate,
-              avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-              banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-            };
-            localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-            console.log("[AuthFlow] [checkRedirect] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-            localStorage.setItem("linco_profile_is_logged_in", "true");
-            console.log("[AuthFlow] [checkRedirect] Executing onLoginSuccess with user.email:", user.email);
-            onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
-          } else {
-            console.log("[AuthFlow] [checkRedirect] User Firestore doc does not exist, creating default profile.");
-            const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
-            const defaultProfile = {
-              uid: user.uid,
-              displayName: user.displayName || "Verified User",
-              username: defaultUsername,
-              bio: "Lost & Found helper on LINCO",
-              city: "Kolkata, India",
-              photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-              createdAt: Date.now()
-            };
-            try {
-              console.log("[AuthFlow] [checkRedirect] [setDoc] Executing setDoc for userDocRef:", userDocRef.path);
-              await setDoc(userDocRef, defaultProfile);
-              console.log("[AuthFlow] [checkRedirect] [setDoc] Completed setDoc successfully.");
-            } catch (fsErr: any) {
-              console.error("[AuthFlow] [checkRedirect] Firestore setDoc failed:", {
-                code: fsErr.code,
-                message: fsErr.message,
-                stack: fsErr.stack,
-                error: fsErr
-              });
-              throw fsErr;
-            }
-            console.log("[AuthFlow] [checkRedirect] Created Firestore default profile at path:", `users/${user.uid}`);
-            
-            const localProfile = {
-              fullName: defaultProfile.displayName,
-              username: defaultProfile.username,
-              bio: defaultProfile.bio,
-              location: defaultProfile.city,
-              memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
-              avatar: defaultProfile.photoURL,
-              banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-            };
-            localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-            console.log("[AuthFlow] [checkRedirect] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-            localStorage.setItem("linco_profile_is_logged_in", "true");
-            console.log("[AuthFlow] [checkRedirect] Executing onLoginSuccess with user.email:", user.email);
-            onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
-          }
+          addToast("Successfully signed in with Google!", "success");
         } else {
           console.log("[AuthFlow] [checkRedirect] No pending redirect credentials or user found.");
         }
@@ -697,84 +618,7 @@ export function AuthFlow({
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
-      
-      const userDocRef = doc(db, "users", user.uid);
-      let userDoc;
-      try {
-        console.log("[AuthFlow] [handleGoogleLogin] [getDoc] Executing getDoc for userDocRef:", userDocRef.path);
-        userDoc = await getDoc(userDocRef);
-        console.log("[AuthFlow] [handleGoogleLogin] [getDoc] Completed getDoc successfully. Exists:", userDoc.exists());
-      } catch (fsErr: any) {
-        console.error("[AuthFlow] [handleGoogleLogin] Firestore getDoc failed:", {
-          code: fsErr.code,
-          message: fsErr.message,
-          stack: fsErr.stack,
-          error: fsErr
-        });
-        throw fsErr;
-      }
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("[AuthFlow] [handleGoogleLogin] Existing Google profile found:", userData);
-        const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-        const localProfile = {
-          fullName: userData.displayName || user.displayName || "Verified User",
-          username: userData.username || user.email?.split("@")[0] || "user",
-          bio: userData.bio || "Lost & Found helper on LINCO",
-          location: userData.city || "Kolkata, India",
-          memberSince: formattedDate,
-          avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        console.log("[AuthFlow] [handleGoogleLogin] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Successfully signed in with Google!", "success");
-        console.log("[AuthFlow] [handleGoogleLogin] Executing onLoginSuccess with user.email:", user.email);
-        onLoginSuccess(localProfile.fullName, user.email || "guardian@gmail.com");
-      } else {
-        console.log("[AuthFlow] [handleGoogleLogin] Google profile does not exist. Creating default Google user profile...");
-        const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
-        const defaultProfile = {
-          uid: user.uid,
-          displayName: user.displayName || "Verified User",
-          username: defaultUsername,
-          bio: "Lost & Found helper on LINCO",
-          city: "Kolkata, India",
-          photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          createdAt: Date.now()
-        };
-        try {
-          console.log("[AuthFlow] [handleGoogleLogin] [setDoc] Executing setDoc for userDocRef:", userDocRef.path);
-          await setDoc(userDocRef, defaultProfile);
-          console.log("[AuthFlow] [handleGoogleLogin] [setDoc] Completed setDoc successfully.");
-        } catch (fsErr: any) {
-          console.error("[AuthFlow] [handleGoogleLogin] Firestore setDoc failed:", {
-            code: fsErr.code,
-            message: fsErr.message,
-            stack: fsErr.stack,
-            error: fsErr
-          });
-          throw fsErr;
-        }
-        
-        const localProfile = {
-          fullName: defaultProfile.displayName,
-          username: defaultProfile.username,
-          bio: defaultProfile.bio,
-          location: defaultProfile.city,
-          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
-          avatar: defaultProfile.photoURL,
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        console.log("[AuthFlow] [handleGoogleLogin] Executing localStorage.setItem('linco_profile_is_logged_in', 'true')");
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Successfully signed in with Google!", "success");
-        console.log("[AuthFlow] [handleGoogleLogin] Executing onLoginSuccess with user.email:", user.email);
-        onLoginSuccess(defaultProfile.displayName, user.email || "guardian@gmail.com");
-      }
+      addToast("Successfully signed in with Google!", "success");
     } catch (err: any) {
       console.error("Firebase Auth Error");
       console.error("Code:", err.code);

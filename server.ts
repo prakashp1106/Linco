@@ -6,10 +6,8 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch, Claim, PotentialMatch, LincoNotification } from "./src/types.js";
-import { Firestore } from "firebase-admin/firestore";
 import { db } from "./src/services/firebaseAdmin.js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -101,10 +99,6 @@ app.use("/api/", apiLimiter);
 // Set high body limits to allow base64 images to pass through
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ limit: "15mb", extended: true }));
-
-const DB_PATH = path.join(process.cwd(), "posts_db.json");
-const BIN_URL = "https://api.jsonbin.io/v3/b/6a415800da38895dfe0c5f53";
-const BIN_KEY = "$2a$10$Ijx3FPrXZXYTxhztjdE6ludnpXv78iRcdz3iGTNspFT9ey3PHMttW";
 
 // Seed initial realistic data
 const initialPosts: Post[] = [
@@ -308,74 +302,6 @@ async function readDBAsync(): Promise<{ posts: Post[]; matches: Record<string, A
       claims: []
     };
   }
-}
-
-// AI Matching Engine
-async function runAIMatch(newPost: Post, allPosts: Post[]): Promise<AIMatch[]> {
-  const oppType = newPost.type === "Lost" ? "Found" : "Lost";
-  const candidates = allPosts.filter(
-    (p) => p.type === oppType && p.status === "Active" && p.id !== newPost.id
-  );
-  if (candidates.length === 0) return [];
-
-  try {
-    const listString = candidates
-      .map(
-        (p, i) =>
-          `[Index:${i} ID:${p.id}] Item: ${p.item} | Category: ${p.category} | Details: ${p.details} | Location: ${p.address}`
-      )
-      .join("\n");
-
-    const prompt = `You are an AI Lost & Found matching engine.
-New item posted:
-[${newPost.type}] Item: ${newPost.item} | Category: ${newPost.category} | Description: ${newPost.details} | Location: ${newPost.address}
-
-Existing candidates of the opposite type (${oppType}):
-${listString}
-
-Task: Compare the new item with all candidates. Determine if any could represent the same physical item.
-Only match items that share highly compatible descriptions, colors, categories, or locations. For example, a "Lenovo charger" does not match a "Casio Watch".
-Assign a confidence score (from 50 to 100) and a clear, brief, 1-2 sentence match explanation.
-Only return matches with a confidence score above 60%.
-
-Return ONLY a valid JSON array of match results. Do not include any markdown, backticks, or extra commentary.
-Expected format:
-[
-  {
-    "id": "matching_candidate_ID_string",
-    "score": 85,
-    "reason": "Explain why they match, referencing compatible details (e.g., both mention Symbiosis College area and brown leather with eagle detail)."
-  }
-]`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
-
-    const text = response.text || "[]";
-    const cleanedText = text.replace(/```json|```/gi, "").trim();
-    const parsed = JSON.parse(cleanedText);
-    
-    if (Array.isArray(parsed)) {
-      return parsed
-        .map((m) => {
-          const cand = candidates.find((c) => c.id === m.id);
-          if (!cand) return null;
-          return {
-            id: cand.id,
-            item: cand.item,
-            contact: cand.contact,
-            score: Number(m.score) || 70,
-            reason: String(m.reason),
-          };
-        })
-        .filter((m): m is AIMatch => m !== null);
-    }
-  } catch (err) {
-    console.error("AI matching error:", err);
-  }
-  return [];
 }
 
 // --- LINCO SMART AI MATCH ENGINE ---
