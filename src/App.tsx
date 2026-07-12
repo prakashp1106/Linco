@@ -184,14 +184,17 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("[DIAGNOSTIC] [onAuthStateChanged] CALLBACK triggered. User exists in event:", !!user, user ? { uid: user.uid, email: user.email } : "null");
       console.log("[App] [onAuthStateChanged] Triggered. User exists in event:", !!user, user ? { uid: user.uid, email: user.email } : "null");
       console.log("[App] [onAuthStateChanged] Current auth.currentUser?.uid:", auth.currentUser?.uid);
       
       if (user) {
         const userDocRef = doc(db, "users", user.uid);
         try {
+          console.log("[DIAGNOSTIC] [onAuthStateChanged] BEFORE executing getDoc for userDocRef:", userDocRef.path);
           console.log("[App] [onAuthStateChanged] [getDoc] Executing getDoc for userDocRef:", userDocRef.path);
           let userDoc = await getDoc(userDocRef);
+          console.log("[DIAGNOSTIC] [onAuthStateChanged] AFTER executing getDoc. Exists:", userDoc.exists());
           console.log("[App] [onAuthStateChanged] [getDoc] Completed getDoc. Exists:", userDoc.exists());
           let userData = userDoc.exists() ? userDoc.data() : null;
           
@@ -208,15 +211,20 @@ export default function App() {
               createdAt: Date.now()
             };
             try {
+              console.log("[DIAGNOSTIC] [onAuthStateChanged] BEFORE executing setDoc for missing document userDocRef:", userDocRef.path);
               console.log("[App] [onAuthStateChanged] [setDoc] Executing setDoc for missing document userDocRef:", userDocRef.path);
               await setDoc(userDocRef, defaultProfile);
+              console.log("[DIAGNOSTIC] [onAuthStateChanged] AFTER executing setDoc. Success.");
               console.log("[App] [onAuthStateChanged] [setDoc] Completed setDoc successfully.");
               
+              console.log("[DIAGNOSTIC] [onAuthStateChanged] BEFORE executing getDoc (post auto-create) for userDocRef:", userDocRef.path);
               console.log("[App] [onAuthStateChanged] [getDoc] Re-executing getDoc post auto-create for userDocRef:", userDocRef.path);
               userDoc = await getDoc(userDocRef);
+              console.log("[DIAGNOSTIC] [onAuthStateChanged] AFTER executing getDoc (post auto-create). Exists:", userDoc.exists());
               console.log("[App] [onAuthStateChanged] [getDoc] Completed post-auto-create getDoc. Exists:", userDoc.exists());
               userData = userDoc.exists() ? userDoc.data() : defaultProfile;
             } catch (writeErr: any) {
+              console.error("[DIAGNOSTIC] [onAuthStateChanged] Auto-create CATCH block triggered. Error:", writeErr);
               console.error("[App] [onAuthStateChanged] Failed to auto-create user document in Firestore (setDoc/getDoc exception):", {
                 code: writeErr.code,
                 message: writeErr.message,
@@ -241,11 +249,14 @@ export default function App() {
             };
             localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
             localStorage.setItem("linco_profile_is_logged_in", "true");
+            console.log("[DIAGNOSTIC] [onAuthStateChanged] BEFORE calling setIsLoggedIn(true)");
             console.log("[App] [onAuthStateChanged] Calling setIsLoggedIn(true) now...");
             setIsLoggedIn(true);
+            console.log("[DIAGNOSTIC] [onAuthStateChanged] AFTER calling setIsLoggedIn(true)");
             window.dispatchEvent(new Event("profile-updated"));
           }
         } catch (e: any) {
+          console.error("[DIAGNOSTIC] [onAuthStateChanged] Firestore read/verify CATCH block triggered. Error:", e);
           console.error("[App] [onAuthStateChanged] Error reading/verifying Firestore profile (caught exception):", {
             code: e.code,
             message: e.message,
@@ -256,8 +267,10 @@ export default function App() {
       } else {
         localStorage.removeItem("linco_profile_details");
         localStorage.removeItem("linco_profile_is_logged_in");
+        console.log("[DIAGNOSTIC] [onAuthStateChanged] BEFORE calling setIsLoggedIn(false)");
         console.log("[App] [onAuthStateChanged] No authenticated user detected. Calling setIsLoggedIn(false)...");
         setIsLoggedIn(false);
+        console.log("[DIAGNOSTIC] [onAuthStateChanged] AFTER calling setIsLoggedIn(false)");
         window.dispatchEvent(new Event("profile-updated"));
       }
     });

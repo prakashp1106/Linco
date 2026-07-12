@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile document containing display and login information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique Firebase Authentication UID of the user" },
+        "displayName": { "type": "string", "description": "Full name of the user", "maxLength": 100 },
+        "username": { "type": "string", "description": "Unique username of the user", "maxLength": 50, "pattern": "^[a-z0-9_]+$" },
+        "bio": { "type": "string", "description": "Brief description of the user", "maxLength": 500 },
+        "city": { "type": "string", "description": "The user's city/location", "maxLength": 100 },
+        "photoURL": { "type": "string", "description": "The URL or gradient string for the user's avatar", "maxLength": 2000 },
+        "createdAt": { "type": "integer", "description": "Timestamp when user profile was created" }
+      },
+      "required": ["uid", "displayName", "username", "bio", "city", "photoURL", "createdAt"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Lost or Found item post created on LINCO",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the post" },
+        "item": { "type": "string", "description": "Title or short description of the item", "maxLength": 150 },
+        "details": { "type": "string", "description": "Detailed description of the lost or found item", "maxLength": 2000 },
+        "type": { "type": "string", "enum": ["Lost", "Found"], "description": "Type of the post" },
+        "address": { "type": "string", "description": "Location address where the item was lost or found", "maxLength": 250 },
+        "reward": { "type": "string", "description": "Optional reward details", "maxLength": 100 },
+        "contact": { "type": "string", "description": "Contact info of the owner or finder", "maxLength": 150 },
+        "maskedContact": { "type": "string", "description": "Masked contact details", "maxLength": 150 },
+        "securityPin": { "type": "string", "description": "Secure PIN for post management", "maxLength": 10 },
+        "category": { "type": "string", "description": "Category of the item", "maxLength": 50 },
+        "urgency": { "type": "string", "enum": ["Normal", "Urgent", "Contains ID", "Medical"], "description": "Urgency tier of the post" },
+        "image": { "type": "string", "description": "Optional image URL of the item", "maxLength": 2000 },
+        "latitude": { "type": "number", "description": "Optional GPS latitude" },
+        "longitude": { "type": "number", "description": "Optional GPS longitude" },
+        "timeline": { "type": "string", "description": "Optional time or timeline of when the item was lost or found", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["Active", "Resolved"], "description": "Whether the post is active or resolved" },
+        "views": { "type": "integer", "description": "Number of times this post was viewed" },
+        "created": { "type": "integer", "description": "Timestamp of creation" },
+        "timestamp": { "type": "string", "description": "Formatted timestamp string" }
+      },
+      "required": ["id", "item", "details", "type", "address", "contact", "category", "urgency", "status", "views", "created", "timestamp"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "AI-generated match details between a lost and found post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the match" },
+        "item": { "type": "string", "description": "Title or short description of the item" },
+        "contact": { "type": "string", "description": "Contact info of the matching user" },
+        "score": { "type": "number", "description": "Match confidence score" },
+        "reason": { "type": "string", "description": "Explanation of the match" }
+      },
+      "required": ["id", "item", "contact", "score", "reason"]
+    },
+    "Claim": {
+      "title": "Claim",
+      "description": "A claim submitted by a user to recover a found item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the claim" },
+        "postId": { "type": "string", "description": "The post ID being claimed" },
+        "matchedPostId": { "type": "string", "description": "The claimant's matching post ID" },
+        "postTitle": { "type": "string", "description": "Title of the post" },
+        "postType": { "type": "string", "enum": ["Lost", "Found"], "description": "The post type" },
+        "claimantName": { "type": "string", "description": "The claimant's full name" },
+        "claimantContact": { "type": "string", "description": "The claimant's contact information" },
+        "questions": { "type": "array", "description": "Array of ownership verification questions" },
+        "answers": { "type": "array", "description": "Array of claimant's answers" },
+        "aiScore": { "type": "number", "description": "Gemini verification score" },
+        "aiReason": { "type": "string", "description": "Gemini verification details" },
+        "status": { "type": "string", "enum": ["Pending", "Under Review", "Approved", "Rejected", "Contact Unlocked", "Resolved", "Recovery Room"], "description": "Current status of the claim" },
+        "created": { "type": "integer", "description": "Timestamp of creation" },
+        "timestamp": { "type": "string", "description": "Formatted timestamp string" },
+        "trackingCode": { "type": "string", "description": "Secure 6-digit tracking code for the claim" },
+        "revealedOwnerContact": { "type": "string", "description": "Contact info of the owner once unlocked" },
+        "claimantTrusted": { "type": "boolean", "description": "Whether claimant is trusted" },
+        "finderTrusted": { "type": "boolean", "description": "Whether finder is trusted" },
+        "ownerConfirmedReceived": { "type": "boolean", "description": "Whether owner confirmed receipt" },
+        "finderConfirmedReturned": { "type": "boolean", "description": "Whether finder confirmed return" },
+        "messages": { "type": "array", "description": "Secure chat log for the claim" }
+      },
+      "required": ["id", "postId", "postTitle", "postType", "claimantName", "claimantContact", "questions", "answers", "aiScore", "aiReason", "status", "created", "timestamp", "trackingCode"]
+    },
+    "LincoNotification": {
+      "title": "Notification",
+      "description": "Notification message for AI Match, system notice, or claim update",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique notification ID" },
+        "postId": { "type": "string", "description": "Associated post ID" },
+        "message": { "type": "string", "description": "The notification text message" },
+        "createdAt": { "type": "integer", "description": "Creation timestamp" },
+        "read": { "type": "boolean", "description": "Read status" },
+        "type": { "type": "string", "enum": ["match", "system", "claim"], "description": "The notification category" },
+        "matchId": { "type": "string", "description": "Optional matching item ID" },
+        "claimId": { "type": "string", "description": "Optional claiming item ID" },
+        "matchedPostId": { "type": "string", "description": "Optional matched post ID" }
+      },
+      "required": ["id", "postId", "message", "createdAt", "read", "type"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "System structural audit logs for state transitions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique audit log ID" },
+        "claimId": { "type": "string", "description": "Associated claim ID" },
+        "previousStatus": { "type": "string", "description": "Old status of the claim" },
+        "newStatus": { "type": "string", "description": "New status of the claim" },
+        "actor": { "type": "string", "description": "Entity executing the state change (e.g. Claimant, Finder, System)" },
+        "details": { "type": "string", "description": "Detailed notes on the transition" },
+        "timestamp": { "type": "integer", "description": "Timestamp of the log" },
+        "timestampStr": { "type": "string", "description": "Human-readable timestamp string" }
+      },
+      "required": ["id", "claimId", "previousStatus", "newStatus", "actor", "details", "timestamp", "timestampStr"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document containing display and login information"
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Lost or Found item post created on LINCO"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "AI-generated match details between a lost and found post"
+    },
+    "/claims/{claimId}": {
+      "schema": "Claim",
+      "description": "Claims submitted to recover found items"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "LincoNotification",
+      "description": "Notification messages"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "System structural audit logs for state transitions"
+    }
+  }
+}

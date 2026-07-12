@@ -197,6 +197,7 @@ export function AuthFlow({
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[DIAGNOSTIC] [handleEmailLogin] STARTED with email:", email);
     console.log("[AuthFlow] [handleEmailLogin] Attempting sign-in with email:", email);
     const newErrors: Record<string, string> = {};
 
@@ -214,13 +215,16 @@ export function AuthFlow({
       console.warn("[AuthFlow] [handleEmailLogin] Validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please check your login details.", "error");
+      console.log("[DIAGNOSTIC] [handleEmailLogin] RETURNING early due to validation errors.");
       return;
     }
 
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleEmailLogin] Requesting Firebase Auth email/password verification...");
+      console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling signInWithEmailAndPassword with email:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling signInWithEmailAndPassword. User ID obtained:", userCredential.user.uid);
       const user = userCredential.user;
       console.log("[AuthFlow] [handleEmailLogin] Firebase Auth successful. User details:", {
         uid: user.uid,
@@ -230,7 +234,9 @@ export function AuthFlow({
       
       const userDocRef = doc(db, "users", user.uid);
       console.log("[AuthFlow] [handleEmailLogin] Fetching user profile from Firestore at users/" + user.uid);
+      console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling getDoc for users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
+      console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling getDoc. Document exists:", userDoc.exists());
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -248,7 +254,9 @@ export function AuthFlow({
         localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
         localStorage.setItem("linco_profile_is_logged_in", "true");
         addToast("Successfully signed in!", "success");
+        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling onLoginSuccess for existing profile. User Name:", localProfile.fullName, "Email:", email);
         onLoginSuccess(localProfile.fullName, email);
+        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling onLoginSuccess for existing profile.");
       } else {
         console.log("[AuthFlow] [handleEmailLogin] Firestore profile does not exist. Creating default profile...");
         const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
@@ -261,7 +269,9 @@ export function AuthFlow({
           photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
+        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling setDoc to create default profile for users/" + user.uid);
         await setDoc(userDocRef, defaultProfile);
+        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling setDoc. Profile set successfully.");
         console.log("[AuthFlow] [handleEmailLogin] Default profile saved successfully to Firestore.");
         
         const localProfile = {
@@ -276,9 +286,12 @@ export function AuthFlow({
         localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
         localStorage.setItem("linco_profile_is_logged_in", "true");
         addToast("Successfully signed in!", "success");
+        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling onLoginSuccess for new profile. User Name:", defaultProfile.displayName, "Email:", email);
         onLoginSuccess(defaultProfile.displayName, email);
+        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling onLoginSuccess for new profile.");
       }
     } catch (err: any) {
+      console.error("[DIAGNOSTIC] [handleEmailLogin] CATCH block triggered. Error:", err);
       console.error("[AuthFlow] [handleEmailLogin] Email Login failed with exception:", {
         code: err.code,
         message: err.message,
@@ -286,12 +299,14 @@ export function AuthFlow({
       });
       addToast(getAuthErrorMessage(err), "error");
     } finally {
+      console.log("[DIAGNOSTIC] [handleEmailLogin] FINALLY block entered. Setting loading to false.");
       setLoading(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[DIAGNOSTIC] [handleSignup] STARTED with name:", fullName, "email:", email);
     console.log("[AuthFlow] [handleSignup] Initiating Email Registration. Full Name:", fullName, "Email:", email);
     const newErrors: Record<string, string> = {};
 
@@ -319,13 +334,16 @@ export function AuthFlow({
       console.warn("[AuthFlow] [handleSignup] Registration validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please resolve all validation errors.", "error");
+      console.log("[DIAGNOSTIC] [handleSignup] RETURNING early due to registration validation errors.");
       return;
     }
 
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleSignup] Dispatching createUserWithEmailAndPassword command to Firebase...");
+      console.log("[DIAGNOSTIC] [handleSignup] BEFORE calling createUserWithEmailAndPassword for email:", email);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("[DIAGNOSTIC] [handleSignup] AFTER calling createUserWithEmailAndPassword. Registered user UID:", userCredential.user.uid);
       const user = userCredential.user;
       console.log("[AuthFlow] [handleSignup] Firebase registration successful. User UID:", user.uid);
       
@@ -343,7 +361,9 @@ export function AuthFlow({
       };
       
       console.log("[AuthFlow] [handleSignup] Writing default user profile to Firestore path: users/" + user.uid);
+      console.log("[DIAGNOSTIC] [handleSignup] BEFORE calling setDoc to write registration profile for users/" + user.uid);
       await setDoc(userDocRef, defaultProfile);
+      console.log("[DIAGNOSTIC] [handleSignup] AFTER calling setDoc for registration. Profile saved successfully.");
       console.log("[AuthFlow] [handleSignup] Default profile created successfully in database.");
       
       const localProfile = {
@@ -362,6 +382,7 @@ export function AuthFlow({
       setUsername(defaultUsername);
       navigateTo("profile_setup");
     } catch (err: any) {
+      console.error("[DIAGNOSTIC] [handleSignup] CATCH block triggered. Error:", err);
       console.error("[AuthFlow] [handleSignup] Email Registration failed with exception:", {
         code: err.code,
         message: err.message,
@@ -369,6 +390,7 @@ export function AuthFlow({
       });
       addToast(getAuthErrorMessage(err), "error");
     } finally {
+      console.log("[DIAGNOSTIC] [handleSignup] FINALLY block entered. Setting loading to false.");
       setLoading(false);
     }
   };
