@@ -21,7 +21,12 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from "firebase/auth";
 import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -41,7 +46,8 @@ type ScreenType =
   | "login" 
   | "signup" 
   | "forgot_password"
-  | "profile_setup";
+  | "profile_setup"
+  | "phone_auth";
 
 export function AuthFlow({ 
   onLoginSuccess, 
@@ -67,6 +73,14 @@ export function AuthFlow({
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("linear-gradient(135deg, #6366f1 0%, #a855f7 100%)");
   const [username, setUsername] = useState("");
+
+  // Phone Auth State
+  const [phoneRaw, setPhoneRaw] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
+  const [otpCode, setOtpCode] = useState("");
+  const [phoneStep, setPhoneStep] = useState<"input" | "verify">("input");
+  const [resendTimer, setResendTimer] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   // Hidden inputs & stream states for profile setup
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +120,329 @@ export function AuthFlow({
     setErrors({});
     setLoading(false);
     setScreen(nextScreen);
+  };
+
+  // Phone Auth resend timer countdown
+  useEffect(() => {
+    let interval: any;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  // Handle Redirect Result on Mount
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const { getRedirectResult } = await import("firebase/auth");
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          console.log("[AuthFlow] Redirect sign-in result retrieved successfully:", result.user.uid);
+          setLoading(true);
+          const profile = await ensureUserProfile(result.user, "google.com");
+          const formattedDate = profile.createdAt ? new Date(profile.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+          const localProfile = {
+            fullName: profile.displayName || "Verified User",
+            username: profile.username || "user",
+            bio: profile.bio || "Lost & Found helper on LINCO",
+            location: profile.city || "Kolkata, India",
+            memberSince: formattedDate,
+            avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+            banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+          };
+          localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+          localStorage.setItem("linco_profile_is_logged_in", "true");
+          addToast("Successfully signed in with Google!", "success");
+          onLoginSuccess(localProfile.fullName, result.user.email || `${localProfile.username}@linco.org`);
+        }
+      } catch (err: any) {
+        console.error("[AuthFlow] Error handling redirect sign-in:", err);
+        addToast(getAuthErrorMessage(err), "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    handleRedirectResult();
+  }, []);
+
+  const generateUniqueUsername = async (displayNameVal?: string, emailVal?: string, phoneVal?: string, uidVal?: string): Promise<string> => {
+    let base = "";
+    if (displayNameVal) {
+      base = displayNameVal;
+    } else if (emailVal) {
+      base = emailVal.split("@")[0];
+    } else if (phoneVal) {
+      base = phoneVal.replace(/[^0-9]/g, "");
+    } else if (uidVal) {
+      base = uidVal.slice(0, 8);
+    } else {
+      base = "user";
+    }
+
+    let clean = base
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[^a-z0-9_\-]/g, "");
+
+    if (clean.length === 0) {
+      clean = "user";
+    }
+
+    if (clean.length > 25) {
+      clean = clean.slice(0, 25);
+    }
+
+    let finalUsername = clean;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 10) {
+      try {
+        const res = await fetch("/api/auth/check-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: finalUsername })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.exists) {
+            isUnique = true;
+          } else {
+            const suffix = Math.floor(100 + Math.random() * 900).toString();
+            const availableLength = 25 - suffix.length;
+            finalUsername = clean.slice(0, availableLength) + suffix;
+          }
+        } else {
+          isUnique = true;
+        }
+      } catch (err) {
+        console.error("Username uniqueness check error:", err);
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    return finalUsername;
+  };
+
+  const ensureUserProfile = async (user: any, providerId: string, displayNameInput?: string) => {
+    const userDocRef = doc(db, "users", user.uid);
+    let userDoc;
+    try {
+      userDoc = await getDoc(userDocRef);
+    } catch (err) {
+      console.error("Error reading profile in ensureUserProfile:", err);
+    }
+
+    const emailVal = user.email || null;
+    const phoneVal = user.phoneNumber || null;
+    const displayNameVal = displayNameInput || user.displayName || (emailVal ? emailVal.split("@")[0] : null) || "Verified User";
+
+    if (!userDoc || !userDoc.exists()) {
+      console.log(`[ensureUserProfile] Profile missing for UID: ${user.uid}. Generating new profile...`);
+      const generatedUsername = await generateUniqueUsername(displayNameVal, emailVal, phoneVal, user.uid);
+      const defaultProfile = {
+        uid: user.uid,
+        displayName: displayNameVal,
+        username: generatedUsername,
+        email: emailVal,
+        phoneNumber: phoneVal,
+        photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+        bio: "Lost & Found helper on LINCO",
+        city: "Kolkata, India",
+        createdAt: Date.now(),
+        provider: providerId,
+        lastLogin: Date.now()
+      };
+
+      try {
+        await setDoc(userDocRef, defaultProfile);
+        console.log("[ensureUserProfile] Profile created successfully.");
+        return defaultProfile;
+      } catch (writeErr) {
+        console.error("[ensureUserProfile] Failed to write profile to Firestore:", writeErr);
+        return defaultProfile;
+      }
+    } else {
+      const existingData = userDoc.data();
+      const updatePayload: any = {
+        lastLogin: Date.now()
+      };
+
+      if (!existingData.provider) {
+        updatePayload.provider = providerId;
+      }
+      if (emailVal && !existingData.email) {
+        updatePayload.email = emailVal;
+      }
+      if (phoneVal && !existingData.phoneNumber) {
+        updatePayload.phoneNumber = phoneVal;
+      }
+
+      try {
+        await setDoc(userDocRef, updatePayload, { merge: true });
+        console.log("[ensureUserProfile] Profile updated with lastLogin.");
+      } catch (writeErr) {
+        console.error("[ensureUserProfile] Failed to update profile merge:", writeErr);
+      }
+
+      return { ...existingData, ...updatePayload };
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    console.log("[AuthFlow] [handleGoogleSignIn] Initiated.");
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    try {
+      console.log("[AuthFlow] [handleGoogleSignIn] Attempting signInWithPopup...");
+      const result = await signInWithPopup(auth, provider);
+      console.log("[AuthFlow] [handleGoogleSignIn] signInWithPopup successful:", result.user.uid);
+      const profile = await ensureUserProfile(result.user, "google.com");
+      
+      const formattedDate = profile.createdAt ? new Date(profile.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+      const localProfile = {
+        fullName: profile.displayName || "Verified User",
+        username: profile.username || "user",
+        bio: profile.bio || "Lost & Found helper on LINCO",
+        location: profile.city || "Kolkata, India",
+        memberSince: formattedDate,
+        avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+        banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+      };
+      localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+      localStorage.setItem("linco_profile_is_logged_in", "true");
+      addToast("Successfully signed in with Google!", "success");
+      onLoginSuccess(localProfile.fullName, result.user.email || `${localProfile.username}@linco.org`);
+    } catch (popupErr: any) {
+      console.warn("[AuthFlow] [handleGoogleSignIn] signInWithPopup failed/blocked:", popupErr);
+      
+      const isRedirectFallbackNeeded = 
+        popupErr.code === "auth/popup-blocked" || 
+        popupErr.code === "auth/popup-closed-by-user" || 
+        popupErr.code === "auth/cancelled-popup-request" ||
+        popupErr.code === "auth/network-request-failed" ||
+        popupErr.message?.includes("iframe") ||
+        popupErr.message?.includes("popup");
+
+      if (isRedirectFallbackNeeded) {
+        addToast("Popup blocked or failed. Falling back to secure redirect sign-in...", "info");
+        console.log("[AuthFlow] [handleGoogleSignIn] Falling back to signInWithRedirect...");
+        try {
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr: any) {
+          console.error("[AuthFlow] [handleGoogleSignIn] signInWithRedirect failed:", redirectErr);
+          addToast(getAuthErrorMessage(redirectErr), "error");
+        }
+      } else {
+        addToast(getAuthErrorMessage(popupErr), "error");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initRecaptcha = () => {
+    if ((window as any).recaptchaVerifier) {
+      return (window as any).recaptchaVerifier;
+    }
+    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+      size: "invisible",
+      callback: (response: any) => {
+        console.log("Recaptcha verified:", response);
+      },
+      "expired-callback": () => {
+        console.warn("Recaptcha expired.");
+        addToast("Recaptcha expired. Please request a new OTP.", "warn");
+      }
+    });
+    (window as any).recaptchaVerifier = verifier;
+    return verifier;
+  };
+
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanRaw = phoneRaw.trim().replace(/[^0-9]/g, "");
+    if (!cleanRaw) {
+      addToast("Phone number is required.", "error");
+      return;
+    }
+    const cleanPhone = `${countryCode}${cleanRaw}`;
+    if (!/^\+[1-9]\d{1,14}$/.test(cleanPhone)) {
+      addToast("Invalid phone format. Please enter a valid number.", "error");
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+    try {
+      const verifier = initRecaptcha();
+      console.log("[AuthFlow] Requesting Phone SMS OTP for:", cleanPhone);
+      const result = await signInWithPhoneNumber(auth, cleanPhone, verifier);
+      console.log("[AuthFlow] SMS OTP Sent successfully.");
+      setConfirmationResult(result);
+      setPhoneStep("verify");
+      setResendTimer(60);
+      addToast("OTP code sent to your phone!", "success");
+    } catch (err: any) {
+      console.error("SMS OTP failed:", err);
+      if ((window as any).recaptchaVerifier) {
+        try {
+          (window as any).recaptchaVerifier.clear();
+          (window as any).recaptchaVerifier = null;
+        } catch {}
+      }
+      addToast(getAuthErrorMessage(err), "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length !== 6) {
+      addToast("Please enter a valid 6-digit OTP code.", "error");
+      return;
+    }
+    if (!confirmationResult) {
+      addToast("Verification session lost. Please request OTP again.", "error");
+      setPhoneStep("input");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log("[AuthFlow] Verifying OTP Code:", otpCode);
+      const credential = await confirmationResult.confirm(otpCode);
+      const user = credential.user;
+      console.log("[AuthFlow] OTP verified successfully for user:", user.uid);
+      
+      const profile = await ensureUserProfile(user, "phone");
+      const formattedDate = profile.createdAt ? new Date(profile.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+      const localProfile = {
+        fullName: profile.displayName || "Verified User",
+        username: profile.username || "user",
+        bio: profile.bio || "Lost & Found helper on LINCO",
+        location: profile.city || "Kolkata, India",
+        memberSince: formattedDate,
+        avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+        banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+      };
+      localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
+      localStorage.setItem("linco_profile_is_logged_in", "true");
+      
+      addToast("Successfully signed in with phone!", "success");
+      onLoginSuccess(localProfile.fullName, user.email || `${localProfile.username}@linco.org`);
+    } catch (err: any) {
+      console.error("OTP verification failed:", err);
+      addToast(err.code === "auth/invalid-verification-code" ? "Incorrect OTP code. Please try again." : getAuthErrorMessage(err), "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getAuthErrorMessage = (err: any): string => {
@@ -625,43 +962,69 @@ export function AuthFlow({
           {screen === "welcome" && (
             <div
               key="welcome"
-              className="flex flex-col justify-between p-8 space-y-10 h-full relative z-20 pointer-events-auto"
+              className="flex flex-col justify-between p-8 space-y-8 h-full relative z-20 pointer-events-auto animate-fade-in"
             >
               {/* Header */}
-              <div className="text-center space-y-3 pt-4">
+              <div className="text-center space-y-3 pt-2">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center mx-auto mb-2.5 shadow-[0_0_20px_rgba(99,102,241,0.2)] border border-white/5">
                   <Sparkles size={24} className="text-white" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <h2 className="font-sans font-extrabold text-2xl tracking-tight text-slate-100">
                     Welcome to LINCO
                   </h2>
-                  <p className="text-sm font-semibold text-indigo-400 tracking-wide">
-                    Because every lost thing has a story.
+                  <p className="text-xs font-semibold text-indigo-400 tracking-wide font-mono uppercase">
+                    Locate &bull; Verify &bull; Reunite
                   </p>
                   <p className="text-xs text-slate-400 leading-relaxed max-w-[290px] mx-auto">
-                    Recover lost belongings safely through trusted people and intelligent verification.
+                    Recover lost belongings safely through trusted citizens and intelligent verification.
                   </p>
                 </div>
               </div>
 
               {/* Button Actions */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Email */}
                 <button
-                  onClick={(e) => {
-                    console.log("[DEBUG] [Email Button] onClick clicked!");
-                    navigateTo("signup");
-                  }}
-                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-lg pointer-events-auto"
+                  disabled={loading}
+                  onClick={() => navigateTo("signup")}
+                  className="w-full h-12 rounded-2xl bg-[#0d0e14] hover:bg-[#12131b] border border-[#1c1d29] text-white font-bold text-xs transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md pointer-events-auto"
                 >
-                  <Mail size={16} className="text-white shrink-0" />
+                  <Mail size={15} className="text-indigo-400 shrink-0" />
                   <span>Get Started with Email</span>
+                </button>
+
+                {/* Google */}
+                <button
+                  disabled={loading}
+                  onClick={handleGoogleSignIn}
+                  className="w-full h-12 rounded-2xl bg-[#0d0e14] hover:bg-[#12131b] border border-[#1c1d29] text-white font-bold text-xs transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md pointer-events-auto"
+                >
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.93 1 12 1 7.24 1 3.2 3.73 1.24 7.74l3.8 2.95C5.93 7.33 8.74 5.04 12 5.04z" />
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.35H12v4.45h6.45c-.28 1.47-1.11 2.72-2.35 3.55l3.65 2.83c2.14-1.97 3.39-4.88 3.39-8.48z" />
+                    <path fill="#FBBC05" d="M5.04 10.69C4.81 11.39 4.69 12.13 4.69 12s.12 1.31.35 2.01l-3.8 2.95C.44 15.42 0 13.76 0 12s.44-3.42 1.24-4.96l3.8 2.95z" />
+                    <path fill="#34A853" d="M12 23c3.24 0 5.96-1.08 7.95-2.91l-3.65-2.83c-1.01.68-2.31 1.08-3.91 1.08-3.26 0-6.07-2.29-7.05-5.36l-3.8 2.95C3.2 20.27 7.24 23 12 23z" />
+                  </svg>
+                  <span>{loading ? "Connecting..." : "Continue with Google"}</span>
+                </button>
+
+                {/* Phone */}
+                <button
+                  disabled={loading}
+                  onClick={() => navigateTo("phone_auth")}
+                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-lg pointer-events-auto"
+                >
+                  <svg className="w-4 h-4 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                    <line x1="12" y1="18" x2="12" y2="18.01" />
+                  </svg>
+                  <span>Continue with Phone</span>
                 </button>
               </div>
 
               {/* Navigation Footer */}
-              <div className="text-center pt-2 pb-2">
+              <div className="text-center pt-2 pb-2 border-t border-[#161621]/40">
                 <span className="text-[11px] text-slate-400 font-medium">
                   Already have an account?{" "}
                   <button 
@@ -1232,6 +1595,118 @@ export function AuthFlow({
                   <span>Complete Profile Setup</span>
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* 9. PHONE AUTH SCREEN */}
+          {screen === "phone_auth" && (
+            <div
+              key="phone_auth"
+              className="p-8 space-y-6 relative z-20 pointer-events-auto"
+            >
+              {/* Back Button */}
+              <button 
+                onClick={() => {
+                  if (phoneStep === "verify") {
+                    setPhoneStep("input");
+                  } else {
+                    navigateTo("welcome");
+                  }
+                }}
+                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
+              >
+                <ArrowLeft size={14} />
+              </button>
+
+              <div className="space-y-1.5">
+                <h2 className="font-sans font-bold text-xl text-slate-100">
+                  {phoneStep === "input" ? "Phone Authentication" : "Enter Verification Code"}
+                </h2>
+                <p className="text-xs text-slate-400">
+                  {phoneStep === "input" 
+                    ? "Enter your mobile number to transmit a secure OTP code." 
+                    : "We have transmitted a secure 6-digit OTP code to your mobile device."}
+                </p>
+              </div>
+
+              {phoneStep === "input" ? (
+                <form onSubmit={handleSendOTP} className="space-y-4 pt-1">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Mobile Number</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="h-11 px-2.5 text-xs text-white bg-[#09090c] border border-slate-900 rounded-xl outline-none focus:border-indigo-500 cursor-pointer"
+                      >
+                        <option value="+91">+91 (IN)</option>
+                        <option value="+1">+1 (US)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+880">+880 (BD)</option>
+                        <option value="+977">+977 (NP)</option>
+                        <option value="+65">+65 (SG)</option>
+                        <option value="+971">+971 (AE)</option>
+                      </select>
+                      <input
+                        type="tel"
+                        placeholder="98765 43210"
+                        value={phoneRaw}
+                        onChange={(e) => setPhoneRaw(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="flex-1 px-4 h-11 text-xs text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
+                  >
+                    {loading && <Loader2 size={14} className="animate-spin" />}
+                    <span>Send Secure OTP</span>
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP} className="space-y-4 pt-1">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">6-Digit OTP</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="••••••"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
+                      className="w-full text-center h-11 text-lg font-bold tracking-[0.5em] text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[11px] text-slate-400">
+                    <span>Didn't receive code?</span>
+                    {resendTimer > 0 ? (
+                      <span className="font-mono text-indigo-400">Resend in {resendTimer}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        className="text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer"
+                      >
+                        Resend OTP
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
+                  >
+                    {loading && <Loader2 size={14} className="animate-spin" />}
+                    <span>Verify Code</span>
+                  </button>
+                </form>
+              )}
             </div>
           )}
 

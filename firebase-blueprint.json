@@ -11,7 +11,11 @@
         "bio": { "type": "string", "description": "Brief description of the user", "maxLength": 500 },
         "city": { "type": "string", "description": "The user's city/location", "maxLength": 100 },
         "photoURL": { "type": "string", "description": "The URL or gradient string for the user's avatar", "maxLength": 2000 },
-        "createdAt": { "type": "integer", "description": "Timestamp when user profile was created" }
+        "createdAt": { "type": "integer", "description": "Timestamp when user profile was created" },
+        "email": { "type": "string", "description": "Email address of the user", "maxLength": 200 },
+        "phoneNumber": { "type": "string", "description": "Phone number of the user", "maxLength": 100 },
+        "provider": { "type": "string", "description": "Auth provider used for registration", "maxLength": 50 },
+        "lastLogin": { "type": "integer", "description": "Timestamp when user last logged in" }
       },
       "required": ["uid", "displayName", "username", "bio", "city", "photoURL", "createdAt"]
     },
