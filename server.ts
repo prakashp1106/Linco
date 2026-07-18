@@ -43,8 +43,27 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://apis.mappls.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://fonts.googleapis.com", "https://apis.mappls.com"],
+        scriptSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "'unsafe-eval'", 
+          "https://unpkg.com", 
+          "https://apis.mappls.com",
+          "https://apis.google.com",
+          "https://accounts.google.com",
+          "https://www.google.com",
+          "https://www.gstatic.com",
+          "https://*.recaptcha.net",
+          "https://*.firebaseapp.com"
+        ],
+        styleSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "https://unpkg.com", 
+          "https://fonts.googleapis.com", 
+          "https://apis.mappls.com",
+          "https://www.gstatic.com"
+        ],
         imgSrc: [
           "'self'", 
           "data:", 
@@ -55,6 +74,7 @@ app.use(
           "https://*.mappls.com", 
           "https://*.google.com",
           "https://*.googleapis.com",
+          "https://*.googleusercontent.com",
           "https://res.cloudinary.com"
         ],
         connectSrc: [
@@ -67,14 +87,18 @@ app.use(
           "https://*.firebaseapp.com",
           "https://*.googleapis.com",
           "https://*.firebaseio.com",
-          "wss://*.firebaseio.com"
+          "wss://*.firebaseio.com",
+          "https://*.google.com",
+          "https://*.recaptcha.net"
         ],
         frameSrc: [
           "'self'",
           "https://*.firebaseapp.com",
-          "https://*.google.com"
+          "https://*.google.com",
+          "https://*.recaptcha.net",
+          "https://accounts.google.com"
         ],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         frameAncestors: ["'self'", "*"], // Required for AI Studio iframe preview
       },
     },
