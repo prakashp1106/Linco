@@ -329,6 +329,11 @@ export function AuthFlow({
   };
 
   const handlePhoneAuthClick = () => {
+    try {
+      alert("Coming Soon");
+    } catch (e) {
+      console.warn("Alert blocked:", e);
+    }
     addToast("Phone Authentication will be available in a future update.", "info");
   };
 
@@ -915,10 +920,7 @@ export function AuthFlow({
                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                     <line x1="12" y1="18" x2="12" y2="18.01" />
                   </svg>
-                  <span>Continue with Phone (Coming Soon)</span>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] px-1.5 py-0.5 rounded-full font-mono uppercase tracking-wider scale-90">
-                    Soon
-                  </span>
+                  <span>Continue with Phone</span>
                 </button>
               </div>
 
