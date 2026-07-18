@@ -24,9 +24,7 @@ import {
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  RecaptchaVerifier,
-  signInWithPhoneNumber
+  signInWithRedirect
 } from "firebase/auth";
 import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -46,8 +44,7 @@ type ScreenType =
   | "login" 
   | "signup" 
   | "forgot_password"
-  | "profile_setup"
-  | "phone_auth";
+  | "profile_setup";
 
 export function AuthFlow({ 
   onLoginSuccess, 
@@ -74,13 +71,7 @@ export function AuthFlow({
   const [avatarUrl, setAvatarUrl] = useState("linear-gradient(135deg, #6366f1 0%, #a855f7 100%)");
   const [username, setUsername] = useState("");
 
-  // Phone Auth State
-  const [phoneRaw, setPhoneRaw] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
-  const [otpCode, setOtpCode] = useState("");
-  const [phoneStep, setPhoneStep] = useState<"input" | "verify">("input");
-  const [resendTimer, setResendTimer] = useState(0);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+
 
   // Hidden inputs & stream states for profile setup
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -122,16 +113,7 @@ export function AuthFlow({
     setScreen(nextScreen);
   };
 
-  // Phone Auth resend timer countdown
-  useEffect(() => {
-    let interval: any;
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer(prev => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendTimer]);
+
 
   // Handle Redirect Result on Mount
   useEffect(() => {
@@ -346,103 +328,8 @@ export function AuthFlow({
     }
   };
 
-  const initRecaptcha = () => {
-    if ((window as any).recaptchaVerifier) {
-      return (window as any).recaptchaVerifier;
-    }
-    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: (response: any) => {
-        console.log("Recaptcha verified:", response);
-      },
-      "expired-callback": () => {
-        console.warn("Recaptcha expired.");
-        addToast("Recaptcha expired. Please request a new OTP.", "warn");
-      }
-    });
-    (window as any).recaptchaVerifier = verifier;
-    return verifier;
-  };
-
-  const handleSendOTP = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const cleanRaw = phoneRaw.trim().replace(/[^0-9]/g, "");
-    if (!cleanRaw) {
-      addToast("Phone number is required.", "error");
-      return;
-    }
-    const cleanPhone = `${countryCode}${cleanRaw}`;
-    if (!/^\+[1-9]\d{1,14}$/.test(cleanPhone)) {
-      addToast("Invalid phone format. Please enter a valid number.", "error");
-      return;
-    }
-
-    setLoading(true);
-    setErrors({});
-    try {
-      const verifier = initRecaptcha();
-      console.log("[AuthFlow] Requesting Phone SMS OTP for:", cleanPhone);
-      const result = await signInWithPhoneNumber(auth, cleanPhone, verifier);
-      console.log("[AuthFlow] SMS OTP Sent successfully.");
-      setConfirmationResult(result);
-      setPhoneStep("verify");
-      setResendTimer(60);
-      addToast("OTP code sent to your phone!", "success");
-    } catch (err: any) {
-      console.error("SMS OTP failed:", err);
-      if ((window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
-        } catch {}
-      }
-      addToast(getAuthErrorMessage(err), "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode || otpCode.length !== 6) {
-      addToast("Please enter a valid 6-digit OTP code.", "error");
-      return;
-    }
-    if (!confirmationResult) {
-      addToast("Verification session lost. Please request OTP again.", "error");
-      setPhoneStep("input");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      console.log("[AuthFlow] Verifying OTP Code:", otpCode);
-      const credential = await confirmationResult.confirm(otpCode);
-      const user = credential.user;
-      console.log("[AuthFlow] OTP verified successfully for user:", user.uid);
-      
-      const profile = await ensureUserProfile(user, "phone");
-      const formattedDate = profile.createdAt ? new Date(profile.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-      const localProfile = {
-        fullName: profile.displayName || "Verified User",
-        username: profile.username || "user",
-        bio: profile.bio || "Lost & Found helper on LINCO",
-        location: profile.city || "Kolkata, India",
-        memberSince: formattedDate,
-        avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-        banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-      };
-      localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-      localStorage.setItem("linco_profile_is_logged_in", "true");
-      
-      addToast("Successfully signed in with phone!", "success");
-      onLoginSuccess(localProfile.fullName, user.email || `${localProfile.username}@linco.org`);
-    } catch (err: any) {
-      console.error("OTP verification failed:", err);
-      addToast(err.code === "auth/invalid-verification-code" ? "Incorrect OTP code. Please try again." : getAuthErrorMessage(err), "error");
-    } finally {
-      setLoading(false);
-    }
+  const handlePhoneAuthClick = () => {
+    addToast("Phone Authentication will be available in a future update.", "info");
   };
 
   const getAuthErrorMessage = (err: any): string => {
@@ -911,8 +798,6 @@ export function AuthFlow({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030304] overflow-y-auto px-4 py-8">
-      {/* Invisible Recaptcha Container for Phone Authentication */}
-      <div id="recaptcha-container" className="pointer-events-none absolute w-0 h-0 opacity-0 overflow-hidden"></div>
 
       {/* Decorative Blur Backgrounds */}
       <div className="fixed -top-[20%] -left-[20%] w-[70vw] h-[70vw] bg-radial from-indigo-600/15 via-transparent to-transparent blur-[130px] pointer-events-none z-0" />
@@ -1020,17 +905,20 @@ export function AuthFlow({
                   <span>{loading ? "Connecting..." : "Continue with Google"}</span>
                 </button>
 
-                {/* Phone */}
+                {/* Phone Coming Soon */}
                 <button
-                  disabled={loading}
-                  onClick={() => navigateTo("phone_auth")}
-                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-lg pointer-events-auto"
+                  type="button"
+                  onClick={handlePhoneAuthClick}
+                  className="w-full h-12 rounded-2xl bg-[#0d0e14]/60 hover:bg-[#12131b]/80 border border-[#1c1d29]/60 text-slate-400 font-bold text-xs transition-all flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer shadow-md pointer-events-auto relative overflow-hidden group"
                 >
-                  <svg className="w-4 h-4 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                     <line x1="12" y1="18" x2="12" y2="18.01" />
                   </svg>
-                  <span>Continue with Phone</span>
+                  <span>Continue with Phone (Coming Soon)</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] px-1.5 py-0.5 rounded-full font-mono uppercase tracking-wider scale-90">
+                    Soon
+                  </span>
                 </button>
               </div>
 
@@ -1609,117 +1497,7 @@ export function AuthFlow({
             </div>
           )}
 
-          {/* 9. PHONE AUTH SCREEN */}
-          {screen === "phone_auth" && (
-            <div
-              key="phone_auth"
-              className="p-8 space-y-6 relative z-20 pointer-events-auto"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={() => {
-                  if (phoneStep === "verify") {
-                    setPhoneStep("input");
-                  } else {
-                    navigateTo("welcome");
-                  }
-                }}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
-              >
-                <ArrowLeft size={14} />
-              </button>
 
-              <div className="space-y-1.5">
-                <h2 className="font-sans font-bold text-xl text-slate-100">
-                  {phoneStep === "input" ? "Phone Authentication" : "Enter Verification Code"}
-                </h2>
-                <p className="text-xs text-slate-400">
-                  {phoneStep === "input" 
-                    ? "Enter your mobile number to transmit a secure OTP code." 
-                    : "We have transmitted a secure 6-digit OTP code to your mobile device."}
-                </p>
-              </div>
-
-              {phoneStep === "input" ? (
-                <form onSubmit={handleSendOTP} className="space-y-4 pt-1">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Mobile Number</label>
-                    <div className="flex gap-2">
-                      <select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        className="h-11 px-2.5 text-xs text-white bg-[#09090c] border border-slate-900 rounded-xl outline-none focus:border-indigo-500 cursor-pointer"
-                      >
-                        <option value="+91">+91 (IN)</option>
-                        <option value="+1">+1 (US)</option>
-                        <option value="+44">+44 (UK)</option>
-                        <option value="+880">+880 (BD)</option>
-                        <option value="+977">+977 (NP)</option>
-                        <option value="+65">+65 (SG)</option>
-                        <option value="+971">+971 (AE)</option>
-                      </select>
-                      <input
-                        type="tel"
-                        placeholder="98765 43210"
-                        value={phoneRaw}
-                        onChange={(e) => setPhoneRaw(e.target.value.replace(/[^0-9]/g, ""))}
-                        className="flex-1 px-4 h-11 text-xs text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
-                  >
-                    {loading && <Loader2 size={14} className="animate-spin" />}
-                    <span>Send Secure OTP</span>
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOTP} className="space-y-4 pt-1">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">6-Digit OTP</label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="••••••"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
-                      className="w-full text-center h-11 text-lg font-bold tracking-[0.5em] text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center text-[11px] text-slate-400">
-                    <span>Didn't receive code?</span>
-                    {resendTimer > 0 ? (
-                      <span className="font-mono text-indigo-400">Resend in {resendTimer}s</span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleSendOTP}
-                        className="text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer"
-                      >
-                        Resend OTP
-                      </button>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
-                  >
-                    {loading && <Loader2 size={14} className="animate-spin" />}
-                    <span>Verify Code</span>
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
 
         </AnimatePresence>
 
