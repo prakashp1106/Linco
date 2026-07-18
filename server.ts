@@ -98,6 +98,12 @@ app.use("/api/", apiLimiter);
 
 // Set high body limits to allow base64 images to pass through
 app.use(express.json({ limit: "15mb" }));
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err instanceof SyntaxError && 'status' in err && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: "Invalid JSON format." });
+  }
+  next();
+});
 app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
 // Seed initial realistic data
@@ -1597,16 +1603,24 @@ app.post("/api/upload", async (req, res) => {
   }
 });
 
+const usernameReqSchema = z.object({
+  username: z.string()
+    .min(1, "Username cannot be empty.")
+    .refine(val => !/\s/.test(val), "Username cannot contain spaces.")
+    .refine(val => val === val.toLowerCase(), "Username must be in lowercase.")
+});
+
 // Check if username already exists in Firestore users collection
 app.post("/api/auth/check-username", async (req, res) => {
   try {
-    const { username } = req.body;
-    if (!username || typeof username !== "string") {
-      return res.status(400).json({ error: "Username is required." });
+    const parseResult = usernameReqSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ error: parseResult.error.issues[0].message });
     }
+    const { username } = parseResult.data;
     const cleanUsername = username.trim().toLowerCase();
     if (!db) {
-      return res.json({ exists: false });
+      return res.status(503).json({ error: "Database offline." });
     }
     const snapshot = await db.collection("users").where("username", "==", cleanUsername).limit(1).get();
     return res.json({ exists: !snapshot.empty });
@@ -1619,10 +1633,11 @@ app.post("/api/auth/check-username", async (req, res) => {
 // Resolve username to its stored email
 app.post("/api/auth/resolve-username", async (req, res) => {
   try {
-    const { username } = req.body;
-    if (!username || typeof username !== "string") {
-      return res.status(400).json({ error: "Username is required." });
+    const parseResult = usernameReqSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ error: parseResult.error.issues[0].message });
     }
+    const { username } = parseResult.data;
     const cleanUsername = username.trim().toLowerCase();
     if (!db) {
       return res.status(503).json({ error: "Database offline. Unable to resolve username." });
@@ -1633,7 +1648,7 @@ app.post("/api/auth/resolve-username", async (req, res) => {
     }
     const userData = snapshot.docs[0].data();
     if (!userData.email) {
-      return res.status(400).json({ error: "This profile has no registered email. Please log in using your email address once to update your profile." });
+      return res.status(400).json({ error: "This account cannot be used for username login." });
     }
     return res.json({ email: userData.email });
   } catch (error: any) {

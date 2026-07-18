@@ -862,19 +862,30 @@ export function AuthFlow({
       }
 
       const userDocRef = doc(db, "users", user.uid);
-      const profilePayload = {
-        uid: user.uid,
+      const userDocSnap = await getDoc(userDocRef);
+      const existingData = userDocSnap.exists() ? userDocSnap.data() : null;
+
+      const profilePayload: any = {
         displayName: fullName.trim(),
         username: cleanUsername,
         city: city.trim(),
         bio: bio.trim(),
         photoURL: avatarUrl,
-        createdAt: Date.now()
+        updatedAt: Date.now()
       };
 
-      await setDoc(userDocRef, profilePayload);
+      // Only set createdAt and uid if they do not already exist to preserve the original profile creation metadata
+      if (!existingData || !existingData.createdAt) {
+        profilePayload.createdAt = Date.now();
+      }
+      if (!existingData || !existingData.uid) {
+        profilePayload.uid = user.uid;
+      }
 
-      const formattedDate = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
+      await setDoc(userDocRef, profilePayload, { merge: true });
+
+      const memberSinceTimestamp = existingData?.createdAt || profilePayload.createdAt || Date.now();
+      const formattedDate = new Date(memberSinceTimestamp).toLocaleString("en-US", { month: "long", year: "numeric" });
       const localProfile = {
         fullName: profilePayload.displayName,
         username: profilePayload.username,
