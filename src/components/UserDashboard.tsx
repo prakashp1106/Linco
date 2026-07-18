@@ -26,7 +26,6 @@ import {
   ChevronLeft, 
   Check, 
   Lock,
-  Smartphone,
   Mail,
   AlertTriangle,
   Sparkles,
@@ -108,14 +107,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   // Settings detail state variables
   const [settingsEmail, setSettingsEmail] = useState("user@example.com");
-  const [settingsPhone, setSettingsPhone] = useState("+91 98765 43210");
   const [settingsPassword, setSettingsPassword] = useState("••••••••");
   const [newPassword, setNewPassword] = useState("");
   
   // Toggles for notifications
   const [notifPush, setNotifPush] = useState(true);
   const [notifEmail, setNotifEmail] = useState(true);
-  const [notifSMS, setNotifSMS] = useState(false);
 
   // Themes & languages
   const [settingsTheme, setSettingsTheme] = useState("dark");
@@ -164,7 +161,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
     if (auth.currentUser) {
       setSettingsEmail(auth.currentUser.email || "user@example.com");
-      setSettingsPhone(auth.currentUser.phoneNumber || "");
     }
   }, [profile]);
 
@@ -416,7 +412,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     const unlocked = JSON.parse(localStorage.getItem("linco_db_unlocked_posts") || "[]");
     const savedSearches = JSON.parse(localStorage.getItem("linco_saved_searches") || "[]");
     const settings = {
-      notifications: { push: notifPush, email: notifEmail, sms: notifSMS },
+      notifications: { push: notifPush, email: notifEmail, sms: false },
       appearance: settingsTheme,
       language: settingsLang
     };
@@ -881,17 +877,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         </button>
 
                         <button
-                          onClick={() => setActiveCategory("Phone")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
-                        >
-                          <div className="flex justify-between items-center w-full pr-2">
-                            <span className="text-slate-300 font-bold">Phone</span>
-                            <span className="text-[11px] text-slate-500 font-normal">{settingsPhone}</span>
-                          </div>
-                          <ChevronRight size={14} className="text-slate-600" />
-                        </button>
-
-                        <button
                           onClick={() => setActiveCategory("Password")}
                           className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
                         >
@@ -965,20 +950,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             type="button"
                             onClick={() => setNotifEmail(!notifEmail)}
                             className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifEmail ? 'bg-[#6366f1] justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
-                          >
-                            <div className="w-4 h-4 bg-white rounded-full shadow" />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-900">
-                          <div>
-                            <span className="text-xs font-bold text-slate-300 block">SMS Alerts</span>
-                            <span className="text-[10px] text-slate-500">Direct carrier text ping on urgent handovers</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setNotifSMS(!notifSMS)}
-                            className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifSMS ? 'bg-[#6366f1] justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
                           >
                             <div className="w-4 h-4 bg-white rounded-full shadow" />
                           </button>
@@ -1111,27 +1082,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           className="px-4 py-2 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-lg text-xs transition cursor-pointer"
                         >
                           Save Email
-                        </button>
-                      </div>
-                    )}
-
-                    {activeCategory === "Phone" && (
-                      <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">Update Phone Number</span>
-                        <input
-                          type="text"
-                          value={settingsPhone}
-                          onChange={(e) => setSettingsPhone(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
-                        />
-                        <button
-                          onClick={() => {
-                            setActiveCategory(null);
-                            addToast("Phone number updated", "success");
-                          }}
-                          className="px-4 py-2 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-lg text-xs transition cursor-pointer"
-                        >
-                          Save Phone Number
                         </button>
                       </div>
                     )}

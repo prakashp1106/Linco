@@ -6,9 +6,6 @@ import {
   EyeOff, 
   ChevronLeft, 
   ArrowLeft, 
-  Phone, 
-  Chrome, 
-  Smartphone, 
   Check, 
   Loader2, 
   Sparkles, 
@@ -24,13 +21,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signInWithPopup, 
-  signInWithRedirect,
-  getRedirectResult,
-  GoogleAuthProvider,
-  sendPasswordResetEmail,
-  RecaptchaVerifier,
-  signInWithPhoneNumber
+  sendPasswordResetEmail
 } from "firebase/auth";
 import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -49,8 +40,6 @@ type ScreenType =
   | "welcome" 
   | "login" 
   | "signup" 
-  | "phone_login" 
-  | "otp_verification" 
   | "forgot_password"
   | "profile_setup";
 
@@ -72,12 +61,6 @@ export function AuthFlow({
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
-  
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Profile Setup Form state
   const [city, setCity] = useState("");
@@ -156,55 +139,18 @@ export function AuthFlow({
     }
   };
 
-  useEffect(() => {
-    const checkRedirect = async () => {
-      const isIframe = typeof window !== "undefined" && window.self !== window.top;
-      if (isIframe) {
-        console.log("[AuthFlow] [checkRedirect] Skipping Google redirect check inside iframe due to cross-origin / third-party cookie restrictions.");
-        return;
-      }
-      console.log("[AuthFlow] [checkRedirect] Checking Google redirect authentication result...");
-      try {
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          console.log("[AuthFlow] [checkRedirect] User verified from Google redirect:", {
-            uid: result.user.uid,
-            email: result.user.email
-          });
-          addToast("Successfully signed in with Google!", "success");
-        } else {
-          console.log("[AuthFlow] [checkRedirect] No pending redirect credentials or user found.");
-        }
-      } catch (err: any) {
-        if (isIframe && err.code === "auth/network-request-failed") {
-          console.warn("[AuthFlow] [checkRedirect] Network request failed inside iframe context as expected due to cookie restrictions.");
-        } else {
-          console.error("[AuthFlow] [checkRedirect] Google Redirect result verification failed:", {
-            code: err.code,
-            message: err.message,
-            error: err
-          });
-          addToast(getAuthErrorMessage(err), "error");
-        }
-      }
-    };
-    checkRedirect();
-  }, []);
-
   const validateEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[DIAGNOSTIC] [handleEmailLogin] STARTED with email:", email);
-    console.log("[AuthFlow] [handleEmailLogin] Attempting sign-in with email:", email);
+    console.log("[DIAGNOSTIC] [handleEmailLogin] STARTED with input:", email);
+    console.log("[AuthFlow] [handleEmailLogin] Attempting sign-in with:", email);
     const newErrors: Record<string, string> = {};
 
     if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "Email or Username is required";
     }
 
     if (!password) {
@@ -215,16 +161,50 @@ export function AuthFlow({
       console.warn("[AuthFlow] [handleEmailLogin] Validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please check your login details.", "error");
-      console.log("[DIAGNOSTIC] [handleEmailLogin] RETURNING early due to validation errors.");
       return;
     }
 
     try {
       setLoading(true);
-      console.log("[AuthFlow] [handleEmailLogin] Requesting Firebase Auth email/password verification...");
-      console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling signInWithEmailAndPassword with email:", email);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling signInWithEmailAndPassword. User ID obtained:", userCredential.user.uid);
+      let targetEmail = email.trim();
+
+      // Check if the input is a username (no @ symbol)
+      if (!targetEmail.includes("@")) {
+        console.log("[AuthFlow] [handleEmailLogin] Treating input as username. Attempting resolution...");
+        try {
+          const res = await fetch("/api/auth/resolve-username", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: targetEmail.toLowerCase() })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.email) {
+              console.log("[AuthFlow] [handleEmailLogin] Username resolved to email successfully.");
+              targetEmail = data.email;
+            } else {
+              throw new Error("No email found for this username");
+            }
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || "Incorrect username/email or password.");
+          }
+        } catch (resolveErr: any) {
+          console.error("Username resolution failed:", resolveErr);
+          addToast(resolveErr.message || "Incorrect username/email or password.", "error");
+          setErrors({ email: resolveErr.message || "Incorrect username/email or password." });
+          return;
+        }
+      } else {
+        if (!validateEmail(targetEmail)) {
+          setErrors({ email: "Please enter a valid email address" });
+          addToast("Please enter a valid email address.", "error");
+          return;
+        }
+      }
+
+      console.log("[AuthFlow] [handleEmailLogin] Requesting Firebase Auth email/password verification with resolved email:", targetEmail);
+      const userCredential = await signInWithEmailAndPassword(auth, targetEmail, password);
       const user = userCredential.user;
       console.log("[AuthFlow] [handleEmailLogin] Firebase Auth successful. User details:", {
         uid: user.uid,
@@ -234,12 +214,22 @@ export function AuthFlow({
       
       const userDocRef = doc(db, "users", user.uid);
       console.log("[AuthFlow] [handleEmailLogin] Fetching user profile from Firestore at users/" + user.uid);
-      console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling getDoc for users/" + user.uid);
       const userDoc = await getDoc(userDocRef);
-      console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling getDoc. Document exists:", userDoc.exists());
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        
+        // Backward compatibility: store email field in user profile if missing
+        if (!userData.email) {
+          console.log("[AuthFlow] [handleEmailLogin] Legacy user profile missing email field. Merging email field...");
+          try {
+            await setDoc(userDocRef, { email: user.email || targetEmail }, { merge: true });
+            userData.email = user.email || targetEmail;
+          } catch (writeErr) {
+            console.error("Failed to merge email field for legacy user profile:", writeErr);
+          }
+        }
+
         console.log("[AuthFlow] [handleEmailLogin] Firestore profile found:", userData);
         const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
         const localProfile = {
@@ -254,9 +244,7 @@ export function AuthFlow({
         localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
         localStorage.setItem("linco_profile_is_logged_in", "true");
         addToast("Successfully signed in!", "success");
-        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling onLoginSuccess for existing profile. User Name:", localProfile.fullName, "Email:", email);
-        onLoginSuccess(localProfile.fullName, email);
-        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling onLoginSuccess for existing profile.");
+        onLoginSuccess(localProfile.fullName, targetEmail);
       } else {
         console.log("[AuthFlow] [handleEmailLogin] Firestore profile does not exist. Creating default profile...");
         const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
@@ -264,14 +252,13 @@ export function AuthFlow({
           uid: user.uid,
           displayName: user.displayName || "Verified User",
           username: defaultUsername,
+          email: user.email || targetEmail,
           bio: "Lost & Found helper on LINCO",
           city: "Kolkata, India",
           photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
-        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling setDoc to create default profile for users/" + user.uid);
         await setDoc(userDocRef, defaultProfile);
-        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling setDoc. Profile set successfully.");
         console.log("[AuthFlow] [handleEmailLogin] Default profile saved successfully to Firestore.");
         
         const localProfile = {
@@ -286,46 +273,68 @@ export function AuthFlow({
         localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
         localStorage.setItem("linco_profile_is_logged_in", "true");
         addToast("Successfully signed in!", "success");
-        console.log("[DIAGNOSTIC] [handleEmailLogin] BEFORE calling onLoginSuccess for new profile. User Name:", defaultProfile.displayName, "Email:", email);
-        onLoginSuccess(defaultProfile.displayName, email);
-        console.log("[DIAGNOSTIC] [handleEmailLogin] AFTER calling onLoginSuccess for new profile.");
+        onLoginSuccess(defaultProfile.displayName, targetEmail);
       }
     } catch (err: any) {
-      console.error("[DIAGNOSTIC] [handleEmailLogin] CATCH block triggered. Error:", err);
-      console.error("[AuthFlow] [handleEmailLogin] Email Login failed with exception:", {
-        code: err.code,
-        message: err.message,
-        error: err
-      });
+      console.error("[AuthFlow] [handleEmailLogin] Login failed:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
-      console.log("[DIAGNOSTIC] [handleEmailLogin] FINALLY block entered. Setting loading to false.");
       setLoading(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[DIAGNOSTIC] [handleSignup] STARTED with name:", fullName, "email:", email);
-    console.log("[AuthFlow] [handleSignup] Initiating Email Registration. Full Name:", fullName, "Email:", email);
+    console.log("[DIAGNOSTIC] [handleSignup] STARTED with name:", fullName, "email:", email, "username:", username);
+    console.log("[AuthFlow] [handleSignup] Initiating Email Registration. Full Name:", fullName, "Email:", email, "Username:", username);
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) {
       newErrors.fullName = "Full name is required";
     }
+
+    const cleanUsername = username.trim().toLowerCase();
+    if (!cleanUsername) {
+      newErrors.username = "Username is required";
+    } else if (!/^[a-z0-9_\-]+$/.test(cleanUsername)) {
+      newErrors.username = "Username can only contain lowercase letters, numbers, underscores, or hyphens";
+    } else {
+      try {
+        setLoading(true);
+        const checkRes = await fetch("/api/auth/check-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: cleanUsername })
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (checkData.exists) {
+            newErrors.username = "Username is already taken";
+          }
+        }
+      } catch (fetchErr) {
+        console.error("Username uniqueness check error:", fetchErr);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     if (!email) {
       newErrors.email = "Email is required";
     } else if (!validateEmail(email)) {
       newErrors.email = "Please enter a valid email address";
     }
+
     if (!password) {
       newErrors.password = "Password is required";
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
+
     if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+
     if (!acceptPrivacy) {
       newErrors.privacy = "You must accept the Privacy Policy to continue";
     }
@@ -334,26 +343,23 @@ export function AuthFlow({
       console.warn("[AuthFlow] [handleSignup] Registration validation failed:", newErrors);
       setErrors(newErrors);
       addToast("Please resolve all validation errors.", "error");
-      console.log("[DIAGNOSTIC] [handleSignup] RETURNING early due to registration validation errors.");
       return;
     }
 
     try {
       setLoading(true);
       console.log("[AuthFlow] [handleSignup] Dispatching createUserWithEmailAndPassword command to Firebase...");
-      console.log("[DIAGNOSTIC] [handleSignup] BEFORE calling createUserWithEmailAndPassword for email:", email);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("[DIAGNOSTIC] [handleSignup] AFTER calling createUserWithEmailAndPassword. Registered user UID:", userCredential.user.uid);
       const user = userCredential.user;
       console.log("[AuthFlow] [handleSignup] Firebase registration successful. User UID:", user.uid);
       
       // Auto-create initial user doc
-      const defaultUsername = email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
       const userDocRef = doc(db, "users", user.uid);
       const defaultProfile = {
         uid: user.uid,
         displayName: fullName.trim(),
-        username: defaultUsername,
+        username: cleanUsername,
+        email: email.trim().toLowerCase(),
         bio: "Lost & Found helper on LINCO",
         city: "Kolkata, India",
         photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
@@ -361,9 +367,7 @@ export function AuthFlow({
       };
       
       console.log("[AuthFlow] [handleSignup] Writing default user profile to Firestore path: users/" + user.uid);
-      console.log("[DIAGNOSTIC] [handleSignup] BEFORE calling setDoc to write registration profile for users/" + user.uid);
       await setDoc(userDocRef, defaultProfile);
-      console.log("[DIAGNOSTIC] [handleSignup] AFTER calling setDoc for registration. Profile saved successfully.");
       console.log("[AuthFlow] [handleSignup] Default profile created successfully in database.");
       
       const localProfile = {
@@ -379,196 +383,11 @@ export function AuthFlow({
       localStorage.setItem("linco_profile_is_logged_in", "true");
       
       addToast("Account registered! Now let's set up your profile.", "success");
-      setUsername(defaultUsername);
+      setUsername(cleanUsername);
       navigateTo("profile_setup");
     } catch (err: any) {
-      console.error("[DIAGNOSTIC] [handleSignup] CATCH block triggered. Error:", err);
-      console.error("[AuthFlow] [handleSignup] Email Registration failed with exception:", {
-        code: err.code,
-        message: err.message,
-        error: err
-      });
+      console.error("[AuthFlow] [handleSignup] Registration failed:", err);
       addToast(getAuthErrorMessage(err), "error");
-    } finally {
-      console.log("[DIAGNOSTIC] [handleSignup] FINALLY block entered. Setting loading to false.");
-      setLoading(false);
-    }
-  };
-
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("[AuthFlow] [handlePhoneSubmit] Requesting SMS verification for Country Code:", countryCode, "Phone:", phoneNumber);
-    const newErrors: Record<string, string> = {};
-
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
-    if (!cleanPhone) {
-      newErrors.phone = "Phone number is required";
-    } else if (cleanPhone.length < 10 || cleanPhone.length > 11) {
-      newErrors.phone = "Please enter a valid 10-digit mobile number";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      console.warn("[AuthFlow] [handlePhoneSubmit] Phone submission validation failed:", newErrors);
-      setErrors(newErrors);
-      addToast("Please enter a valid phone number.", "error");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const formatPhone = countryCode + cleanPhone;
-      console.log("[AuthFlow] [handlePhoneSubmit] Initializing invisible RecaptchaVerifier...", {
-        authType: typeof auth,
-        authExists: !!auth,
-        formatPhone,
-        recaptchaId: "recaptcha-container",
-        containerExists: !!document.getElementById("recaptcha-container")
-      });
-
-      const recaptchaContainer = document.getElementById("recaptcha-container");
-      if (!recaptchaContainer) {
-        throw new Error("Critical Error: recaptcha-container element not found in DOM.");
-      }
-
-      if (!(window as any).recaptchaVerifier) {
-        console.log("[AuthFlow] [handlePhoneSubmit] Creating new RecaptchaVerifier instance with correct parameters (auth, container, config)...");
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible"
-        });
-        console.log("[AuthFlow] [handlePhoneSubmit] RecaptchaVerifier constructed successfully.");
-      } else {
-        console.log("[AuthFlow] [handlePhoneSubmit] Reusing existing RecaptchaVerifier instance from window.");
-      }
-      const appVerifier = (window as any).recaptchaVerifier;
-      
-      console.log("[AuthFlow] [handlePhoneSubmit] Sending Firebase OTP verification to number:", formatPhone);
-      const confirmation = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
-      (window as any).confirmationResult = confirmation;
-      
-      addToast(`OTP code sent successfully to ${countryCode} ${cleanPhone}!`, "success");
-      navigateTo("otp_verification");
-    } catch (error: any) {
-      console.error("Firebase Auth Error");
-      console.error("Code:", error.code);
-      console.error("Message:", error.message);
-      console.error("Custom Data:", error.customData);
-      console.error("Stack:", error.stack);
-      // Clear instance on error so next attempt can retry fresh
-      (window as any).recaptchaVerifier = null;
-      addToast(getAuthErrorMessage(error), "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    const cleanVal = value.replace(/\D/g, "");
-    if (!cleanVal) {
-      const newOtp = [...otp];
-      newOtp[index] = "";
-      setOtp(newOtp);
-      return;
-    }
-
-    const newOtp = [...otp];
-    newOtp[index] = cleanVal.slice(-1);
-    setOtp(newOtp);
-
-    // Focus next
-    if (index < 5 && cleanVal) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const enteredOtp = otp.join("");
-    console.log("[AuthFlow] [handleOtpVerify] Attempting OTP Verification. Submitted Code:", enteredOtp);
-    
-    if (enteredOtp.length < 6) {
-      console.warn("[AuthFlow] [handleOtpVerify] Code is less than 6 digits:", enteredOtp);
-      addToast("Please enter the full 6-digit verification code.", "error");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const confirmation = (window as any).confirmationResult;
-      console.log("[AuthFlow] [handleOtpVerify] Fetching active phone authentication confirmation session...");
-      if (!confirmation) {
-        console.error("[AuthFlow] [handleOtpVerify] confirmationResult is missing from window global object.");
-        throw new Error("No active phone verification session found. Please request a new OTP.");
-      }
-      console.log("[AuthFlow] [handleOtpVerify] Sending confirmation.confirm with code to Firebase Auth...");
-      
-      const result = await confirmation.confirm(enteredOtp);
-      const user = result.user;
-      console.log("[AuthFlow] [handleOtpVerify] Phone code verified successfully! User UID:", user.uid, "Phone:", user.phoneNumber);
-      
-      const userDocRef = doc(db, "users", user.uid);
-      console.log("[AuthFlow] [handleOtpVerify] Checking Firestore for existing phone profile at users/" + user.uid);
-      
-      const userDoc = await getDoc(userDocRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("[AuthFlow] [handleOtpVerify] Firestore profile found:", userData);
-        const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
-        const localProfile = {
-          fullName: userData.displayName || user.displayName || "Verified User",
-          username: userData.username || `phone_user_${user.uid.slice(0, 5)}`,
-          bio: userData.bio || "Lost & Found helper on LINCO",
-          location: userData.city || "Kolkata, India",
-          memberSince: formattedDate,
-          avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Phone verified and signed in successfully!", "success");
-        onLoginSuccess(localProfile.fullName, `${localProfile.username}@linco.org`);
-      } else {
-        console.log("[AuthFlow] [handleOtpVerify] Firestore profile does not exist. Creating default profile...");
-        const defaultUsername = `user_${user.uid.slice(0, 5)}`;
-        const defaultProfile = {
-          uid: user.uid,
-          displayName: "Phone User",
-          username: defaultUsername,
-          bio: "Lost & Found helper on LINCO",
-          city: "Kolkata, India",
-          photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          createdAt: Date.now()
-        };
-        await setDoc(userDocRef, defaultProfile);
-        console.log("[AuthFlow] [handleOtpVerify] Default phone user profile created successfully in database.");
-        
-        const localProfile = {
-          fullName: defaultProfile.displayName,
-          username: defaultProfile.username,
-          bio: defaultProfile.bio,
-          location: defaultProfile.city,
-          memberSince: new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
-          avatar: defaultProfile.photoURL,
-          banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
-        };
-        localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
-        localStorage.setItem("linco_profile_is_logged_in", "true");
-        addToast("Phone verified and signed in successfully!", "success");
-        onLoginSuccess(defaultProfile.displayName, `${defaultProfile.username}@linco.org`);
-      }
-    } catch (error: any) {
-      console.error("[AuthFlow] [handleOtpVerify] OTP Verification failed with exception:", {
-        code: error.code,
-        message: error.message,
-        error: error
-      });
-      addToast(getAuthErrorMessage(error), "error");
     } finally {
       setLoading(false);
     }
@@ -599,65 +418,7 @@ export function AuthFlow({
       addToast("Password reset link sent! Check your inbox.", "success");
       navigateTo("login");
     } catch (err: any) {
-      console.error("[AuthFlow] [handleForgotPasswordSubmit] Password reset failed with exception:", {
-        code: err.code,
-        message: err.message,
-        error: err
-      });
-      addToast(getAuthErrorMessage(err), "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const isMobileBrowser = (): boolean => {
-    if (typeof window === "undefined" || !window.navigator) return false;
-    const ua = window.navigator.userAgent || "";
-    console.log("[AuthFlow] [isMobileBrowser] UserAgent string detected:", ua);
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SamsungBrowser|Mobile|CriOS/i.test(ua);
-  };
-
-  const handleGoogleLogin = async () => {
-    console.log("[AuthFlow] [handleGoogleLogin] Requesting Google authentication...");
-    try {
-      setLoading(true);
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: "select_account"
-      });
-
-      const isMobile = isMobileBrowser();
-      console.log(`[AuthFlow] [handleGoogleLogin] Device detection: isMobile=${isMobile}, userAgent="${navigator.userAgent}"`);
-
-      if (isMobile) {
-        console.log("[AuthFlow] [handleGoogleLogin] Mobile browser detected. Triggering signInWithRedirect...");
-        await signInWithRedirect(auth, provider);
-        // Page will redirect, code execution stops here.
-        return;
-      }
-
-      console.log("[AuthFlow] [handleGoogleLogin] Desktop browser detected. Triggering signInWithPopup...");
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log("[AuthFlow] [handleGoogleLogin] Google Sign-In with popup verified successfully. User UID:", user.uid);
-      addToast("Successfully signed in with Google!", "success");
-    } catch (err: any) {
-      console.error("Firebase Auth Error");
-      console.error("Code:", err.code);
-      console.error("Message:", err.message);
-      console.error("Custom Data:", err.customData);
-      console.error("Stack:", err.stack);
-
-      // Programmatically check if error is due to unauthorized domain or iframe/cookies block
-      const currentHost = typeof window !== "undefined" ? window.location.hostname : "";
-      if (err.code === "auth/internal-error" || err.code === "auth/unauthorized-domain") {
-        console.warn(
-          `[AuthFlow] PROD ALERT: If you are seeing '${err.code}' on domain '${currentHost}', ` +
-          `please verify that '${currentHost}' (e.g., lincoindia.onrender.com) is fully added ` +
-          `to the "Authorized domains" list in your Firebase Console under Authentication > Settings > Authorized domains.`
-        );
-      }
-
+      console.error("[AuthFlow] [handleForgotPasswordSubmit] Password reset failed:", err);
       addToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
@@ -886,50 +647,16 @@ export function AuthFlow({
 
               {/* Button Actions */}
               <div className="space-y-4">
-                {/* Google */}
-                <button
-                  disabled={loading}
-                  onClick={(e) => {
-                    console.log("[DEBUG] [Google Button] onClick/handleGoogleLogin clicked!");
-                    handleGoogleLogin();
-                  }}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
-                >
-                  {loading ? (
-                    <Loader2 size={16} className="animate-spin text-indigo-400" />
-                  ) : (
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                  )}
-                  <span>Continue with Google</span>
-                </button>
-
                 {/* Email */}
                 <button
                   onClick={(e) => {
                     console.log("[DEBUG] [Email Button] onClick clicked!");
                     navigateTo("signup");
                   }}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
+                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-lg pointer-events-auto"
                 >
-                  <Mail size={16} className="text-cyan-400 shrink-0" />
-                  <span>Continue with Email</span>
-                </button>
-
-                {/* Phone */}
-                <button
-                  onClick={(e) => {
-                    console.log("[DEBUG] [Phone Button] onClick clicked!");
-                    navigateTo("phone_login");
-                  }}
-                  className="w-full h-12 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-750 font-semibold text-xs text-slate-200 hover:text-white transition-all flex items-center justify-center gap-3.5 active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
-                >
-                  <Phone size={16} className="text-violet-400 shrink-0" />
-                  <span>Continue with Phone Number</span>
+                  <Mail size={16} className="text-white shrink-0" />
+                  <span>Get Started with Email</span>
                 </button>
               </div>
 
@@ -979,14 +706,14 @@ export function AuthFlow({
               }} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Email Address</label>
+                  <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Email or Username</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
                       <Mail size={14} />
                     </span>
                     <input
                       type="text"
-                      placeholder="you@domain.com"
+                      placeholder="you@domain.com or username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all ${errors.email ? "border-rose-500/50 focus:border-rose-500" : ""}`}
@@ -1050,42 +777,6 @@ export function AuthFlow({
                 </button>
               </form>
 
-              {/* Dividers */}
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-[#1c1c2a]"></div>
-                <span className="flex-shrink mx-3 text-[9px] font-black uppercase text-slate-600 font-mono">or connect with</span>
-                <div className="flex-grow border-t border-[#1c1c2a]"></div>
-              </div>
-
-              {/* Alternate Login Buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={(e) => {
-                    console.log("[DEBUG] [Login Alt Google Button] onClick clicked!");
-                    handleGoogleLogin();
-                  }}
-                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05" />
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                  </svg>
-                  <span>Google</span>
-                </button>
-                <button
-                  onClick={(e) => {
-                    console.log("[DEBUG] [Login Alt Phone Button] onClick clicked!");
-                    navigateTo("phone_login");
-                  }}
-                  className="h-11 rounded-2xl bg-[#090a0f] border border-[#1e202a] hover:border-slate-800 text-[11px] font-bold text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer pointer-events-auto"
-                >
-                  <Phone size={13} className="text-violet-400 shrink-0" />
-                  <span>Phone</span>
-                </button>
-              </div>
-
               {/* Create Account link */}
               <div className="text-center pt-2">
                 <span className="text-[11px] text-slate-400 font-medium">
@@ -1147,6 +838,26 @@ export function AuthFlow({
                   </div>
                   {errors.fullName && (
                     <span className="text-[10px] text-rose-400 font-medium">{errors.fullName}</span>
+                  )}
+                </div>
+
+                {/* Username */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Username</label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                      <Sparkles size={14} className="text-slate-500" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="john_doe"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all ${errors.username ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                    />
+                  </div>
+                  {errors.username && (
+                    <span className="text-[10px] text-rose-400 font-medium">{errors.username}</span>
                   )}
                 </div>
 
@@ -1264,181 +975,6 @@ export function AuthFlow({
                   </button>
                 </span>
               </div>
-            </div>
-          )}
-
-          {/* 5. PHONE LOGIN SCREEN */}
-          {screen === "phone_login" && (
-            <div
-              key="phone_login"
-              className="p-8 space-y-6 relative z-20 pointer-events-auto"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={(e) => {
-                  console.log("[DEBUG] [PhoneLogin Back Button] onClick clicked!");
-                  navigateTo("welcome");
-                }}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
-              >
-                <ArrowLeft size={14} />
-              </button>
-
-              <div className="space-y-1.5">
-                <h2 className="font-sans font-bold text-xl text-slate-100">Verify Your Number</h2>
-                <p className="text-xs text-slate-400">We will transmit a 6-digit one-time password code to verify your profile.</p>
-              </div>
-
-              <form onSubmit={(e) => {
-                console.log("[DEBUG] [PhoneLogin Form] onSubmit triggered!");
-                handlePhoneSubmit(e);
-              }} className="space-y-4 pt-1">
-                {/* Phone Form Field */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Mobile Phone Number</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-20 bg-[#09090c] border border-slate-900 text-xs text-slate-200 outline-none rounded-xl px-2 h-11 text-center font-semibold cursor-pointer focus:border-indigo-500"
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+880">🇧🇩 +880</option>
-                    </select>
-                    <div className="relative flex-1 flex items-center">
-                      <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
-                        <Phone size={14} />
-                      </span>
-                      <input
-                        type="tel"
-                        placeholder="98765 43210"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className={`w-full h-11 pl-11! pr-4 text-xs text-white bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition-all ${errors.phone ? "border-rose-500/50 focus:border-rose-500" : ""}`}
-                      />
-                    </div>
-                  </div>
-                  {errors.phone && (
-                    <span className="text-[10px] text-rose-400 font-medium">{errors.phone}</span>
-                  )}
-                </div>
-
-                {/* Privacy Assurance info */}
-                <div className="p-3 bg-indigo-950/25 border border-indigo-500/10 rounded-xl flex gap-3">
-                  <Shield size={14} className="text-indigo-400 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    Your number is always masked and securely hashed. We only decrypt when matches are approved.
-                  </p>
-                </div>
-
-                {/* Action button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  onClick={() => console.log("[DEBUG] [PhoneLogin Submit Button] onClick clicked!")}
-                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg mt-2 cursor-pointer"
-                >
-                  {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Send OTP</span>
-                </button>
-              </form>
-
-              {/* Footer link to Welcome */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={(e) => {
-                    console.log("[DEBUG] [PhoneLogin ChangeOption Button] onClick clicked!");
-                    navigateTo("welcome");
-                  }}
-                  className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer pointer-events-auto"
-                >
-                  Change login option
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 6. OTP VERIFICATION SCREEN */}
-          {screen === "otp_verification" && (
-            <div
-              key="otp_verification"
-              className="p-8 space-y-6 relative z-20 pointer-events-auto"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={(e) => {
-                  console.log("[DEBUG] [Otp Back Button] onClick clicked!");
-                  navigateTo("phone_login");
-                }}
-                className="p-2 rounded-xl bg-[#090a0f]/60 hover:bg-[#0c0d14] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-[#1c1c2a] pointer-events-auto"
-              >
-                <ArrowLeft size={14} />
-              </button>
-
-              <div className="space-y-1.5">
-                <h2 className="font-sans font-bold text-xl text-slate-100">Enter Verification Code</h2>
-                <p className="text-xs text-slate-400">
-                  We sent a 6-digit secure code to your device at <span className="text-indigo-300 font-semibold">{countryCode} {phoneNumber}</span>.
-                </p>
-              </div>
-
-              <form onSubmit={(e) => {
-                console.log("[DEBUG] [Otp Form] onSubmit triggered!");
-                handleOtpVerify(e);
-              }} className="space-y-5">
-                {/* 6-Digit input layout */}
-                <div className="flex gap-2 justify-between">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={(el) => { otpRefs.current[index] = el; }}
-                      type="text"
-                      maxLength={1}
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-11 h-12 text-center text-lg font-mono font-black border border-slate-900 bg-[#09090c] rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:scale-105 transition-all text-white p-0! flex items-center justify-center"
-                    />
-                  ))}
-                </div>
-
-                {/* Prompt instructions */}
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400">Didn't receive code?</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log("[DEBUG] [Otp Resend Button] onClick clicked!");
-                      addToast("New code dispatched!", "info");
-                    }}
-                    className="text-cyan-400 font-bold hover:underline cursor-pointer"
-                  >
-                    Resend Code
-                  </button>
-                </div>
-
-                <div className="p-3 bg-cyan-950/20 border border-cyan-500/10 rounded-xl text-center">
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    💡 Simulated OTP bypass: enter any 6 digits (e.g., <strong className="text-cyan-400">123456</strong>) to verify immediately.
-                  </p>
-                </div>
-
-                {/* Verify Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  onClick={() => console.log("[DEBUG] [Otp Submit Button] onClick clicked!")}
-                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-75 shadow-lg cursor-pointer"
-                >
-                  {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Verify OTP</span>
-                </button>
-              </form>
             </div>
           )}
 

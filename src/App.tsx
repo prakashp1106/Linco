@@ -198,6 +198,18 @@ export default function App() {
           console.log("[App] [onAuthStateChanged] [getDoc] Completed getDoc. Exists:", userDoc.exists());
           let userData = userDoc.exists() ? userDoc.data() : null;
           
+          if (userDoc.exists() && userData && (!userData.email || userData.email !== user.email)) {
+            console.log("[App] [onAuthStateChanged] Existing user document is missing email or has outdated email. Updating...");
+            try {
+              await setDoc(userDocRef, { email: user.email || `${userData.username || "user"}@linco.org` }, { merge: true });
+              console.log("[App] [onAuthStateChanged] Successfully updated email field in existing user document.");
+              userDoc = await getDoc(userDocRef);
+              userData = userDoc.data() || userData;
+            } catch (updateErr) {
+              console.error("[App] [onAuthStateChanged] Failed to update existing user document with email:", updateErr);
+            }
+          }
+
           if (!userDoc.exists()) {
             // Auto-create missing Firestore document
             const defaultUsername = user.email?.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") || `user_${user.uid.slice(0, 5)}`;
@@ -205,6 +217,7 @@ export default function App() {
               uid: user.uid,
               displayName: user.displayName || "Verified User",
               username: defaultUsername,
+              email: user.email || `${defaultUsername}@linco.org`,
               bio: "Lost & Found helper on LINCO",
               city: "Kolkata, India",
               photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",

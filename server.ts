@@ -1597,6 +1597,51 @@ app.post("/api/upload", async (req, res) => {
   }
 });
 
+// Check if username already exists in Firestore users collection
+app.post("/api/auth/check-username", async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username || typeof username !== "string") {
+      return res.status(400).json({ error: "Username is required." });
+    }
+    const cleanUsername = username.trim().toLowerCase();
+    if (!db) {
+      return res.json({ exists: false });
+    }
+    const snapshot = await db.collection("users").where("username", "==", cleanUsername).limit(1).get();
+    return res.json({ exists: !snapshot.empty });
+  } catch (error: any) {
+    console.error("Error checking username uniqueness:", error);
+    return res.status(500).json({ error: "Internal server error checking username uniqueness." });
+  }
+});
+
+// Resolve username to its stored email
+app.post("/api/auth/resolve-username", async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username || typeof username !== "string") {
+      return res.status(400).json({ error: "Username is required." });
+    }
+    const cleanUsername = username.trim().toLowerCase();
+    if (!db) {
+      return res.status(503).json({ error: "Database offline. Unable to resolve username." });
+    }
+    const snapshot = await db.collection("users").where("username", "==", cleanUsername).limit(1).get();
+    if (snapshot.empty) {
+      return res.status(404).json({ error: "Username not found." });
+    }
+    const userData = snapshot.docs[0].data();
+    if (!userData.email) {
+      return res.status(400).json({ error: "This profile has no registered email. Please log in using your email address once to update your profile." });
+    }
+    return res.json({ email: userData.email });
+  } catch (error: any) {
+    console.error("Error resolving username:", error);
+    return res.status(500).json({ error: "Internal server error resolving username." });
+  }
+});
+
 // Healthcheck
 app.get("/api/health", (req, res) => {
   res.json({
