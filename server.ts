@@ -2005,6 +2005,9 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
 app.put("/api/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    // Security check: Validate security PIN presence to prevent authorization bypass
+    const { securityPin } = actionPinSchema.parse(req.body);
+
     let post: Post | null = null;
     let local = useLocalFallback ? readLocalDB() : null;
 
@@ -2026,17 +2029,15 @@ app.put("/api/posts/:id", async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    const { securityPin, ...otherFields } = req.body;
+    const { securityPin: _pin, ...otherFields } = req.body;
 
-    if (securityPin) {
-      const expectedPin = post.securityPin || "1234";
-      const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-        ? await bcrypt.compare(securityPin, expectedPin)
-        : expectedPin === securityPin;
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
 
-      if (!isPinValid) {
-        return res.status(403).json({ error: "Wrong PIN!" });
-      }
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Wrong PIN!" });
     }
 
     const updatedPost: Post = {
@@ -2058,6 +2059,9 @@ app.put("/api/posts/:id", async (req, res) => {
 
     res.json({ success: true, post: updatedPost });
   } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: "Validation error", details: (err as any).errors });
+    }
     res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
