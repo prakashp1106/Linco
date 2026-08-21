@@ -1373,13 +1373,14 @@ app.get("/api/maps/autosuggest", async (req, res) => {
       return res.json({ suggestedLocations: [] });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    const apiKey = process.env.MAPMYINDIA_API_KEY;
     let results: any[] = [];
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
+    // 1. Try MapmyIndia first if API key is provided
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
       const response = await fetch(mapplsUrl, {
         headers: {
           "Referer": "https://apis.mappls.com"
@@ -1400,6 +1401,7 @@ app.get("/api/maps/autosuggest", async (req, res) => {
       }
     } catch (err) {
       console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
+    }
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no results
@@ -1450,13 +1452,14 @@ app.get("/api/maps/revgeocode", async (req, res) => {
       return res.status(400).json({ error: "Missing lat or lng" });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    const apiKey = process.env.MAPMYINDIA_API_KEY;
     let addressText = "";
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
+    // 1. Try MapmyIndia first if API key is provided
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
       const response = await fetch(mapplsUrl, {
         headers: {
           "Referer": "https://apis.mappls.com"
@@ -1479,6 +1482,7 @@ app.get("/api/maps/revgeocode", async (req, res) => {
       }
     } catch (err) {
       console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
+    }
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no address
