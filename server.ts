@@ -2028,15 +2028,18 @@ app.put("/api/posts/:id", async (req, res) => {
 
     const { securityPin, ...otherFields } = req.body;
 
-    if (securityPin) {
-      const expectedPin = post.securityPin || "1234";
-      const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-        ? await bcrypt.compare(securityPin, expectedPin)
-        : expectedPin === securityPin;
+    // Security check: require securityPin to update a post
+    if (!securityPin) {
+      return res.status(400).json({ error: "Security PIN is required to update post" });
+    }
 
-      if (!isPinValid) {
-        return res.status(403).json({ error: "Wrong PIN!" });
-      }
+    const expectedPin = post.securityPin || "1234";
+    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
+      ? await bcrypt.compare(securityPin, expectedPin)
+      : expectedPin === securityPin;
+
+    if (!isPinValid) {
+      return res.status(403).json({ error: "Wrong PIN!" });
     }
 
     const updatedPost: Post = {
