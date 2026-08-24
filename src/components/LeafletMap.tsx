@@ -22,9 +22,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // MapmyIndia static API Key
-  const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
-
   // Reverse geocoding using secure server map proxy (MapmyIndia + Nominatim)
   const reverseGeocode = async (newLat: number, newLng: number) => {
     if (!onAddressChange) return;
