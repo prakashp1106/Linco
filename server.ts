@@ -1373,33 +1373,36 @@ app.get("/api/maps/autosuggest", async (req, res) => {
       return res.json({ suggestedLocations: [] });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security Notice: Read MapmyIndia API Key from environment variables rather than hardcoding.
+    const apiKey = process.env.MAPMYINDIA_API_KEY;
     let results: any[] = [];
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
-      const response = await fetch(mapplsUrl, {
-        headers: {
-          "Referer": "https://apis.mappls.com"
+    // 1. Try MapmyIndia first if configured
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
+        const response = await fetch(mapplsUrl, {
+          headers: {
+            "Referer": "https://apis.mappls.com"
+          }
+        });
+        if (response.ok) {
+          const data: any = await response.json();
+          if (data && data.suggestedLocations && data.suggestedLocations.length > 0) {
+            results = data.suggestedLocations.map((item: any) => ({
+              placeName: item.placeName || item.formatted_address || item.placeAddress || "Location",
+              placeAddress: item.placeAddress || item.formatted_address || item.placeName || "",
+              latitude: item.latitude !== undefined ? item.latitude : item.lat,
+              longitude: item.longitude !== undefined ? item.longitude : item.lng,
+              eLoc: item.eLoc || String(Math.random())
+            }));
+            mapplsSuccess = results.length > 0;
+          }
         }
-      });
-      if (response.ok) {
-        const data: any = await response.json();
-        if (data && data.suggestedLocations && data.suggestedLocations.length > 0) {
-          results = data.suggestedLocations.map((item: any) => ({
-            placeName: item.placeName || item.formatted_address || item.placeAddress || "Location",
-            placeAddress: item.placeAddress || item.formatted_address || item.placeName || "",
-            latitude: item.latitude !== undefined ? item.latitude : item.lat,
-            longitude: item.longitude !== undefined ? item.longitude : item.lng,
-            eLoc: item.eLoc || String(Math.random())
-          }));
-          mapplsSuccess = results.length > 0;
-        }
+      } catch (err) {
+        console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
       }
-    } catch (err) {
-      console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no results
@@ -1450,35 +1453,38 @@ app.get("/api/maps/revgeocode", async (req, res) => {
       return res.status(400).json({ error: "Missing lat or lng" });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security Notice: Read MapmyIndia API Key from environment variables rather than hardcoding.
+    const apiKey = process.env.MAPMYINDIA_API_KEY;
     let addressText = "";
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
-      const response = await fetch(mapplsUrl, {
-        headers: {
-          "Referer": "https://apis.mappls.com"
+    // 1. Try MapmyIndia first if configured
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
+        const response = await fetch(mapplsUrl, {
+          headers: {
+            "Referer": "https://apis.mappls.com"
+          }
+        });
+        if (response.ok) {
+          const data: any = await response.json();
+          if (data && data.results && data.results.length > 0) {
+            const result = data.results[0];
+            addressText = result.formatted_address || result.formattedAddress || [
+              result.poi,
+              result.street,
+              result.subLocality,
+              result.locality,
+              result.district,
+              result.state
+            ].filter(Boolean).join(", ");
+            if (addressText) mapplsSuccess = true;
+          }
         }
-      });
-      if (response.ok) {
-        const data: any = await response.json();
-        if (data && data.results && data.results.length > 0) {
-          const result = data.results[0];
-          addressText = result.formatted_address || result.formattedAddress || [
-            result.poi,
-            result.street,
-            result.subLocality,
-            result.locality,
-            result.district,
-            result.state
-          ].filter(Boolean).join(", ");
-          if (addressText) mapplsSuccess = true;
-        }
+      } catch (err) {
+        console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
       }
-    } catch (err) {
-      console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no address
