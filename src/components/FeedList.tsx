@@ -468,7 +468,7 @@ export const FeedList: React.FC<FeedListProps> = ({
         {/* Search Input Bar */}
         <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
             <input
               ref={inputRef}
               type="text"
@@ -477,21 +477,23 @@ export const FeedList: React.FC<FeedListProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsRecentFocused(true)}
               onBlur={() => setTimeout(() => setIsRecentFocused(false), 200)}
-              className="w-full pl-12 pr-12 md:pr-24 py-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/20 outline-none text-xs font-semibold text-white transition-all placeholder:text-slate-500"
+              className="w-full pl-11 pr-14 md:pr-24 py-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/20 outline-none text-xs font-semibold text-white transition-all placeholder:text-slate-500"
               aria-label="Universal Search Bar"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 md:right-14 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition"
-                aria-label="Clear Search Input"
-              >
-                <X size={14} />
-              </button>
-            )}
-            <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 items-center gap-1 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/60 px-1.5 py-0.5 rounded border border-slate-800">
-              ⌘K
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 text-slate-400 hover:text-white rounded-full transition cursor-pointer"
+                  aria-label="Clear Search Input"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <div className="hidden md:flex items-center gap-1 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800/80 pointer-events-none select-none">
+                ⌘K
+              </div>
             </div>
           </div>
 

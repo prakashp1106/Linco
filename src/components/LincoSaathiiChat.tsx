@@ -859,7 +859,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
                           disabled={isThinking || chatLoading}
-                          className="w-full pl-32 pr-14 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
+                          className="w-full pl-28 sm:pl-32 pr-12 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
                         />
 
                         {/* Send Button */}
