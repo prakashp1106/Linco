@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Claim } from "../types";
 import { apiService } from "../services/api";
+import { getWhatsAppLink } from "../utils/whatsapp";
 
 interface ClaimTrackerProps {
   isOpen: boolean;
@@ -555,10 +556,12 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                                   Copy Number
                                 </button>
                                 <a
-                                  href={`tel:${claim.revealedOwnerContact || "+918838271822"}`}
-                                  className="py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-center transition cursor-pointer"
+                                  href={getWhatsAppLink(claim.revealedOwnerContact || "8838271822", `Hi! I verified my claim for '${claim.postTitle}' on LINCO. Let's arrange a handover meeting!`)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-center transition cursor-pointer flex items-center justify-center gap-1 font-bold"
                                 >
-                                  Call Finder
+                                  <MessageSquare size={10} /> Chat on WhatsApp
                                 </a>
                               </div>
                             </div>

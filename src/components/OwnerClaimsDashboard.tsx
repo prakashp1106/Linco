@@ -27,6 +27,7 @@ import { Post, Claim } from "../types";
 import { apiService } from "../services/api";
 import { decryptContact } from "../services/encryptionService";
 import { formatKolkataTimestamp } from "../utils/date";
+import { getWhatsAppLink } from "../utils/whatsapp";
 
 interface OwnerClaimsDashboardProps {
   isOpen: boolean;
@@ -737,7 +738,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                       <div className="p-3 bg-emerald-950/10 rounded-xl border border-emerald-500/10 space-y-1.5">
                                         <span className="block text-[8px] font-mono font-bold text-emerald-400 uppercase tracking-wider">Unlocked Claimant Contact</span>
                                         <a
-                                          href={`https://wa.me/91${claim.claimantContact}`}
+                                          href={getWhatsAppLink(claim.claimantContact, `Hi ${claim.claimantName}! I approved your claim for '${post.item}' on LINCO. Let's arrange a handover!`)}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-[11px] font-mono font-black text-slate-200 hover:text-emerald-400 flex items-center gap-1"
