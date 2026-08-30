@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
+import { formatWhatsAppNumber, getWhatsAppLink } from "./utils/whatsapp";
 import confetti from "canvas-confetti";
 
 import { usePosts } from "./hooks/usePosts";
@@ -1083,11 +1084,11 @@ export default function App() {
   const handleSharePostText = (p: Post, e: React.MouseEvent) => {
     e.stopPropagation();
     const isUnlocked = unlockedPosts.includes(p.id);
-    const displayContact = isUnlocked
-      ? (decryptedContacts[p.id] || p.contact)
-      : (p.maskedContact || "+91 ******" + (p.contact.startsWith("ENC:") ? "XX" : p.contact.slice(-2)));
+    const rawContact = isUnlocked ? (decryptedContacts[p.id] || p.contact) : p.contact;
+    const cleanNumber = formatWhatsAppNumber(rawContact);
+    const whatsappLink = cleanNumber ? `https://wa.me/${cleanNumber}` : `https://wa.me/91${p.contact}`;
 
-    const shareText = `🔍 LINCO Lost & Found 🔍\n\n📢 Status: ${p.type === "Lost" ? "🚨 LOST" : "✅ FOUND"}\n📦 Item: ${p.item}\n📍 Location: ${p.address}\n📝 Description: ${p.details}${p.reward ? `\n💰 Reward Offered: ₹${p.reward}` : ""}\n\n📱 Contact via WhatsApp at: wa.me/91${displayContact}\n\n— Tracked on LINCO AI`;
+    const shareText = `🔍 LINCO Lost & Found 🔍\n\n📢 Status: ${p.type === "Lost" ? "🚨 LOST" : "✅ FOUND"}\n📦 Item: ${p.item}\n📍 Location: ${p.address}\n📝 Description: ${p.details}${p.reward ? `\n💰 Reward Offered: ₹${p.reward}` : ""}\n\n📱 Direct WhatsApp Chat: ${whatsappLink}\n\n— Tracked on LINCO AI`;
 
     navigator.clipboard.writeText(shareText)
       .then(() => {
