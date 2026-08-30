@@ -37,6 +37,15 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = 3000;
 
+// Global process error handlers to prevent unhandled background rejections (e.g. Firebase ADC / Gemini API errors) from crashing the server
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[PROCESS-WARN] Unhandled Rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[PROCESS-ERROR] Uncaught Exception:", error);
+});
+
 // Secure Headers with Helmet configured for iframe embedding & Leaflet map tile rendering
 app.use(
   helmet({
@@ -353,8 +362,15 @@ interface AIFeatures {
 }
 
 // Haversine distance on server
-function calculateHaversineDistance(lat1?: number, lon1?: number, lat2?: number, lon2?: number): number | null {
-  if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return null;
+function calculateHaversineDistance(lat1?: number | null, lon1?: number | null, lat2?: number | null, lon2?: number | null): number | null {
+  if (
+    lat1 === undefined || lat1 === null || typeof lat1 !== "number" ||
+    lon1 === undefined || lon1 === null || typeof lon1 !== "number" ||
+    lat2 === undefined || lat2 === null || typeof lat2 !== "number" ||
+    lon2 === undefined || lon2 === null || typeof lon2 !== "number"
+  ) {
+    return null;
+  }
   const R = 6371; // km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -455,7 +471,7 @@ Extract and output ONLY a valid JSON object matching the following structure. Do
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: parts,
         });
         return response.text || "{}";
@@ -943,7 +959,7 @@ Expected JSON format:
       const text = await callGeminiWithRetry(
         async () => {
           const response = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
+            model: "gemini-2.5-flash",
             contents: prompt,
           });
           return response.text || "{}";
@@ -1378,9 +1394,10 @@ app.get("/api/maps/autosuggest", async (req, res) => {
     let results: any[] = [];
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
+    // 1. Try MapmyIndia first (only if key is provided)
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/autoSuggest?query=${encodeURIComponent(query)}`;
       const response = await fetch(mapplsUrl, {
         headers: {
           "Referer": "https://apis.mappls.com"
@@ -1397,10 +1414,11 @@ app.get("/api/maps/autosuggest", async (req, res) => {
             eLoc: item.eLoc || String(Math.random())
           }));
           mapplsSuccess = results.length > 0;
+          }
         }
+      } catch (err) {
+        console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
       }
-    } catch (err) {
-      console.error("Server MapmyIndia AutoSuggest Proxy Error, falling back to Nominatim:", err);
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no results
@@ -1456,9 +1474,10 @@ app.get("/api/maps/revgeocode", async (req, res) => {
     let addressText = "";
     let mapplsSuccess = false;
 
-    // 1. Try MapmyIndia first
-    try {
-      const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
+    // 1. Try MapmyIndia first (only if key is provided)
+    if (apiKey) {
+      try {
+        const mapplsUrl = `https://apis.mappls.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lng}`;
       const response = await fetch(mapplsUrl, {
         headers: {
           "Referer": "https://apis.mappls.com"
@@ -1477,10 +1496,11 @@ app.get("/api/maps/revgeocode", async (req, res) => {
             result.state
           ].filter(Boolean).join(", ");
           if (addressText) mapplsSuccess = true;
+          }
         }
+      } catch (err) {
+        console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
       }
-    } catch (err) {
-      console.error("Server MapmyIndia Reverse Geocoding Error, falling back to Nominatim:", err);
     }
 
     // 2. Fall back to OpenStreetMap Nominatim if MapmyIndia failed or returned no address
@@ -1583,7 +1603,19 @@ async function deleteCloudinaryImage(url: string | null | undefined) {
   }
 }
 
-// Base64 Image Upload & Storage Endpoint (Replaces heavy base64 storage in db)
+// Helper to save base64 data to local file system fallback
+function saveBase64ToFile(base64Str: string, prefix: string): string {
+  const matches = base64Str.match(/^data:(.*?);base64,(.*)$/);
+  const ext = matches && matches[1] ? (matches[1].split("/")[1] || "jpeg") : "jpeg";
+  const data = matches ? matches[2] : base64Str;
+  const buffer = Buffer.from(data, "base64");
+  const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+  const filepath = path.join(UPLOADS_DIR, filename);
+  fs.writeFileSync(filepath, buffer);
+  return `/uploads/${filename}`;
+}
+
+// Base64 Image Upload & Storage Endpoint (Cloudinary with local file fallback)
 app.post("/api/upload", async (req, res) => {
   try {
     const { image, thumbnail } = req.body;
@@ -1591,37 +1623,51 @@ app.post("/api/upload", async (req, res) => {
       return res.status(400).json({ error: "Image base64 data required" });
     }
 
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      return res.status(500).json({ error: "Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET." });
-    }
+    const hasCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
 
-    // Upload main image to Cloudinary
-    console.log("Uploading main image to Cloudinary...");
-    const mainUpload = await cloudinary.uploader.upload(image, {
-      folder: "linco/posts",
-    });
-    
-    let thumbnailUrl = mainUpload.secure_url;
-    
-    // Upload thumbnail to Cloudinary if provided
-    if (thumbnail) {
+    if (hasCloudinary) {
       try {
-        console.log("Uploading thumbnail to Cloudinary...");
-        const thumbUpload = await cloudinary.uploader.upload(thumbnail, {
-          folder: "linco/thumbnails",
+        console.log("Uploading main image to Cloudinary...");
+        const mainUpload = await cloudinary.uploader.upload(image, {
+          folder: "linco/posts",
         });
-        thumbnailUrl = thumbUpload.secure_url;
-      } catch (thumbErr) {
-        console.error("Cloudinary thumbnail upload error:", thumbErr);
-        // Fall back to main image URL if thumbnail upload fails
+
+        let thumbnailUrl = mainUpload.secure_url;
+
+        if (thumbnail) {
+          try {
+            console.log("Uploading thumbnail to Cloudinary...");
+            const thumbUpload = await cloudinary.uploader.upload(thumbnail, {
+              folder: "linco/thumbnails",
+            });
+            thumbnailUrl = thumbUpload.secure_url;
+          } catch (thumbErr) {
+            console.error("Cloudinary thumbnail upload error:", thumbErr);
+          }
+        }
+
+        console.log("Successfully uploaded to Cloudinary! URLs:", { url: mainUpload.secure_url, thumbnailUrl });
+
+        return res.json({
+          url: mainUpload.secure_url,
+          thumbnailUrl: thumbnailUrl
+        });
+      } catch (cloudinaryErr) {
+        console.error("Cloudinary upload failed, falling back to local file storage:", cloudinaryErr);
       }
+    } else {
+      console.log("Cloudinary credentials missing, using local disk storage for upload...");
     }
 
-    console.log("Successfully uploaded to Cloudinary! URLs:", { url: mainUpload.secure_url, thumbnailUrl });
+    // Local disk fallback when Cloudinary is unconfigured or fails
+    const mainUrl = saveBase64ToFile(image, "img");
+    const thumbUrl = thumbnail ? saveBase64ToFile(thumbnail, "thumb") : mainUrl;
 
-    res.json({
-      url: mainUpload.secure_url,
-      thumbnailUrl: thumbnailUrl
+    console.log("Successfully saved image to local disk! URLs:", { url: mainUrl, thumbnailUrl: thumbUrl });
+
+    return res.json({
+      url: mainUrl,
+      thumbnailUrl: thumbUrl
     });
   } catch (error: any) {
     console.error("Image upload processing error:", error);
@@ -1636,7 +1682,7 @@ const usernameReqSchema = z.object({
     .refine(val => val === val.toLowerCase(), "Username must be in lowercase.")
 });
 
-// Check if username already exists in Firestore users collection
+// Check if username already exists in Firestore users collection or local fallback DB
 app.post("/api/auth/check-username", async (req, res) => {
   try {
     const parseResult = usernameReqSchema.safeParse(req.body);
@@ -1645,9 +1691,14 @@ app.post("/api/auth/check-username", async (req, res) => {
     }
     const { username } = parseResult.data;
     const cleanUsername = username.trim().toLowerCase();
-    if (!db) {
-      return res.status(503).json({ error: "Database offline." });
+
+    if (useLocalFallback || !db) {
+      const local = readLocalDB();
+      const users = local.users || [];
+      const exists = users.some((u: any) => u.username === cleanUsername);
+      return res.json({ exists });
     }
+
     const snapshot = await db.collection("users").where("username", "==", cleanUsername).limit(1).get();
     return res.json({ exists: !snapshot.empty });
   } catch (error: any) {
@@ -1665,9 +1716,20 @@ app.post("/api/auth/resolve-username", async (req, res) => {
     }
     const { username } = parseResult.data;
     const cleanUsername = username.trim().toLowerCase();
-    if (!db) {
-      return res.status(503).json({ error: "Database offline. Unable to resolve username." });
+
+    if (useLocalFallback || !db) {
+      const local = readLocalDB();
+      const users = local.users || [];
+      const user = users.find((u: any) => u.username === cleanUsername);
+      if (!user) {
+        return res.status(404).json({ error: "Username not found." });
+      }
+      if (!user.email) {
+        return res.status(400).json({ error: "This account cannot be used for username login." });
+      }
+      return res.json({ email: user.email });
     }
+
     const snapshot = await db.collection("users").where("username", "==", cleanUsername).limit(1).get();
     if (snapshot.empty) {
       return res.status(404).json({ error: "Username not found." });
@@ -2354,13 +2416,13 @@ function generateTrackingCode(): string {
 }
 
 // 1. Submit a Claim
-app.post("/api/posts/:id/claims", requireGeminiApiKey, async (req, res) => {
+app.post("/api/posts/:id/claims", async (req, res) => {
   try {
     const { id } = req.params;
     const { claimantName, claimantContact, questions, answers, matchedPostId } = req.body;
 
-    if (!claimantName || !claimantContact || !questions || !answers) {
-      return res.status(400).json({ error: "Missing required claim fields" });
+    if (!claimantName || !claimantContact || !questions || !answers || !Array.isArray(questions) || !Array.isArray(answers)) {
+      return res.status(400).json({ error: "Missing required claim fields or questions/answers must be arrays" });
     }
 
     // Load parent post
@@ -2412,7 +2474,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -3088,7 +3150,7 @@ The JSON object MUST have exactly these keys:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: [imagePart, { text: prompt }],
         });
         return response.text || "{}";
@@ -3135,7 +3197,7 @@ The JSON object MUST have exactly these keys:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -3172,7 +3234,7 @@ Return ONLY the final enhanced description. Do not include introductory text, he
     const enhancedText = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text?.trim() || description;
@@ -3208,7 +3270,7 @@ Be positive, logical, and concise. Keep your answer under 4 sentences total. Ret
     const analysisText = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text?.trim() || "";
@@ -3251,7 +3313,7 @@ Return ONLY a valid JSON object (no markdown backticks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -3306,7 +3368,7 @@ Format:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text || "[]";
@@ -3367,7 +3429,7 @@ Return ONLY a valid JSON object (no markdown backticks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -3452,7 +3514,7 @@ Task: Output a single, strictly valid JSON response containing exactly these key
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents: systemInstruction,
           config: {
             responseMimeType: "application/json"
@@ -3512,9 +3574,16 @@ async function startServer() {
     });
   }
 
+  // Catch-all 404 handler for unmatched API routes
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({ error: `API route ${req.method} ${req.path} not found.` });
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`LINCO Backend Server listening on http://0.0.0.0:${PORT}`);
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("Critical failure starting server:", err);
+});
