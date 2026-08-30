@@ -169,7 +169,11 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
       const interval = setInterval(() => {
         refreshClaimDetails();
       }, 5000); // Poll every 5s
-      return () => clearInterval(interval);
+      setPollingTimer(interval);
+      return () => {
+        clearInterval(interval);
+        setPollingTimer(null);
+      };
     }
   }, [claim?.id, claim?.status]);
 
