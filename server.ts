@@ -1373,7 +1373,8 @@ app.get("/api/maps/autosuggest", async (req, res) => {
       return res.json({ suggestedLocations: [] });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security: Retrieve MapmyIndia API key from environment variable to prevent hardcoded credential leakage
+    const apiKey = process.env.MAPMYINDIA_API_KEY || "";
     let results: any[] = [];
     let mapplsSuccess = false;
 
@@ -1450,7 +1451,8 @@ app.get("/api/maps/revgeocode", async (req, res) => {
       return res.status(400).json({ error: "Missing lat or lng" });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security: Retrieve MapmyIndia API key from environment variable to prevent hardcoded credential leakage
+    const apiKey = process.env.MAPMYINDIA_API_KEY || "";
     let addressText = "";
     let mapplsSuccess = false;
 
