@@ -71,6 +71,23 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("+919876543210")).toBe(true);
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
+      expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Spam & Abuse Defense Edge Cases", () => {
+    it("safely handles null, undefined and non-string inputs", () => {
+      expect(sanitizeText(null as any)).toBe("");
+      expect(sanitizeText(undefined as any)).toBe("");
+      expect(hasDangerousContent("")).toBe(false);
+      expect(isValidPinFormat(null)).toBe(false);
+      expect(maskPhoneNumber("12345")).toBe("******");
+    });
+
+    it("detects eval and malicious SVG onload payloads", () => {
+      expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
+      expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
+      expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
 });
