@@ -127,6 +127,16 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests from this IP, please try again later." },
 });
 
+// Stricter rate limiter for sensitive authentication and security PIN verification endpoints
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Limit each IP to 15 requests per 15 minutes to prevent PIN & username brute-force
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false },
+  message: { error: "Too many attempts from this IP, please try again after 15 minutes." },
+});
+
 app.use("/api/", apiLimiter);
 
 // Set high body limits to allow base64 images to pass through
@@ -1708,7 +1718,7 @@ app.post("/api/auth/check-username", async (req, res) => {
 });
 
 // Resolve username to its stored email
-app.post("/api/auth/resolve-username", async (req, res) => {
+app.post("/api/auth/resolve-username", authLimiter, async (req, res) => {
   try {
     const parseResult = usernameReqSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -2181,7 +2191,7 @@ app.post("/api/posts/:id/view", async (req, res) => {
 });
 
 // Verify ownership PIN of a post without modification
-app.post("/api/posts/:id/verify-pin", async (req, res) => {
+app.post("/api/posts/:id/verify-pin", authLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const { securityPin } = req.body;
