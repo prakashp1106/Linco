@@ -2592,14 +2592,17 @@ app.post("/api/posts/:id/claims/list", async (req, res) => {
   }
 });
 
-// 3. Track a Claim (Supports multi-device via Claim ID, enters the Recovery Room when approved)
+// 3. Track a Claim (Supports multi-device via Claim ID or Tracking Code, enters the Recovery Room when approved)
 app.get("/api/claims/track", async (req, res) => {
   try {
     const claimId = req.query.claimId as string;
+    const code = req.query.code as string;
     const postId = req.query.postId as string;
 
-    if (!claimId) {
-      return res.status(400).json({ error: "Claim ID is required" });
+    const queryKey = (claimId || code || "").trim();
+
+    if (!queryKey) {
+      return res.status(400).json({ error: "Claim ID or Tracking Code is required" });
     }
 
     let claim: Claim | null = null;
@@ -2608,21 +2611,29 @@ app.get("/api/claims/track", async (req, res) => {
     if (useLocalFallback) {
       claim = local.claims?.find((c: Claim) => {
         if (postId && c.postId !== postId) return false;
-        return c.id === claimId;
+        return (
+          c.id === queryKey ||
+          (c.trackingCode && c.trackingCode.toUpperCase() === queryKey.toUpperCase())
+        );
       }) || null;
     } else {
       if (postId) {
         const claimsSnapshot = await db!.collection("claims").where("postId", "==", postId).get();
         claimsSnapshot.forEach(doc => {
           const c = doc.data() as Claim;
-          if (c.id === claimId) {
+          if (c.id === queryKey || (c.trackingCode && c.trackingCode.toUpperCase() === queryKey.toUpperCase())) {
             claim = c;
           }
         });
       } else {
-        const doc = await db!.collection("claims").doc(claimId).get();
+        const doc = await db!.collection("claims").doc(queryKey).get();
         if (doc.exists) {
           claim = doc.data() as Claim;
+        } else {
+          const snapshot = await db!.collection("claims").where("trackingCode", "==", queryKey.toUpperCase()).limit(1).get();
+          if (!snapshot.empty) {
+            claim = snapshot.docs[0].data() as Claim;
+          }
         }
       }
     }
