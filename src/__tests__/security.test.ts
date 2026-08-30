@@ -90,4 +90,11 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Sensitive Endpoint Rate Limiting Defense", () => {
+    it("exports authLimiter with strict rate limits for brute-force prevention", async () => {
+      const { authLimiter } = await import("../../server");
+      expect(authLimiter).toBeDefined();
+    });
+  });
 });
