@@ -251,7 +251,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             placeholder="Search local landmark, college, village, city (MapmyIndia)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 shadow-lg backdrop-blur-md"
+            className="w-full pl-10 pr-14 py-2.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 shadow-lg backdrop-blur-md"
           />
           {searchQuery && (
             <button
@@ -260,7 +260,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 setSearchQuery("");
                 setSearchResults([]);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 hover:text-slate-300 font-bold"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white font-bold p-1 rounded-full cursor-pointer"
             >
               Clear
             </button>

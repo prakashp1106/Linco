@@ -4,6 +4,12 @@
 
 export function formatWhatsAppNumber(phone: string): string {
   if (!phone) return "";
+
+  // If contact is encrypted (starts with ENC:), do not attempt formatting as phone
+  if (phone.startsWith("ENC:") || phone.includes("*")) {
+    return "";
+  }
+
   // Strip all non-digit characters
   let cleaned = phone.replace(/\D/g, "");
 
@@ -17,6 +23,11 @@ export function formatWhatsAppNumber(phone: string): string {
     cleaned = `91${cleaned}`;
   }
 
+  // Validate length: valid international phone numbers are between 10 and 15 digits
+  if (cleaned.length < 10 || cleaned.length > 15) {
+    return "";
+  }
+
   return cleaned;
 }
 
@@ -27,5 +38,6 @@ export function getWhatsAppLink(phone: string, message?: string): string {
   const defaultMessage = message || "Hi! I am reaching out regarding the item listing on LINCO AI.";
   const encodedText = encodeURIComponent(defaultMessage);
 
-  return `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedText}`;
+  // Using official WhatsApp wa.me click-to-chat URL format
+  return `https://wa.me/${cleanNumber}?text=${encodedText}`;
 }
