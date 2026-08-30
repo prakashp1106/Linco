@@ -1,0 +1,23 @@
+{
+  "name": "LINCO – AI Lost & Found India",
+  "short_name": "LINCO",
+  "description": "AI-powered lost and found recovery network with Gemini matching, secure PIN verification, and instant claim tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=192&h=192&q=80",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=512&h=512&q=80",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["utilities", "productivity", "social"]
+}

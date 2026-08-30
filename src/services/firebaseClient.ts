@@ -6,6 +6,7 @@ import {
   browserPopupRedirectResolver 
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider, CustomProvider } from "firebase/app-check";
 import fileConfig from "../../firebase-applet-config.json";
 
 // Merge environment variables and fallback JSON configuration
@@ -61,6 +62,33 @@ if (!isConfigValid) {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// Firebase App Check Initialization (Separating Dev/Debug tokens from Production)
+let appCheck: any = null;
+if (typeof window !== "undefined" && isConfigValid) {
+  try {
+    const recaptchaSiteKey = metaEnv.VITE_RECAPTCHA_V3_SITE_KEY;
+    const isDebugMode = metaEnv.DEV || metaEnv.VITE_FIREBASE_APPCHECK_DEBUG === "true";
+    const debugToken = metaEnv.VITE_FIREBASE_APPCHECK_DEBUG_TOKEN;
+
+    if (isDebugMode && debugToken) {
+      // In local development or testing with debug token
+      (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    }
+
+    if (recaptchaSiteKey) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+      console.log("[FirebaseClient] Firebase App Check initialized with ReCaptchaV3 provider.");
+    } else {
+      console.log("[FirebaseClient] App Check running in standby mode (VITE_RECAPTCHA_V3_SITE_KEY not configured).");
+    }
+  } catch (appCheckErr) {
+    console.warn("[FirebaseClient] App Check initialization skipped/failed gracefully:", appCheckErr);
+  }
+}
+
 // Explicitly initialize Auth using modern Firebase v10+ initializeAuth pattern with injected dependencies
 let auth;
 try {
@@ -76,5 +104,5 @@ try {
 
 const db = getFirestore(app);
 
-export { app, auth, db, isConfigValid };
+export { app, auth, db, appCheck, isConfigValid };
 
