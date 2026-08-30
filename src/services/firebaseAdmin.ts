@@ -8,7 +8,7 @@ import { getFirestore, Firestore } from "firebase-admin/firestore";
 import fs from "fs";
 import path from "path";
 
-let db: Firestore;
+let db: Firestore | null = null;
 let configDatabaseId = "";
 
 try {
@@ -87,8 +87,8 @@ try {
   db = getFirestore(app, configDatabaseId || undefined);
   console.log("[FIREBASE-INIT] Firestore database client ready.");
 } catch (error: any) {
-  console.error("[FIREBASE-INIT] Critical Error initializing Firebase:", error);
-  throw error;
+  console.error("[FIREBASE-INIT] Critical Error initializing Firebase (will fall back to local file storage):", error);
+  db = null;
 }
 
 export { db };
