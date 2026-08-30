@@ -2007,6 +2007,8 @@ app.put("/api/posts/:id/resolve", async (req, res) => {
 app.put("/api/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    // Security check: Validate security PIN presence to prevent authorization bypass
+    const { securityPin } = actionPinSchema.parse(req.body);
     const { securityPin, ...inputData } = req.body;
 
     // Security Check: Enforce authentication via securityPin to prevent unauthorized modification
@@ -2034,6 +2036,8 @@ app.put("/api/posts/:id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
+
+    const { securityPin: _pin, ...otherFields } = req.body;
 
     // Security Check: Validate PIN against stored hash or fallback
     const expectedPin = post.securityPin || "1234";
