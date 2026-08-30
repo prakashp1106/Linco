@@ -12,6 +12,7 @@ import { LiveMissingTimer } from "./LiveMissingTimer";
 import { MiniMap } from "./LeafletMap";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { formatKolkataTimestamp } from "../utils/date";
+import { getWhatsAppLink } from "../utils/whatsapp";
 
 interface PostCardProps {
   post: Post;
@@ -269,7 +270,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                     <h4 className="text-xs font-bold text-slate-200 mb-0.5">{match.item}</h4>
                     <p className="text-[11px] text-slate-400 leading-normal mb-2">{match.reason}</p>
                     <a
-                      href={`https://wa.me/91${match.contact}?text=Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`}
+                      href={getWhatsAppLink(match.contact, `Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}

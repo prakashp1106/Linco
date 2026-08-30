@@ -1373,7 +1373,8 @@ app.get("/api/maps/autosuggest", async (req, res) => {
       return res.json({ suggestedLocations: [] });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security: Retrieve MapmyIndia API key from environment variable to prevent hardcoded credential leakage
+    const apiKey = process.env.MAPMYINDIA_API_KEY || "";
     let results: any[] = [];
     let mapplsSuccess = false;
 
@@ -1450,7 +1451,8 @@ app.get("/api/maps/revgeocode", async (req, res) => {
       return res.status(400).json({ error: "Missing lat or lng" });
     }
 
-    const apiKey = "gotklovuwdujpswuvxrfqwrecuoqfnycpqpy";
+    // Security: Retrieve MapmyIndia API key from environment variable to prevent hardcoded credential leakage
+    const apiKey = process.env.MAPMYINDIA_API_KEY || "";
     let addressText = "";
     let mapplsSuccess = false;
 
@@ -2007,6 +2009,12 @@ app.put("/api/posts/:id", async (req, res) => {
     const { id } = req.params;
     // Security check: Validate security PIN presence to prevent authorization bypass
     const { securityPin } = actionPinSchema.parse(req.body);
+    const { securityPin, ...inputData } = req.body;
+
+    // Security Check: Enforce authentication via securityPin to prevent unauthorized modification
+    if (!securityPin) {
+      return res.status(400).json({ error: "Security PIN is required to update a post" });
+    }
 
     let post: Post | null = null;
     let local = useLocalFallback ? readLocalDB() : null;
@@ -2031,6 +2039,7 @@ app.put("/api/posts/:id", async (req, res) => {
 
     const { securityPin: _pin, ...otherFields } = req.body;
 
+    // Security Check: Validate PIN against stored hash or fallback
     const expectedPin = post.securityPin || "1234";
     const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
       ? await bcrypt.compare(securityPin, expectedPin)
@@ -2040,10 +2049,14 @@ app.put("/api/posts/:id", async (req, res) => {
       return res.status(403).json({ error: "Wrong PIN!" });
     }
 
+    // Security Check: Sanitize and validate update fields using schema partial to prevent mass assignment
+    const validatedUpdates = createPostSchema.partial().parse(inputData);
+
     const updatedPost: Post = {
       ...post,
-      ...otherFields,
-      id, // protect document ID
+      ...validatedUpdates,
+      id: post.id, // Protect system document ID from client modification
+      securityPin: post.securityPin, // Preserve existing hashed PIN
     };
 
     if (useLocalFallback) {
