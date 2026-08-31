@@ -29,6 +29,7 @@ import {
 import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { imageService } from "../services/imageService";
+import { LincoLogo } from "./LincoLogo";
 
 interface AuthFlowProps {
   onLoginSuccess: (fullName: string, email: string) => void;
@@ -51,7 +52,7 @@ export function AuthFlow({
   addToast,
   onSplashEnd,
   isSplashOnly = false,
-  initialScreen = "splash"
+  initialScreen = "welcome"
 }: AuthFlowProps) {
   const [screen, setScreen] = useState<ScreenType>(initialScreen);
   const [loading, setLoading] = useState(false);
@@ -827,30 +828,12 @@ export function AuthFlow({
           {screen === "splash" && (
             <div
               key="splash"
-              className="flex flex-col items-center justify-center p-8 text-center space-y-8 relative z-20 pointer-events-auto"
+              className="flex flex-col items-center justify-center p-8 text-center space-y-6 relative z-20 pointer-events-auto"
             >
-              <div className="relative flex flex-col items-center">
-                {/* Subtle Glow Ring */}
-                <div className="absolute w-24 h-24 rounded-full bg-indigo-500/10 blur-xl animate-pulse pointer-events-none" />
-                <div className="w-20 h-20 rounded-2.5xl bg-gradient-to-br from-indigo-600 to-cyan-500 flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.25)] border border-indigo-400/20">
-                  <Sparkles size={38} className="text-white" />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h1 className="font-sans font-extrabold text-4xl tracking-tight text-white select-none drop-shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                  LINCO
-                </h1>
-                <p className="text-xs font-semibold text-indigo-400 tracking-wider uppercase font-mono">
-                  Locate &bull; Verify &bull; Reunite
-                </p>
-                <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[220px] mx-auto">
-                  Because every lost thing has a story.
-                </p>
-              </div>
+              <LincoLogo variant="stacked" size="hero" animated showTagline taglineText="Because every lost thing has a story." />
 
               {/* Progress Indicator */}
-              <div className="w-28 h-1 bg-[#12121a] rounded-full overflow-hidden relative">
+              <div className="w-28 h-1 bg-[#12121a] rounded-full overflow-hidden relative mt-4">
                 <div 
                   className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full animate-pulse"
                   style={{ left: "25%" }}
@@ -867,20 +850,10 @@ export function AuthFlow({
             >
               {/* Header */}
               <div className="text-center space-y-3 pt-2">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center mx-auto mb-2.5 shadow-[0_0_20px_rgba(99,102,241,0.2)] border border-white/5">
-                  <Sparkles size={24} className="text-white" />
-                </div>
-                <div className="space-y-1.5">
-                  <h2 className="font-sans font-extrabold text-2xl tracking-tight text-slate-100">
-                    Welcome to LINCO
-                  </h2>
-                  <p className="text-xs font-semibold text-indigo-400 tracking-wide font-mono uppercase">
-                    Locate &bull; Verify &bull; Reunite
-                  </p>
-                  <p className="text-xs text-slate-400 leading-relaxed max-w-[290px] mx-auto">
-                    Recover lost belongings safely through trusted citizens and intelligent verification.
-                  </p>
-                </div>
+                <LincoLogo variant="stacked" size="lg" className="mb-2" />
+                <p className="text-xs text-slate-400 leading-relaxed max-w-[290px] mx-auto">
+                  Recover lost belongings safely through trusted citizens and intelligent verification.
+                </p>
               </div>
 
               {/* Button Actions */}

@@ -6,6 +6,7 @@
 import React from "react";
 import { Sparkles, ShieldCheck, HelpCircle, User, ExternalLink, Mail, Globe, Map } from "lucide-react";
 import { motion } from "motion/react";
+import { LincoLogo } from "./LincoLogo";
 
 export const AboutTab: React.FC = () => {
   return (
@@ -17,13 +18,11 @@ export const AboutTab: React.FC = () => {
       id="about-tab"
     >
       {/* Hero */}
-      <div className="text-center space-y-3 p-8 rounded-3xl bg-[#07070a]/90 border border-[#161621] backdrop-blur-md relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-cyan-500/10 blur-3xl rounded-full" />
-        <h2 className="text-2xl sm:text-3xl font-sans font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
-          About LINCO AI Portal
-        </h2>
-        <p className="text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          The next-generation, community-driven, AI-orchestrated Lost &amp; Found platform designed for cities across India. Powered by Gemini, secured with end-to-end client cryptography.
+      <div className="text-center space-y-4 p-8 rounded-3xl bg-[#07070a]/90 border border-[#161621] backdrop-blur-md relative overflow-hidden flex flex-col items-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-indigo-500/10 blur-3xl rounded-full" />
+        <LincoLogo variant="stacked" size="lg" showTagline taglineText="Locate • Verify • Reunite" />
+        <p className="text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed mt-2">
+          The next-generation, community-driven, AI-orchestrated Lost &amp; Found platform designed for citizens across India. Powered by Gemini, secured with end-to-end client cryptography.
         </p>
       </div>
 

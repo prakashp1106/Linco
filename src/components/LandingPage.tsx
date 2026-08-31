@@ -27,6 +27,7 @@ import {
   Bot
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { LincoLogo } from "./LincoLogo";
 
 interface LandingPageProps {
   stats: {
@@ -183,14 +184,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="space-y-3"
+            className="flex flex-col items-center justify-center space-y-2"
           >
-            <h2 className="text-sm font-black tracking-[0.3em] text-slate-100 font-sans uppercase">
-              LINCO
-            </h2>
-            <p className="text-[10px] md:text-xs font-mono font-bold text-indigo-400 uppercase tracking-[0.2em] max-w-md mx-auto">
-              Locate &bull; Identify &bull; Notify &bull; Connect &bull; Owner
-            </p>
+            <LincoLogo variant="stacked" size="lg" showTagline taglineText="Locate • Verify • Reunite" />
           </motion.div>
 
           <motion.h1
@@ -1090,8 +1086,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="pt-24 pb-8 border-t border-[#161621] mt-24">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16">
           <div className="md:col-span-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-black tracking-tight text-white font-mono">LINCO</span>
+            <div className="flex items-center gap-3">
+              <LincoLogo variant="full" size="sm" />
               <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[#12121a] border border-[#1c1c26] text-indigo-400 font-bold uppercase tracking-wider">
                 V2.0
               </span>

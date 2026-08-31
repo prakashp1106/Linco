@@ -51,6 +51,8 @@ import { PrivacyTrustCenter } from "./components/PrivacyTrustCenter";
 import { UserDashboard } from "./components/UserDashboard";
 import { CookieConsent } from "./components/CookieConsent";
 import { AuthFlow } from "./components/AuthFlow";
+import { SplashScreen } from "./components/SplashScreen";
+import { LincoLogo } from "./components/LincoLogo";
 import { auth, db } from "./services/firebaseClient";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -1120,16 +1122,12 @@ export default function App() {
 
   if (isSplashActive) {
     return (
-      <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-dot-grid">
-        <CanvasParticles />
-        <AuthFlow 
-          key="splash"
-          onLoginSuccess={handleLoginSuccess} 
-          addToast={addToast} 
-          onSplashEnd={() => setIsSplashActive(false)}
-          isSplashOnly={isLoggedIn}
+      <AnimatePresence mode="wait">
+        <SplashScreen 
+          key="linco-splash"
+          onComplete={() => setIsSplashActive(false)} 
         />
-      </div>
+      </AnimatePresence>
     );
   }
 
@@ -1234,12 +1232,11 @@ export default function App() {
           >
             <Menu size={20} />
           </button>
-          <span 
-            onClick={() => setActiveTab("home")}
-            className="font-sans font-black text-lg tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-1.5 cursor-pointer"
-          >
-            LINCO
-          </span>
+          <LincoLogo 
+            variant="full" 
+            size="sm" 
+            onClick={() => setActiveTab("home")} 
+          />
         </div>
 
         {/* CENTER */}
@@ -1317,9 +1314,7 @@ export default function App() {
               <div className="p-6 flex-1 overflow-y-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-sans font-black text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                    LINCO Menu
-                  </span>
+                  <LincoLogo variant="full" size="md" />
                   <button 
                     onClick={() => setDrawerOpen(false)}
                     className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
@@ -1931,8 +1926,8 @@ export default function App() {
 
       <footer className="relative z-10 border-t border-[#161621] py-12 text-center select-none" id="app-footer">
         <div className="max-w-md mx-auto space-y-6 px-4">
-          <div className="space-y-1.5">
-            <h4 className="text-sm font-black tracking-[0.2em] text-slate-100 font-sans uppercase">LINCO</h4>
+          <div className="space-y-2 flex flex-col items-center">
+            <LincoLogo variant="stacked" size="sm" showTagline={false} />
             <p className="text-[11px] text-slate-500 font-medium">Recovering what matters.</p>
             <p className="text-[10px] text-slate-400 font-normal leading-relaxed max-w-xs mx-auto">
               Trusted by communities.<br />
