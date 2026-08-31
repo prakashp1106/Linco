@@ -45,6 +45,7 @@ interface FeedListProps {
   onMarkResolved: (id: string, e: React.MouseEvent) => void;
   onDeletePost: (id: string, e: React.MouseEvent) => void;
   onStartClaim: (post: Post, e: React.MouseEvent) => void;
+  onIHaveThisItem?: (post: Post, e: React.MouseEvent) => void;
   onSharePost: (post: Post, e: React.MouseEvent) => void;
   onShareAsImage: (post: Post, e: React.MouseEvent) => void;
   onShowQrCode: (post: Post, e: React.MouseEvent) => void;
@@ -182,6 +183,7 @@ export const FeedList: React.FC<FeedListProps> = ({
   onMarkResolved,
   onDeletePost,
   onStartClaim,
+  onIHaveThisItem,
   onSharePost,
   onShareAsImage,
   onShowQrCode,
@@ -1032,6 +1034,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                   onMarkResolved={onMarkResolved}
                   onDeletePost={onDeletePost}
                   onStartClaim={onStartClaim}
+                  onIHaveThisItem={onIHaveThisItem}
                   onSharePost={onSharePost}
                   onShareAsImage={onShareAsImage}
                   onShowQrCode={onShowQrCode}

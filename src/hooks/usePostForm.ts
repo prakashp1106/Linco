@@ -32,6 +32,10 @@ export function usePostForm() {
   const [fUrgency, setFUrgency] = useState<UrgencyType>("Normal");
   const [fImage, setFImage] = useState<string | null>(null);
   const [fTimeline, setFTimeline] = useState("");
+  const [fCharacteristics, setFCharacteristics] = useState("");
+  const [fUniqueMarks, setFUniqueMarks] = useState("");
+  const [fContents, setFContents] = useState("");
+  const [fCondition, setFCondition] = useState("");
   const [fLat, setFLat] = useState<number | undefined>(undefined);
   const [fLng, setFLng] = useState<number | undefined>(undefined);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -50,6 +54,10 @@ export function usePostForm() {
       if (draft.urgency) setFUrgency(draft.urgency);
       if (draft.image) setFImage(draft.image);
       if (draft.timeline) setFTimeline(draft.timeline);
+      if (draft.characteristics) setFCharacteristics(draft.characteristics);
+      if (draft.uniqueMarks) setFUniqueMarks(draft.uniqueMarks);
+      if (draft.contents) setFContents(draft.contents);
+      if (draft.condition) setFCondition(draft.condition);
       if (draft.lat) setFLat(draft.lat);
       if (draft.lng) setFLng(draft.lng);
       if (draft.securityPin) setFSecurityPin(draft.securityPin);
@@ -70,12 +78,16 @@ export function usePostForm() {
         urgency: fUrgency,
         image: fImage,
         timeline: fTimeline,
+        characteristics: fCharacteristics,
+        uniqueMarks: fUniqueMarks,
+        contents: fContents,
+        condition: fCondition,
         lat: fLat,
         lng: fLng,
         securityPin: fSecurityPin,
       } as any);
     }
-  }, [fItem, fDetails, fType, fAddress, fReward, fContact, fCategory, fUrgency, fImage, fTimeline, fLat, fLng, fSecurityPin]);
+  }, [fItem, fDetails, fType, fAddress, fReward, fContact, fCategory, fUrgency, fImage, fTimeline, fCharacteristics, fUniqueMarks, fContents, fCondition, fLat, fLng, fSecurityPin]);
 
   const validateStep1 = useCallback(() => {
     const newErrors: FormErrors = {};
@@ -121,6 +133,10 @@ export function usePostForm() {
     setFUrgency("Normal");
     setFImage(null);
     setFTimeline("");
+    setFCharacteristics("");
+    setFUniqueMarks("");
+    setFContents("");
+    setFCondition("");
     setFLat(undefined);
     setFLng(undefined);
     setStep(1);
@@ -163,6 +179,14 @@ export function usePostForm() {
     setFImage,
     fTimeline,
     setFTimeline,
+    fCharacteristics,
+    setFCharacteristics,
+    fUniqueMarks,
+    setFUniqueMarks,
+    fContents,
+    setFContents,
+    fCondition,
+    setFCondition,
     fLat,
     setFLat,
     fLng,

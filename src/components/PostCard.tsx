@@ -24,6 +24,7 @@ interface PostCardProps {
   onMarkResolved: (id: string, e: React.MouseEvent) => void;
   onDeletePost: (id: string, e: React.MouseEvent) => void;
   onStartClaim: (post: Post, e: React.MouseEvent) => void;
+  onIHaveThisItem?: (post: Post, e: React.MouseEvent) => void;
   onSharePost: (post: Post, e: React.MouseEvent) => void;
   onShareAsImage: (post: Post, e: React.MouseEvent) => void;
   onShowQrCode: (post: Post, e: React.MouseEvent) => void;
@@ -41,6 +42,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onMarkResolved,
   onDeletePost,
   onStartClaim,
+  onIHaveThisItem,
   onSharePost,
   onShareAsImage,
   onShowQrCode,
@@ -187,18 +189,39 @@ export const PostCard: React.FC<PostCardProps> = ({
         </span>
       </div>
 
-      {/* Action Buttons: WhatsApp and Claim */}
+      {/* Action Buttons: WhatsApp and Claim / I Have This Item */}
       <div className="flex flex-wrap gap-2 pt-1 border-t border-[#14141e]/50">
         {!isResolved ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onStartClaim(post, e);
-            }}
-            className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer shadow-md shadow-indigo-950/20 active:scale-95"
-          >
-            <ShieldCheck size={14} /> {isLost ? "Verify Ownership" : "Submit Claim"}
-          </button>
+          <>
+            {isLost && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onIHaveThisItem) {
+                    onIHaveThisItem(post, e);
+                  } else {
+                    onStartClaim(post, e);
+                  }
+                }}
+                className="flex-1 min-w-[130px] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer shadow-md shadow-emerald-950/30 active:scale-95"
+              >
+                <Sparkles size={13} /> I Have This Item
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartClaim(post, e);
+              }}
+              className={`flex-1 min-w-[120px] py-2.5 rounded-xl ${
+                isLost
+                  ? "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                  : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-950/20"
+              } font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer active:scale-95`}
+            >
+              <ShieldCheck size={14} /> {isLost ? "Verify Ownership" : "Submit Claim"}
+            </button>
+          </>
         ) : (
           <div className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/15 text-emerald-400 font-bold text-xs text-center select-none flex items-center justify-center gap-1.5">
             <CheckCircle2 size={13} className="text-emerald-400" /> Reclaimed &amp; Handed Over

@@ -381,6 +381,117 @@ export const apiService = {
   },
 
   /**
+   * Get match details by ID
+   */
+  async getMatchById(matchId: string): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}`);
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to fetch match details");
+    }
+    return response.json();
+  },
+
+  /**
+   * Submit participant verification for a potential match
+   */
+  async verifyMatch(
+    matchId: string,
+    data: {
+      role: "Owner" | "Finder";
+      respondentName: string;
+      contact: string;
+      questions: string[];
+      answers: string[];
+      postId: string;
+      securityPin?: string;
+    }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to submit verification");
+    }
+    return response.json();
+  },
+
+  /**
+   * Approve match verification (Mutual Approval Engine)
+   */
+  async approveMatch(
+    matchId: string,
+    data: {
+      role: "Owner" | "Finder";
+      securityPin: string;
+      postId: string;
+    }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to approve match");
+    }
+    return response.json();
+  },
+
+  /**
+   * Reject match
+   */
+  async rejectMatch(
+    matchId: string,
+    data: {
+      role: "Owner" | "Finder";
+      securityPin: string;
+      postId: string;
+      reason?: string;
+    }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to reject match");
+    }
+    return response.json();
+  },
+
+  /**
+   * Send a chat message inside the Match Handover Secure Chat
+   * (Enforced: Mutually approved connections only)
+   */
+  async sendMatchChat(
+    matchId: string,
+    data: {
+      sender: "Owner" | "Finder";
+      text: string;
+      securityPin: string;
+      postId: string;
+    }
+  ): Promise<{ success: boolean; match: PotentialMatch; message: any }> {
+    const response = await fetch(`/api/matches/${matchId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to send chat message");
+    }
+    return response.json();
+  },
+
+  /**
    * Fetch all in-app notifications
    */
   async getNotifications(): Promise<{ success: boolean; notifications: LincoNotification[] }> {
@@ -426,6 +537,121 @@ export const apiService = {
     });
     if (!response.ok) {
       throw new Error("Failed to update configuration");
+    }
+    return response.json();
+  },
+
+  /**
+   * Confirm mutual trust for a potential match
+   */
+  async submitMatchTrust(
+    matchId: string,
+    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/trust`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to confirm trust");
+    }
+    return response.json();
+  },
+
+  /**
+   * Start handover process for a potential match
+   */
+  async startMatchHandover(
+    matchId: string,
+    data: {
+      role: "Owner" | "Finder";
+      securityPin: string;
+      postId: string;
+      location?: string;
+      meetingTime?: string;
+      notes?: string;
+    }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/handover/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to start handover");
+    }
+    return response.json();
+  },
+
+  /**
+   * Confirm item handover / received for a potential match
+   */
+  async confirmMatchHandover(
+    matchId: string,
+    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+  ): Promise<{ success: boolean; match: PotentialMatch }> {
+    const response = await fetch(`/api/matches/${matchId}/handover/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to confirm handover");
+    }
+    return response.json();
+  },
+
+  /**
+   * Securely retrieve unmasked counterparty contact details & WhatsApp link after mutual trust
+   */
+  async getMatchRevealedContact(
+    matchId: string,
+    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+  ): Promise<{
+    success: boolean;
+    contact: string;
+    normalizedPhone: string;
+    whatsappUrl: string;
+    item: string;
+  }> {
+    const response = await fetch(`/api/matches/${matchId}/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Contact is still locked or PIN is invalid");
+    }
+    return response.json();
+  },
+
+  /**
+   * Submit community "I Have This Item" finder verification
+   */
+  async submitCommunityFound(data: {
+    lostPostId: string;
+    finderName: string;
+    finderContact: string;
+    finderSecurityPin: string;
+    foundLocation?: string;
+    foundDetails?: string;
+    foundImage?: string | null;
+    answers?: string[];
+    questions?: string[];
+  }): Promise<{ success: boolean; match: PotentialMatch; post: Post }> {
+    const response = await fetch("/api/matches/community-found", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to submit finder verification");
     }
     return response.json();
   },

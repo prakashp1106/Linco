@@ -58,6 +58,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 // Modals
 import { PinModal } from "./components/PinModal";
 import { ClaimModal } from "./components/ClaimModal";
+import { CommunityFoundModal } from "./components/CommunityFoundModal";
 import { QRModal } from "./components/QRModal";
 import { OwnerClaimsDashboard } from "./components/OwnerClaimsDashboard";
 import { ClaimTracker } from "./components/ClaimTracker";
@@ -336,6 +337,10 @@ export default function App() {
   const [claimingPost, setClaimingPost] = useState<Post | null>(null);
   const [claimingMatchedPostId, setClaimingMatchedPostId] = useState<string | undefined>(undefined);
   const [showClaimModal, setShowClaimModal] = useState(false);
+
+  // Community "I Have This Item" verification modal state
+  const [communityFoundPost, setCommunityFoundPost] = useState<Post | null>(null);
+  const [showCommunityFoundModal, setShowCommunityFoundModal] = useState(false);
 
   // Owner dashboard state
   const [managingPost, setManagingPost] = useState<Post | null>(null);
@@ -1671,6 +1676,10 @@ export default function App() {
                         onMarkResolved={handleMarkResolvedTrigger}
                         onDeletePost={handleDeletePostTrigger}
                         onStartClaim={handleStartClaimTrigger}
+                        onIHaveThisItem={(post) => {
+                          setCommunityFoundPost(post);
+                          setShowCommunityFoundModal(true);
+                        }}
                         onSharePost={handleSharePostText}
                         onShareAsImage={handleShareAsImage}
                         onShowQrCode={handleShowQrCodeTrigger}
@@ -1846,6 +1855,23 @@ export default function App() {
         onClose={() => {
           setShowClaimModal(false);
           setClaimingMatchedPostId(undefined);
+        }}
+      />
+
+      <CommunityFoundModal
+        isOpen={showCommunityFoundModal}
+        lostPost={communityFoundPost}
+        onClose={() => {
+          setShowCommunityFoundModal(false);
+          setCommunityFoundPost(null);
+        }}
+        addToast={addToast}
+        onFoundReportCreated={(foundPost, match) => {
+          loadPosts(true);
+          if (match) {
+            setActiveTab("matches");
+            setSelectedMatchId(match.matchId);
+          }
         }}
       />
 

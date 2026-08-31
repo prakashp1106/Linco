@@ -810,23 +810,23 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                   </div>
 
                   {/* Input Form Area */}
-                  <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/85 backdrop-blur shrink-0">
+                  <div className="p-3 sm:p-5 border-t border-slate-800 bg-slate-950/90 backdrop-blur shrink-0">
                     <div className="max-w-2xl mx-auto">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
                           handleSendMessage();
                         }}
-                        className="relative flex items-center"
+                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-900/80 border border-slate-800/80 rounded-2xl p-1.5 focus-within:border-cyan-500/50 transition-all shadow-inner"
                       >
-                        {/* Interactive Left Side Actions (Voice, Camera, Upload) */}
-                        <div className="absolute left-3 flex items-center gap-1.5 sm:gap-2 z-10">
-                          {/* Microphone Voice Button (Visually disabled style, triggers premium toast) */}
+                        {/* Interactive Action Buttons (Voice, Camera, Upload) */}
+                        <div className="flex items-center gap-1 shrink-0 px-1 pt-1 sm:pt-0">
+                          {/* Microphone Voice Button */}
                           <button
                             type="button"
                             onClick={triggerVoiceToast}
-                            className="p-2 rounded-xl bg-slate-900/60 text-slate-500 hover:text-slate-400 border border-slate-800/20 transition duration-200 cursor-pointer"
-                            title="Voice Assistant (Coming Soon)"
+                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
+                            title="Voice Assistant"
                           >
                             <Mic size={15} />
                           </button>
@@ -835,7 +835,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           <button
                             type="button"
                             onClick={() => cameraInputRef.current?.click()}
-                            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition duration-200 cursor-pointer"
+                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
                             title="Take Live Camera Shot"
                           >
                             <Camera size={15} />
@@ -845,36 +845,38 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition duration-200 cursor-pointer"
+                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
                             title="Upload from Gallery"
                           >
                             <ImageIcon size={15} />
                           </button>
                         </div>
 
-                        {/* Input Area */}
-                        <input
-                          type="text"
-                          placeholder="Bhai lost/found item details type kijiye..."
-                          value={inputMessage}
-                          onChange={(e) => setInputMessage(e.target.value)}
-                          disabled={isThinking || chatLoading}
-                          className="w-full pl-28 sm:pl-32 pr-12 py-3 rounded-2xl bg-slate-900/80 border border-slate-800/80 focus:border-cyan-500/40 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-600 transition"
-                        />
+                        {/* Text Input Area with zero overlap */}
+                        <div className="flex-1 flex items-center gap-2 px-1">
+                          <input
+                            type="text"
+                            placeholder="Type lost/found item details..."
+                            value={inputMessage}
+                            onChange={(e) => setInputMessage(e.target.value)}
+                            disabled={isThinking || chatLoading}
+                            className="w-full bg-transparent py-2 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 transition font-sans"
+                          />
 
-                        {/* Send Button */}
-                        <button
-                          type="submit"
-                          disabled={isThinking || chatLoading || !inputMessage.trim()}
-                          className="absolute right-3 p-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-200 disabled:opacity-30 cursor-pointer shadow"
-                          title="Send Message"
-                        >
-                          <Send size={14} />
-                        </button>
+                          {/* Send Button */}
+                          <button
+                            type="submit"
+                            disabled={isThinking || chatLoading || !inputMessage.trim()}
+                            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-200 disabled:opacity-30 cursor-pointer shadow shrink-0"
+                            title="Send Message"
+                          >
+                            <Send size={14} />
+                          </button>
+                        </div>
                       </form>
 
                       {/* Small Info line */}
-                      <p className="text-[8px] text-slate-600 text-center mt-2.5 font-mono tracking-widest uppercase select-none">
+                      <p className="text-[8px] text-slate-500 text-center mt-2 font-mono tracking-widest uppercase select-none">
                         LINCO Conversational Intelligence Core Model 3.5
                       </p>
                     </div>

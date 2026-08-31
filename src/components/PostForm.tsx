@@ -387,6 +387,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
         urgency: form.fUrgency,
         image: form.fImage,
         timeline: form.fTimeline,
+        characteristics: form.fCharacteristics,
+        uniqueMarks: form.fUniqueMarks,
+        contents: form.fContents,
+        condition: form.fCondition,
         latitude: form.fLat,
         longitude: form.fLng,
         securityPin: form.fSecurityPin,
@@ -784,6 +788,73 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   </p>
                 )}
               </div>
+
+              {/* Advanced Specific Characteristics (Color, Brand, Model, Material) */}
+              <div className="pt-2 border-t border-[#1c1c26]/60">
+                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
+                  Item Characteristics <span className="text-slate-500 font-normal text-xs">(Color, Brand, Model, Material)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Color: Space Gray, Brand: Apple, Model: iPhone 15 Pro, Material: Titanium & Glass"
+                  value={form.fCharacteristics || ""}
+                  onChange={(e) => form.setFCharacteristics(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                />
+              </div>
+
+              {/* Unique Marks & Identifiers */}
+              <div className="pt-2">
+                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
+                  Unique Marks & Secret Identifiers <span className="text-slate-500 font-normal text-xs">(Scratches, stickers, engravings, serial number)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Small scratch on bottom right edge, NASA sticker on rear, customized keychain attached"
+                  value={form.fUniqueMarks || ""}
+                  onChange={(e) => form.setFUniqueMarks(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                />
+              </div>
+
+              {/* Contents (for wallets, bags, boxes) */}
+              <div className="pt-2">
+                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
+                  Inner Contents <span className="text-slate-500 font-normal text-xs">(For wallets, bags, cases, or compartments)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. College ID card, Metro pass, 2 keys, blue ballpoint pen inside pouch"
+                  value={form.fContents || ""}
+                  onChange={(e) => form.setFContents(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                />
+              </div>
+
+              {/* Condition (Specifically required for Found reports) */}
+              {!isLost && (
+                <div className="pt-2">
+                  <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
+                    Found Item Condition <span className="text-emerald-400 font-bold">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {["Brand New / Intact", "Good Condition", "Used / Scratched", "Damaged / Broken"].map((cond) => (
+                      <button
+                        key={cond}
+                        type="button"
+                        onClick={() => form.setFCondition(cond)}
+                        className={`text-xs py-2.5 px-2 rounded-xl border font-bold transition-all duration-150 cursor-pointer flex items-center justify-center text-center ${
+                          form.fCondition === cond
+                            ? "bg-emerald-500/15 border-emerald-400 text-emerald-300 shadow-md scale-[1.01]"
+                            : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                        }`}
+                      >
+                        {cond}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Category selection - embedded beautifully */}
               <div className="pt-1">

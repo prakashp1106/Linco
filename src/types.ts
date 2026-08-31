@@ -5,6 +5,21 @@
 
 export type UrgencyType = "Normal" | "Urgent" | "Contains ID" | "Medical";
 
+export type MatchStatus =
+  | "POTENTIAL_MATCH"
+  | "FINDER_VERIFICATION_PENDING"
+  | "OWNER_REVIEW_PENDING"
+  | "OWNER_APPROVED"
+  | "FINDER_APPROVED"
+  | "MUTUAL_TRUST_PENDING"
+  | "VERIFIED_CONNECTION"
+  | "HANDOVER_PENDING"
+  | "OWNER_RECEIVED_CONFIRMED"
+  | "FINDER_HANDOVER_CONFIRMED"
+  | "RESOLVED"
+  | "REJECTED"
+  | "DISMISSED";
+
 export interface Post {
   id: string;
   item: string;
@@ -21,6 +36,11 @@ export interface Post {
   latitude?: number;
   longitude?: number;
   timeline?: string;
+  characteristics?: string;
+  uniqueMarks?: string;
+  contents?: string;
+  condition?: string;
+  lostFoundTime?: string;
   status: "Active" | "Resolved";
   views: number;
   created: number;
@@ -72,11 +92,37 @@ export interface Claim {
   messages?: { id: string; sender: "Claimant" | "Finder"; text: string; timestamp: number }[];
 }
 
+export interface MatchMessage {
+  id: string;
+  sender: "Owner" | "Finder" | "System";
+  text: string;
+  timestamp: number;
+}
+
+export interface VerificationSubmission {
+  respondentName: string;
+  contact: string;
+  answers: string[];
+  questions: string[];
+  submittedAt: number;
+  aiScore?: number;
+  aiReason?: string;
+}
+
+export interface HandoverDetails {
+  location?: string;
+  meetingTime?: string;
+  notes?: string;
+  startedBy?: "Owner" | "Finder";
+  startedAt?: number;
+}
+
 export interface PotentialMatch {
   matchId: string;
   lostPostId: string;
   foundPostId: string;
   matchScore: number;
+  similarityScore?: number;
   matchBreakdown: {
     category: number;
     item: number;
@@ -94,6 +140,25 @@ export interface PotentialMatch {
   };
   createdAt: number;
   status: "Active" | "Dismissed";
+  matchStatus?: MatchStatus;
+  ownerApproved?: boolean;
+  finderApproved?: boolean;
+  ownerTrustConfirmed?: boolean;
+  finderTrustConfirmed?: boolean;
+  ownerTrusted?: boolean;
+  finderTrusted?: boolean;
+  handoverStarted?: boolean;
+  handoverDetails?: HandoverDetails;
+  ownerReceivedConfirmed?: boolean;
+  finderHandoverConfirmed?: boolean;
+  resolvedAt?: number;
+  revealedOwnerContact?: string;
+  revealedFinderContact?: string;
+  ownerVerification?: VerificationSubmission;
+  finderVerification?: VerificationSubmission;
+  rejectionReason?: string;
+  rejectedBy?: "Owner" | "Finder";
+  messages?: MatchMessage[];
   reviewed: boolean;
   notificationsSent: boolean;
   lastUpdated: number;
