@@ -416,14 +416,18 @@ export default function App() {
   // Fetch notifications
   const loadNotifications = useCallback(async () => {
     try {
-      const res = await apiService.getNotifications();
+      if (unlockedPosts.length === 0) {
+        setNotifications([]);
+        return;
+      }
+      const res = await apiService.getNotifications(unlockedPosts.join(","));
       if (res.success) {
         setNotifications(res.notifications);
       }
     } catch (err) {
       console.error("Failed to load notifications:", err);
     }
-  }, []);
+  }, [unlockedPosts]);
 
   useEffect(() => {
     loadNotifications();
