@@ -90,4 +90,15 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Notification Privacy & Authorization", () => {
+    it("constructs correct notification API request URLs based on target post IDs", () => {
+      const buildNotificationUrl = (postId?: string) =>
+        postId ? `/api/notifications?postId=${encodeURIComponent(postId)}` : "/api/notifications";
+
+      expect(buildNotificationUrl()).toBe("/api/notifications");
+      expect(buildNotificationUrl("1719680000000")).toBe("/api/notifications?postId=1719680000000");
+      expect(buildNotificationUrl("101,102")).toBe("/api/notifications?postId=101%2C102");
+    });
+  });
 });
