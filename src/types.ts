@@ -171,7 +171,7 @@ export interface LincoNotification {
   message: string;
   createdAt: number;
   read: boolean;
-  type: "match" | "system" | "claim";
+  type: "match" | "system" | "claim" | "CLAIM_RECEIVED" | "CLAIM_APPROVED" | "CLAIM_REJECTED" | "TRUST_UPDATED" | "CHAT_MESSAGE" | "HANDOVER_UPDATED" | "ITEM_RECEIVED" | "CASE_RESOLVED";
   matchId?: string;
   claimId?: string;
   matchedPostId?: string;

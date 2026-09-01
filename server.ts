@@ -1878,13 +1878,14 @@ app.get("/api/matches/:matchId", async (req, res) => {
 });
 
 // Submit Verification for a Match (Owner or Finder)
+// Match Verification / Simple Claim Endpoint (NO PIN REQUIRED)
 app.post("/api/matches/:matchId/verify", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, respondentName, contact, questions, answers, postId, securityPin } = req.body;
+    const { role, respondentName, contact, questions, answers, postId, notes } = req.body;
 
-    if (!role || !respondentName || !contact || !answers || !questions) {
-      return res.status(400).json({ error: "Missing required verification fields" });
+    if (!role || !respondentName || !contact) {
+      return res.status(400).json({ error: "Missing required verification fields (role, respondentName, contact)" });
     }
 
     let match: any = null;
@@ -1910,10 +1911,10 @@ app.post("/api/matches/:matchId/verify", async (req, res) => {
       if (pDoc.exists) targetPost = pDoc.data() as Post;
     }
 
-    // AI Evaluation of answers
-    let aiScore = 75;
-    let aiReason = "Verification details registered for participant review.";
-    if (targetPost && questions.length > 0) {
+    // AI Evaluation of answers if provided
+    let aiScore = 85;
+    let aiReason = `${role} submitted claim for verification review.`;
+    if (targetPost && questions && questions.length > 0 && answers && answers.length > 0) {
       const prompt = `Evaluate if this ${role} verification answers confirm genuine match for:
 Item: "${targetPost.item}"
 Details: "${targetPost.details}"
@@ -1934,7 +1935,7 @@ Return JSON ONLY:
             });
             return resp.text || "{}";
           },
-          JSON.stringify({ confidence: 75, message: "AI evaluation saved for participant review." }),
+          JSON.stringify({ confidence: 85, message: "AI evaluation saved for participant review." }),
           "match-verify"
         );
         const parsed = JSON.parse(aiText.replace(/```json|```/gi, "").trim());
@@ -1948,8 +1949,9 @@ Return JSON ONLY:
     const verificationSubmission = {
       respondentName,
       contact,
-      answers,
-      questions,
+      answers: answers || [],
+      questions: questions || [],
+      notes: notes || "",
       submittedAt: Date.now(),
       aiScore,
       aiReason
@@ -1959,14 +1961,12 @@ Return JSON ONLY:
 
     if (role === "Owner") {
       match.ownerVerification = verificationSubmission;
-      if (!match.matchStatus || match.matchStatus === "POTENTIAL_MATCH") {
-        match.matchStatus = "OWNER_VERIFICATION_PENDING";
-      }
+      match.ownerApproved = true; // Claiming owner approves their match
+      match.matchStatus = "FINDER_REVIEW_PENDING";
     } else {
       match.finderVerification = verificationSubmission;
-      if (!match.matchStatus || match.matchStatus === "POTENTIAL_MATCH") {
-        match.matchStatus = "FINDER_VERIFICATION_PENDING";
-      }
+      match.finderApproved = true;
+      match.matchStatus = "OWNER_REVIEW_PENDING";
     }
 
     match.lastUpdated = Date.now();
@@ -1980,18 +1980,22 @@ Return JSON ONLY:
     }
 
     // State Transition Audit Log
-    await createAuditLog(matchId, prevStatus, match.matchStatus, role, `${role} (${respondentName}) submitted verification details. AI Confidence: ${aiScore}%`);
+    await createAuditLog(matchId, prevStatus, match.matchStatus, role, `${role} (${respondentName}) submitted claim/verification details.`);
 
-    // Create target notification for counterparty
+    // Create real notification for counterparty (Finder receives CLAIM_RECEIVED)
     const targetNotifyPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
     const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-    const notif = {
+    const notifMessage = role === "Owner" 
+      ? "The owner has claimed this item" 
+      : `${role} (${respondentName}) submitted details for your match.`;
+    
+    const notif: LincoNotification = {
       id: notifId,
       postId: targetNotifyPostId,
-      message: `${role} (${respondentName}) submitted verification answers for your match! Review answers to approve handover.`,
+      message: notifMessage,
       createdAt: Date.now(),
       read: false,
-      type: "match",
+      type: "CLAIM_RECEIVED",
       matchId: match.matchId
     };
 
@@ -2010,14 +2014,14 @@ Return JSON ONLY:
   }
 });
 
-// Mutual Approval Endpoint (Owner or Finder approves verification)
+// Mutual Approval Endpoint (Finder clicks "Yes, I believe this is the owner" or Owner approves)
 app.post("/api/matches/:matchId/approve", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId } = req.body;
+    const { role } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required (Owner or Finder)" });
     }
 
     let match: any = null;
@@ -2033,28 +2037,6 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    // Verify PIN against participant's post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Associated post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
-    }
-
     const prevStatus = match.matchStatus || "POTENTIAL_MATCH";
 
     if (role === "Owner") {
@@ -2063,70 +2045,40 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       match.finderApproved = true;
     }
 
-    // Check for Mutual Approval & Trust Condition
+    // Check for Mutual Approval Condition (Both must be approved, or if Finder confirms an owner-initiated claim)
     const bothApproved = match.ownerApproved === true && match.finderApproved === true;
-    const bothTrusted = match.ownerTrustConfirmed === true && match.finderTrustConfirmed === true;
 
-    if (bothApproved && bothTrusted) {
+    if (bothApproved) {
       match.matchStatus = "VERIFIED_CONNECTION";
       if (!match.messages || match.messages.length === 0) {
         match.messages = [
           {
             id: "sys_" + Date.now(),
             sender: "System",
-            text: "🎉 Both Owner and Finder have approved verification and confirmed mutual trust! Secure Chat and direct WhatsApp contact are now unlocked.",
+            text: "🎉 Connection Verified! Both parties are connected. Secure Chat is now unlocked to coordinate your handover.",
             timestamp: Date.now()
           }
         ];
       }
-      await createAuditLog(matchId, prevStatus, "VERIFIED_CONNECTION", "System", "Mutual Approval & Trust Confirmed: Match transitioned to VERIFIED_CONNECTION. Secure Chat is now unlocked!");
+      await createAuditLog(matchId, prevStatus, "VERIFIED_CONNECTION", role, `Claim approved. Match transitioned to VERIFIED_CONNECTION. Secure Chat is unlocked!`);
 
-      // Deliver alerts to both parties
-      const notif1 = {
-        id: "notif_" + Date.now() + "_lost",
+      // Deliver alerts to both parties (CLAIM_APPROVED)
+      const notif1: LincoNotification = {
+        id: "notif_" + Date.now() + "_lost_appr",
         postId: match.lostPostId,
-        message: "🎉 Secure Chat & Contact Unlocked! Both parties have approved verification for your item. Coordinate your safe handover now!",
+        message: "Match verified — Secure Chat is ready.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "CLAIM_APPROVED",
         matchId: match.matchId
       };
-      const notif2 = {
-        id: "notif_" + Date.now() + "_found",
+      const notif2: LincoNotification = {
+        id: "notif_" + Date.now() + "_found_appr",
         postId: match.foundPostId,
-        message: "🎉 Secure Chat & Contact Unlocked! Both parties have approved verification for the found item. Coordinate your safe handover now!",
+        message: "Match verified — Secure Chat is ready.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
-        matchId: match.matchId
-      };
-      if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif1, notif2);
-      } else {
-        await db!.collection("notifications").doc(notif1.id).set(notif1);
-        await db!.collection("notifications").doc(notif2.id).set(notif2);
-      }
-    } else if (bothApproved) {
-      match.matchStatus = "MUTUAL_TRUST_PENDING";
-      await createAuditLog(matchId, prevStatus, "MUTUAL_TRUST_PENDING", role, `Both parties approved verification. Awaiting mutual trust confirmation to unlock direct contact.`);
-
-      const notif1 = {
-        id: "notif_" + Date.now() + "_lost_trust",
-        postId: match.lostPostId,
-        message: "Mutual verification approved! Please confirm trust to unlock direct contact and coordinate handover.",
-        createdAt: Date.now(),
-        read: false,
-        type: "match",
-        matchId: match.matchId
-      };
-      const notif2 = {
-        id: "notif_" + Date.now() + "_found_trust",
-        postId: match.foundPostId,
-        message: "Mutual verification approved! Please confirm trust to unlock direct contact and coordinate handover.",
-        createdAt: Date.now(),
-        read: false,
-        type: "match",
+        type: "CLAIM_APPROVED",
         matchId: match.matchId
       };
       if (useLocalFallback) {
@@ -2138,18 +2090,18 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       }
     } else {
       match.matchStatus = role === "Owner" ? "OWNER_APPROVED" : "FINDER_APPROVED";
-      await createAuditLog(matchId, prevStatus, match.matchStatus, role, `${role} confirmed verification approval. Awaiting counterparty confirmation.`);
+      await createAuditLog(matchId, prevStatus, match.matchStatus, role, `${role} confirmed approval. Awaiting counterparty confirmation.`);
 
       // Notify counterparty
       const notifyPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
       const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-      const notif = {
+      const notif: LincoNotification = {
         id: notifId,
         postId: notifyPostId,
-        message: `${role} has approved the verification! Confirm your approval to unlock Secure Handover Chat.`,
+        message: `${role} approved the match! Confirm your approval to unlock Secure Chat.`,
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "CLAIM_RECEIVED",
         matchId: match.matchId
       };
       if (useLocalFallback) {
@@ -2177,14 +2129,14 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
   }
 });
 
-// Trust Confirmation Endpoint (Owner or Finder confirms trust)
+// Trust Confirmation Endpoint (Owner or Finder confirms trust - NO PIN REQUIRED)
 app.post("/api/matches/:matchId/trust", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId } = req.body;
+    const { role } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required (Owner or Finder)" });
     }
 
     let match: any = null;
@@ -2200,67 +2152,48 @@ app.post("/api/matches/:matchId/trust", async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    // Verify PIN against participant's post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Associated post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
-    }
-
     const prevStatus = match.matchStatus || "POTENTIAL_MATCH";
 
     if (role === "Owner") {
       match.ownerTrustConfirmed = true;
+      match.ownerTrusted = true;
     } else if (role === "Finder") {
       match.finderTrustConfirmed = true;
+      match.finderTrusted = true;
     }
 
-    const bothApproved = match.ownerApproved === true && match.finderApproved === true;
-    const bothTrusted = match.ownerTrustConfirmed === true && match.finderTrustConfirmed === true;
+    const isOwnerTrusted = Boolean(match.ownerTrustConfirmed || match.ownerTrusted);
+    const isFinderTrusted = Boolean(match.finderTrustConfirmed || match.finderTrusted);
+    const bothTrusted = isOwnerTrusted && isFinderTrusted;
 
-    if (bothTrusted && bothApproved) {
-      match.matchStatus = "VERIFIED_CONNECTION";
+    if (bothTrusted) {
+      match.matchStatus = match.matchStatus === "HANDOVER_PENDING" ? match.matchStatus : "MUTUAL_TRUST_PENDING";
       if (!match.messages) match.messages = [];
       match.messages.push({
         id: "sys_" + Date.now(),
         sender: "System",
-        text: "🎉 Mutual Trust Confirmed! Both Owner and Finder have verified each other. Secure Chat and WhatsApp direct contact are unlocked.",
+        text: "🎉 Mutual trust confirmed! Direct WhatsApp chat and phone contact are now unlocked.",
         timestamp: Date.now()
       });
 
-      await createAuditLog(matchId, prevStatus, "VERIFIED_CONNECTION", "System", "Mutual Trust Confirmed: Contact unlocked and Secure Chat available.");
+      await createAuditLog(matchId, prevStatus, match.matchStatus, "System", "Mutual Trust Confirmed: Both parties confirmed trust. WhatsApp button and contact numbers unlocked.");
 
-      const notif1 = {
-        id: "notif_" + Date.now() + "_lost_unlocked",
+      const notif1: LincoNotification = {
+        id: "notif_" + Date.now() + "_lost_trust_unlocked",
         postId: match.lostPostId,
-        message: "🎉 Mutual trust confirmed! Direct WhatsApp contact and safe handover options are now available.",
+        message: "Mutual trust confirmed! Chat on WhatsApp is now unlocked.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "TRUST_UPDATED",
         matchId: match.matchId
       };
-      const notif2 = {
-        id: "notif_" + Date.now() + "_found_unlocked",
+      const notif2: LincoNotification = {
+        id: "notif_" + Date.now() + "_found_trust_unlocked",
         postId: match.foundPostId,
-        message: "🎉 Mutual trust confirmed! Direct WhatsApp contact and safe handover options are now available.",
+        message: "Mutual trust confirmed! Chat on WhatsApp is now unlocked.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "TRUST_UPDATED",
         matchId: match.matchId
       };
 
@@ -2272,18 +2205,17 @@ app.post("/api/matches/:matchId/trust", async (req, res) => {
         await db!.collection("notifications").doc(notif2.id).set(notif2);
       }
     } else {
-      match.matchStatus = "MUTUAL_TRUST_PENDING";
-      await createAuditLog(matchId, prevStatus, "MUTUAL_TRUST_PENDING", role, `${role} confirmed trust. Awaiting counterparty trust confirmation.`);
+      await createAuditLog(matchId, prevStatus, match.matchStatus, role, `${role} confirmed trust. Awaiting counterparty trust confirmation.`);
 
       const targetPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
       const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-      const notif = {
+      const notif: LincoNotification = {
         id: notifId,
         postId: targetPostId,
-        message: `${role} confirmed trust! Please confirm your trust to unlock direct contact and handover tools.`,
+        message: `${role} clicked "I Trust This Person"! Click "I Trust This Person" to reveal WhatsApp.`,
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "TRUST_UPDATED",
         matchId: match.matchId
       };
 
@@ -2312,14 +2244,14 @@ app.post("/api/matches/:matchId/trust", async (req, res) => {
   }
 });
 
-// Start Handover Endpoint
+// Start Handover Endpoint (NO PIN REQUIRED)
 app.post("/api/matches/:matchId/handover/start", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId, location, meetingTime, notes } = req.body;
+    const { role, location, meetingTime, notes } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
     }
 
     let match: any = null;
@@ -2333,28 +2265,6 @@ app.post("/api/matches/:matchId/handover/start", async (req, res) => {
 
     if (!match) {
       return res.status(404).json({ error: "Match not found" });
-    }
-
-    // Verify PIN against participant's post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Associated post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
     }
 
     const prevStatus = match.matchStatus || "POTENTIAL_MATCH";
@@ -2372,7 +2282,7 @@ app.post("/api/matches/:matchId/handover/start", async (req, res) => {
     match.messages.push({
       id: "sys_" + Date.now(),
       sender: "System",
-      text: `🤝 Handover phase started by ${role}! Proposed location: ${location || "Public Safe Zone"}. When meet-up is complete, both parties should confirm reception/handover.`,
+      text: `🤝 Handover phase started by ${role}! Proposed location: ${location || "Public Safe Zone"}. When item is handed over, both parties should confirm.`,
       timestamp: Date.now()
     });
 
@@ -2380,19 +2290,20 @@ app.post("/api/matches/:matchId/handover/start", async (req, res) => {
 
     const targetPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
     const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-    const notif = {
+    const notif: LincoNotification = {
       id: notifId,
       postId: targetPostId,
-      message: `🤝 Handover initiated by ${role}! Proposed location: ${location || "Public Safe Zone"}. Check details and confirm when completed.`,
+      message: `Safe handover scheduled by ${role}.`,
       createdAt: Date.now(),
       read: false,
-      type: "match",
+      type: "HANDOVER_UPDATED",
       matchId: match.matchId
     };
 
     if (useLocalFallback) {
       if (!local.notifications) local.notifications = [];
       local.notifications.push(notif);
+      writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notifId).set(notif);
     }
@@ -2414,14 +2325,14 @@ app.post("/api/matches/:matchId/handover/start", async (req, res) => {
   }
 });
 
-// Confirm Handover / Item Received Endpoint
+// Confirm Handover / Item Received Endpoint (NO PIN REQUIRED)
 app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId } = req.body;
+    const { role } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required (Owner or Finder)" });
     }
 
     let match: any = null;
@@ -2435,28 +2346,6 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
 
     if (!match) {
       return res.status(404).json({ error: "Match not found" });
-    }
-
-    // Verify PIN against participant's post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Associated post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
     }
 
     const prevStatus = match.matchStatus || "HANDOVER_PENDING";
@@ -2493,22 +2382,22 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
 
       await createAuditLog(matchId, prevStatus, "RESOLVED", "System", "Handover completed & confirmed by both parties. Post listings updated to Resolved.");
 
-      const notif1 = {
+      const notif1: LincoNotification = {
         id: "notif_" + Date.now() + "_lost_res",
         postId: match.lostPostId,
-        message: "🏆 Item recovery resolved! Both parties confirmed the successful handover. Listing updated to Resolved.",
+        message: "Item successfully reunited! Case marked as Resolved.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "CASE_RESOLVED",
         matchId: match.matchId
       };
-      const notif2 = {
+      const notif2: LincoNotification = {
         id: "notif_" + Date.now() + "_found_res",
         postId: match.foundPostId,
-        message: "🏆 Item recovery resolved! Both parties confirmed the successful handover. Listing updated to Resolved.",
+        message: "Item successfully reunited! Case marked as Resolved.",
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: "CASE_RESOLVED",
         matchId: match.matchId
       };
 
@@ -2525,13 +2414,15 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
 
       const targetPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
       const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-      const notif = {
+      const notif: LincoNotification = {
         id: notifId,
         postId: targetPostId,
-        message: `${role} confirmed the item handover! Please submit your confirmation to officially close this recovery case.`,
+        message: role === "Finder" 
+          ? 'Finder confirmed: "I handed over this item". Please confirm when received.' 
+          : 'Owner confirmed: "I received my item".',
         createdAt: Date.now(),
         read: false,
-        type: "match",
+        type: role === "Finder" ? "HANDOVER_UPDATED" : "ITEM_RECEIVED",
         matchId: match.matchId
       };
 
@@ -2560,14 +2451,14 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
   }
 });
 
-// Secure Contact Reveal Endpoint (ONLY unlocked after mutual approval & mutual trust)
+// Secure Contact Reveal Endpoint (Unlocked after mutual trust OR resolved - NO PIN REQUIRED)
 app.post("/api/matches/:matchId/contact", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId } = req.body;
+    const { role } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
     }
 
     let match: any = null;
@@ -2583,40 +2474,16 @@ app.post("/api/matches/:matchId/contact", async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    // Verify PIN against participant's post
-    let userPost: Post | null = null;
-    if (useLocalFallback) {
-      userPost = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) userPost = pDoc.data() as Post;
-    }
+    // MANDATORY SECURITY VERIFICATION: Unlocked when BOTH parties confirmed trust OR resolved
+    const isOwnerTrusted = Boolean(match.ownerTrustConfirmed || match.ownerTrusted);
+    const isFinderTrusted = Boolean(match.finderTrustConfirmed || match.finderTrusted);
+    const isBothTrusted = isOwnerTrusted && isFinderTrusted;
 
-    if (!userPost) {
-      return res.status(404).json({ error: "Your post listing was not found" });
-    }
-
-    const expectedPin = userPost.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
-    }
-
-    // MANDATORY SECURITY VERIFICATION: Must have mutual approval OR verified connection
-    const isEligible = 
-      (match.ownerApproved && match.finderApproved && match.ownerTrustConfirmed && match.finderTrustConfirmed) ||
-      match.matchStatus === "VERIFIED_CONNECTION" ||
-      match.matchStatus === "HANDOVER_PENDING" ||
-      match.matchStatus === "OWNER_RECEIVED_CONFIRMED" ||
-      match.matchStatus === "FINDER_HANDOVER_CONFIRMED" ||
-      match.matchStatus === "RESOLVED";
+    const isEligible = isBothTrusted || match.matchStatus === "RESOLVED";
 
     if (!isEligible) {
       return res.status(403).json({
-        error: "CONTACT LOCKED: Phone number and WhatsApp deep link remain hidden until BOTH parties complete mutual trust confirmation."
+        error: "CONTACT LOCKED: WhatsApp deep link and phone number remain hidden until BOTH parties click 'I Trust This Person'."
       });
     }
 
@@ -2630,24 +2497,25 @@ app.post("/api/matches/:matchId/contact", async (req, res) => {
       if (tDoc.exists) targetPost = tDoc.data() as Post;
     }
 
-    if (!targetPost) {
-      return res.status(404).json({ error: "Counterparty post details not found" });
-    }
+    const rawContact =
+      (role === "Owner" ? match.finderVerification?.contact : match.ownerVerification?.contact) ||
+      targetPost?.contact ||
+      "";
 
     // Phone normalization helper
-    let cleanPhone = targetPost.contact.replace(/\D/g, "");
+    let cleanPhone = rawContact.replace(/\D/g, "");
     if (cleanPhone.length === 11 && cleanPhone.startsWith("0")) cleanPhone = cleanPhone.slice(1);
     if (cleanPhone.length === 10) cleanPhone = `91${cleanPhone}`;
 
-    const defaultMsg = encodeURIComponent(`Hi! I am reaching out regarding our LINCO verified match for "${targetPost.item}". Let's arrange the safe handover!`);
+    const defaultMsg = encodeURIComponent(`Hi! I am reaching out regarding our LINCO verified match for "${targetPost?.item || "item"}". Let's coordinate safe handover!`);
     const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${defaultMsg}` : "";
 
     res.json({
       success: true,
-      contact: targetPost.contact,
+      contact: rawContact,
       normalizedPhone: cleanPhone,
       whatsappUrl: waUrl,
-      item: targetPost.item
+      item: targetPost?.item || "item"
     });
   } catch (err: any) {
     console.error("Contact reveal error:", err);
@@ -2846,14 +2714,14 @@ Return ONLY valid JSON: {"confidence": <number>, "message": "<string>"}`;
   }
 });
 
-// Reject Match Endpoint
+// Reject Match Endpoint (NO PIN REQUIRED)
 app.post("/api/matches/:matchId/reject", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { role, securityPin, postId, reason } = req.body;
+    const { role, reason } = req.body;
 
-    if (!role || !securityPin || !postId) {
-      return res.status(400).json({ error: "Role, Security PIN, and Post ID are required" });
+    if (!role) {
+      return res.status(400).json({ error: "Role is required" });
     }
 
     let match: any = null;
@@ -2867,28 +2735,6 @@ app.post("/api/matches/:matchId/reject", async (req, res) => {
 
     if (!match) {
       return res.status(404).json({ error: "Match not found" });
-    }
-
-    // Verify PIN against participant post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Associated post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied." });
     }
 
     const prevStatus = match.matchStatus || "POTENTIAL_MATCH";
@@ -2910,13 +2756,13 @@ app.post("/api/matches/:matchId/reject", async (req, res) => {
     // Notify counterparty
     const notifyPostId = role === "Owner" ? match.foundPostId : match.lostPostId;
     const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-    const notif = {
+    const notif: LincoNotification = {
       id: notifId,
       postId: notifyPostId,
-      message: `The potential match was evaluated and rejected by the ${role}.`,
+      message: `Claim rejected for this match.`,
       createdAt: Date.now(),
       read: false,
-      type: "match",
+      type: "CLAIM_REJECTED",
       matchId: match.matchId
     };
     if (useLocalFallback) {
@@ -2934,14 +2780,14 @@ app.post("/api/matches/:matchId/reject", async (req, res) => {
   }
 });
 
-// Secure Chat Endpoint (ENFORCES: SECURE CHAT MUST REMAIN LOCKED UNTIL: ownerApproved == true AND finderApproved == true)
+// Secure Chat Endpoint (NO PIN REQUIRED - Unlocks when VERIFIED_CONNECTION)
 app.post("/api/matches/:matchId/chat", async (req, res) => {
   try {
     const { matchId } = req.params;
-    const { sender, text, securityPin, postId } = req.body;
+    const { sender, text } = req.body;
 
-    if (!sender || !text || !securityPin || !postId) {
-      return res.status(400).json({ error: "Sender, text, securityPin, and postId are required" });
+    if (!sender || !text) {
+      return res.status(400).json({ error: "Sender and text are required" });
     }
 
     let match: any = null;
@@ -2957,40 +2803,20 @@ app.post("/api/matches/:matchId/chat", async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    // MANDATORY STRICT LOCK ENFORCEMENT
+    // MANDATORY STRICT LOCK ENFORCEMENT: Unlocks once verified connection or mutual approval
     const isMutuallyApproved =
       (match.ownerApproved === true && match.finderApproved === true) ||
       match.matchStatus === "VERIFIED_CONNECTION" ||
+      match.matchStatus === "MUTUAL_TRUST_PENDING" ||
       match.matchStatus === "HANDOVER_PENDING" ||
       match.matchStatus === "OWNER_RECEIVED_CONFIRMED" ||
       match.matchStatus === "FINDER_HANDOVER_CONFIRMED" ||
       match.matchStatus === "RESOLVED";
+
     if (!isMutuallyApproved) {
       return res.status(403).json({
-        error: "SECURE CHAT LOCKED: Secure Chat remains locked until both the Owner and Finder have approved verification."
+        error: "SECURE CHAT LOCKED: Secure Chat opens once the finder verifies the claim and connection is verified."
       });
-    }
-
-    // Verify PIN of sender's post
-    let post: Post | null = null;
-    if (useLocalFallback) {
-      post = local.posts.find((p: Post) => p.id === postId) || null;
-    } else {
-      const pDoc = await db!.collection("posts").doc(postId).get();
-      if (pDoc.exists) post = pDoc.data() as Post;
-    }
-
-    if (!post) {
-      return res.status(404).json({ error: "Sender post not found" });
-    }
-
-    const expectedPin = post.securityPin || "1234";
-    const isPinValid = expectedPin.startsWith("$2b$") || expectedPin.startsWith("$2a$")
-      ? await bcrypt.compare(securityPin, expectedPin)
-      : expectedPin === securityPin;
-
-    if (!isPinValid) {
-      return res.status(403).json({ error: "Incorrect Security PIN. Access denied to chat." });
     }
 
     if (!match.messages) {
@@ -3014,6 +2840,28 @@ app.post("/api/matches/:matchId/chat", async (req, res) => {
       writeLocalDB(local);
     } else {
       await db!.collection("matches").doc(matchId).set(match);
+    }
+
+    // Send real notification to counterparty
+    const targetPostId = sender === "Owner" ? match.foundPostId : match.lostPostId;
+    const senderName = sender === "Owner" ? (match.ownerVerification?.respondentName || "Owner") : (match.finderVerification?.respondentName || "Finder");
+    const notifId = "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+    const notif: LincoNotification = {
+      id: notifId,
+      postId: targetPostId,
+      message: `New message from ${senderName}`,
+      createdAt: Date.now(),
+      read: false,
+      type: "CHAT_MESSAGE",
+      matchId: match.matchId
+    };
+
+    if (useLocalFallback) {
+      if (!local.notifications) local.notifications = [];
+      local.notifications.push(notif);
+      writeLocalDB(local);
+    } else {
+      await db!.collection("notifications").doc(notifId).set(notif);
     }
 
     res.json({ success: true, match, message: newMsg });

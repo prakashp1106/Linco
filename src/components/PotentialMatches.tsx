@@ -79,25 +79,21 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
   // Verification & Approval Form States
   const [userRole, setUserRole] = useState<"Owner" | "Finder">("Owner");
-  const [userPin, setUserPin] = useState("");
   const [respondentName, setRespondentName] = useState("");
   const [respondentContact, setRespondentContact] = useState("");
   const [verificationAnswers, setVerificationAnswers] = useState<string[]>(["", "", ""]);
   const [submittingVerification, setSubmittingVerification] = useState(false);
 
   // Approval / Reject Action States
-  const [actionPin, setActionPin] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
   // Trust Confirmation State
-  const [trustPin, setTrustPin] = useState("");
   const [submittingTrust, setSubmittingTrust] = useState(false);
 
   // Safe Handover State
   const [handoverMeetingPlace, setHandoverMeetingPlace] = useState("Kolkata Metro Station Public Concourse");
   const [handoverScheduledTime, setHandoverScheduledTime] = useState("Today at 4:00 PM");
-  const [handoverPin, setHandoverPin] = useState("");
   const [startingHandover, setStartingHandover] = useState(false);
   const [confirmingHandover, setConfirmingHandover] = useState(false);
 
@@ -118,16 +114,27 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
   // Effect to handle deep linked match selections from notification clicks
   useEffect(() => {
-    if (initialSelectedMatchId && matches.length > 0) {
+    if (initialSelectedMatchId) {
       const match = matches.find((m) => m.matchId === initialSelectedMatchId);
       if (match) {
         setSelectedMatch(match);
         if (onClearSelectedMatchId) {
           onClearSelectedMatchId();
         }
+      } else if (!loading) {
+        apiService.getMatchById(initialSelectedMatchId).then((res) => {
+          if (res.success && res.match) {
+            setSelectedMatch(res.match);
+            if (onClearSelectedMatchId) {
+              onClearSelectedMatchId();
+            }
+          }
+        }).catch((err) => {
+          console.error("Failed to fetch initial match by ID:", err);
+        });
       }
     }
-  }, [initialSelectedMatchId, matches, onClearSelectedMatchId]);
+  }, [initialSelectedMatchId, matches, loading, onClearSelectedMatchId]);
 
   // Loading message rotation loop
   useEffect(() => {
@@ -573,14 +580,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
         contact: respondentContact,
         questions,
         answers: verificationAnswers,
-        postId: targetPostId,
-        securityPin: userPin.trim() || undefined
+        postId: targetPostId
       });
 
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        addToast("Verification submitted successfully! The counterparty has been notified to review.", "success");
+        addToast("Claim submitted! The finder has been notified to review and verify.", "success");
         setActiveModalTab("verification");
       }
     } catch (err: any) {
@@ -591,30 +597,24 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     }
   };
 
-  // Handle Approve Match
+  // Handle Approve Match (e.g. Finder clicks "Yes, I believe this is the owner")
   const handleApproveMatch = async (roleToApprove: "Owner" | "Finder") => {
     if (!selectedMatch) return;
-    if (!actionPin.trim()) {
-      addToast("Please enter your 4-digit Security PIN to authenticate approval.", "warn");
-      return;
-    }
 
     setActionLoading(true);
     try {
       const postId = roleToApprove === "Owner" ? selectedMatch.lostPostId : selectedMatch.foundPostId;
       const res = await apiService.approveMatch(selectedMatch.matchId, {
         role: roleToApprove,
-        securityPin: actionPin.trim(),
         postId
       });
 
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        setActionPin("");
         const isNowMutuallyApproved = (res.match.ownerApproved && res.match.finderApproved) || res.match.matchStatus === "VERIFIED_CONNECTION";
         if (isNowMutuallyApproved) {
-          addToast("🎉 Mutual Approval Confirmed! Secure Handover Chat is now unlocked!", "success");
+          addToast("🎉 Connection Verified! Secure Chat is now unlocked.", "success");
           setActiveModalTab("chat");
         } else {
           addToast("Approval registered! Waiting for counterparty's approval.", "info");
@@ -622,7 +622,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       }
     } catch (err: any) {
       console.error(err);
-      addToast(err.message || "Approval failed. Check your Security PIN.", "error");
+      addToast(err.message || "Approval failed.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -631,17 +631,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   // Handle Reject Match
   const handleRejectMatch = async (roleToReject: "Owner" | "Finder") => {
     if (!selectedMatch) return;
-    if (!actionPin.trim()) {
-      addToast("Please enter your 4-digit Security PIN to authenticate rejection.", "warn");
-      return;
-    }
 
     setActionLoading(true);
     try {
       const postId = roleToReject === "Owner" ? selectedMatch.lostPostId : selectedMatch.foundPostId;
       const res = await apiService.rejectMatch(selectedMatch.matchId, {
         role: roleToReject,
-        securityPin: actionPin.trim(),
         postId,
         reason: rejectReason.trim() || "Item details do not match upon review."
       });
@@ -649,13 +644,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        setActionPin("");
         setRejectReason("");
         addToast("Match connection rejected and logged.", "info");
       }
     } catch (err: any) {
       console.error(err);
-      addToast(err.message || "Rejection failed. Check your Security PIN.", "error");
+      addToast(err.message || "Rejection failed.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -665,12 +659,6 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMatch || !chatMessage.trim()) return;
-    
-    // Check PIN
-    if (!actionPin.trim()) {
-      addToast("Enter your 4-digit Security PIN above to authenticate sending messages.", "warn");
-      return;
-    }
 
     setSendingChat(true);
     try {
@@ -678,7 +666,6 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       const res = await apiService.sendMatchChat(selectedMatch.matchId, {
         sender: userRole,
         text: chatMessage.trim(),
-        securityPin: actionPin.trim(),
         postId
       });
 
@@ -695,56 +682,45 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     }
   };
 
-  // Handle Confirm Trust (Part 2 Mutual Trust Confirmation)
+  // Handle Confirm Trust (Both click "I Trust This Person" -> WhatsApp Unlocked)
   const handleConfirmTrust = async (roleToTrust: "Owner" | "Finder") => {
     if (!selectedMatch) return;
-    if (!trustPin.trim()) {
-      addToast("Please enter your 4-digit Security PIN to confirm trust.", "warn");
-      return;
-    }
 
     setSubmittingTrust(true);
     try {
       const postId = roleToTrust === "Owner" ? selectedMatch.lostPostId : selectedMatch.foundPostId;
       const res = await apiService.submitMatchTrust(selectedMatch.matchId, {
         role: roleToTrust,
-        securityPin: trustPin.trim(),
         postId
       });
 
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        setTrustPin("");
-        const isBothTrusted = (res.match.ownerTrusted && res.match.finderTrusted) || res.match.matchStatus === "VERIFIED_CONNECTION";
+        const isBothTrusted = (res.match.ownerTrusted || (res.match as any).ownerTrustConfirmed) && (res.match.finderTrusted || (res.match as any).finderTrustConfirmed) || res.match.matchStatus === "VERIFIED_CONNECTION";
         if (isBothTrusted) {
-          addToast("🎉 Mutual Trust Confirmed! WhatsApp contact & Handover are now unlocked!", "success");
+          addToast("🎉 Mutual Trust Confirmed! Direct WhatsApp & phone number are now revealed!", "success");
         } else {
-          addToast(`Trust confirmed as ${roleToTrust}! Waiting for counterparty confirmation.`, "info");
+          addToast(`Trust confirmed! Waiting for the other person to click "I Trust This Person".`, "info");
         }
       }
     } catch (err: any) {
       console.error(err);
-      addToast(err.message || "Failed to confirm trust. Verify your PIN.", "error");
+      addToast(err.message || "Failed to confirm trust.", "error");
     } finally {
       setSubmittingTrust(false);
     }
   };
 
-  // Handle Start Handover (Part 2 Handover Phase)
+  // Handle Start Handover (Handover Phase)
   const handleStartHandover = async () => {
     if (!selectedMatch) return;
-    if (!handoverPin.trim()) {
-      addToast("Please enter your Security PIN to initiate handover.", "warn");
-      return;
-    }
 
     setStartingHandover(true);
     try {
       const postId = userRole === "Owner" ? selectedMatch.lostPostId : selectedMatch.foundPostId;
       const res = await apiService.startMatchHandover(selectedMatch.matchId, {
         role: userRole,
-        securityPin: handoverPin.trim(),
         postId,
         location: handoverMeetingPlace.trim(),
         meetingTime: handoverScheduledTime.trim()
@@ -753,8 +729,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        setHandoverPin("");
-        addToast("Safe handover initiated! Please adhere to public safety protocols.", "success");
+        addToast("Safe handover scheduled!", "success");
       }
     } catch (err: any) {
       console.error(err);
@@ -764,36 +739,30 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     }
   };
 
-  // Handle Confirm Handover (Part 2 Handover Resolution)
+  // Handle Confirm Handover (Handover Resolution)
   const handleConfirmHandover = async (roleToConfirm: "Owner" | "Finder") => {
     if (!selectedMatch) return;
-    if (!handoverPin.trim()) {
-      addToast("Please enter your Security PIN to confirm handover completion.", "warn");
-      return;
-    }
 
     setConfirmingHandover(true);
     try {
       const postId = roleToConfirm === "Owner" ? selectedMatch.lostPostId : selectedMatch.foundPostId;
       const res = await apiService.confirmMatchHandover(selectedMatch.matchId, {
         role: roleToConfirm,
-        securityPin: handoverPin.trim(),
         postId
       });
 
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        setHandoverPin("");
         if (res.match.matchStatus === "RESOLVED") {
           confetti({
             particleCount: 120,
             spread: 80,
             origin: { y: 0.6 }
           });
-          addToast("🎉 Handover complete! Item successfully reunited & resolved!", "success");
+          addToast("🎉 Handover confirmed! Item successfully reunited & marked RESOLVED!", "success");
         } else {
-          addToast(`Handover marked as confirmed by ${roleToConfirm}. Waiting for counterparty confirmation.`, "info");
+          addToast(`Confirmed as ${roleToConfirm}! Waiting for the other party to confirm.`, "info");
         }
       }
     } catch (err: any) {
@@ -980,7 +949,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
               // Distance & Proximity values
               const distance = getDistanceText(lostPost, foundPost);
               const confidence = getConfidenceLevel(m.matchScore);
-              const statusBadge = getStatusBadge(m.matchStatus, m.ownerApproved, m.finderApproved);
+              const statusBadge = getStatusBadge(
+                m.matchStatus,
+                m.ownerApproved,
+                m.finderApproved,
+                Boolean(m.ownerTrusted || (m as any).ownerTrustConfirmed),
+                Boolean(m.finderTrusted || (m as any).finderTrustConfirmed)
+              );
 
               return (
                 <motion.div
@@ -1186,7 +1161,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
           const distance = getDistanceText(lostPost, foundPost);
           const confidence = getConfidenceLevel(selectedMatch.matchScore);
-          const statusBadge = getStatusBadge(selectedMatch.matchStatus, selectedMatch.ownerApproved, selectedMatch.finderApproved);
+          const statusBadge = getStatusBadge(
+            selectedMatch.matchStatus,
+            selectedMatch.ownerApproved,
+            selectedMatch.finderApproved,
+            Boolean(selectedMatch.ownerTrusted || (selectedMatch as any).ownerTrustConfirmed),
+            Boolean(selectedMatch.finderTrusted || (selectedMatch as any).finderTrustConfirmed)
+          );
           const isMutuallyApproved = (selectedMatch.ownerApproved && selectedMatch.finderApproved) || selectedMatch.matchStatus === "VERIFIED_CONNECTION";
 
           return (
@@ -1534,7 +1515,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               Participant Action Controls
                             </h4>
                             <p className="text-xs text-slate-400 font-mono">
-                              Select your role and authenticate with your post Security PIN.
+                              Select your role to submit details or review and verify this connection.
                             </p>
                           </div>
 
@@ -1645,23 +1626,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-                              <div className="flex items-center gap-2">
-                                <KeyRound size={14} className="text-slate-500 shrink-0" />
-                                <input
-                                  type="password"
-                                  placeholder="4-digit PIN"
-                                  maxLength={6}
-                                  value={userPin}
-                                  onChange={(e) => setUserPin(e.target.value)}
-                                  className="w-32 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white font-mono text-center outline-none focus:border-indigo-500"
-                                />
-                              </div>
-
+                            <div className="flex justify-end pt-2">
                               <button
                                 type="submit"
                                 disabled={submittingVerification}
-                                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-lg shadow-indigo-950/50 disabled:opacity-50"
+                                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-lg shadow-indigo-950/50 disabled:opacity-50"
                               >
                                 {submittingVerification ? "Submitting..." : "Submit Verification Answers"}
                               </button>
@@ -1671,38 +1640,34 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                         {/* Approval / Rejection Controls for Pending Submissions */}
                         <div className="pt-3 border-t border-[#12121a] space-y-3">
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                            <div className="flex items-center gap-2 flex-1">
-                              <KeyRound size={14} className="text-slate-500 shrink-0" />
-                              <input
-                                type="password"
-                                placeholder="Enter Security PIN to Approve / Reject"
-                                maxLength={6}
-                                value={actionPin}
-                                onChange={(e) => setActionPin(e.target.value)}
-                                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white font-mono outline-none focus:border-indigo-500"
-                              />
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <div className="text-xs text-slate-400 font-mono">
+                              {userRole === "Finder"
+                                ? "Review the owner's details. If they match the found item, confirm to unlock Secure Chat."
+                                : "Review the finder's details. Confirm to unlock Secure Chat."}
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleApproveMatch(userRole)}
-                              disabled={actionLoading}
-                              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                            >
-                              <CheckCircle size={13} />
-                              {actionLoading ? "Processing..." : `Approve as ${userRole}`}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleApproveMatch(userRole)}
+                                disabled={actionLoading}
+                                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                              >
+                                <CheckCircle size={13} />
+                                {actionLoading ? "Processing..." : userRole === "Finder" ? "Yes, I believe this is the owner" : "Approve Verification"}
+                              </button>
 
-                            <button
-                              type="button"
-                              onClick={() => handleRejectMatch(userRole)}
-                              disabled={actionLoading}
-                              className="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                            >
-                              <XCircle size={13} />
-                              Reject
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRejectMatch(userRole)}
+                                disabled={actionLoading}
+                                className="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                              >
+                                <XCircle size={13} />
+                                Reject
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1712,9 +1677,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                   {activeModalTab === "trust" && (() => {
                     const viewerRoleKey = userRole.toLowerCase() as "owner" | "finder";
                     const revealed = getMatchRevealedContact(selectedMatch, viewerRoleKey);
-                    const isBothTrusted = (selectedMatch.ownerTrusted && selectedMatch.finderTrusted) || selectedMatch.matchStatus === "VERIFIED_CONNECTION";
+                    const isOwnerTrustedConfirmed = Boolean(selectedMatch.ownerTrusted || (selectedMatch as any).ownerTrustConfirmed);
+                    const isFinderTrustedConfirmed = Boolean(selectedMatch.finderTrusted || (selectedMatch as any).finderTrustConfirmed);
+                    const isBothTrusted = (isOwnerTrustedConfirmed && isFinderTrustedConfirmed) || selectedMatch.matchStatus === "VERIFIED_CONNECTION";
                     const waMessage = `Hi! Reaching out via LINCO regarding the matched ${lostPost.item} report. Let's coordinate safe handover.`;
-                    const waLink = revealed.isEligible ? getWhatsAppLink(revealed.contact, waMessage) : "";
+                    const waLink = revealed.whatsappUrl || (revealed.isEligible ? getWhatsAppLink(revealed.contact, waMessage) : "");
 
                     return (
                       <div className="space-y-6 text-left">
@@ -1727,36 +1694,36 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                             </h4>
                           </div>
                           <p className="text-xs text-slate-300 font-mono leading-relaxed">
-                            To ensure safety and privacy across the community, direct WhatsApp and contact numbers are only revealed once <strong>BOTH parties confirm mutual trust</strong> with their security PIN.
+                            To ensure safety and privacy across the community, direct WhatsApp and contact numbers are revealed as soon as <strong>BOTH parties click "I Trust This Person"</strong>.
                           </p>
                         </div>
 
                         {/* Mutual Trust Status Checklist */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className={`p-4 rounded-2xl border ${selectedMatch.ownerTrusted ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
+                          <div className={`p-4 rounded-2xl border ${isOwnerTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-bold text-slate-200">Owner Trust</span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${selectedMatch.ownerTrusted ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
-                                {selectedMatch.ownerTrusted ? "Confirmed ✓" : "Pending Confirmation"}
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isOwnerTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
+                                {isOwnerTrustedConfirmed ? "Confirmed ✓" : "Pending Confirmation"}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 font-mono mt-2">
-                              {selectedMatch.ownerTrusted
-                                ? "Owner has authorized direct contact & handover."
+                              {isOwnerTrustedConfirmed
+                                ? "Owner has confirmed trust."
                                 : "Awaiting owner trust confirmation."}
                             </p>
                           </div>
 
-                          <div className={`p-4 rounded-2xl border ${selectedMatch.finderTrusted ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
+                          <div className={`p-4 rounded-2xl border ${isFinderTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-bold text-slate-200">Finder Trust</span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${selectedMatch.finderTrusted ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
-                                {selectedMatch.finderTrusted ? "Confirmed ✓" : "Pending Confirmation"}
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isFinderTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
+                                {isFinderTrustedConfirmed ? "Confirmed ✓" : "Pending Confirmation"}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 font-mono mt-2">
-                              {selectedMatch.finderTrusted
-                                ? "Finder has authorized direct contact & handover."
+                              {isFinderTrustedConfirmed
+                                ? "Finder has confirmed trust."
                                 : "Awaiting finder trust confirmation."}
                             </p>
                           </div>
@@ -1821,42 +1788,33 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                             ) : (
                               <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 font-mono flex items-center gap-2">
                                 <Lock size={13} className="text-amber-400 shrink-0" />
-                                <span>Complete trust confirmation below to reveal active WhatsApp link and phone number.</span>
+                                <span>Both users must click "I Trust This Person" below to reveal active WhatsApp link and phone number.</span>
                               </div>
                             )}
                           </div>
                         </div>
 
                         {/* Confirm Trust Action */}
-                        <div className="p-5 rounded-2xl bg-gradient-to-b from-[#0c0c16] to-[#06060c] border border-indigo-500/20 space-y-4">
-                          <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-display">
-                            Confirm Trust for this Match
-                          </h5>
-
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                            <div className="flex items-center gap-2 flex-1">
-                              <KeyRound size={14} className="text-slate-500 shrink-0" />
-                              <input
-                                type="password"
-                                placeholder="Enter Security PIN"
-                                maxLength={6}
-                                value={trustPin}
-                                onChange={(e) => setTrustPin(e.target.value)}
-                                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-white font-mono outline-none focus:border-indigo-500"
-                              />
-                            </div>
+                        {((userRole === "Owner" && !isOwnerTrustedConfirmed) || (userRole === "Finder" && !isFinderTrustedConfirmed)) && (
+                          <div className="p-5 rounded-2xl bg-gradient-to-b from-[#0c0c16] to-[#06060c] border border-indigo-500/20 space-y-4">
+                            <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-display">
+                              Confirm Trust as {userRole}
+                            </h5>
+                            <p className="text-xs text-slate-400 font-mono">
+                              By clicking trust, you authorize exchanging direct WhatsApp contact for safe item handover.
+                            </p>
 
                             <button
                               type="button"
                               onClick={() => handleConfirmTrust(userRole)}
                               disabled={submittingTrust}
-                              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
                             >
-                              <Handshake size={14} />
-                              {submittingTrust ? "Confirming..." : `Confirm Trust as ${userRole}`}
+                              <Handshake size={15} />
+                              {submittingTrust ? "Confirming..." : "I Trust This Person"}
                             </button>
                           </div>
-                        </div>
+                        )}
                       </div>
                     );
                   })()}
@@ -1877,7 +1835,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 Item Successfully Reunited & Resolved!
                               </h4>
                               <p className="text-xs text-slate-300 font-mono max-w-md mx-auto leading-relaxed">
-                                Both owner and finder have confirmed the safe handover. Thank you for protecting our community!
+                                Both owner and finder have confirmed the safe handover. Case resolved!
                               </p>
                             </div>
                             <button
@@ -1897,7 +1855,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </h4>
                             </div>
                             <p className="text-xs text-slate-300 font-mono leading-relaxed">
-                              Coordinate a public meetup location (e.g. Metro Station, Police Station helpdesk, or campus security). Both parties will confirm handover with their security PIN.
+                              Coordinate a public meetup location (e.g. Metro Station, Police Helpdesk, or campus security). Once physically handed over, both parties confirm below to resolve the case.
                             </p>
                           </div>
                         )}
@@ -1933,19 +1891,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </div>
                             </div>
 
-                            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                              <div className="flex items-center gap-2 flex-1">
-                                <KeyRound size={14} className="text-slate-500 shrink-0" />
-                                <input
-                                  type="password"
-                                  placeholder="Security PIN"
-                                  maxLength={6}
-                                  value={handoverPin}
-                                  onChange={(e) => setHandoverPin(e.target.value)}
-                                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white font-mono outline-none focus:border-cyan-500"
-                                />
-                              </div>
-
+                            <div className="pt-2 flex justify-end">
                               <button
                                 type="button"
                                 onClick={handleStartHandover}
@@ -1953,7 +1899,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-cyan-950/50"
                               >
                                 <MapPin size={13} />
-                                {startingHandover ? "Initiating..." : "Start Safe Handover"}
+                                {startingHandover ? "Scheduling..." : "Schedule Safe Handover"}
                               </button>
                             </div>
                           </div>
@@ -1963,31 +1909,31 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         {!isResolved && (
                           <div className="p-5 rounded-2xl bg-[#06060c] border border-[#161621] space-y-4">
                             <h5 className="text-xs font-display font-bold text-slate-200 uppercase tracking-wider">
-                              Confirm Handover Completion
+                              Confirm Handover & Resolve Case
                             </h5>
                             <p className="text-[11px] text-slate-400 font-mono">
-                              Once physically met at the public spot, both parties must confirm with their PIN to permanently resolve the case.
+                              Once physically handed over at the meetup spot, confirm to finalize the return.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-3">
                               <button
                                 type="button"
-                                onClick={() => handleConfirmHandover("Owner")}
+                                onClick={() => handleConfirmHandover("Finder")}
                                 disabled={confirmingHandover}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                className="flex-1 px-4 py-3 rounded-xl bg-teal-600/20 hover:bg-teal-600 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                               >
                                 <CheckCheck size={14} />
-                                Confirm Item Received (Owner)
+                                I handed over this item
                               </button>
 
                               <button
                                 type="button"
-                                onClick={() => handleConfirmHandover("Finder")}
+                                onClick={() => handleConfirmHandover("Owner")}
                                 disabled={confirmingHandover}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-teal-600/20 hover:bg-teal-600 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                className="flex-1 px-4 py-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                               >
                                 <CheckCheck size={14} />
-                                Confirm Handover Completed (Finder)
+                                I received my item
                               </button>
                             </div>
                           </div>
@@ -2006,10 +1952,10 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           </div>
                           <div className="space-y-1 max-w-md mx-auto">
                             <h4 className="text-sm font-display font-extrabold text-slate-100 uppercase tracking-wider">
-                              Secure Chat Remains Locked
+                              Secure Chat Unlocks After Verification
                             </h4>
                             <p className="text-xs text-slate-400 leading-relaxed font-mono">
-                              Mutual Approval Requirement: Both the Item Owner and Finder must submit and approve verification before the private coordination chat unlocks.
+                              Once the claim is verified, end-to-end Secure Chat automatically opens between both parties.
                             </p>
                           </div>
 
@@ -2017,13 +1963,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                             <div className="flex items-center gap-1.5">
                               <span className={`w-2.5 h-2.5 rounded-full ${selectedMatch.ownerApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
                               <span className={selectedMatch.ownerApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                                Owner Approval: {selectedMatch.ownerApproved ? "Done ✓" : "Pending"}
+                                Owner: {selectedMatch.ownerApproved ? "Verified ✓" : "Pending"}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className={`w-2.5 h-2.5 rounded-full ${selectedMatch.finderApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
                               <span className={selectedMatch.finderApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                                Finder Approval: {selectedMatch.finderApproved ? "Done ✓" : "Pending"}
+                                Finder: {selectedMatch.finderApproved ? "Verified ✓" : "Pending"}
                               </span>
                             </div>
                           </div>
@@ -2056,7 +2002,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#030305]/40 text-left">
                             {(!selectedMatch.messages || selectedMatch.messages.length === 0) ? (
                               <div className="text-center py-12 text-slate-500 text-xs font-mono">
-                                Connection verified! Say hello to coordinate safe handover.
+                                Connection verified! Send a message to coordinate safe handover.
                               </div>
                             ) : (
                               selectedMatch.messages.map((msg) => {
@@ -2094,34 +2040,21 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                             <div ref={chatBottomRef} />
                           </div>
 
-                          {/* Chat Input Bar with Mobile-Friendly Layout */}
-                          <form onSubmit={handleSendChat} className="p-3 border-t border-[#12121a] bg-[#07070d] flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                            <div className="flex items-center gap-2 shrink-0">
-                              <KeyRound size={13} className="text-slate-500 shrink-0" />
-                              <input
-                                type="password"
-                                placeholder="PIN"
-                                maxLength={6}
-                                value={actionPin}
-                                onChange={(e) => setActionPin(e.target.value)}
-                                className="w-20 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-mono text-center outline-none focus:border-indigo-500"
-                                required
-                              />
-                            </div>
-
+                          {/* Chat Input Bar */}
+                          <form onSubmit={handleSendChat} className="p-3 border-t border-[#12121a] bg-[#07070d] flex items-center gap-2">
                             <input
                               type="text"
-                              placeholder="Type handover message..."
+                              placeholder="Type a message to coordinate handover..."
                               value={chatMessage}
                               onChange={(e) => setChatMessage(e.target.value)}
-                              className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
                               required
                             />
 
                             <button
                               type="submit"
                               disabled={sendingChat || !chatMessage.trim()}
-                              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shrink-0 disabled:opacity-50"
+                              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shrink-0 disabled:opacity-50 shadow-lg shadow-indigo-950/50"
                             >
                               <Send size={12} />
                               <span>{sendingChat ? "Sending..." : "Send"}</span>

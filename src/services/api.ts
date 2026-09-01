@@ -426,8 +426,8 @@ export const apiService = {
     matchId: string,
     data: {
       role: "Owner" | "Finder";
-      securityPin: string;
-      postId: string;
+      securityPin?: string;
+      postId?: string;
     }
   ): Promise<{ success: boolean; match: PotentialMatch }> {
     const response = await fetch(`/api/matches/${matchId}/approve`, {
@@ -449,8 +449,8 @@ export const apiService = {
     matchId: string,
     data: {
       role: "Owner" | "Finder";
-      securityPin: string;
-      postId: string;
+      securityPin?: string;
+      postId?: string;
       reason?: string;
     }
   ): Promise<{ success: boolean; match: PotentialMatch }> {
@@ -475,8 +475,8 @@ export const apiService = {
     data: {
       sender: "Owner" | "Finder";
       text: string;
-      securityPin: string;
-      postId: string;
+      securityPin?: string;
+      postId?: string;
     }
   ): Promise<{ success: boolean; match: PotentialMatch; message: any }> {
     const response = await fetch(`/api/matches/${matchId}/chat`, {
@@ -546,7 +546,7 @@ export const apiService = {
    */
   async submitMatchTrust(
     matchId: string,
-    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+    data: { role: "Owner" | "Finder"; securityPin?: string; postId?: string }
   ): Promise<{ success: boolean; match: PotentialMatch }> {
     const response = await fetch(`/api/matches/${matchId}/trust`, {
       method: "POST",
@@ -567,8 +567,8 @@ export const apiService = {
     matchId: string,
     data: {
       role: "Owner" | "Finder";
-      securityPin: string;
-      postId: string;
+      securityPin?: string;
+      postId?: string;
       location?: string;
       meetingTime?: string;
       notes?: string;
@@ -591,7 +591,7 @@ export const apiService = {
    */
   async confirmMatchHandover(
     matchId: string,
-    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+    data: { role: "Owner" | "Finder"; securityPin?: string; postId?: string }
   ): Promise<{ success: boolean; match: PotentialMatch }> {
     const response = await fetch(`/api/matches/${matchId}/handover/confirm`, {
       method: "POST",
@@ -610,7 +610,7 @@ export const apiService = {
    */
   async getMatchRevealedContact(
     matchId: string,
-    data: { role: "Owner" | "Finder"; securityPin: string; postId: string }
+    data: { role: "Owner" | "Finder"; securityPin?: string; postId?: string }
   ): Promise<{
     success: boolean;
     contact: string;
@@ -625,7 +625,7 @@ export const apiService = {
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "Contact is still locked or PIN is invalid");
+      throw new Error(errData.error || "Contact is still locked or unavailable");
     }
     return response.json();
   },
@@ -637,7 +637,7 @@ export const apiService = {
     lostPostId: string;
     finderName: string;
     finderContact: string;
-    finderSecurityPin: string;
+    finderSecurityPin?: string;
     foundLocation?: string;
     foundDetails?: string;
     foundImage?: string | null;

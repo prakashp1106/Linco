@@ -61,6 +61,7 @@ export interface RevealedContactResult {
   contact: string;
   maskedContact: string;
   name?: string;
+  whatsappUrl?: string;
 }
 
 export function getMatchRevealedContact(
@@ -70,30 +71,41 @@ export function getMatchRevealedContact(
     finderApproved?: boolean;
     ownerTrusted?: boolean;
     finderTrusted?: boolean;
+    ownerTrustConfirmed?: boolean;
+    finderTrustConfirmed?: boolean;
     ownerVerification?: { respondentName?: string; contact?: string };
     finderVerification?: { respondentName?: string; contact?: string };
+    lostPostId?: string;
+    foundPostId?: string;
   },
-  viewerRole: "owner" | "finder"
+  viewerRole: "owner" | "finder",
+  targetPost?: { contact?: string; item?: string; type?: string }
 ): RevealedContactResult {
-  const isEligible = Boolean(
-    (match.ownerApproved && match.finderApproved && match.ownerTrusted && match.finderTrusted) ||
-    match.matchStatus === "VERIFIED_CONNECTION" ||
-    match.matchStatus === "HANDOVER_PENDING" ||
-    match.matchStatus === "OWNER_RECEIVED_CONFIRMED" ||
-    match.matchStatus === "FINDER_HANDOVER_CONFIRMED" ||
-    match.matchStatus === "RESOLVED"
-  );
+  const isOwnerTrusted = Boolean(match.ownerTrusted || match.ownerTrustConfirmed);
+  const isFinderTrusted = Boolean(match.finderTrusted || match.finderTrustConfirmed);
+  const isBothTrusted = isOwnerTrusted && isFinderTrusted;
+
+  const isEligible = isBothTrusted || match.matchStatus === "RESOLVED";
 
   const targetVerification = viewerRole === "owner" ? match.finderVerification : match.ownerVerification;
-  const rawContact = targetVerification?.contact || (viewerRole === "owner" ? (match as any).finderContact : (match as any).ownerContact) || "";
+  const rawContact =
+    targetVerification?.contact ||
+    targetPost?.contact ||
+    (viewerRole === "owner" ? (match as any).finderContact : (match as any).ownerContact) ||
+    "";
+    
   const defaultName = viewerRole === "owner" ? ((match as any).finderName || "Item Finder") : ((match as any).ownerName || "Item Owner");
   const name = targetVerification?.respondentName || defaultName;
+  const itemName = targetPost?.item || "item";
+
+  const waMessage = `Hi! Reaching out via LINCO regarding our verified match for "${itemName}". Let's coordinate safe handover.`;
+  const whatsappUrl = isEligible && rawContact ? getWhatsAppLink(rawContact, waMessage) : "";
 
   return {
     isEligible,
     contact: isEligible ? rawContact : "",
     maskedContact: maskPhoneNumber(rawContact),
-    name
+    name,
+    whatsappUrl
   };
 }
-
