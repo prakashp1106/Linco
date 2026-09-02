@@ -492,10 +492,10 @@ export const apiService = {
   },
 
   /**
-   * Fetch all in-app notifications
+   * Fetch in-app notifications for a specific post
    */
-  async getNotifications(): Promise<{ success: boolean; notifications: LincoNotification[] }> {
-    const response = await fetch("/api/notifications");
+  async getNotifications(postId: string): Promise<{ success: boolean; notifications: LincoNotification[] }> {
+    const response = await fetch(`/api/notifications?postId=${encodeURIComponent(postId)}`);
     if (!response.ok) {
       throw new Error("Failed to fetch notifications");
     }
