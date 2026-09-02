@@ -413,17 +413,25 @@ export default function App() {
     }, 4500);
   }, []);
 
-  // Fetch notifications
+  // Fetch notifications for user's unlocked posts
   const loadNotifications = useCallback(async () => {
+    if (unlockedPosts.length === 0) {
+      setNotifications([]);
+      return;
+    }
     try {
-      const res = await apiService.getNotifications();
-      if (res.success) {
-        setNotifications(res.notifications);
+      const allNotifs: LincoNotification[] = [];
+      for (const postId of unlockedPosts) {
+        const res = await apiService.getNotifications(postId);
+        if (res.success && res.notifications) {
+          allNotifs.push(...res.notifications);
+        }
       }
+      setNotifications(allNotifs);
     } catch (err) {
       console.error("Failed to load notifications:", err);
     }
-  }, []);
+  }, [unlockedPosts]);
 
   useEffect(() => {
     loadNotifications();

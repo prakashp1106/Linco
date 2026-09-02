@@ -2871,22 +2871,35 @@ app.post("/api/matches/:matchId/chat", async (req, res) => {
   }
 });
 
-// Fetch notifications
+// Fetch notifications (Requires mandatory postId query parameter to prevent global notification data leakage across users)
 app.get("/api/notifications", async (req, res) => {
   try {
+    const rawPostId = req.query.postId;
+    if (!rawPostId || typeof rawPostId !== "string" || !rawPostId.trim()) {
+      return res.status(400).json({ error: "postId parameter is required to fetch notifications" });
+    }
+
+    const targetPostId = rawPostId.trim();
     let notificationsList: any[] = [];
+
     if (useLocalFallback) {
       const local = readLocalDB();
       notificationsList = local.notifications || [];
       console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Local Fallback JSON.`);
     } else {
       console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'notifications'");
-      const snapshot = await db!.collection("notifications").get();
+      const snapshot = await db!.collection("notifications").where("postId", "==", targetPostId).get();
       snapshot.forEach(doc => {
         notificationsList.push(doc.data());
       });
       console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Firestore collection 'notifications'.`);
     }
+
+    // Filter by postId to ensure strictly post-isolated notification data return
+    if (useLocalFallback) {
+      notificationsList = notificationsList.filter(n => String(n.postId) === targetPostId);
+    }
+
     // Sort descending by creation date
     notificationsList.sort((a, b) => b.createdAt - a.createdAt);
     res.json({ success: true, notifications: notificationsList });

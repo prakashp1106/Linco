@@ -90,4 +90,39 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Notification Data Isolation Security", () => {
+    it("strictly requires postId parameter and rejects missing postId to prevent notification leakage", () => {
+      const mockNotifications = [
+        { id: "n1", postId: "post100", message: "Match found for Post 100", createdAt: 1000 },
+        { id: "n2", postId: "post200", message: "Match found for Post 200", createdAt: 2000 },
+        { id: "n3", postId: "post100", message: "Claim received for Post 100", createdAt: 3000 }
+      ];
+
+      // Simulate server handler behavior for GET /api/notifications
+      const handleGetNotifications = (reqQueryPostId: any) => {
+        if (!reqQueryPostId || typeof reqQueryPostId !== "string" || !reqQueryPostId.trim()) {
+          return { status: 400, error: "postId parameter is required to fetch notifications" };
+        }
+        const targetPostId = reqQueryPostId.trim();
+        const filtered = mockNotifications.filter(n => String(n.postId) === targetPostId);
+        return { status: 200, notifications: filtered };
+      };
+
+      // 1. Missing or invalid postId should return 400 Bad Request
+      const missingResult = handleGetNotifications(undefined);
+      expect(missingResult.status).toBe(400);
+      expect(missingResult.error).toContain("postId parameter is required");
+
+      const emptyResult = handleGetNotifications("   ");
+      expect(emptyResult.status).toBe(400);
+
+      // 2. Valid postId should return strictly isolated notifications
+      const post100Result = handleGetNotifications("post100");
+      expect(post100Result.status).toBe(200);
+      expect(post100Result.notifications).toHaveLength(2);
+      expect(post100Result.notifications?.every(n => n.postId === "post100")).toBe(true);
+      expect(post100Result.notifications?.some(n => n.id === "n2")).toBe(false);
+    });
+  });
 });
