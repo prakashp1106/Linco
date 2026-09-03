@@ -90,4 +90,58 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Match PII Sanitization", () => {
+    it("masks verification contacts when match is not unlocked", () => {
+      function sanitizeMatch(match: any): any {
+        if (!match) return match;
+        const isUnlocked = match.matchStatus === "VERIFIED_CONNECTION" || (match.ownerApproved && match.finderApproved);
+        if (!isUnlocked) {
+          const sanitized = { ...match };
+          if (sanitized.ownerVerification?.contact) {
+            const c = String(sanitized.ownerVerification.contact);
+            const masked = c.length >= 5 ? c.slice(0, 3) + "******" + c.slice(-2) : "******";
+            sanitized.ownerVerification = {
+              ...sanitized.ownerVerification,
+              contact: masked
+            };
+          }
+          if (sanitized.finderVerification?.contact) {
+            const c = String(sanitized.finderVerification.contact);
+            const masked = c.length >= 5 ? c.slice(0, 3) + "******" + c.slice(-2) : "******";
+            sanitized.finderVerification = {
+              ...sanitized.finderVerification,
+              contact: masked
+            };
+          }
+          return sanitized;
+        }
+        return match;
+      }
+
+      const lockedMatch = {
+        matchId: "m1",
+        matchStatus: "POTENTIAL_MATCH",
+        ownerApproved: false,
+        finderApproved: false,
+        ownerVerification: { contact: "9876543210" },
+        finderVerification: { contact: "9123456789" }
+      };
+
+      const sanitized = sanitizeMatch(lockedMatch);
+      expect(sanitized.ownerVerification.contact).toBe("987******10");
+      expect(sanitized.finderVerification.contact).toBe("912******89");
+
+      const unlockedMatch = {
+        ...lockedMatch,
+        matchStatus: "VERIFIED_CONNECTION",
+        ownerApproved: true,
+        finderApproved: true
+      };
+
+      const unsanitized = sanitizeMatch(unlockedMatch);
+      expect(unsanitized.ownerVerification.contact).toBe("9876543210");
+      expect(unsanitized.finderVerification.contact).toBe("9123456789");
+    });
+  });
 });
