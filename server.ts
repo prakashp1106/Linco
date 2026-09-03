@@ -1775,6 +1775,33 @@ app.get("/api/posts", async (req, res) => {
 
 // --- NEW SMART AI MATCH ENGINE ENDPOINTS ---
 
+// PII Protection Helper: Masks direct contacts unless mutually verified connection
+function sanitizeMatch(match: any): any {
+  if (!match) return match;
+  const isUnlocked = match.matchStatus === "VERIFIED_CONNECTION" || (match.ownerApproved && match.finderApproved);
+  if (!isUnlocked) {
+    const sanitized = { ...match };
+    if (sanitized.ownerVerification?.contact) {
+      const c = String(sanitized.ownerVerification.contact);
+      const masked = c.length >= 5 ? c.slice(0, 3) + "******" + c.slice(-2) : "******";
+      sanitized.ownerVerification = {
+        ...sanitized.ownerVerification,
+        contact: masked
+      };
+    }
+    if (sanitized.finderVerification?.contact) {
+      const c = String(sanitized.finderVerification.contact);
+      const masked = c.length >= 5 ? c.slice(0, 3) + "******" + c.slice(-2) : "******";
+      sanitized.finderVerification = {
+        ...sanitized.finderVerification,
+        contact: masked
+      };
+    }
+    return sanitized;
+  }
+  return match;
+}
+
 // Fetch potential matches list
 app.get("/api/matches", async (req, res) => {
   try {
@@ -1795,7 +1822,7 @@ app.get("/api/matches", async (req, res) => {
       });
       console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/matches: Read ${matchesList.length} potential matches from Firestore collection 'matches'.`);
     }
-    res.json({ success: true, matches: matchesList });
+    res.json({ success: true, matches: matchesList.map(sanitizeMatch) });
   } catch (err: any) {
     console.error("GET /api/matches failed:", err);
     res.status(500).json({ error: err.message || "Failed to load matches" });
@@ -1851,26 +1878,7 @@ app.get("/api/matches/:matchId", async (req, res) => {
       return res.status(404).json({ error: "Match not found" });
     }
 
-    // PII Protection: Mask direct contacts unless mutually verified connection
-    const isUnlocked = match.matchStatus === "VERIFIED_CONNECTION" || (match.ownerApproved && match.finderApproved);
-    if (!isUnlocked) {
-      const sanitized = { ...match };
-      if (sanitized.ownerVerification?.contact) {
-        sanitized.ownerVerification = {
-          ...sanitized.ownerVerification,
-          contact: sanitized.ownerVerification.contact.slice(0, 3) + "******" + sanitized.ownerVerification.contact.slice(-2)
-        };
-      }
-      if (sanitized.finderVerification?.contact) {
-        sanitized.finderVerification = {
-          ...sanitized.finderVerification,
-          contact: sanitized.finderVerification.contact.slice(0, 3) + "******" + sanitized.finderVerification.contact.slice(-2)
-        };
-      }
-      return res.json({ success: true, match: sanitized });
-    }
-
-    res.json({ success: true, match });
+    res.json({ success: true, match: sanitizeMatch(match) });
   } catch (err: any) {
     console.error("Get match details failed:", err);
     res.status(500).json({ error: err.message || "Failed to load match" });
