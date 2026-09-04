@@ -2922,8 +2922,15 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
-// Update Configuration
+// Update Configuration (Security: Enforces Admin Key check if ADMIN_API_KEY is configured)
 app.post("/api/config", (req, res) => {
+  const adminKey = (req.headers["x-admin-key"] as string) || req.body?.adminKey;
+  const expectedAdminKey = process.env.ADMIN_API_KEY;
+
+  if (expectedAdminKey && adminKey !== expectedAdminKey) {
+    return res.status(403).json({ error: "Unauthorized: Invalid or missing Admin API Key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
