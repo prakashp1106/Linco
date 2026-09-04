@@ -527,16 +527,21 @@ export const apiService = {
   },
 
   /**
-   * Update match threshold configuration
+   * Update match threshold configuration (requires adminKey if configured)
    */
-  async updateConfig(threshold: number): Promise<{ success: boolean; matchThreshold: number }> {
+  async updateConfig(threshold: number, adminKey?: string): Promise<{ success: boolean; matchThreshold: number }> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (adminKey) {
+      headers["X-Admin-Key"] = adminKey;
+    }
     const response = await fetch("/api/config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ threshold }),
+      headers,
+      body: JSON.stringify({ threshold, adminKey }),
     });
     if (!response.ok) {
-      throw new Error("Failed to update configuration");
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to update configuration");
     }
     return response.json();
   },
