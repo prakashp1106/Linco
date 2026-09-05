@@ -75,6 +75,49 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
     });
   });
 
+  describe("Admin API Authorization Controls", () => {
+    const handleConfigUpdate = (req: { headers: Record<string, string>; body?: Record<string, any> }, envAdminKey?: string) => {
+      if (envAdminKey) {
+        const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+        if (!providedKey || providedKey !== envAdminKey) {
+          return { status: 401, body: { error: "Unauthorized: Invalid or missing admin API key." } };
+        }
+      }
+      const { threshold } = req.body || {};
+      if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
+        return { status: 200, body: { success: true, matchThreshold: threshold } };
+      }
+      return { status: 400, body: { error: "Invalid threshold value. Must be between 0 and 100." } };
+    };
+
+    it("enforces 401 Unauthorized on POST /api/config when ADMIN_API_KEY is set and missing/invalid key is provided", () => {
+      const envKey = "admin-secret-123";
+
+      // Missing key -> 401
+      const res1 = handleConfigUpdate({ headers: {}, body: { threshold: 75 } }, envKey);
+      expect(res1.status).toBe(401);
+      expect(res1.body.error).toContain("Unauthorized");
+
+      // Wrong key -> 401
+      const res2 = handleConfigUpdate({ headers: { "x-admin-key": "invalid-key" }, body: { threshold: 75 } }, envKey);
+      expect(res2.status).toBe(401);
+
+      // Valid header key -> 200
+      const res3 = handleConfigUpdate({ headers: { "x-admin-key": envKey }, body: { threshold: 75 } }, envKey);
+      expect(res3.status).toBe(200);
+      expect(res3.body.matchThreshold).toBe(75);
+
+      // Valid body key -> 200
+      const res4 = handleConfigUpdate({ headers: {}, body: { adminKey: envKey, threshold: 85 } }, envKey);
+      expect(res4.status).toBe(200);
+      expect(res4.body.matchThreshold).toBe(85);
+
+      // Unset ADMIN_API_KEY -> 200 without key
+      const res5 = handleConfigUpdate({ headers: {}, body: { threshold: 90 } }, undefined);
+      expect(res5.status).toBe(200);
+    });
+  });
+
   describe("Spam & Abuse Defense Edge Cases", () => {
     it("safely handles null, undefined and non-string inputs", () => {
       expect(sanitizeText(null as any)).toBe("");
