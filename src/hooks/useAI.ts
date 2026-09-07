@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from "react";
 import { aiController } from "../services/aiController";
-import { QuickFillResponse, SuggestRewardResponse, VerifyClaimResponse } from "../services/api";
+import { QuickFillResponse, SuggestRewardResponse, VerifyClaimResponse, EnhanceDescriptionResponse, ReconstructTimelineResponse } from "../services/api";
 
 export function useAI() {
   const [photoLoading, setPhotoLoading] = useState(false);
@@ -19,6 +19,8 @@ export function useAI() {
   // Suggested values / detector states
   const [rewardReason, setRewardReason] = useState("");
   const [timelineResult, setTimelineResult] = useState("");
+  const [timelineData, setTimelineData] = useState<ReconstructTimelineResponse | null>(null);
+  const [enhancedData, setEnhancedData] = useState<EnhanceDescriptionResponse | null>(null);
 
   const runPhotoAnalyzer = useCallback(async (imageBase64: string): Promise<QuickFillResponse> => {
     setPhotoLoading(true);
@@ -40,10 +42,11 @@ export function useAI() {
     }
   }, []);
 
-  const runEnhanceDescription = useCallback(async (item: string, category: string, rawDesc: string): Promise<string> => {
+  const runEnhanceDescription = useCallback(async (item: string, category: string, rawDesc: string, language?: string): Promise<EnhanceDescriptionResponse> => {
     setEnhanceLoading(true);
     try {
-      const res = await aiController.enhanceItemDescription(item, category, rawDesc);
+      const res = await aiController.enhanceItemDescription(item, category, rawDesc, language);
+      setEnhancedData(res);
       return res;
     } finally {
       setEnhanceLoading(false);
@@ -61,12 +64,13 @@ export function useAI() {
     }
   }, []);
 
-  const runTimelineAnalysis = useCallback(async (item: string, timeline: string): Promise<string> => {
+  const runTimelineAnalysis = useCallback(async (item: string, timeline: string, language?: string): Promise<ReconstructTimelineResponse> => {
     setTimelineLoading(true);
     try {
-      const analysis = await aiController.reconstructUserTimeline(item, timeline);
-      setTimelineResult(analysis);
-      return analysis;
+      const res = await aiController.reconstructUserTimeline(item, timeline, language);
+      setTimelineData(res);
+      setTimelineResult(res.analysis || "");
+      return res;
     } finally {
       setTimelineLoading(false);
     }
@@ -103,6 +107,10 @@ export function useAI() {
     setRewardReason,
     timelineResult,
     setTimelineResult,
+    timelineData,
+    setTimelineData,
+    enhancedData,
+    setEnhancedData,
     runPhotoAnalyzer,
     runVoiceAnalyzer,
     runEnhanceDescription,

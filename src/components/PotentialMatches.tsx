@@ -507,11 +507,18 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
         icon: <MapPin size={12} className="text-cyan-400 animate-bounce" />
       };
     }
-    if (status === "VERIFIED_CONNECTION" || (ownerApproved && finderApproved && ownerTrusted && finderTrusted)) {
+    if (ownerApproved && finderApproved && ownerTrusted && finderTrusted) {
       return {
-        label: "Verified Connection (WhatsApp & Direct Handover Unlocked)",
+        label: "Mutual Trust Established (WhatsApp & Direct Handover Unlocked)",
         style: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
         icon: <ShieldCheck size={12} className="text-emerald-400" />
+      };
+    }
+    if (status === "VERIFIED_CONNECTION" || (ownerApproved && finderApproved)) {
+      return {
+        label: "Verified Connection (Secure Chat Unlocked)",
+        style: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
+        icon: <ShieldCheck size={12} className="text-cyan-400" />
       };
     }
     if (status === "MUTUAL_TRUST_PENDING" || (ownerApproved && finderApproved)) {
@@ -697,7 +704,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       if (res.success && res.match) {
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
-        const isBothTrusted = (res.match.ownerTrusted || (res.match as any).ownerTrustConfirmed) && (res.match.finderTrusted || (res.match as any).finderTrustConfirmed) || res.match.matchStatus === "VERIFIED_CONNECTION";
+        const isBothTrusted = Boolean((res.match.ownerTrusted || (res.match as any).ownerTrustConfirmed) && (res.match.finderTrusted || (res.match as any).finderTrustConfirmed));
         if (isBothTrusted) {
           addToast("🎉 Mutual Trust Confirmed! Direct WhatsApp & phone number are now revealed!", "success");
         } else {
@@ -1402,6 +1409,79 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           </p>
                         </div>
                       </div>
+
+                      {/* Quick Mutual Approval Decision Strip */}
+                      <div className="p-4 rounded-2xl bg-[#060810] border border-[#161828] text-left space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#121422]">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck size={16} className="text-indigo-400" />
+                            <span className="text-xs font-bold text-slate-200">
+                              Mutual Approval Review — {userRole} Perspective
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-mono">
+                            <span className="text-slate-500">Match Status:</span>
+                            <span className="text-cyan-400 font-bold">{selectedMatch.matchStatus}</span>
+                          </div>
+                        </div>
+
+                        {selectedMatch.ownerApproved && selectedMatch.finderApproved ? (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                            <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1.5">
+                              <CheckCircle size={14} /> Mutual approval confirmed. Both parties have verified.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveModalTab("chat")}
+                              className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider cursor-pointer transition shrink-0"
+                            >
+                              Open Secure Chat →
+                            </button>
+                          </div>
+                        ) : (userRole === "Owner" && selectedMatch.ownerApproved) ? (
+                          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-300 font-medium">
+                            <span>✓ You marked: <strong>"This looks like my item"</strong>. Waiting for finder's confirmation.</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-400">1/2 Approved</span>
+                          </div>
+                        ) : (userRole === "Finder" && selectedMatch.finderApproved) ? (
+                          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-300 font-medium">
+                            <span>✓ You confirmed: <strong>"Yes, this is the owner"</strong>. Waiting for owner's confirmation.</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-400">1/2 Approved</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <p className="text-xs text-slate-400 font-mono">
+                              {userRole === "Finder"
+                                ? "Does this lost report match the item you found? Confirm to proceed toward Secure Chat."
+                                : "Does this found report match your lost item? Confirm to notify the finder."}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleApproveMatch(userRole)}
+                                disabled={actionLoading}
+                                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition flex items-center gap-1.5 disabled:opacity-50"
+                              >
+                                <CheckCircle size={13} />
+                                {actionLoading
+                                  ? "Saving..."
+                                  : userRole === "Finder"
+                                  ? "Yes, this is the owner"
+                                  : "This looks like my item"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRejectMatch(userRole)}
+                                disabled={actionLoading}
+                                className="px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition disabled:opacity-50"
+                              >
+                                <XCircle size={13} />
+                                {userRole === "Finder" ? "No, details do not match" : "Not my item"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1640,35 +1720,72 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                         {/* Approval / Rejection Controls for Pending Submissions */}
                         <div className="pt-3 border-t border-[#12121a] space-y-3">
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                            <div className="text-xs text-slate-400 font-mono">
-                              {userRole === "Finder"
-                                ? "Review the owner's details. If they match the found item, confirm to unlock Secure Chat."
-                                : "Review the finder's details. Confirm to unlock Secure Chat."}
-                            </div>
-
-                            <div className="flex items-center gap-2">
+                          {selectedMatch.ownerApproved && selectedMatch.finderApproved ? (
+                            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                                <CheckCircle size={15} />
+                                <span>🎉 Mutual Approval Complete! Connection verified. Secure Chat is unlocked.</span>
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => handleApproveMatch(userRole)}
-                                disabled={actionLoading}
-                                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                                onClick={() => setActiveModalTab("chat")}
+                                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shrink-0"
                               >
-                                <CheckCircle size={13} />
-                                {actionLoading ? "Processing..." : userRole === "Finder" ? "Yes, I believe this is the owner" : "Approve Verification"}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleRejectMatch(userRole)}
-                                disabled={actionLoading}
-                                className="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                              >
-                                <XCircle size={13} />
-                                Reject
+                                <MessageSquare size={13} />
+                                Open Secure Chat →
                               </button>
                             </div>
-                          </div>
+                          ) : (userRole === "Owner" && selectedMatch.ownerApproved) ? (
+                            <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-cyan-300 text-xs font-semibold">
+                                <Clock size={15} className="animate-spin text-cyan-400" />
+                                <span>✓ You marked: <strong>"This looks like my item"</strong>. Waiting for finder's confirmation to unlock Secure Chat.</span>
+                              </div>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-400">1/2 Approvals</span>
+                            </div>
+                          ) : (userRole === "Finder" && selectedMatch.finderApproved) ? (
+                            <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-cyan-300 text-xs font-semibold">
+                                <Clock size={15} className="animate-spin text-cyan-400" />
+                                <span>✓ You confirmed: <strong>"Yes, this is the owner"</strong>. Waiting for owner's confirmation to unlock Secure Chat.</span>
+                              </div>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-400">1/2 Approvals</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                              <div className="text-xs text-slate-400 font-mono">
+                                {userRole === "Finder"
+                                  ? "Review the owner's evidence and answers. Does this match what you found?"
+                                  : "Review the found item details and AI analysis. Does this look like your item?"}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveMatch(userRole)}
+                                  disabled={actionLoading}
+                                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                                >
+                                  <CheckCircle size={13} />
+                                  {actionLoading
+                                    ? "Processing..."
+                                    : userRole === "Finder"
+                                    ? "Yes, this is the owner"
+                                    : "This looks like my item"}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRejectMatch(userRole)}
+                                  disabled={actionLoading}
+                                  className="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                >
+                                  <XCircle size={13} />
+                                  {userRole === "Finder" ? "No, details do not match" : "Not my item"}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1679,7 +1796,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     const revealed = getMatchRevealedContact(selectedMatch, viewerRoleKey);
                     const isOwnerTrustedConfirmed = Boolean(selectedMatch.ownerTrusted || (selectedMatch as any).ownerTrustConfirmed);
                     const isFinderTrustedConfirmed = Boolean(selectedMatch.finderTrusted || (selectedMatch as any).finderTrustConfirmed);
-                    const isBothTrusted = (isOwnerTrustedConfirmed && isFinderTrustedConfirmed) || selectedMatch.matchStatus === "VERIFIED_CONNECTION";
+                    const isBothTrusted = Boolean((isOwnerTrustedConfirmed && isFinderTrustedConfirmed) || selectedMatch.matchStatus === "RESOLVED");
                     const waMessage = `Hi! Reaching out via LINCO regarding the matched ${lostPost.item} report. Let's coordinate safe handover.`;
                     const waLink = revealed.whatsappUrl || (revealed.isEligible ? getWhatsAppLink(revealed.contact, waMessage) : "");
 

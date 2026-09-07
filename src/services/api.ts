@@ -37,6 +37,45 @@ export interface LincoSaathiiResponse {
   shouldAutoSubmit: boolean;
 }
 
+export interface StructuredForensicDetails {
+  category?: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+  visibleCondition?: string;
+  distinctiveCharacteristics?: string;
+  uniqueMarks?: string;
+  accessories?: string;
+  identifyingDetails?: string;
+  searchKeywords?: string[];
+  missingInfoSuggestions?: string[];
+}
+
+export interface EnhanceDescriptionResponse {
+  description: string;
+  originalDescription?: string;
+  structured?: StructuredForensicDetails;
+}
+
+export interface TimelineEventItem {
+  id: string;
+  time: string;
+  timeType: "EXACT" | "APPROXIMATE" | "RELATIVE" | "UNKNOWN";
+  location: string;
+  locationType: "USER_PROVIDED" | "AI_INFERRED" | "UNKNOWN";
+  description: string;
+  source: "USER_PROVIDED" | "AI_INFERRED";
+  confidence?: "High" | "Medium" | "Low";
+}
+
+export interface ReconstructTimelineResponse {
+  analysis: string;
+  events: TimelineEventItem[];
+  likelyLossLocation?: string;
+  likelyTimeWindow?: string;
+  reasoning?: string;
+}
+
 export const apiService = {
   /**
    * Fetch all posts and AI matches
@@ -157,13 +196,13 @@ export const apiService = {
   },
 
   /**
-   * AI Enhance raw item description
+   * AI Enhance raw item description with structured forensic extraction
    */
-  async enhanceDescription(item: string, category: string, description: string): Promise<{ description: string }> {
+  async enhanceDescription(item: string, category: string, description: string, language?: string): Promise<EnhanceDescriptionResponse> {
     const response = await fetch("/api/ai/enhance-description", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, category, description }),
+      body: JSON.stringify({ item, category, description, language }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -189,13 +228,13 @@ export const apiService = {
   },
 
   /**
-   * AI Timeline logical reconstructor
+   * AI Timeline logical reconstructor with structured chronological checkpoints
    */
-  async reconstructTimeline(item: string, timeline: string): Promise<{ analysis: string }> {
+  async reconstructTimeline(item: string, timeline: string, language?: string): Promise<ReconstructTimelineResponse> {
     const response = await fetch("/api/ai/reconstruct-timeline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, timeline }),
+      body: JSON.stringify({ item, timeline, language }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));

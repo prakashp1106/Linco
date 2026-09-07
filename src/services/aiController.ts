@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { apiService, QuickFillResponse, SuggestRewardResponse, VerifyClaimResponse } from "./api";
+import { apiService, QuickFillResponse, SuggestRewardResponse, VerifyClaimResponse, EnhanceDescriptionResponse, ReconstructTimelineResponse } from "./api";
 import { Post } from "../types";
 
 export const aiController = {
@@ -32,15 +32,30 @@ export const aiController = {
   },
 
   /**
-   * Enhances a description to be more searchable and specific
+   * Enhances a description to be more searchable and specific with forensic structured extraction
    */
-  async enhanceItemDescription(item: string, category: string, description: string): Promise<string> {
+  async enhanceItemDescription(item: string, category: string, description: string, language?: string): Promise<EnhanceDescriptionResponse> {
     try {
-      const res = await apiService.enhanceDescription(item, category, description);
-      return res.description;
+      return await apiService.enhanceDescription(item, category, description, language);
     } catch (error) {
       console.error("aiController.enhanceItemDescription failed:", error);
-      return description; // Fallback to raw description
+      return {
+        description,
+        originalDescription: description,
+        structured: {
+          category: category || "Property",
+          brand: "Not provided",
+          model: "Not provided",
+          color: "Not provided",
+          visibleCondition: "Not provided",
+          distinctiveCharacteristics: "Not provided",
+          uniqueMarks: "Not provided",
+          accessories: "Not provided",
+          identifyingDetails: description,
+          searchKeywords: [item, category].filter(Boolean),
+          missingInfoSuggestions: ["Would you like to add the brand name?", "Would you like to specify the color?"]
+        }
+      };
     }
   },
 
@@ -61,15 +76,31 @@ export const aiController = {
   },
 
   /**
-   * Suggests where an item might have been lost based on a timeline
+   * Suggests where an item might have been lost based on a timeline with structured checkpoints
    */
-  async reconstructUserTimeline(item: string, timeline: string): Promise<string> {
+  async reconstructUserTimeline(item: string, timeline: string, language?: string): Promise<ReconstructTimelineResponse> {
     try {
-      const res = await apiService.reconstructTimeline(item, timeline);
-      return res.analysis;
+      return await apiService.reconstructTimeline(item, timeline, language);
     } catch (error) {
       console.error("aiController.reconstructUserTimeline failed:", error);
-      throw new Error("AI timeline reconstruction is temporarily offline. Please trace your steps manually.");
+      return {
+        analysis: "AI timeline reconstruction is temporarily offline. Please trace your steps manually.",
+        events: [
+          {
+            id: "evt_1",
+            time: "Recent",
+            timeType: "RELATIVE",
+            location: "Location described",
+            locationType: "USER_PROVIDED",
+            description: timeline,
+            source: "USER_PROVIDED",
+            confidence: "Medium"
+          }
+        ],
+        likelyLossLocation: "Last reported location",
+        likelyTimeWindow: "Recent hours",
+        reasoning: "Trace each location visited chronologically to locate your item."
+      };
     }
   },
 

@@ -38,6 +38,11 @@ import { TimelineSection } from "./TimelineSection";
 import { RewardSection } from "./RewardSection";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { RecoveryIntelligenceCard } from "./RecoveryIntelligenceCard";
+import { useLanguage } from "../context/LanguageContext";
+import { VoiceInputButton } from "./VoiceInputButton";
+import { ContextualHelp } from "./ContextualHelp";
+import { EnhanceDescriptionModal } from "./EnhanceDescriptionModal";
+import { EnhanceDescriptionResponse } from "../services/api";
 
 interface PostFormProps {
   onSubmit: (postData: any) => Promise<any>;
@@ -45,6 +50,7 @@ interface PostFormProps {
 }
 
 export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
+  const { lang, t } = useLanguage();
   const ai = useAI();
   const maps = useMaps();
 
@@ -70,6 +76,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
   const [showPin, setShowPin] = useState(false);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [isStepLoading, setIsStepLoading] = useState(false);
+  
+  // AI Enhance Description Modal state
+  const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
+  const [enhanceOriginalText, setEnhanceOriginalText] = useState("");
+  const [enhanceResultData, setEnhanceResultData] = useState<EnhanceDescriptionResponse | null>(null);
+
+  // Autosave Draft Notification
+  const [draftRestoredNotice, setDraftRestoredNotice] = useState(false);
   
   // Distance Radius local state
   const [distanceRadius, setDistanceRadius] = useState(500);
@@ -209,24 +223,120 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
     }
   };
 
+  // Autosave draft
+  useEffect(() => {
+    if (form.fItem || form.fDetails || form.fAddress || form.fContact) {
+      const draft = {
+        fItem: form.fItem,
+        fDetails: form.fDetails,
+        fType: form.fType,
+        fAddress: form.fAddress,
+        fCategory: form.fCategory,
+        fUrgency: form.fUrgency,
+        fContact: form.fContact,
+        fReward: form.fReward,
+        fCharacteristics: form.fCharacteristics,
+        fUniqueMarks: form.fUniqueMarks,
+        fSecurityPin: form.fSecurityPin,
+        currentStep,
+        timestamp: Date.now(),
+      };
+      try {
+        localStorage.setItem("linco_report_draft", JSON.stringify(draft));
+      } catch (_) {}
+    }
+  }, [
+    form.fItem,
+    form.fDetails,
+    form.fType,
+    form.fAddress,
+    form.fCategory,
+    form.fUrgency,
+    form.fContact,
+    form.fReward,
+    form.fCharacteristics,
+    form.fUniqueMarks,
+    form.fSecurityPin,
+    currentStep,
+  ]);
+
+  // Check for existing draft on initial mount
+  useEffect(() => {
+    if (!form.fItem && !form.fDetails) {
+      try {
+        const savedDraft = localStorage.getItem("linco_report_draft");
+        if (savedDraft) {
+          const parsed = JSON.parse(savedDraft);
+          if (parsed && parsed.fItem && Date.now() - (parsed.timestamp || 0) < 48 * 3600 * 1000) {
+            setDraftRestoredNotice(true);
+          }
+        }
+      } catch (_) {}
+    }
+  }, []);
+
+  const restoreDraft = () => {
+    try {
+      const savedDraft = localStorage.getItem("linco_report_draft");
+      if (savedDraft) {
+        const d = JSON.parse(savedDraft);
+        if (d.fItem) form.setFItem(d.fItem);
+        if (d.fDetails) form.setFDetails(d.fDetails);
+        if (d.fType) form.setFType(d.fType);
+        if (d.fAddress) form.setFAddress(d.fAddress);
+        if (d.fCategory) form.setFCategory(d.fCategory);
+        if (d.fUrgency) form.setFUrgency(d.fUrgency);
+        if (d.fContact) form.setFContact(d.fContact);
+        if (d.fReward) form.setFReward(d.fReward);
+        if (d.fCharacteristics) form.setFCharacteristics(d.fCharacteristics);
+        if (d.fUniqueMarks) form.setFUniqueMarks(d.fUniqueMarks);
+        if (d.fSecurityPin) form.setFSecurityPin(d.fSecurityPin);
+        if (d.currentStep && d.currentStep > 1) setCurrentStep(d.currentStep);
+        setDraftRestoredNotice(false);
+        setAiFillNotice("📋 Restored your draft report!");
+        setTimeout(() => setAiFillNotice(""), 4000);
+      }
+    } catch (_) {}
+  };
+
+  const dismissDraft = () => {
+    setDraftRestoredNotice(false);
+    localStorage.removeItem("linco_report_draft");
+  };
+
   const handleEnhanceDescription = async () => {
     if (!form.fDetails.trim()) {
-      setLocalErrors((prev) => ({ ...prev, details: "Bhai draft description empty hai. Please type basic description first!" }));
+      setLocalErrors((prev) => ({ ...prev, details: "Please enter a draft description first to enhance!" }));
       return;
     }
     setLocalErrors((prev) => ({ ...prev, details: "" }));
+    setEnhanceOriginalText(form.fDetails);
+    setIsEnhanceModalOpen(true);
     try {
-      const enhanced = await ai.runEnhanceDescription(
-        form.fItem,
+      const res = await ai.runEnhanceDescription(
+        form.fItem || "Item",
         form.fCategory || "Property",
-        form.fDetails
+        form.fDetails,
+        lang
       );
-      form.setFDetails(enhanced);
-      setAiFillNotice("✨ Gemini enhanced your details beautifully!");
-      setTimeout(() => setAiFillNotice(""), 4000);
+      setEnhanceResultData(res);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleApplyEnhancedDescription = (enhancedText: string, structured?: any) => {
+    form.setFDetails(enhancedText);
+    if (structured) {
+      if (structured.brand && !form.fCharacteristics) {
+        form.setFCharacteristics(`Brand: ${structured.brand}${structured.color ? `, Color: ${structured.color}` : ""}`);
+      }
+      if (structured.distinguishingMarks && structured.distinguishingMarks.length > 0 && !form.fUniqueMarks) {
+        form.setFUniqueMarks(structured.distinguishingMarks.join(", "));
+      }
+    }
+    setAiFillNotice("✨ Enhanced description and facts applied successfully!");
+    setTimeout(() => setAiFillNotice(""), 4500);
   };
 
   const handleGenerateSecurePin = () => {
@@ -533,6 +643,34 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
         )}
       </div>
 
+      {/* Draft Restore Notification */}
+      {draftRestoredNotice && (
+        <div className="mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📝</span>
+            <span className="font-semibold">
+              {t("report.draftFound", "You have an unsaved draft report from an earlier session.")}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold cursor-pointer transition"
+            >
+              {t("report.restoreDraft", "Restore Draft")}
+            </button>
+            <button
+              type="button"
+              onClick={dismissDraft}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold cursor-pointer transition"
+            >
+              {t("report.dismiss", "Dismiss")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* AI auto fill notices banner */}
       <AnimatePresence>
         {aiFillNotice && (
@@ -691,9 +829,23 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             <div className="space-y-5">
               {/* Item Name */}
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
-                  Item Name <span className="text-rose-500 font-bold">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                      {t("report.step2.itemName", "Item Name")} <span className="text-rose-500 font-bold">*</span>
+                    </label>
+                    <ContextualHelp fieldKey="itemName" />
+                  </div>
+                  <VoiceInputButton
+                    fieldName="Item Name"
+                    currentValue={form.fItem}
+                    onApply={(val) => {
+                      form.setFItem(val);
+                      setLocalErrors((prev) => ({ ...prev, item: "" }));
+                    }}
+                    size="sm"
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="e.g. Matte Black iPhone 15 Pro, Brown Leather Tommy Hilfiger Wallet"
@@ -730,18 +882,32 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               {/* Item Description - PLACED IMMEDIATELY BELOW ITEM NAME */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-semibold text-slate-200 tracking-tight">
-                    Item Description <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleEnhanceDescription}
-                    disabled={ai.enhanceLoading || !form.fDetails.trim()}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-[9px] font-extrabold text-cyan-300 uppercase transition disabled:opacity-40 cursor-pointer"
-                  >
-                    <Sparkles size={11} className={ai.enhanceLoading ? "animate-spin text-cyan-400" : "text-cyan-400"} />
-                    {ai.enhanceLoading ? "Enhancing..." : "✨ Improve Description"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                      {t("report.step2.description", "Item Description")} <span className="text-rose-500 font-bold">*</span>
+                    </label>
+                    <ContextualHelp fieldKey="description" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <VoiceInputButton
+                      fieldName="Description"
+                      currentValue={form.fDetails}
+                      onApply={(val) => {
+                        form.setFDetails(val);
+                        setLocalErrors((prev) => ({ ...prev, details: "" }));
+                      }}
+                      size="sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleEnhanceDescription}
+                      disabled={ai.enhanceLoading || !form.fDetails.trim()}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-[9px] font-extrabold text-cyan-300 uppercase transition disabled:opacity-40 cursor-pointer"
+                    >
+                      <Sparkles size={11} className={ai.enhanceLoading ? "animate-spin text-cyan-400" : "text-cyan-400"} />
+                      {ai.enhanceLoading ? "Enhancing..." : "✨ Improve Description"}
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   placeholder="Describe unique identifiers, colors, brand names, scratch marks, stickers, lock screen wallpaper or any specific markings. Example: 'iPhone 15 Pro with a minor scratch on the top-left rim, inside a clear silicone cover, wallpaper is a high-contrast mountain skyline.'"
@@ -791,9 +957,21 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Advanced Specific Characteristics (Color, Brand, Model, Material) */}
               <div className="pt-2 border-t border-[#1c1c26]/60">
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
-                  Item Characteristics <span className="text-slate-500 font-normal text-xs">(Color, Brand, Model, Material)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                      {t("report.step2.characteristics", "Item Characteristics")}{" "}
+                      <span className="text-slate-500 font-normal text-xs">(Color, Brand, Model, Material)</span>
+                    </label>
+                    <ContextualHelp fieldKey="identifying" />
+                  </div>
+                  <VoiceInputButton
+                    fieldName="Characteristics"
+                    currentValue={form.fCharacteristics || ""}
+                    onApply={(val) => form.setFCharacteristics(val)}
+                    size="sm"
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="e.g. Color: Space Gray, Brand: Apple, Model: iPhone 15 Pro, Material: Titanium & Glass"
@@ -805,9 +983,21 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Unique Marks & Identifiers */}
               <div className="pt-2">
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
-                  Unique Marks & Secret Identifiers <span className="text-slate-500 font-normal text-xs">(Scratches, stickers, engravings, serial number)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                      {t("report.step2.uniqueMarks", "Unique Marks & Secret Identifiers")}{" "}
+                      <span className="text-slate-500 font-normal text-xs">(Scratches, stickers, engravings, serial number)</span>
+                    </label>
+                    <ContextualHelp fieldKey="identifying" />
+                  </div>
+                  <VoiceInputButton
+                    fieldName="Unique Marks"
+                    currentValue={form.fUniqueMarks || ""}
+                    onApply={(val) => form.setFUniqueMarks(val)}
+                    size="sm"
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="e.g. Small scratch on bottom right edge, NASA sticker on rear, customized keychain attached"
@@ -819,9 +1009,18 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Contents (for wallets, bags, boxes) */}
               <div className="pt-2">
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-1">
-                  Inner Contents <span className="text-slate-500 font-normal text-xs">(For wallets, bags, cases, or compartments)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                    {t("report.step2.contents", "Inner Contents")}{" "}
+                    <span className="text-slate-500 font-normal text-xs">(For wallets, bags, cases, or compartments)</span>
+                  </label>
+                  <VoiceInputButton
+                    fieldName="Inner Contents"
+                    currentValue={form.fContents || ""}
+                    onApply={(val) => form.setFContents(val)}
+                    size="sm"
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="e.g. College ID card, Metro pass, 2 keys, blue ballpoint pen inside pouch"
@@ -1079,9 +1278,23 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             <div className="space-y-4">
               {/* Address input */}
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
-                  Incident Address / Location <span className="text-rose-500 font-bold">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                      {t("report.step4.address", "Incident Address / Location")} <span className="text-rose-500 font-bold">*</span>
+                    </label>
+                    <ContextualHelp fieldKey="location" />
+                  </div>
+                  <VoiceInputButton
+                    fieldName="Location"
+                    currentValue={form.fAddress}
+                    onApply={(val) => {
+                      form.setFAddress(val);
+                      setLocalErrors((prev) => ({ ...prev, address: "" }));
+                    }}
+                    size="sm"
+                  />
+                </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
                     <MapPin size={16} className="absolute left-4 top-3.5 text-slate-500" />
@@ -1874,6 +2087,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
           </button>
         )}
       </div>
+
+      {/* AI Enhance Description Review Modal */}
+      <EnhanceDescriptionModal
+        isOpen={isEnhanceModalOpen}
+        onClose={() => setIsEnhanceModalOpen(false)}
+        originalText={enhanceOriginalText}
+        enhancedData={enhanceResultData}
+        isLoading={ai.enhanceLoading}
+        onAccept={handleApplyEnhancedDescription}
+        onRetry={handleEnhanceDescription}
+      />
     </div>
   );
 };

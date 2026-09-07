@@ -445,6 +445,7 @@ async function extractAIFeatures(post: Post): Promise<AIFeatures> {
 
     const prompt = `You are a forensic detail extraction engine for a Lost and Found platform called LINCO.
 Analyze the following post details and the optional image. Extract the specific metadata requested in the JSON schema.
+MULTILINGUAL UNDERSTANDING: The post details may be in English, Hindi, Marathi, Gujarati, Bengali, Tamil, Telugu, Kannada, Malayalam, Punjabi, Odia, Assamese, or mixed Hinglish. Semantically understand the regional language and translate item traits to clean normalized descriptors while preserving forensic accuracy.
 Post Details:
 - Item: ${post.item}
 - Category: ${post.category}
@@ -471,7 +472,7 @@ Extract and output ONLY a valid JSON object matching the following structure. Do
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: parts,
         });
         return response.text || "{}";
@@ -504,23 +505,24 @@ Extract and output ONLY a valid JSON object matching the following structure. Do
 }
 
 const STOP_WORDS = new Set([
-  "a", "an", "the", "in", "on", "at", "with", "of", "for", "and", "or", "is", "was", "to", "from", "by", "about", "that", "this", "my", "your", "their", "our", "mine", "some", "any"
+  "a", "an", "the", "in", "on", "at", "with", "of", "for", "and", "or", "is", "was", "to", "from", "by", "about", "that", "this", "my", "your", "their", "our", "mine", "some", "any",
+  "मेरा", "मेरी", "मेरे", "का", "की", "के", "में", "पर", "से", "था", "थी", "थे", "है", "हैं", "पास", "खो", "गया", "गई", "मिला", "मिली", "माझा", "माझी", "माझे", "सापडला", "हरवला", "आहे", "होता", "होती"
 ]);
 
 const SYNONYM_GROUPS = [
-  ["wallet", "purse", "pouch", "clutch", "handbag", "pocketbook", "leather wallet", "money bag", "billfold", "cardholder", "bifold", "trifold"],
-  ["phone", "mobile", "smartphone", "cellphone", "cell", "device", "iphone", "android", "galaxy", "pixel", "telephone"],
-  ["earbuds", "earphones", "headphones", "pods", "airpods", "buds", "headset"],
-  ["watch", "wristwatch", "wrist watch", "wrist", "smartwatch", "tracker", "fitbit", "applewatch"],
-  ["backpack", "schoolbag", "rucksack", "bag", "pack", "school bag", "duffel", "suitcase", "satchel"],
-  ["laptop", "notebook", "computer", "macbook", "chromebook", "tablet", "ipad"],
-  ["key", "keys", "keychain", "fob", "car key", "house key"],
-  ["card", "id", "license", "badge", "passport", "cardholder", "permit", "document"],
-  ["glasses", "sunglasses", "spectacles", "eyeglasses", "goggles", "shades", "specs"],
-  ["ring", "band", "wedding ring", "engagement ring", "jewelry", "jewel"],
-  ["necklace", "chain", "pendant", "choker"],
-  ["bottle", "flask", "thermos", "tumbler", "canteen", "mug", "cup"],
-  ["jacket", "coat", "hoodie", "sweater", "cardigan", "blazer", "outerwear", "windbreaker"]
+  ["wallet", "purse", "pouch", "clutch", "handbag", "pocketbook", "leather wallet", "money bag", "billfold", "cardholder", "bifold", "trifold", "बटुआ", "पाकीट", "पर्स"],
+  ["phone", "mobile", "smartphone", "cellphone", "cell", "device", "iphone", "android", "galaxy", "pixel", "telephone", "फ़ोन", "फोन", "मोबाइल"],
+  ["earbuds", "earphones", "headphones", "pods", "airpods", "buds", "headset", "इयरफ़ोन", "इयरबड्स"],
+  ["watch", "wristwatch", "wrist watch", "wrist", "smartwatch", "tracker", "fitbit", "applewatch", "घड़ी", "घड्याळ"],
+  ["backpack", "schoolbag", "rucksack", "bag", "pack", "school bag", "duffel", "suitcase", "satchel", "बैग", "थैला", "दफ्तर"],
+  ["laptop", "notebook", "computer", "macbook", "chromebook", "tablet", "ipad", "लैपटॉप"],
+  ["key", "keys", "keychain", "fob", "car key", "house key", "चाबी", "किल्ली", "चाबियां"],
+  ["card", "id", "license", "badge", "passport", "cardholder", "permit", "document", "कार्ड", "लाइसेंस"],
+  ["glasses", "sunglasses", "spectacles", "eyeglasses", "goggles", "shades", "specs", "चश्मा"],
+  ["ring", "band", "wedding ring", "engagement ring", "jewelry", "jewel", "अंगूठी"],
+  ["necklace", "chain", "pendant", "choker", "चेन", "हार"],
+  ["bottle", "flask", "thermos", "tumbler", "canteen", "mug", "cup", "बोतल"],
+  ["jacket", "coat", "hoodie", "sweater", "cardigan", "blazer", "outerwear", "windbreaker", "जैकेट"]
 ];
 
 const DESCRIPTORS = new Set([
@@ -528,7 +530,8 @@ const DESCRIPTORS = new Set([
   "black", "white", "blue", "red", "green", "yellow", "pink", "purple", "orange", "brown", "grey", "gray",
   "small", "large", "medium", "big", "little", "tiny", "brand", "new", "old", "used", "school", "office", "work",
   "wrist", "smart", "metallic", "fabric", "nylon", "steel", "brass", "copper", "aluminum", "glass", "denim", "wool",
-  "light", "dark", "bright", "matte", "glossy", "clear", "transparent"
+  "light", "dark", "bright", "matte", "glossy", "clear", "transparent",
+  "काला", "काली", "काळा", "नीला", "नीली", "लाल", "सफेद", "सफ़ेद", "पांढरा", "हरा", "हरी", "पीला", "छोटा", "बड़ा", "नया", "पुराना"
 ]);
 
 const BRAND_WORDS = new Set([
@@ -635,7 +638,7 @@ function areWordsRelated(w1: string, w2: string): boolean {
 function cleanAndTokenize(text: string): string[] {
   return text
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
+    .replace(/[^\p{L}\p{M}\p{N}\s]/gu, " ")
     .split(/\s+/)
     .filter(Boolean)
     .filter(w => !STOP_WORDS.has(w));
@@ -774,10 +777,19 @@ async function comparePostsForMatch(postA: Post, postB: Post): Promise<Potential
     }
   }
 
-  // 2. Item Name Similarity (40% weight)
+  // 2. Item Name Similarity (40% weight) - cross-lingual & AI-features aware
   const itemA = (lostPost.item || "").toLowerCase().trim();
   const itemB = (foundPost.item || "").toLowerCase().trim();
-  const itemScore = calculateLocalItemSimilarity(itemA, itemB);
+  const rawItemScore = calculateLocalItemSimilarity(itemA, itemB);
+
+  // Also check AI-normalized item names for robust cross-lingual matching (e.g. Hindi -> English)
+  const normA = (lostPost.aiFeatures?.itemName || "").toLowerCase().trim();
+  const normB = (foundPost.aiFeatures?.itemName || "").toLowerCase().trim();
+  const normScore = (normA && normB) ? calculateLocalItemSimilarity(normA, normB) : 0;
+  const crossScoreA = normA ? calculateLocalItemSimilarity(normA, itemB) : 0;
+  const crossScoreB = normB ? calculateLocalItemSimilarity(itemA, normB) : 0;
+
+  const itemScore = Math.max(rawItemScore, normScore, crossScoreA, crossScoreB);
 
   // 3. Image similarity if images exist (10% weight)
   const bothHaveImages = !!(lostPost.image && foundPost.image);
@@ -922,7 +934,7 @@ Task:
 You MUST calculate individual match factor scores from 0 to 100 and combine them into a final overall confidence score.
 
 Scoring Criteria and Weights:
-1. Item Name Semantic Similarity (40% weight): Compare the items semantically. Understand synonyms and natural language (e.g., Wallet ↔ Leather Wallet, Samsung Galaxy J8 ↔ Samsung J8 Phone, Wrist Watch ↔ Watch, Backpack ↔ School Bag, Purse ↔ Wallet, Earbuds ↔ Earphones, Mobile ↔ Phone). Ignore casing, punctuation, spacing, and word order (e.g. "Samsung J8 Phone", "Phone Samsung Galaxy J8", and "Galaxy J8 Samsung" are equivalent).
+1. Item Name Semantic Similarity (40% weight): Compare the items semantically across Indian languages (Hindi, Marathi, Gujarati, Bengali, Tamil, Telugu, Kannada, Malayalam, Punjabi, Odia, Assamese) and English. Understand cross-lingual semantics (e.g., "मेरा काला iPhone 15" ↔ "Found a black iPhone 15", "माझा पाकीट" ↔ "Black leather wallet", "சாவிகள்" ↔ "Lost keys", "घड्याळ" ↔ "Wrist watch", "மொபைல்" ↔ "Phone", "बैग" ↔ "Backpack"). Also recognize synonyms and natural language (e.g., Wallet ↔ Leather Wallet, Samsung Galaxy J8 ↔ Samsung J8 Phone, Wrist Watch ↔ Watch, Backpack ↔ School Bag, Purse ↔ Wallet, Earbuds ↔ Earphones, Mobile ↔ Phone). Ignore casing, punctuation, spacing, language script differences, and word order (e.g. "Samsung J8 Phone", "Phone Samsung Galaxy J8", and "Galaxy J8 Samsung" are equivalent).
 2. Category Match (20% weight): How closely do their categories match?
 3. Location Proximity (20% weight): Use the pre-computed Location Distance Score.
 4. Date & Time Proximity (10% weight): Use the pre-computed Date Proximity Score.
@@ -959,7 +971,7 @@ Expected JSON format:
       const text = await callGeminiWithRetry(
         async () => {
           const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.6-flash",
             contents: prompt,
           });
           return response.text || "{}";
@@ -1930,7 +1942,7 @@ Return JSON ONLY:
         const aiText = await callGeminiWithRetry(
           async () => {
             const resp = await ai.models.generateContent({
-              model: "gemini-2.5-flash",
+              model: "gemini-3.6-flash",
               contents: prompt
             });
             return resp.text || "{}";
@@ -2066,7 +2078,7 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       const notif1: LincoNotification = {
         id: "notif_" + Date.now() + "_lost_appr",
         postId: match.lostPostId,
-        message: "Match verified — Secure Chat is ready.",
+        message: "Connection verified! You can now chat securely.",
         createdAt: Date.now(),
         read: false,
         type: "CLAIM_APPROVED",
@@ -2075,7 +2087,7 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       const notif2: LincoNotification = {
         id: "notif_" + Date.now() + "_found_appr",
         postId: match.foundPostId,
-        message: "Match verified — Secure Chat is ready.",
+        message: "Connection verified! You can now chat securely.",
         createdAt: Date.now(),
         read: false,
         type: "CLAIM_APPROVED",
@@ -2098,7 +2110,9 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
       const notif: LincoNotification = {
         id: notifId,
         postId: notifyPostId,
-        message: `${role} approved the match! Confirm your approval to unlock Secure Chat.`,
+        message: role === "Owner" 
+          ? "Someone has claimed this item" 
+          : "Finder believes this is your item! Confirm approval to connect.",
         createdAt: Date.now(),
         read: false,
         type: "CLAIM_RECEIVED",
@@ -2612,7 +2626,7 @@ Return ONLY valid JSON: {"confidence": <number>, "message": "<string>"}`;
         const aiText = await callGeminiWithRetry(
           async () => {
             const resp = await ai.models.generateContent({
-              model: "gemini-2.5-flash",
+              model: "gemini-3.6-flash",
               contents: prompt
             });
             return resp.text || "{}";
@@ -3516,7 +3530,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -4192,7 +4206,7 @@ The JSON object MUST have exactly these keys:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: [imagePart, { text: prompt }],
         });
         return response.text || "{}";
@@ -4239,7 +4253,7 @@ The JSON object MUST have exactly these keys:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -4260,68 +4274,250 @@ The JSON object MUST have exactly these keys:
   }
 });
 
-// 3. Description Enhancer
+// 3. Description Enhancer with Structured Forensic Detail Extraction & Multilingual Support
 app.post("/api/ai/enhance-description", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, category, description } = req.body;
+    const { item, category, description, language } = req.body;
     if (!description) return res.status(400).json({ error: "Description is required" });
 
-    const prompt = `Improve this lost or found item description to make it highly professional, specific, clear, and easily searchable on a community platform. Include bullet points if helpful, but keep it under 80 words total. Plain English only.
+    // Programmatic heuristic extraction fallback
+    const lowerDesc = description.toLowerCase();
+    const detectedBrand = (function() {
+      const brands = ["apple", "iphone", "samsung", "oneplus", "xiaomi", "redmi", "realme", "vivo", "oppo", "dell", "hp", "lenovo", "macbook", "asus", "boat", "noise", "fastrack", "titan", "casio", "wildcraft", "puma", "nike", "adidas", "american tourister", "skybags", "tommy hilfiger", "fossil"];
+      for (const b of brands) {
+        if (lowerDesc.includes(b)) return b.charAt(0).toUpperCase() + b.slice(1);
+      }
+      return "Not provided";
+    })();
+
+    const detectedColor = (function() {
+      const colors = ["black", "white", "blue", "red", "green", "grey", "gray", "silver", "gold", "brown", "yellow", "purple", "pink", "kala", "neela", "safed", "laal", "peela"];
+      for (const c of colors) {
+        if (lowerDesc.includes(c)) return c.charAt(0).toUpperCase() + c.slice(1);
+      }
+      return "Not provided";
+    })();
+
+    const detectedCondition = (function() {
+      if (lowerDesc.includes("crack") || lowerDesc.includes("broken") || lowerDesc.includes("scratch") || lowerDesc.includes("damaged")) return "Minor visible wear / damage mentioned";
+      if (lowerDesc.includes("new") || lowerDesc.includes("mint") || lowerDesc.includes("brand new")) return "Near mint / excellent";
+      return "Good / Normal wear";
+    })();
+
+    const heuristicStructured = {
+      category: category || "Property",
+      brand: detectedBrand,
+      model: "Not provided",
+      color: detectedColor,
+      visibleCondition: detectedCondition,
+      distinctiveCharacteristics: lowerDesc.includes("cover") || lowerDesc.includes("case") || lowerDesc.includes("sticker") 
+        ? "Distinctive cover/case or sticker mentioned" 
+        : "Not provided",
+      uniqueMarks: lowerDesc.includes("crack") || lowerDesc.includes("scratch") 
+        ? "Visible crack or scratch mentioned" 
+        : "Not provided",
+      accessories: lowerDesc.includes("cover") || lowerDesc.includes("case") ? "Protective cover/case" : "Not provided",
+      identifyingDetails: `${item || "Item"}: ${description}`,
+      searchKeywords: Array.from(new Set([item, category, detectedBrand !== "Not provided" ? detectedBrand : "", detectedColor !== "Not provided" ? detectedColor : ""] .filter(Boolean))),
+      missingInfoSuggestions: [
+        detectedBrand === "Not provided" ? "Would you like to add the brand name if known?" : null,
+        detectedColor === "Not provided" ? "Would you like to specify the primary color?" : null,
+        "Would you like to mention any unique stickers, wallpaper, or internal contents?"
+      ].filter(Boolean) as string[]
+    };
+
+    const prompt = `You are an expert forensic item detail enhancer for LINCO (Lost & Found India).
+Analyze this user's raw description of a lost or found item.
 Item Name: "${item || "Unspecified item"}"
 Category: "${category || "Other"}"
+User Language: "${language || "Auto-detect (Indian regional language or English)"}"
 Original Raw Description: "${description}"
 
-Return ONLY the final enhanced description. Do not include introductory text, headers, or markdown backticks.`;
+CRITICAL INSTRUCTIONS:
+1. Improve the description for community searchability, clarity, and precision WITHOUT hallucinating or inventing missing facts.
+2. If brand, model, color, or condition are not explicitly stated or implied, output "Not provided". Never invent models or serial numbers.
+3. If the user wrote in Hindi, Marathi, Bengali, Tamil, Telugu, Gujarati, Punjabi, Kannada, Malayalam, Odia, Assamese, or Hinglish, understand the semantics fully and provide an enhanced description that is clear and natural (in the user's language, or polite English with vernacular keywords included).
+4. Extract structured forensic facts into the requested schema.
 
-    const enhancedText = await callGeminiWithRetry(
+Return ONLY a valid JSON object matching this schema (do NOT include markdown backticks or extra text):
+{
+  "enhancedDescription": "A clear, professional, factual description under 80 words without introductory fluff.",
+  "category": "Item category",
+  "brand": "Brand name if mentioned, or 'Not provided'",
+  "model": "Model name if mentioned, or 'Not provided'",
+  "color": "Primary color(s) if mentioned, or 'Not provided'",
+  "visibleCondition": "Visible condition, or 'Not provided'",
+  "distinctiveCharacteristics": "Distinctive attributes, or 'Not provided'",
+  "uniqueMarks": "Scratches, dents, stickers, cracks, keychains mentioned, or 'Not provided'",
+  "accessories": "Cases, chargers, cords, pouches mentioned, or 'Not provided'",
+  "identifyingDetails": "Key identifying phrases for fast matching",
+  "searchKeywords": ["keyword1", "keyword2", "keyword3"],
+  "missingInfoSuggestions": ["Helpful suggestion 1 e.g. 'Would you like to add the lock screen wallpaper?'", "Helpful suggestion 2"]
+}`;
+
+    const enhancedResult = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
-        return response.text?.trim() || description;
+        const text = response.text?.trim() || "";
+        const cleaned = text.replace(/```json|```/gi, "").trim();
+        const parsed = JSON.parse(cleaned);
+        return {
+          description: parsed.enhancedDescription || description,
+          originalDescription: description,
+          structured: {
+            category: parsed.category || heuristicStructured.category,
+            brand: parsed.brand || heuristicStructured.brand,
+            model: parsed.model || heuristicStructured.model,
+            color: parsed.color || heuristicStructured.color,
+            visibleCondition: parsed.visibleCondition || heuristicStructured.visibleCondition,
+            distinctiveCharacteristics: parsed.distinctiveCharacteristics || heuristicStructured.distinctiveCharacteristics,
+            uniqueMarks: parsed.uniqueMarks || heuristicStructured.uniqueMarks,
+            accessories: parsed.accessories || heuristicStructured.accessories,
+            identifyingDetails: parsed.identifyingDetails || heuristicStructured.identifyingDetails,
+            searchKeywords: Array.isArray(parsed.searchKeywords) ? parsed.searchKeywords : heuristicStructured.searchKeywords,
+            missingInfoSuggestions: Array.isArray(parsed.missingInfoSuggestions) ? parsed.missingInfoSuggestions : heuristicStructured.missingInfoSuggestions,
+          }
+        };
       },
-      description,
+      {
+        description: description,
+        originalDescription: description,
+        structured: heuristicStructured
+      },
       "enhance-description"
     );
 
-    res.json({ description: enhancedText });
+    res.json(enhancedResult);
   } catch (err: any) {
     console.error("AI enhance error:", err);
     res.status(500).json({ error: getProfessionalFallbackMessage("enhance-description") });
   }
 });
 
-// 4. Timeline Reconstructor
+// 4. Timeline Reconstructor with Structured Chronological Events & Uncertainty Marking
 app.post("/api/ai/reconstruct-timeline", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, timeline } = req.body;
+    const { item, language } = req.body;
+    const timeline = req.body.timeline || req.body.text;
     if (!timeline) return res.status(400).json({ error: "Timeline text is required" });
 
-    const prompt = `You are a meticulous detective assisting someone in locating a lost item.
+    // Programmatic heuristic parser for chronological events
+    const parseHeuristicEvents = (text: string) => {
+      const lines = text.split(/[\n,;]|\b(?:then|after that|next|subsequently|fir|baad mein|nantar)\b/i)
+        .map(s => s.trim())
+        .filter(s => s.length > 3);
+      
+      const events: any[] = [];
+      let idx = 1;
+
+      for (const line of lines) {
+        // Look for time mentions: e.g. 8:30 AM, 9:15, 2 PM, 11 AM, around 1, 5 baje
+        const timeMatch = line.match(/\b(?:\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.|baje|वाजता)?|morning|afternoon|evening|night|noon|lunch|subah|dopahar|shaam)\b/i);
+        const timeStr = timeMatch ? timeMatch[0] : `Checkpoint ${idx}`;
+        const isApprox = /\b(?:around|about|approx|lagbhag|sadharan|nearly)\b/i.test(line);
+
+        events.push({
+          id: `evt_${idx}`,
+          time: isApprox ? `~${timeStr}` : timeStr,
+          timeType: isApprox ? "APPROXIMATE" : (timeMatch ? "EXACT" : "RELATIVE"),
+          location: line.replace(/\b(?:around|about|at|in|near|went to|left|reached|visited)\b/gi, "").trim() || "Location mentioned",
+          locationType: "USER_PROVIDED",
+          description: line,
+          source: "USER_PROVIDED",
+          confidence: timeMatch ? "High" : "Medium"
+        });
+        idx++;
+      }
+
+      if (events.length === 0) {
+        events.push({
+          id: "evt_1",
+          time: "Recent",
+          timeType: "RELATIVE",
+          location: "Location described",
+          locationType: "USER_PROVIDED",
+          description: text,
+          source: "USER_PROVIDED",
+          confidence: "Medium"
+        });
+      }
+
+      return {
+        events,
+        likelyLossLocation: events[events.length - 1]?.location || "Last reported location",
+        likelyTimeWindow: events[0]?.time ? `${events[0].time} to ${events[events.length - 1].time}` : "Within recent hours",
+        reasoning: "Based on chronological sequence, the item was most likely misplaced at the last visited spot before the absence was noticed.",
+        analysis: `Reconstructed ${events.length} timeline checkpoints from your description. Check the highest risk zones first.`
+      };
+    };
+
+    const heuristicData = parseHeuristicEvents(timeline);
+
+    const prompt = `You are a forensic detective and timeline reconstructor for LINCO (Lost & Found India).
 Item: "${item || "Lost item"}"
-Description of their day: "${timeline}"
+Description of day / movements: "${timeline}"
+User Language: "${language || "Auto-detect"}"
 
-Perform a step-by-step logical reconstruction of their day to identify:
-1) The most likely precise spot or location where they lost the item.
-2) The most likely time window of when the loss occurred.
-3) Helpful logical reasoning that they can act on immediately.
+TASK:
+1. Break down the user's natural language timeline into structured chronological events.
+2. Recognize:
+   - exact time (e.g. 8:30 AM, 14:00)
+   - approximate time (e.g. around 5, lagbhag 2 baje)
+   - relative time (e.g. after lunch, before class, then)
+   - locations visited and movement sequence
+3. CRITICAL UNCERTAINTY RULE:
+   - Do NOT present estimated information as fact.
+   - For each event, classify source as "USER_PROVIDED" if explicitly stated by user, or "AI_INFERRED" if deduced by logic.
+   - For timeType, mark "EXACT", "APPROXIMATE", "RELATIVE", or "UNKNOWN".
+   - For locationType, mark "USER_PROVIDED", "AI_INFERRED", or "UNKNOWN".
+4. Determine the most likely loss spot, time window, and actionable logical advice.
 
-Be positive, logical, and concise. Keep your answer under 4 sentences total. Return the answer as clean plain text.`;
+Return ONLY a valid JSON object matching this schema (do NOT include markdown backticks or extra text):
+{
+  "events": [
+    {
+      "id": "evt_1",
+      "time": "08:30 AM or ~11:00 AM",
+      "timeType": "EXACT",
+      "location": "Home",
+      "locationType": "USER_PROVIDED",
+      "description": "Left home for college",
+      "source": "USER_PROVIDED",
+      "confidence": "High"
+    }
+  ],
+  "likelyLossLocation": "Specific high-probability spot (e.g. Library 2nd Floor desk)",
+  "likelyTimeWindow": "e.g. 11:00 AM - 1:00 PM",
+  "reasoning": "2-sentence logical explanation of why this spot has the highest likelihood.",
+  "analysis": "Concise plain text summary of the reconstructed timeline."
+}`;
 
-    const analysisText = await callGeminiWithRetry(
+    const timelineResult = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
-        return response.text?.trim() || "";
+        const text = response.text?.trim() || "";
+        const cleaned = text.replace(/```json|```/gi, "").trim();
+        const parsed = JSON.parse(cleaned);
+        
+        return {
+          analysis: parsed.analysis || heuristicData.analysis,
+          events: Array.isArray(parsed.events) && parsed.events.length > 0 ? parsed.events : heuristicData.events,
+          likelyLossLocation: parsed.likelyLossLocation || heuristicData.likelyLossLocation,
+          likelyTimeWindow: parsed.likelyTimeWindow || heuristicData.likelyTimeWindow,
+          reasoning: parsed.reasoning || heuristicData.reasoning
+        };
       },
-      "Timeline analysis is temporarily offline. Please trace your steps manually or try again in a bit.",
+      heuristicData,
       "reconstruct-timeline"
     );
 
-    res.json({ analysis: analysisText });
+    res.json(timelineResult);
   } catch (err: any) {
     console.error("AI timeline error:", err);
     res.status(500).json({ error: getProfessionalFallbackMessage("reconstruct-timeline") });
@@ -4355,7 +4551,7 @@ Return ONLY a valid JSON object (no markdown backticks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -4410,7 +4606,7 @@ Format:
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
         return response.text || "[]";
@@ -4471,7 +4667,7 @@ Return ONLY a valid JSON object (no markdown backticks):
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
         });
         return response.text || "{}";
@@ -4556,7 +4752,7 @@ Task: Output a single, strictly valid JSON response containing exactly these key
     const text = await callGeminiWithRetry(
       async () => {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: systemInstruction,
           config: {
             responseMimeType: "application/json"

@@ -22,7 +22,8 @@ import {
   Heart,
   LifeBuoy,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  Globe
 } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
@@ -64,6 +65,8 @@ import { CommunityFoundModal } from "./components/CommunityFoundModal";
 import { QRModal } from "./components/QRModal";
 import { OwnerClaimsDashboard } from "./components/OwnerClaimsDashboard";
 import { ClaimTracker } from "./components/ClaimTracker";
+import { LanguageSelectorModal } from "./components/LanguageSelectorModal";
+import { useLanguage } from "./context/LanguageContext";
 
 interface Toast {
   id: string;
@@ -88,6 +91,8 @@ export default function App() {
   } = usePosts();
 
   const form = usePostForm();
+
+  const { meta, showSelector, openSelector, closeSelector, isFirstTime } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">("home");
   const [privacySection, setPrivacySection] = useState<string>("privacy");
@@ -1251,7 +1256,18 @@ export default function App() {
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-3 z-10">
+        <div className="flex items-center gap-2 sm:gap-3 z-10">
+          {/* Language Selector Button */}
+          <button
+            onClick={openSelector}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 text-xs text-slate-300 hover:text-white transition cursor-pointer"
+            title="Change Language / भाषा बदलें"
+            aria-label="Change Language"
+          >
+            <Globe size={14} className="text-amber-400 shrink-0" />
+            <span className="hidden sm:inline font-semibold text-[11px]">{meta.nativeName}</span>
+          </button>
+
           {/* Notification Bell */}
           <button
             onClick={() => setNotificationsOpen(true)}
@@ -2000,6 +2016,12 @@ export default function App() {
           setPrivacySection("privacy-center");
         }}
         addToast={addToast}
+      />
+
+      <LanguageSelectorModal
+        isOpen={showSelector}
+        onClose={closeSelector}
+        isInitialOnboarding={isFirstTime}
       />
     </div>
   );
