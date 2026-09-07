@@ -10,7 +10,7 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
