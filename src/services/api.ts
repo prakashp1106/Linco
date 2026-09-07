@@ -555,6 +555,19 @@ export const apiService = {
   },
 
   /**
+   * Mark all notifications as read
+   */
+  async markAllNotificationsRead(): Promise<{ success: boolean }> {
+    const response = await fetch("/api/notifications/mark-all-read", {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to mark all notifications as read");
+    }
+    return response.json();
+  },
+
+  /**
    * Get match threshold configuration
    */
   async getConfig(): Promise<{ success: boolean; matchThreshold: number }> {

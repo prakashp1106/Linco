@@ -557,25 +557,22 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
   return (
     <div className="bg-[#07070a] border border-[#161621] rounded-[32px] p-6 sm:p-8 md:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden" id="post-form-card">
-      <div className="absolute top-0 right-10 w-48 h-48 bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-violet-500/5 blur-[100px] rounded-full pointer-events-none" />
-
-      {/* REDESIGNED AI-GUIDED JOURNEY HEADER */}
-      <div className="mb-8 pb-5 border-b border-[#161621]/80 flex flex-col gap-5 text-left">
+      {/* Clean Stepper Header */}
+      <div className="mb-8 pb-5 border-b border-[#181b2a] flex flex-col gap-5 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <span className="text-[10px] font-sans font-extrabold tracking-widest text-cyan-400 uppercase bg-cyan-950/40 px-3 py-1 rounded-full border border-cyan-500/20">
-              🤖 AI-Guided Report Builder
+            <span className="text-[11px] font-sans font-bold tracking-wider text-indigo-400 uppercase bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+              Verified Community Listing
             </span>
-            <h2 className="text-xl md:text-2xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-violet-400 mt-2.5">
-              Create Verified Report
+            <h2 className="text-xl md:text-2xl font-bold text-slate-100 mt-2.5">
+              {form.fType === "Lost" ? "Report a Lost Item" : "Report a Found Item"}
             </h2>
             {/* Encouraging subtitle */}
             <motion.p
               key={currentStep}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-xs sm:text-sm text-slate-300 mt-1 font-semibold flex items-center gap-1.5"
+              className="text-xs sm:text-sm text-slate-400 mt-1 font-medium flex items-center gap-1.5"
             >
               {getEncouragingText(currentStep)}
             </motion.p>
@@ -583,29 +580,29 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
           {currentStep <= 8 && (
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <span className="font-mono text-[11px] font-black tracking-wider text-slate-400">
-                STEP <span className="text-cyan-400 font-extrabold">{getVisualStepNumber(currentStep)}</span> OF {totalSteps}
+              <span className="font-mono text-[11px] font-bold tracking-wider text-slate-400">
+                Step <span className="text-indigo-400">{getVisualStepNumber(currentStep)}</span> of {totalSteps}
               </span>
-              <div className="w-28 sm:w-36 h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800/40 relative">
+              <div className="w-28 sm:w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
                 <motion.div
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 to-violet-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+                  className="absolute top-0 left-0 h-full bg-indigo-500 rounded-full"
                   initial={{ width: "12%" }}
                   animate={{ width: `${(getVisualStepNumber(currentStep) / totalSteps) * 100}%` }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 />
               </div>
             </div>
           )}
           {currentStep === 9 && (
-            <div className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-black text-[10px] tracking-wider uppercase font-mono shrink-0">
-              🔍 FINAL RECONCILIATION DRAFT
+            <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-[11px] tracking-wider uppercase font-mono shrink-0">
+              Final Review
             </div>
           )}
         </div>
 
-        {/* Premium Adaptive Stepper Timeline Tracker */}
+        {/* Stepper Timeline Tracker */}
         {currentStep <= 8 && (
-          <div className="w-full border-t border-[#161621]/85 pt-4">
+          <div className="w-full border-t border-[#181b2a] pt-4">
             <div className="flex items-center justify-between gap-1 w-full overflow-x-auto pb-2 scrollbar-none">
               {stepNames.map((name, i) => {
                 const stepNum = i + 1;
@@ -618,22 +615,22 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         type="button"
                         disabled={stepNum >= currentStep}
                         onClick={() => setCurrentStep(stepNum)}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all duration-200 ${
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold border transition-all duration-200 ${
                           isCompleted
-                            ? "bg-cyan-500/10 border-cyan-400 text-cyan-400 cursor-pointer"
+                            ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300 cursor-pointer"
                             : isCurrent
-                            ? "bg-gradient-to-r from-cyan-400 to-indigo-500 border-transparent text-slate-950 font-extrabold shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-                            : "bg-[#030304] border-[#161621] text-slate-600 cursor-not-allowed"
+                            ? "bg-indigo-600 border-indigo-500 text-white shadow-sm"
+                            : "bg-[#0c0e15] border-slate-800 text-slate-500 cursor-not-allowed"
                         }`}
                       >
-                        {isCompleted ? <Check size={11} className="stroke-[3]" /> : stepNum}
+                        {isCompleted ? <Check size={12} className="stroke-[2.5]" /> : stepNum}
                       </button>
-                      <span className={`text-[10px] font-sans font-semibold tracking-tight hidden sm:inline ${isCurrent ? "text-slate-200" : isCompleted ? "text-slate-400" : "text-slate-600"}`}>
+                      <span className={`text-[11px] font-medium tracking-tight hidden sm:inline ${isCurrent ? "text-slate-200" : isCompleted ? "text-slate-400" : "text-slate-600"}`}>
                         {name}
                       </span>
                     </div>
                     {i < stepNames.length - 1 && (
-                      <div className={`h-[1px] flex-1 min-w-[8px] ${currentStep > stepNum ? "bg-cyan-500/50" : "bg-[#161621]"}`} />
+                      <div className={`h-[1px] flex-1 min-w-[8px] ${currentStep > stepNum ? "bg-indigo-500/40" : "bg-[#181b2a]"}`} />
                     )}
                   </React.Fragment>
                 );

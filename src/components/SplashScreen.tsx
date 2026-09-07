@@ -291,7 +291,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         className="w-full max-w-lg text-center"
       >
         <p className="text-[10px] sm:text-[11px] font-mono text-slate-400 tracking-wider">
-          SECURE CITIZEN NETWORK • GEMINI AI POWERED
+          SECURE CITIZEN RECOVERY NETWORK • LINCO INDIA
         </p>
       </motion.div>
     </motion.div>

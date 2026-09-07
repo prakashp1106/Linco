@@ -67,6 +67,7 @@ import { OwnerClaimsDashboard } from "./components/OwnerClaimsDashboard";
 import { ClaimTracker } from "./components/ClaimTracker";
 import { LanguageSelectorModal } from "./components/LanguageSelectorModal";
 import { useLanguage } from "./context/LanguageContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 interface Toast {
   id: string;
@@ -94,7 +95,36 @@ export default function App() {
 
   const { meta, showSelector, openSelector, closeSelector, isFirstTime } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">("home");
+  const [activeTab, setActiveTabState] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">(() => {
+    const hash = window.location.hash.replace("#", "");
+    const validTabs = ["home", "report", "feed", "about", "matches", "privacy-trust", "dashboard"];
+    if (validTabs.includes(hash)) return hash as any;
+    return "home";
+  });
+
+  const setActiveTab = useCallback((tab: "home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard") => {
+    setActiveTabState(tab);
+    if (window.location.hash !== `#${tab}`) {
+      window.history.pushState({ tab }, "", `#${tab}`);
+    }
+  }, []);
+
+  // Listen for browser popstate (Back / Forward button navigation)
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const hash = window.location.hash.replace("#", "");
+      const validTabs = ["home", "report", "feed", "about", "matches", "privacy-trust", "dashboard"];
+      if (e.state?.tab && validTabs.includes(e.state.tab)) {
+        setActiveTabState(e.state.tab);
+      } else if (validTabs.includes(hash)) {
+        setActiveTabState(hash as any);
+      } else {
+        setActiveTabState("home");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
   const [privacySection, setPrivacySection] = useState<string>("privacy");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState(() => {
@@ -374,7 +404,7 @@ export default function App() {
     const messages = [
       "Lost something? We'll match it. 🔍",
       "Found something? Return it instantly. 🤝",
-      "Powered by Gemini AI. Driven by Community. ✨",
+      "Intelligent AI Matching. Driven by Community. ✨",
       "Your missing item is closer than you think.",
     ];
     let msgIndex = 0;
@@ -1265,7 +1295,7 @@ export default function App() {
             aria-label="Change Language"
           >
             <Globe size={14} className="text-amber-400 shrink-0" />
-            <span className="hidden sm:inline font-semibold text-[11px]">{meta.nativeName}</span>
+            <span className="font-semibold text-[11px]">{meta.nativeName}</span>
           </button>
 
           {/* Notification Bell */}
@@ -1721,14 +1751,16 @@ export default function App() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -15 }}
                     >
-                      <PotentialMatches
-                        posts={posts}
-                        unlockedPosts={unlockedPosts}
-                        onStartClaim={(post, matchedPostId) => handleStartClaimTrigger(post, matchedPostId)}
-                        addToast={addToast}
-                        initialSelectedMatchId={selectedMatchId}
-                        onClearSelectedMatchId={() => setSelectedMatchId(null)}
-                      />
+                      <ErrorBoundary fallbackTitle="AI Forensic Matches">
+                        <PotentialMatches
+                          posts={posts}
+                          unlockedPosts={unlockedPosts}
+                          onStartClaim={(post, matchedPostId) => handleStartClaimTrigger(post, matchedPostId)}
+                          addToast={addToast}
+                          initialSelectedMatchId={selectedMatchId}
+                          onClearSelectedMatchId={() => setSelectedMatchId(null)}
+                        />
+                      </ErrorBoundary>
                     </motion.div>
                   )}
                 </AnimatePresence>

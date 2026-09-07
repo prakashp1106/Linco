@@ -260,6 +260,17 @@ function writeLocalDB(data: any) {
   }
 }
 
+// Helper to upsert a notification idempotently into local fallback DB
+function upsertLocalNotification(local: any, notif: LincoNotification) {
+  if (!local.notifications) local.notifications = [];
+  const idx = local.notifications.findIndex((n: any) => n.id === notif.id);
+  if (idx >= 0) {
+    local.notifications[idx] = { ...local.notifications[idx], ...notif };
+  } else {
+    local.notifications.push(notif);
+  }
+}
+
 // Helper to seed initial posts if Firestore collection is empty
 async function seedFirestoreIfNeeded() {
   if (useLocalFallback || !db) return;
@@ -1283,9 +1294,8 @@ async function runSmartMatchEngine(newPost: Post) {
           if (!savedNotifications) {
             try {
               const local = readLocalDB();
-              if (!local.notifications) local.notifications = [];
-              local.notifications.push(notifLost);
-              local.notifications.push(notifFound);
+              upsertLocalNotification(local, notifLost);
+              upsertLocalNotification(local, notifFound);
               writeLocalDB(local);
               console.log(`[AI-MATCH-ENGINE] NOTIFICATION DELIVERY SUCCESS: Saved alerts successfully to Local Fallback DB.`);
             } catch (localErr) {
@@ -2007,13 +2017,12 @@ Return JSON ONLY:
       message: notifMessage,
       createdAt: Date.now(),
       read: false,
-      type: "CLAIM_RECEIVED",
+      type: "verification",
       matchId: match.matchId
     };
 
     if (useLocalFallback) {
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(notif);
+      upsertLocalNotification(local, notif);
       writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notifId).set(notif);
@@ -2090,12 +2099,12 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
         message: "Connection verified! You can now chat securely.",
         createdAt: Date.now(),
         read: false,
-        type: "CLAIM_APPROVED",
+        type: "approval",
         matchId: match.matchId
       };
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif1, notif2);
+        upsertLocalNotification(local, notif1);
+        upsertLocalNotification(local, notif2);
       } else {
         await db!.collection("notifications").doc(notif1.id).set(notif1);
         await db!.collection("notifications").doc(notif2.id).set(notif2);
@@ -2111,16 +2120,15 @@ app.post("/api/matches/:matchId/approve", async (req, res) => {
         id: notifId,
         postId: notifyPostId,
         message: role === "Owner" 
-          ? "Someone has claimed this item" 
+          ? "Owner approved this match! Confirm your approval to connect." 
           : "Finder believes this is your item! Confirm approval to connect.",
         createdAt: Date.now(),
         read: false,
-        type: "CLAIM_RECEIVED",
+        type: "approval",
         matchId: match.matchId
       };
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif);
+        upsertLocalNotification(local, notif);
       } else {
         await db!.collection("notifications").doc(notifId).set(notif);
       }
@@ -2207,13 +2215,13 @@ app.post("/api/matches/:matchId/trust", async (req, res) => {
         message: "Mutual trust confirmed! Chat on WhatsApp is now unlocked.",
         createdAt: Date.now(),
         read: false,
-        type: "TRUST_UPDATED",
+        type: "trust",
         matchId: match.matchId
       };
 
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif1, notif2);
+        upsertLocalNotification(local, notif1);
+        upsertLocalNotification(local, notif2);
       } else {
         await db!.collection("notifications").doc(notif1.id).set(notif1);
         await db!.collection("notifications").doc(notif2.id).set(notif2);
@@ -2229,13 +2237,12 @@ app.post("/api/matches/:matchId/trust", async (req, res) => {
         message: `${role} clicked "I Trust This Person"! Click "I Trust This Person" to reveal WhatsApp.`,
         createdAt: Date.now(),
         read: false,
-        type: "TRUST_UPDATED",
+        type: "trust",
         matchId: match.matchId
       };
 
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif);
+        upsertLocalNotification(local, notif);
       } else {
         await db!.collection("notifications").doc(notifId).set(notif);
       }
@@ -2310,13 +2317,12 @@ app.post("/api/matches/:matchId/handover/start", async (req, res) => {
       message: `Safe handover scheduled by ${role}.`,
       createdAt: Date.now(),
       read: false,
-      type: "HANDOVER_UPDATED",
+      type: "handover",
       matchId: match.matchId
     };
 
     if (useLocalFallback) {
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(notif);
+      upsertLocalNotification(local, notif);
       writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notifId).set(notif);
@@ -2411,13 +2417,13 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
         message: "Item successfully reunited! Case marked as Resolved.",
         createdAt: Date.now(),
         read: false,
-        type: "CASE_RESOLVED",
+        type: "handover",
         matchId: match.matchId
       };
 
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif1, notif2);
+        upsertLocalNotification(local, notif1);
+        upsertLocalNotification(local, notif2);
       } else {
         await db!.collection("notifications").doc(notif1.id).set(notif1);
         await db!.collection("notifications").doc(notif2.id).set(notif2);
@@ -2436,13 +2442,12 @@ app.post("/api/matches/:matchId/handover/confirm", async (req, res) => {
           : 'Owner confirmed: "I received my item".',
         createdAt: Date.now(),
         read: false,
-        type: role === "Finder" ? "HANDOVER_UPDATED" : "ITEM_RECEIVED",
+        type: "handover",
         matchId: match.matchId
       };
 
       if (useLocalFallback) {
-        if (!local.notifications) local.notifications = [];
-        local.notifications.push(notif);
+        upsertLocalNotification(local, notif);
       } else {
         await db!.collection("notifications").doc(notifId).set(notif);
       }
@@ -2701,11 +2706,10 @@ Return ONLY valid JSON: {"confidence": <number>, "message": "<string>"}`;
         message: `🔍 ${finderName} reported finding your "${lostPost.item}"! Review their verification answers now.`,
         createdAt: now,
         read: false,
-        type: "match",
+        type: "claim",
         matchId
       };
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(notif);
+      upsertLocalNotification(local, notif);
       writeLocalDB(local);
     } else {
       await db!.collection("matches").doc(matchId).set(newMatch);
@@ -2780,8 +2784,7 @@ app.post("/api/matches/:matchId/reject", async (req, res) => {
       matchId: match.matchId
     };
     if (useLocalFallback) {
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(notif);
+      upsertLocalNotification(local, notif);
       writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notifId).set(notif);
@@ -2866,13 +2869,12 @@ app.post("/api/matches/:matchId/chat", async (req, res) => {
       message: `New message from ${senderName}`,
       createdAt: Date.now(),
       read: false,
-      type: "CHAT_MESSAGE",
+      type: "chat",
       matchId: match.matchId
     };
 
     if (useLocalFallback) {
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(notif);
+      upsertLocalNotification(local, notif);
       writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notifId).set(notif);
@@ -2888,21 +2890,33 @@ app.post("/api/matches/:matchId/chat", async (req, res) => {
 // Fetch notifications
 app.get("/api/notifications", async (req, res) => {
   try {
-    let notificationsList: any[] = [];
+    let rawNotifications: any[] = [];
     if (useLocalFallback) {
       const local = readLocalDB();
-      notificationsList = local.notifications || [];
-      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Local Fallback JSON.`);
+      rawNotifications = local.notifications || [];
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${rawNotifications.length} notifications from Local Fallback JSON.`);
     } else {
       console.log("[DIAGNOSTIC-FIRESTORE-QUERY] Accessing collection: 'notifications'");
       const snapshot = await db!.collection("notifications").get();
       snapshot.forEach(doc => {
-        notificationsList.push(doc.data());
+        rawNotifications.push(doc.data());
       });
-      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${notificationsList.length} notifications from Firestore collection 'notifications'.`);
+      console.log(`[DIAGNOSTIC-API-AUDIT] GET /api/notifications: Read ${rawNotifications.length} notifications from Firestore collection 'notifications'.`);
     }
+
+    // Deduplicate notifications strictly by ID to guarantee zero duplicate alerts
+    const seenIds = new Set<string>();
+    const notificationsList: any[] = [];
+    for (const notif of rawNotifications) {
+      if (!notif || !notif.id) continue;
+      if (!seenIds.has(notif.id)) {
+        seenIds.add(notif.id);
+        notificationsList.push(notif);
+      }
+    }
+
     // Sort descending by creation date
-    notificationsList.sort((a, b) => b.createdAt - a.createdAt);
+    notificationsList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     res.json({ success: true, notifications: notificationsList });
   } catch (err: any) {
     console.error("GET /api/notifications failed:", err);
@@ -2910,7 +2924,33 @@ app.get("/api/notifications", async (req, res) => {
   }
 });
 
-// Mark notification as read
+// Mark all notifications as read
+app.post("/api/notifications/mark-all-read", async (req, res) => {
+  try {
+    if (useLocalFallback) {
+      const local = readLocalDB();
+      if (local.notifications && Array.isArray(local.notifications)) {
+        local.notifications.forEach((n: any) => {
+          n.read = true;
+        });
+        writeLocalDB(local);
+      }
+    } else if (db) {
+      const snapshot = await db.collection("notifications").where("read", "==", false).get();
+      const batch = db.batch();
+      snapshot.forEach(doc => {
+        batch.update(doc.ref, { read: true });
+      });
+      await batch.commit();
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("Mark all notifications read failed:", err);
+    res.status(500).json({ error: err.message || "Failed to mark all notifications as read" });
+  }
+});
+
+// Mark single notification as read
 app.post("/api/notifications/:id/read", async (req, res) => {
   const { id } = req.params;
   try {
@@ -3603,8 +3643,7 @@ Return ONLY a valid JSON object (no markdown backticks, no \`\`\`json blocks):
 
     if (useLocalFallback) {
       const local = readLocalDB();
-      if (!local.notifications) local.notifications = [];
-      local.notifications.push(newNotification);
+      upsertLocalNotification(local, newNotification);
       writeLocalDB(local);
     } else {
       await db!.collection("notifications").doc(notificationId).set(newNotification);

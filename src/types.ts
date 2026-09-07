@@ -165,13 +165,32 @@ export interface PotentialMatch {
   reason: string;
 }
 
+export type NotificationType =
+  | "match"
+  | "system"
+  | "claim"
+  | "verification"
+  | "approval"
+  | "trust"
+  | "handover"
+  | "chat"
+  | "CLAIM_RECEIVED"
+  | "CLAIM_APPROVED"
+  | "CLAIM_REJECTED"
+  | "TRUST_UPDATED"
+  | "CHAT_MESSAGE"
+  | "HANDOVER_UPDATED"
+  | "ITEM_RECEIVED"
+  | "CASE_RESOLVED"
+  | (string & {});
+
 export interface LincoNotification {
   id: string;
   postId: string;
   message: string;
   createdAt: number;
   read: boolean;
-  type: "match" | "system" | "claim" | "CLAIM_RECEIVED" | "CLAIM_APPROVED" | "CLAIM_REJECTED" | "TRUST_UPDATED" | "CHAT_MESSAGE" | "HANDOVER_UPDATED" | "ITEM_RECEIVED" | "CASE_RESOLVED";
+  type: NotificationType;
   matchId?: string;
   claimId?: string;
   matchedPostId?: string;

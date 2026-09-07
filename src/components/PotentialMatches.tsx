@@ -305,9 +305,36 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     }
   };
 
+  // Safe resolver for posts, creating graceful fallback if post record is not yet in state
+  const resolvePost = (postId: string, fallbackType: "Lost" | "Found", matchObj?: PotentialMatch | null): Post => {
+    const existing = getPostById(postId);
+    if (existing) return existing;
+    const anyMatch = matchObj as any;
+    return {
+      id: postId,
+      type: fallbackType,
+      item: fallbackType === "Lost" ? (anyMatch?.lostItemName || "Lost Item") : (anyMatch?.foundItemName || "Found Item"),
+      category: (fallbackType === "Lost" ? anyMatch?.lostCategory : anyMatch?.foundCategory) || "General",
+      details: fallbackType === "Lost" ? (anyMatch?.lostItemName || "") : (anyMatch?.foundItemName || ""),
+      location: (fallbackType === "Lost" ? anyMatch?.lostLocation : anyMatch?.foundLocation) || "Reported Location",
+      date: (fallbackType === "Lost" ? anyMatch?.lostDate : anyMatch?.foundDate) || "Recently",
+      time: "",
+      status: "Active",
+      resolved: false,
+      securityPin: "",
+      image: (fallbackType === "Lost" ? anyMatch?.lostPhoto : anyMatch?.foundPhoto) || "",
+      contact: "",
+      created: Date.now(),
+      createdAt: Date.now()
+    } as any;
+  };
+
   // Dynamic feature extraction helper for side-by-side comparison
-  const extractFeatures = (post: Post) => {
-    const text = `${post.item} ${post.details}`.toLowerCase();
+  const extractFeatures = (post?: Post | null) => {
+    if (!post) {
+      return { brand: "Not specified", color: "Not specified", material: "Not specified", size: "Medium", shape: "Standard" };
+    }
+    const text = `${post.item || ""} ${post.details || ""}`.toLowerCase();
     
     // Brand list
     const brands = [
@@ -374,9 +401,9 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     return { brand, color, material, size, shape };
   };
 
-  const getDistanceText = (lost: Post, found: Post) => {
-    if (!lost.latitude || !lost.longitude || !found.latitude || !found.longitude) {
-      return { text: "No GPS Anchor", km: null };
+  const getDistanceText = (lost?: Post | null, found?: Post | null) => {
+    if (!lost || !found || !lost.latitude || !lost.longitude || !found.latitude || !found.longitude) {
+      return { text: "Location matched", km: null };
     }
     const R = 6371; // km
     const dLat = (found.latitude - lost.latitude) * (Math.PI / 180);
@@ -396,8 +423,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     return { text: `${d.toFixed(1)} km away`, km: d };
   };
 
-  const getTimelineText = (lost: Post, found: Post) => {
-    const diff = Math.abs(found.created - lost.created);
+  const getTimelineText = (lost?: Post | null, found?: Post | null) => {
+    if (!lost || !found) return "Timeline matched";
+    const lostCreated = (lost as any).created || (lost as any).createdAt || Date.now();
+    const foundCreated = (found as any).created || (found as any).createdAt || Date.now();
+    const diff = Math.abs(foundCreated - lostCreated);
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
 
@@ -410,8 +440,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
     return "Reported almost simultaneously";
   };
 
-  const getHoursDaysProximityText = (lost: Post, found: Post) => {
-    const diff = Math.abs(found.created - lost.created);
+  const getHoursDaysProximityText = (lost?: Post | null, found?: Post | null) => {
+    if (!lost || !found) return "Recent report";
+    const lostCreated = (lost as any).created || (lost as any).createdAt || Date.now();
+    const foundCreated = (found as any).created || (found as any).createdAt || Date.now();
+    const diff = Math.abs(foundCreated - lostCreated);
     const hours = Math.round(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     if (days > 0) return `${days}d ${hours % 24}h apart`;
@@ -940,8 +973,8 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <AnimatePresence mode="popLayout">
             {filteredMatches.map((m) => {
-              const lostPost = getPostById(m.lostPostId)!;
-              const foundPost = getPostById(m.foundPostId)!;
+              const lostPost = resolvePost(m.lostPostId, "Lost", m);
+              const foundPost = resolvePost(m.foundPostId, "Found", m);
               const isExpanded = expandedMatchId === m.matchId;
               const isSaved = savedMatches.includes(m.matchId);
 
@@ -951,7 +984,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
               const sameBrand = lostF.brand !== "Not specified" && foundF.brand !== "Not specified" && lostF.brand.toLowerCase() === foundF.brand.toLowerCase();
               const sameColor = lostF.color !== "Not specified" && foundF.color !== "Not specified" && lostF.color.toLowerCase() === foundF.color.toLowerCase();
-              const sameCategory = lostPost.category.toLowerCase() === foundPost.category.toLowerCase();
+              const sameCategory = (lostPost.category || "").toLowerCase() === (foundPost.category || "").toLowerCase();
 
               // Distance & Proximity values
               const distance = getDistanceText(lostPost, foundPost);
@@ -1158,8 +1191,8 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       {/* Side-by-Side Review & Mutual Approval Modal */}
       <AnimatePresence>
         {selectedMatch && (() => {
-          const lostPost = getPostById(selectedMatch.lostPostId)!;
-          const foundPost = getPostById(selectedMatch.foundPostId)!;
+          const lostPost = resolvePost(selectedMatch.lostPostId, "Lost", selectedMatch);
+          const foundPost = resolvePost(selectedMatch.foundPostId, "Found", selectedMatch);
           const userOwnsLost = unlockedPosts.includes(selectedMatch.lostPostId);
           const userOwnsFound = unlockedPosts.includes(selectedMatch.foundPostId);
 
@@ -1187,15 +1220,25 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#12121a] bg-[#030304]/80 backdrop-blur-md">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="text-indigo-400" size={18} />
-                    <h3 className="font-display font-extrabold text-xs sm:text-sm text-slate-100 uppercase tracking-wider">
-                      Forensic Audit & Mutual Approval ({selectedMatch.matchScore}% Confidence)
-                    </h3>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedMatch(null)}
+                      className="px-2.5 py-1.5 rounded-xl bg-[#12121a] border border-[#1c1c26] text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                      title="Back to matches list"
+                    >
+                      <span>← Back</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="text-indigo-400" size={17} />
+                      <h3 className="font-display font-extrabold text-xs sm:text-sm text-slate-100 uppercase tracking-wider">
+                        Forensic Audit & Mutual Approval ({selectedMatch.matchScore}% Confidence)
+                      </h3>
+                    </div>
                   </div>
                   <button
                     onClick={() => setSelectedMatch(null)}
                     className="p-1.5 rounded-lg bg-[#12121a] border border-[#1c1c26] text-slate-400 hover:text-white cursor-pointer transition"
+                    aria-label="Close modal"
                   >
                     <X size={15} />
                   </button>
