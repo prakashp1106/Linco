@@ -7,13 +7,19 @@ import {
   Sparkles, 
   CheckCircle, 
   UserCheck, 
-  ArrowRight,
-  Inbox,
-  Shield,
-  CheckCheck
+  ArrowRight, 
+  Inbox, 
+  ShieldCheck, 
+  CheckCheck,
+  ClipboardList,
+  HeartHandshake,
+  Package,
+  Award
 } from "lucide-react";
 import { LincoNotification, Post } from "../types";
 import { apiService } from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
+import { getNotificationTaxonomy, getLocalizedNotificationMessage } from "../services/i18n";
 
 interface ActivityCenterProps {
   unlockedPosts: string[];
@@ -43,14 +49,33 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
   addToast
 }) => {
   const [markingAll, setMarkingAll] = useState(false);
+  const { t } = useLanguage();
 
   if (!isOpen) return null;
 
   // Filter ONLY real user notifications matching user's unlocked posts
-  const realNotifications = notifications.filter((n) => unlockedPosts.includes(n.postId));
+  // Strict event deduplication: 1 match event = 1 card (never duplicate cards for the same match)
+  const uniqueNotificationsMap = new Map<string, LincoNotification>();
+  notifications
+    .filter((n) => unlockedPosts.includes(n.postId))
+    .forEach((n) => {
+      const dedupeKey = n.matchId ? `match_${n.matchId}` : (n.claimId ? `claim_${n.claimId}` : n.id);
+      if (!uniqueNotificationsMap.has(dedupeKey)) {
+        uniqueNotificationsMap.set(dedupeKey, n);
+      } else {
+        const existing = uniqueNotificationsMap.get(dedupeKey)!;
+        if (existing.read && !n.read) {
+          uniqueNotificationsMap.set(dedupeKey, n);
+        }
+      }
+    });
+
+  const realNotifications = Array.from(uniqueNotificationsMap.values());
   const unreadCount = realNotifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = async (n: LincoNotification) => {
+    const taxonomy = getNotificationTaxonomy(n, t);
+
     // Mark as read immediately
     if (!n.read) {
       try {
@@ -63,19 +88,40 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
 
     onClose();
 
-    // 1. If notification has a matchId -> Route directly to the Match details
+    // 1. Taxonomy Route Target: Chat
+    if (taxonomy.routeTarget === "chat" && n.matchId) {
+      onViewMatch(n.matchId);
+      return;
+    }
+
+    // 2. Taxonomy Route Target: Claims
+    if (taxonomy.routeTarget === "claims") {
+      if (n.claimId && onOpenClaimTracker) {
+        onOpenClaimTracker(n.claimId);
+        return;
+      }
+      if (n.postId) {
+        const targetPost = posts.find((p) => p.id === n.postId);
+        if (targetPost && onOpenOwnerClaims) {
+          onOpenOwnerClaims(targetPost);
+          return;
+        }
+      }
+    }
+
+    // 3. Direct match routing
     if (n.matchId) {
       onViewMatch(n.matchId);
       return;
     }
 
-    // 2. If notification has a claimId -> Open the Claim Tracker modal
+    // 4. Direct claimId routing
     if (n.claimId && onOpenClaimTracker) {
       onOpenClaimTracker(n.claimId);
       return;
     }
 
-    // 3. If notification is for a claim on user's post -> Open Owner Claims Review
+    // 5. Direct claim on user's post
     if (n.type === "claim" && n.postId) {
       const targetPost = posts.find((p) => p.id === n.postId);
       if (targetPost && onOpenOwnerClaims) {
@@ -84,7 +130,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
       }
     }
 
-    // 4. If notification is a match type -> Go to matches tab
+    // 6. Match category
     if (n.type === "match") {
       if (onNavigateToTab) {
         onNavigateToTab("matches");
@@ -92,7 +138,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
       return;
     }
 
-    // Default fallback: Go to feed to see post updates
+    // Default fallback: Go to feed
     if (onNavigateToTab) {
       onNavigateToTab("feed");
     }
@@ -104,7 +150,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
     try {
       await apiService.markAllNotificationsRead();
       onRefreshNotifications();
-      addToast("All notifications marked as read", "success");
+      addToast(t("notifications.readAllSuccess", "All notifications marked as read"), "success");
     } catch (err) {
       console.error("Mark all read failed:", err);
     } finally {
@@ -112,34 +158,29 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
     }
   };
 
-  const getNotificationIcon = (type: string, message: string) => {
-    const lower = (message || "").toLowerCase();
-    const t = (type || "").toLowerCase();
-    if (lower.includes("chat") || lower.includes("message") || t === "chat") {
-      return <MessageSquare size={15} className="text-emerald-400" />;
+  const renderNotificationIcon = (iconType: string) => {
+    switch (iconType) {
+      case "messageSquare":
+        return <MessageSquare size={15} className="text-emerald-400" />;
+      case "award":
+        return <Award size={15} className="text-emerald-400" />;
+      case "checkCircle":
+        return <CheckCircle size={15} className="text-teal-400" />;
+      case "package":
+        return <Package size={15} className="text-amber-400" />;
+      case "heartHandshake":
+        return <HeartHandshake size={15} className="text-cyan-400" />;
+      case "shieldCheck":
+        return <ShieldCheck size={15} className="text-violet-400" />;
+      case "userCheck":
+        return <UserCheck size={15} className="text-blue-400" />;
+      case "clipboard":
+        return <ClipboardList size={15} className="text-yellow-400" />;
+      case "sparkles":
+        return <Sparkles size={15} className="text-indigo-400" />;
+      default:
+        return <Bell size={15} className="text-slate-400" />;
     }
-    if (lower.includes("claim") || t === "claim") {
-      return <UserCheck size={15} className="text-indigo-400" />;
-    }
-    if (lower.includes("trust") || t === "trust") {
-      return <Shield size={15} className="text-amber-400" />;
-    }
-    if (lower.includes("resolved") || lower.includes("handover") || t === "handover") {
-      return <CheckCircle size={15} className="text-cyan-400" />;
-    }
-    return <Sparkles size={15} className="text-indigo-400" />;
-  };
-
-  const getActionLabel = (n: LincoNotification) => {
-    const t = (n.type || "").toLowerCase();
-    if (t === "chat" || t === "chat_message") return "Open Chat";
-    if (t === "handover" || t === "handover_updated") return "Confirm Handover";
-    if (t === "resolved" || t === "case_resolved" || t === "item_received") return "View Case";
-    if (t === "verification") return "Verify Answer";
-    if (t === "claim" || t === "claim_received" || t === "claim_approved" || t === "claim_rejected" || n.claimId) return "Review Claim";
-    if (t === "trust" || t === "trust_updated") return "Confirm Trust";
-    if (n.matchId || t === "match") return "View Match";
-    return "View Details";
   };
 
   return (
@@ -170,15 +211,17 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-sans font-bold text-sm text-slate-100 uppercase tracking-wider">
-                  Activity Center
+                  {t("notifications.centerTitle", "Activity Center")}
                 </h3>
                 {unreadCount > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                    {unreadCount} unread
+                    {unreadCount} {t("notifications.unread", "unread")}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 font-mono mt-0.5">Real-time alerts for your listings</p>
+              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                {t("notifications.centerSubtitle", "Real-time alerts for your listings")}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -187,10 +230,10 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
                 onClick={handleMarkAllRead}
                 disabled={markingAll}
                 className="text-[11px] font-medium text-slate-400 hover:text-indigo-300 px-2.5 py-1 rounded-lg hover:bg-slate-800/60 transition flex items-center gap-1 cursor-pointer"
-                title="Mark all as read"
+                title={t("notifications.readAll", "Mark all as read")}
               >
                 <CheckCheck size={13} />
-                <span>Read all</span>
+                <span>{t("notifications.readAll", "Read all")}</span>
               </button>
             )}
             <button 
@@ -209,22 +252,23 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
             <div className="space-y-2.5">
               {realNotifications.map((notif) => {
                 const targetPost = posts.find((p) => p.id === notif.postId);
-                const actionLabel = getActionLabel(notif);
+                const taxonomy = getNotificationTaxonomy(notif, t);
+                const localizedMsg = getLocalizedNotificationMessage(notif, t);
                 
                 return (
                   <div 
                     key={notif.id}
                     className={`p-4 rounded-2xl flex flex-col gap-3 transition border ${
                       !notif.read 
-                        ? "bg-[#0f1320] border-indigo-500/30 shadow-[0_4px_20px_-4px_rgba(79,70,229,0.15)]" 
+                        ? `bg-[#0f1320] ${taxonomy.cardBorder} shadow-[0_4px_20px_-4px_rgba(79,70,229,0.15)]` 
                         : "bg-[#0a0c13] border-[#161826] hover:border-slate-800 opacity-90"
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`p-2.5 rounded-xl border mt-0.5 shrink-0 ${
-                        !notif.read ? "bg-indigo-950/60 border-indigo-500/30" : "bg-slate-900/60 border-slate-800"
+                        !notif.read ? `${taxonomy.badgeBg} ${taxonomy.badgeBorder}` : "bg-slate-900/60 border-slate-800"
                       }`}>
-                        {getNotificationIcon(notif.type, notif.message)}
+                        {renderNotificationIcon(taxonomy.iconType)}
                       </div>
                       <div className="space-y-1 flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
@@ -232,16 +276,21 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
                             {!notif.read && (
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
                             )}
-                            <span className="text-[10px] font-mono font-bold uppercase text-indigo-400 tracking-wider truncate">
-                              {targetPost ? `${targetPost.type}: ${targetPost.item}` : "Listing Alert"}
+                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase tracking-wider border ${taxonomy.badgeBg} ${taxonomy.badgeText} ${taxonomy.badgeBorder}`}>
+                              {taxonomy.categoryTitle}
                             </span>
+                            {targetPost && (
+                              <span className="text-[10px] font-mono text-slate-400 truncate max-w-[140px]">
+                                • {targetPost.item}
+                              </span>
+                            )}
                           </div>
                           <span className="text-[10px] font-mono text-slate-500 shrink-0">
                             {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         <p className="text-xs text-slate-200 font-medium leading-relaxed">
-                          {notif.message}
+                          {localizedMsg}
                         </p>
                       </div>
                     </div>
@@ -254,7 +303,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
                           : "bg-slate-850 hover:bg-slate-800 text-slate-200 border border-slate-800"
                       }`}
                     >
-                      <span>{actionLabel}</span>
+                      <span>{taxonomy.actionTitle}</span>
                       <ArrowRight size={13} />
                     </button>
                   </div>
@@ -267,9 +316,11 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
                 <Inbox size={26} />
               </div>
               <div className="space-y-1.5 px-4">
-                <h4 className="text-sm font-bold text-slate-200">You're all caught up.</h4>
+                <h4 className="text-sm font-bold text-slate-200">
+                  {t("notifications.emptyTitle", "You're all caught up.")}
+                </h4>
                 <p className="text-xs text-slate-400 max-w-[260px] mx-auto leading-relaxed">
-                  We will notify you when someone reports an item that matches yours.
+                  {t("notifications.emptySubtitle", "We will notify you when someone reports an item that matches yours.")}
                 </p>
               </div>
             </div>
@@ -279,7 +330,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
         {/* Footer */}
         <div className="p-4 bg-[#07080d] border-t border-[#141624] text-center select-none">
           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-            Verified Community Network • LINCO India
+            {t("notifications.networkFooter", "Verified Community Network • LINCO India")}
           </span>
         </div>
       </motion.div>

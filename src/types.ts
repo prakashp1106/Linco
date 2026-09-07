@@ -188,6 +188,8 @@ export interface LincoNotification {
   id: string;
   postId: string;
   message: string;
+  messageKey?: string;
+  messageParams?: Record<string, string>;
   createdAt: number;
   read: boolean;
   type: NotificationType;
