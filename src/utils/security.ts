@@ -78,3 +78,15 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Verifies whether an administrative request is authorized against the environment ADMIN_API_KEY.
+ */
+export function isAdminAuthorized(
+  providedKey: string | null | undefined,
+  adminKeyEnv: string | undefined
+): boolean {
+  if (!adminKeyEnv) return true;
+  if (!providedKey) return false;
+  return providedKey === adminKeyEnv;
+}

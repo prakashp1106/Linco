@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isAdminAuthorized
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,17 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative Endpoints & Admin Key Authentication", () => {
+    it("authenticates admin key logic correctly using isAdminAuthorized", () => {
+      const adminKeyEnv = "secret_admin_key_123";
+
+      expect(isAdminAuthorized(undefined, adminKeyEnv)).toBe(false);
+      expect(isAdminAuthorized("wrong_key", adminKeyEnv)).toBe(false);
+      expect(isAdminAuthorized("secret_admin_key_123", adminKeyEnv)).toBe(true);
+      expect(isAdminAuthorized(undefined, undefined)).toBe(true);
     });
   });
 });
