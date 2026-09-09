@@ -62,7 +62,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     document.documentElement.lang = lang;
-  }, [lang]);
+    const isRtl = meta.direction === "rtl" || ["ur", "ar", "sd", "ks"].includes(lang);
+    document.documentElement.dir = isRtl ? "rtl" : "ltr";
+    if (isRtl) {
+      document.body.classList.add("rtl-mode");
+    } else {
+      document.body.classList.remove("rtl-mode");
+    }
+  }, [lang, meta.direction]);
 
   return (
     <LanguageContext.Provider

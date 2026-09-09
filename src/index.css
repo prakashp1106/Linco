@@ -205,3 +205,56 @@ nav.sticky > div {
   background-size: 28px 28px;
   background-image: radial-gradient(rgba(99, 102, 241, 0.07) 1px, transparent 1px);
 }
+
+/* Comprehensive RTL Support for Urdu, Arabic, Sindhi, Kashmiri */
+[dir="rtl"],
+.rtl-mode {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select,
+.rtl-mode input,
+.rtl-mode textarea,
+.rtl-mode select {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Icons with directional arrows */
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-arrow-left,
+.rtl-mode .lucide-arrow-right,
+.rtl-mode .lucide-chevron-right,
+.rtl-mode .lucide-chevron-left,
+.rtl-mode .lucide-arrow-left {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .rtl-flip,
+.rtl-mode .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Fix flex gap and alignments in RTL */
+[dir="rtl"] .text-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left !important;
+}
+
+[dir="rtl"] .left-0 {
+  left: auto !important;
+  right: 0 !important;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto !important;
+  left: 0 !important;
+}

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { LincoLogo } from "./LincoLogo";
+import { useLanguage } from "../context/LanguageContext";
 
 interface LandingPageProps {
   stats: {
@@ -109,6 +110,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenNotifications,
   onFocusAIAssistant
 }) => {
+  const { t } = useLanguage();
+
   // Timeline Reconstructor State
   const [activeScenario, setActiveScenario] = useState(SCENARIOS[0]);
   const [customInput, setCustomInput] = useState("");
@@ -186,7 +189,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center justify-center space-y-2"
           >
-            <LincoLogo variant="stacked" size="lg" showTagline taglineText="Locate • Verify • Reunite" />
+            <LincoLogo variant="stacked" size="lg" showTagline taglineText={t("home.heroTag", "Locate • Verify • Reunite")} />
           </motion.div>
 
           <motion.h1
@@ -195,9 +198,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-[clamp(2.5rem,6.5vw,4.5rem)] font-sans font-extrabold tracking-tight text-white leading-[1.1]"
           >
-            Your identity stays private. <br className="hidden sm:inline" />
+            {t("home.heroTitle1", "Your identity stays private.")} <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-400 bg-clip-text text-transparent">
-              Your item doesn't.
+              {t("home.heroTitle2", "Your item doesn't.")}
             </span>
           </motion.h1>
 
@@ -208,11 +211,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="space-y-4 max-w-2xl mx-auto"
           >
             <p className="text-slate-200 text-sm md:text-lg font-medium tracking-tight">
-              Never lose what matters. <br className="sm:hidden" />
-              <span className="text-slate-400">Powered by people. Protected by AI.</span>
+              {t("home.heroSubtitle1", "Never lose what matters.")} <br className="sm:hidden" />
+              <span className="text-slate-400">{t("home.heroSubtitle2", "Powered by people. Protected by AI.")}</span>
             </p>
             <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-xl mx-auto">
-              Report a lost or found item in under one minute while your identity remains private until ownership is verified.
+              {t("home.heroDesc", "Report a lost or found item in under one minute while your identity remains private until ownership is verified.")}
             </p>
           </motion.div>
 
@@ -227,14 +230,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={() => onNavigateToReport()}
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition-all duration-300 shadow-xl shadow-indigo-950/20 flex items-center justify-center gap-2 cursor-pointer group active:scale-95"
             >
-              Start Report
+              {t("home.startReport", "Start Report")}
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={onNavigateToFeed}
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#12121a] border border-[#1c1c26] hover:bg-[#1a1a26] text-slate-200 font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
             >
-              Browse Community Feed
+              {t("home.browseFeed", "Browse Community Feed")}
               <Compass size={14} className="text-slate-400 animate-spin" style={{ animationDuration: '60s' }} />
             </button>
           </motion.div>
@@ -249,20 +252,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Section Header */}
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <h3 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-[0.2em] flex items-center justify-center gap-1.5">
-              🛡️ Trusted by Design
+              🛡️ {t("home.trustTitle", "Trusted by Design")}
             </h3>
             
             <div className="space-y-1">
               <p className="text-2xl md:text-3xl font-sans font-extrabold text-white leading-tight">
-                Your identity stays private.
+                {t("home.heroTitle1", "Your identity stays private.")}
               </p>
               <p className="text-2xl md:text-3xl font-sans font-extrabold text-slate-400 leading-tight">
-                Your item doesn't.
+                {t("home.heroTitle2", "Your item doesn't.")}
               </p>
             </div>
 
             <p className="text-xs md:text-sm text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-              Trusted by communities. Powered by AI. Built for everyone.
+              {t("home.trustSubtitle", "Trusted by communities. Powered by AI. Built for everyone.")}
             </p>
           </div>
 
@@ -270,20 +273,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                title: "Private by Default",
-                desc: "Your contact details are kept strictly private and anonymous until a matched claim is successfully verified."
+                title: t("home.trustPrivacyTitle", "Private by Default"),
+                desc: t("home.trustPrivacyDesc", "Your contact details are kept strictly private and anonymous until a matched claim is successfully verified.")
               },
               {
-                title: "Verified Claims",
-                desc: "Owner validation uses dynamic, non-revealing questions generated by smart AI to block unauthorized claims."
+                title: t("home.trustProofTitle", "Verified Claims"),
+                desc: t("home.trustProofDesc", "Owner validation uses dynamic, non-revealing questions generated by smart AI to block unauthorized claims.")
               },
               {
-                title: "AI-Assisted Matching",
-                desc: "Deep correlation matching finds exact similarities between lost reports and found logs instantly."
+                title: t("nav.matches", "AI-Assisted Matching"),
+                desc: t("notifications.matchFoundMsg", "Deep correlation matching finds exact similarities between lost reports and found logs instantly.")
               },
               {
-                title: "Secure Communication",
-                desc: "Direct coordination is enabled only after local security PIN validation to keep conversations protected."
+                title: t("home.trustRecoveryTitle", "Trusted Community Network"),
+                desc: t("home.trustRecoveryDesc", "Connect through secure chat, mutual verification, and guided handovers.")
               }
             ].map((indicator, idx) => (
               <div 
@@ -345,18 +348,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Search size={20} />
             </div>
             <h3 className="text-lg font-bold text-slate-100 group-hover:text-rose-400 transition-colors mb-2 flex items-center gap-2">
-              Report Lost Item
+              {t("home.reportLost", "Report Lost Item")}
               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium mb-4">
-              Lost a laptop, wallet, key, or device? Create a private search listing to notify your community.
+              {t("home.heroDesc", "Lost a laptop, wallet, key, or device? Create a private search listing to notify your community.")}
             </p>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-mono font-bold bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/15 uppercase tracking-wide">
-                Start Search
+                {t("home.findItem", "Start Search")}
               </span>
               <span className="text-[9px] font-mono text-slate-500">
-                Private
+                {t("home.trustPrivacyTitle", "Private")}
               </span>
             </div>
           </motion.div>
@@ -372,18 +375,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <CheckCircle2 size={20} />
             </div>
             <h3 className="text-lg font-bold text-slate-100 group-hover:text-emerald-400 transition-colors mb-2 flex items-center gap-2">
-              Report Found Item
+              {t("home.reportFound", "Report Found Item")}
               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed font-medium mb-4">
-              Found keys, luggage, or accessories on campus? Hand it over safely and list descriptions for owners.
+              {t("claim.modalSubtitle", "Found keys, luggage, or accessories on campus? Hand it over safely and list descriptions for owners.")}
             </p>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/15 uppercase tracking-wide">
-                Safe Handover
+                {t("notifications.handoverUpdate", "Safe Handover")}
               </span>
               <span className="text-[9px] font-mono text-slate-500">
-                Verify claimants
+                {t("claim.verifyIdentity", "Verify claimants")}
               </span>
             </div>
           </motion.div>
@@ -399,13 +402,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Sparkles size={16} />
             </div>
             <h4 className="text-sm font-bold text-slate-100 group-hover:text-indigo-400 transition-colors mb-1.5 flex items-center gap-1.5">
-              Smart Matches
+              {t("home.viewMatches", "Smart Matches")}
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Instantly discover possible matching items found nearby, powered by smart AI.
+              {t("notifications.matchFoundMsg", "Instantly discover possible matching items found nearby, powered by smart AI.")}
             </p>
             <span className="text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/15 uppercase tracking-wide">
-              AI Powered
+              {t("nav.matches", "AI Powered")}
             </span>
           </motion.div>
 
@@ -420,13 +423,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Bell size={16} />
             </div>
             <h4 className="text-sm font-bold text-slate-100 group-hover:text-amber-400 transition-colors mb-1.5">
-              Activity Center
+              {t("notifications.centerTitle", "Activity Center")}
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Track active claims, secure handovers, AI matches, and trust levels.
+              {t("notifications.centerSubtitle", "Track active claims, secure handovers, AI matches, and trust levels.")}
             </p>
             <span className="text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/15 uppercase tracking-wide">
-              Live Alerts
+              {t("nav.activity", "Live Alerts")}
             </span>
           </motion.div>
 
@@ -441,13 +444,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Bot size={16} />
             </div>
             <h4 className="text-sm font-bold text-slate-100 group-hover:text-cyan-400 transition-colors mb-1.5 flex items-center gap-1.5">
-              LINCO AI Assistant
+              {t("nav.saathii", "LINCO AI Assistant")}
             </h4>
             <p className="text-[11px] text-slate-400 leading-relaxed font-medium mb-4">
-              Talk directly with Linco Sathi to generate timelines, log locations, or auto-fill filings.
+              {t("home.timelineShowcaseSubtitle", "Talk directly with Linco Sathi to generate timelines, log locations, or auto-fill filings.")}
             </p>
             <span className="text-[9px] font-mono font-bold bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/15 uppercase tracking-wide animate-pulse">
-              Ask Sathi
+              {t("nav.saathii", "Ask Sathi")}
             </span>
           </motion.div>
         </div>
@@ -461,38 +464,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-400"></span>
             </span>
-            <span>Platform Pulse</span>
+            <span>{t("nav.activity", "Platform Pulse")}</span>
           </div>
-          <p className="text-2xl md:text-3xl font-sans font-extrabold text-slate-100 tracking-tight">Active community recovery counter</p>
+          <p className="text-2xl md:text-3xl font-sans font-extrabold text-slate-100 tracking-tight">{t("home.trustRecoveryTitle", "Active community recovery counter")}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
           {[
             {
               value: stats.total,
-              label: "Assets cataloged",
-              desc: "Total listings verified",
+              label: t("home.statsTotal", "Assets cataloged"),
+              desc: t("home.statsTotal", "Total listings verified"),
               color: "text-white",
               badge: "SECURED"
             },
             {
               value: stats.lost,
-              label: "Active searches",
-              desc: "Seeking missing objects",
+              label: t("home.statsLost", "Active searches"),
+              desc: t("home.statsLost", "Seeking missing objects"),
               color: "text-rose-400",
               badge: "ACTIVE SEARCH"
             },
             {
               value: stats.found,
-              label: "Safekeeping logs",
-              desc: "Awaiting safe returns",
+              label: t("home.statsFound", "Safekeeping logs"),
+              desc: t("home.statsFound", "Awaiting safe returns"),
               color: "text-emerald-400",
               badge: "SAFEGUARDED"
             },
             {
               value: `${stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 88}%`,
-              label: "Recovery rate",
-              desc: "Proven safe return speed",
+              label: t("home.statsResolved", "Recovery rate"),
+              desc: t("home.statsResolved", "Proven safe return speed"),
               color: "text-indigo-400",
               badge: "SUCCESS RATE"
             }
@@ -528,13 +531,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="text-center space-y-3 max-w-2xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-mono font-bold text-indigo-300 uppercase tracking-widest shadow-inner">
             <Clock size={11} className="animate-pulse" />
-            <span>Community search tool</span>
+            <span>{t("home.timelineShowcaseTitle", "Community search tool")}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-sans font-extrabold text-white tracking-tight leading-none">
-            Timeline Reconstructor
+            {t("home.timelineShowcaseTitle", "Timeline Reconstructor")}
           </h2>
           <p className="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
-            Translate your daily sequence of events into a travel path, mapping key areas to simplify physical search efforts.
+            {t("home.timelineShowcaseSubtitle", "Translate your daily sequence of events into a travel path, mapping key areas to simplify physical search efforts.")}
           </p>
         </div>
 
@@ -545,7 +548,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest block">
-                01. CHOOSE A SCENARIO:
+                {t("home.timelineTryPrompt", "CHOOSE A SCENARIO:")}
               </span>
               <div className="grid grid-cols-1 gap-2.5">
                 {SCENARIOS.map((scen) => (
@@ -1044,8 +1047,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 9. FAQ ACCORDION SECTION */}
       <section className="space-y-12 max-w-3xl mx-auto">
         <div className="text-center space-y-3">
-          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">Have questions?</h2>
-          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">Common questions</p>
+          <h2 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest">{t("home.faqTitle", "Have questions?")}</h2>
+          <p className="text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">{t("home.faqSubtitle", "Common questions")}</p>
         </div>
 
         <div className="space-y-4">
@@ -1096,29 +1099,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               A private, simple, and community-driven path mapping and item recovery network.
             </p>
             <div className="text-[10px] text-slate-500 font-mono font-medium">
-              "Your identity stays private. Your item doesn't."
+              "{t("home.heroTitle1", "Your identity stays private.")} {t("home.heroTitle2", "Your item doesn't.")}"
             </div>
           </div>
 
           <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
             <div className="space-y-4">
               <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-                Product
+                {t("nav.feed", "Product")}
               </span>
               <ul className="space-y-2 text-xs">
                 <li>
                   <button onClick={onNavigateToFeed} className="text-slate-500 hover:text-slate-300 font-medium transition text-left cursor-pointer">
-                    Recover Feed
+                    {t("home.browseFeed", "Recover Feed")}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => onNavigateToReport()} className="text-slate-500 hover:text-slate-300 font-medium transition text-left cursor-pointer">
-                    Report Lost / Found
+                    {t("nav.report", "Report Lost / Found")}
                   </button>
                 </li>
                 <li>
                   <span className="text-slate-600 font-medium select-none">
-                    Timeline Reconstructor
+                    {t("home.timelineShowcaseTitle", "Timeline Reconstructor")}
                   </span>
                 </li>
               </ul>
@@ -1126,18 +1129,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="space-y-4">
               <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-                Resources
+                {t("home.trustTitle", "Resources")}
               </span>
               <ul className="space-y-2 text-xs font-medium">
-                <li><span className="text-slate-500">Community Guidelines</span></li>
-                <li><span className="text-slate-500">Privacy Standards</span></li>
-                <li><span className="text-slate-500">Support Center</span></li>
+                <li><span className="text-slate-500">{t("claim.guidelinesTitle", "Community Guidelines")}</span></li>
+                <li><span className="text-slate-500">{t("home.trustPrivacyTitle", "Privacy Standards")}</span></li>
+                <li><span className="text-slate-500">{t("nav.saathii", "Support Center")}</span></li>
               </ul>
             </div>
 
             <div className="space-y-4 col-span-2 sm:col-span-1">
               <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">
-                Network Status
+                {t("nav.activity", "Network Status")}
               </span>
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
@@ -1152,7 +1155,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="pt-8 border-t border-[#161621] flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-slate-500 font-medium">
           <div>
-            &copy; {new Date().getFullYear()} LINCO. Built for safe, swift community returns.
+            &copy; {new Date().getFullYear()} LINCO. {t("home.heroSubtitle2", "Built for safe, swift community returns.")}
           </div>
           <div className="flex gap-6">
             <span className="hover:text-slate-300 cursor-pointer transition">Terms of Service</span>

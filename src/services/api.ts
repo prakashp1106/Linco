@@ -76,6 +76,14 @@ export interface ReconstructTimelineResponse {
   reasoning?: string;
 }
 
+function getActiveLanguage(): string {
+  try {
+    return localStorage.getItem("linco_lang") || "en";
+  } catch {
+    return "en";
+  }
+}
+
 export const apiService = {
   /**
    * Fetch all posts and AI matches
@@ -166,11 +174,11 @@ export const apiService = {
   /**
    * AI Quick-fill from Photo
    */
-  async quickFillPhoto(imageBase64: string): Promise<QuickFillResponse> {
+  async quickFillPhoto(imageBase64: string, language?: string): Promise<QuickFillResponse> {
     const response = await fetch("/api/ai/quick-fill-photo", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: imageBase64 }),
+      body: JSON.stringify({ image: imageBase64, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -182,11 +190,11 @@ export const apiService = {
   /**
    * AI Quick-fill from Voice transcription
    */
-  async quickFillVoice(transcript: string): Promise<QuickFillResponse> {
+  async quickFillVoice(transcript: string, language?: string): Promise<QuickFillResponse> {
     const response = await fetch("/api/ai/quick-fill-voice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transcript }),
+      body: JSON.stringify({ transcript, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -202,7 +210,7 @@ export const apiService = {
     const response = await fetch("/api/ai/enhance-description", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, category, description, language }),
+      body: JSON.stringify({ item, category, description, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -214,11 +222,11 @@ export const apiService = {
   /**
    * AI Suggest a reasonable reward
    */
-  async suggestReward(item: string, description: string): Promise<SuggestRewardResponse> {
+  async suggestReward(item: string, description: string, language?: string): Promise<SuggestRewardResponse> {
     const response = await fetch("/api/ai/suggest-reward", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, description }),
+      body: JSON.stringify({ item, description, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -234,7 +242,7 @@ export const apiService = {
     const response = await fetch("/api/ai/reconstruct-timeline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, timeline, language }),
+      body: JSON.stringify({ item, timeline, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -246,11 +254,11 @@ export const apiService = {
   /**
    * AI Generate customized verification questions
    */
-  async generateVerification(item: string, description: string, postId: string): Promise<string[]> {
+  async generateVerification(item: string, description: string, postId: string, language?: string): Promise<string[]> {
     const response = await fetch("/api/ai/generate-verification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, description, postId }),
+      body: JSON.stringify({ item, description, postId, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -266,12 +274,13 @@ export const apiService = {
     item: string,
     description: string,
     questions: string[],
-    answers: string[]
+    answers: string[],
+    language?: string
   ): Promise<VerifyClaimResponse> {
     const response = await fetch("/api/ai/verify-claim", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item, description, questions, answers }),
+      body: JSON.stringify({ item, description, questions, answers, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
@@ -286,12 +295,13 @@ export const apiService = {
   async lincoSaathii(
     history: Array<{ role: "user" | "model"; content: string }>,
     currentState: Partial<Post>,
-    message: string
+    message: string,
+    language?: string
   ): Promise<LincoSaathiiResponse> {
     const response = await fetch("/api/ai/linco-saathii", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ history, currentState, message }),
+      body: JSON.stringify({ history, currentState, message, language: language || getActiveLanguage() }),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));

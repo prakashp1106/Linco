@@ -34,6 +34,7 @@ import { PostCard } from "./PostCard";
 import { FeedMap } from "./LeafletMap";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
 
 interface FeedListProps {
   posts: Post[];
@@ -190,6 +191,7 @@ export const FeedList: React.FC<FeedListProps> = ({
   onManageClaims,
   onUnlockPost,
 }) => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [feedTypeFilter, setFeedTypeFilter] = useState<"All" | "Lost" | "Found">("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -474,13 +476,13 @@ export const FeedList: React.FC<FeedListProps> = ({
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search matching items, tags, colors, brand names, cities..."
+              placeholder={t("feed.searchPlaceholder", "Search matching items, tags, colors, brand names, cities...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsRecentFocused(true)}
               onBlur={() => setTimeout(() => setIsRecentFocused(false), 200)}
               className="w-full pl-11 pr-14 md:pr-24 py-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/20 outline-none text-xs font-semibold text-white transition-all placeholder:text-slate-500"
-              aria-label="Universal Search Bar"
+              aria-label={t("feed.universalSearchBar", "Universal Search Bar")}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               {searchQuery && (
@@ -488,7 +490,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                   type="button"
                   onClick={() => setSearchQuery("")}
                   className="p-1 text-slate-400 hover:text-white rounded-full transition cursor-pointer"
-                  aria-label="Clear Search Input"
+                  aria-label={t("feed.clearSearch", "Clear Search Input")}
                 >
                   <X size={14} />
                 </button>
@@ -508,8 +510,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                 ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20"
                 : "bg-slate-900/60 border-slate-800/80 text-slate-500 hover:text-slate-300"
             }`}
-            title="Save Search Parameters"
-            aria-label="Save Search Configuration"
+            title={t("feed.saveParameters", "Save Search Parameters")}
+            aria-label={t("feed.saveParameters", "Save Search Parameters")}
           >
             <Bookmark size={16} />
           </button>
@@ -523,10 +525,10 @@ export const FeedList: React.FC<FeedListProps> = ({
                 ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border-indigo-500/60 text-indigo-300 shadow-[0_4px_12px_rgba(99,102,241,0.15)]"
                 : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
             }`}
-            aria-label="Toggle Advanced Filters"
+            aria-label={t("feed.toggleFilters", "Toggle Advanced Filters")}
           >
             <SlidersHorizontal size={14} />
-            <span className="hidden sm:inline">Filters</span>
+            <span className="hidden sm:inline">{t("feed.filters", "Filters")}</span>
             {isAdvancedOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
         </form>
@@ -575,7 +577,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               {recentSearches.length > 0 && (
                 <div className="space-y-1.5 text-left">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 block">
-                    Recent Searches
+                    {t("feed.recentSearches", "Recent Searches")}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {recentSearches.map((recent, idx) => (
@@ -597,7 +599,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                       }}
                       className="px-2.5 py-1.5 text-[10px] text-slate-500 hover:text-red-400 font-bold transition uppercase cursor-pointer"
                     >
-                      Clear
+                      {t("common.clear", "Clear")}
                     </button>
                   </div>
                 </div>
@@ -607,7 +609,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               {savedSearches.length > 0 && (
                 <div className="space-y-1.5 text-left">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 block">
-                    Saved Search Configurations
+                    {t("feed.savedSearches", "Saved Search Configurations")}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {savedSearches.map((saved) => (
@@ -624,8 +626,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                           type="button"
                           onClick={(e) => handleDeleteSavedSearch(saved.id, e)}
                           className="p-1 text-slate-500 hover:text-red-400 hover:bg-slate-950 rounded-lg transition"
-                          title="Delete Saved Search"
-                          aria-label="Delete Saved Search"
+                          title={t("feed.deleteSavedSearch", "Delete Saved Search")}
+                          aria-label={t("feed.deleteSavedSearch", "Delete Saved Search")}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -653,21 +655,25 @@ export const FeedList: React.FC<FeedListProps> = ({
                 {/* Section A: Core Type & Status */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <Layers size={10} /> Listing Registry
+                    <Layers size={10} /> {t("feed.listingRegistry", "Listing Registry")}
                   </label>
                   <div className="flex bg-slate-900 p-1 rounded-2xl border border-slate-800/60">
-                    {["All", "Lost", "Found"].map((type) => (
+                    {[
+                      { key: "All", label: t("feed.all", "All") },
+                      { key: "Lost", label: t("feed.lost", "Lost") },
+                      { key: "Found", label: t("feed.found", "Found") },
+                    ].map((type) => (
                       <button
-                        key={type}
+                        key={type.key}
                         type="button"
-                        onClick={() => setFeedTypeFilter(type as any)}
+                        onClick={() => setFeedTypeFilter(type.key as any)}
                         className={`flex-1 text-[10px] font-sans font-bold py-2 rounded-xl uppercase transition tracking-wider cursor-pointer active:scale-95 ${
-                          feedTypeFilter === type
+                          feedTypeFilter === type.key
                             ? "bg-slate-800 text-indigo-400 font-extrabold border border-slate-700/80 shadow"
                             : "text-slate-400 hover:text-slate-200"
                         }`}
                       >
-                        {type}
+                        {type.label}
                       </button>
                     ))}
                   </div>
@@ -676,17 +682,17 @@ export const FeedList: React.FC<FeedListProps> = ({
                 {/* Section B: Category */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <Tag size={10} /> Category
+                    <Tag size={10} /> {t("feed.category", "Category")}
                   </label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="w-full text-xs font-semibold px-4 py-3 bg-slate-900 border border-slate-800/80 rounded-2xl text-slate-300 outline-none cursor-pointer focus:border-indigo-500 transition"
                   >
-                    <option value="All">All Categories</option>
+                    <option value="All">{t("feed.allCategories", "All Categories")}</option>
                     {CATEGORIES.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.emoji} {c.id}
+                        {c.emoji} {t(`category.${c.id.toLowerCase().replace(/[^a-z0-9]/g, "")}`, c.id)}
                       </option>
                     ))}
                   </select>
@@ -695,7 +701,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                 {/* Section C: City Selection */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <MapPin size={10} /> Geographical City
+                    <MapPin size={10} /> {t("feed.city", "Geographical City")}
                   </label>
                   <select
                     value={cityFilter}
@@ -705,7 +711,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                     }}
                     className="w-full text-xs font-semibold px-4 py-3 bg-slate-900 border border-slate-800/80 rounded-2xl text-slate-300 outline-none cursor-pointer focus:border-indigo-500 transition"
                   >
-                    <option value="All">All Cities</option>
+                    <option value="All">{t("feed.allCities", "All Cities")}</option>
                     {CITIES.map((city) => (
                       <option key={city} value={city}>
                         📍 {city}
@@ -722,11 +728,11 @@ export const FeedList: React.FC<FeedListProps> = ({
                 {/* Date range filter */}
                 <div className="space-y-2 text-left">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <Calendar size={10} /> Date Range
+                    <Calendar size={10} /> {t("feed.dateRange", "Date Range")}
                   </label>
                   <div className="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800/60">
                     {[
-                      { id: "All", label: "Anytime" },
+                      { id: "All", label: t("common.all", "Anytime") },
                       { id: "24h", label: "24 Hrs" },
                       { id: "7d", label: "7 Days" },
                       { id: "30d", label: "30 Days" },
@@ -750,7 +756,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                 {/* Distance Filter (only valid if a city is active to center reference) */}
                 <div className="space-y-2 text-left">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <Compass size={10} /> Proximity Boundary
+                    <Compass size={10} /> {t("feed.proximity", "Proximity Boundary")}
                   </label>
                   <select
                     value={distanceFilter}
@@ -762,25 +768,25 @@ export const FeedList: React.FC<FeedListProps> = ({
                         : "border-slate-800/80 text-slate-300"
                     }`}
                   >
-                    <option value="All">All Proximities (Any Distance)</option>
-                    <option value="5km">Within 5 Kilometers</option>
-                    <option value="15km">Within 15 Kilometers</option>
-                    <option value="30km">Within 30 Kilometers</option>
-                    <option value="50km">Within 50 Kilometers</option>
+                    <option value="All">{t("feed.allProximities", "All Proximities (Any Distance)")}</option>
+                    <option value="5km">{t("feed.within5km", "Within 5 Kilometers")}</option>
+                    <option value="15km">{t("feed.within15km", "Within 15 Kilometers")}</option>
+                    <option value="30km">{t("feed.within30km", "Within 30 Kilometers")}</option>
+                    <option value="50km">{t("feed.within50km", "Within 50 Kilometers")}</option>
                   </select>
                 </div>
 
                 {/* Sorting options */}
                 <div className="space-y-2 text-left">
                   <label className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                    <ArrowUpDown size={10} /> Sort Catalog
+                    <ArrowUpDown size={10} /> {t("feed.sortCatalog", "Sort Catalog")}
                   </label>
                   <div className="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800/60">
                     {[
-                      { id: "new", label: "Newest" },
-                      { id: "best", label: "Best Match" },
-                      { id: "nearest", label: "Nearest" },
-                      { id: "views", label: "Views" },
+                      { id: "new", label: t("feed.newestFirst", "Newest") },
+                      { id: "best", label: t("feed.bestMatch", "Best") },
+                      { id: "nearest", label: t("feed.closestDistance", "Nearest") },
+                      { id: "views", label: t("feed.views", "Views") },
                     ].map((opt) => (
                       <button
                         key={opt.id}
@@ -803,7 +809,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               {/* Advanced Color Palette Swatches */}
               <div className="space-y-2 text-left">
                 <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                  <Palette size={10} /> Color Chromatic Swatch
+                  <Palette size={10} /> {t("feed.colorSwatch", "Color Chromatic Swatch")}
                 </span>
                 <div className="flex flex-wrap gap-2 items-center">
                   <button
@@ -815,7 +821,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                         : "bg-slate-900 border-slate-800/80 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    All Colors
+                    {t("feed.allColors", "All Colors")}
                   </button>
                   {POPULAR_COLORS.map((col) => (
                     <button
@@ -839,7 +845,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               {/* Popular Brand filters */}
               <div className="space-y-2 text-left">
                 <span className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                  <TrendingUp size={10} /> Hardware Brand Manufacturer
+                  <TrendingUp size={10} /> {t("feed.hardwareBrand", "Hardware Brand Manufacturer")}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   <button
@@ -851,7 +857,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                         : "bg-slate-900 border-[#1c1c26] text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    All Brands
+                    {t("feed.allBrands", "All Brands")}
                   </button>
                   {POPULAR_BRANDS.map((br) => (
                     <button
@@ -877,7 +883,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                   onClick={handleClearAllFilters}
                   className="px-4 py-2 bg-slate-950 border border-[#1c1c26] hover:border-red-500/40 text-red-400 font-mono text-[10px] font-bold uppercase tracking-wider rounded-xl transition cursor-pointer active:scale-95 flex items-center gap-1.5"
                 >
-                  <RotateCcw size={11} /> Reset Filter Suite
+                  <RotateCcw size={11} /> {t("feed.resetFilters", "Reset Filter Suite")}
                 </button>
               </div>
 
@@ -889,7 +895,7 @@ export const FeedList: React.FC<FeedListProps> = ({
         <div className="flex items-center justify-between pt-1 border-t border-slate-900/60">
           <div className="text-[10px] font-mono font-bold text-slate-500 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{sortedPosts.length} Items Indexed</span>
+            <span>{sortedPosts.length} Items</span>
           </div>
 
           <div className="flex bg-[#030304] p-1 rounded-2xl border border-[#161621] shadow-md">
@@ -902,7 +908,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              <List size={12} /> List
+              <List size={12} /> {t("feed.viewList", "List")}
             </button>
             <button
               type="button"
@@ -913,7 +919,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              <MapIcon size={12} /> Map
+              <MapIcon size={12} /> {t("feed.viewMap", "Map")}
             </button>
           </div>
         </div>
@@ -966,9 +972,9 @@ export const FeedList: React.FC<FeedListProps> = ({
               <Search size={28} className="animate-bounce" />
             </div>
             <div className="space-y-2">
-              <h4 className="text-base font-bold text-white tracking-tight">No match found in indexing tables</h4>
+              <h4 className="text-base font-bold text-white tracking-tight">{t("feed.noMatchesFound", "No match found in indexing tables")}</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                We scanned our secure databases but didn't find any lost or found items fitting these exact filters. Try broadening your keywords or resetting selected swatches.
+                {t("feed.noMatchesDesc", "We scanned our secure databases but didn't find any lost or found items fitting these exact filters. Try broadening your keywords or resetting selected swatches.")}
               </p>
             </div>
           </div>
@@ -978,7 +984,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               onClick={handleClearAllFilters}
               className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer active:scale-95"
             >
-              Reset Filter Suite
+              {t("feed.resetFilters", "Reset Filter Suite")}
             </button>
             <button
               onClick={() => {
@@ -987,7 +993,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               }}
               className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-slate-950 text-xs font-black uppercase tracking-wider transition cursor-pointer active:scale-95"
             >
-              Report Lost/Found Item
+              {t("feed.reportItem", "Report Lost/Found Item")}
             </button>
           </div>
         </motion.div>

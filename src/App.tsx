@@ -93,7 +93,7 @@ export default function App() {
 
   const form = usePostForm();
 
-  const { meta, showSelector, openSelector, closeSelector, isFirstTime } = useLanguage();
+  const { t, meta, showSelector, openSelector, closeSelector, isFirstTime } = useLanguage();
 
   const [activeTab, setActiveTabState] = useState<"home" | "report" | "feed" | "about" | "matches" | "privacy-trust" | "dashboard">(() => {
     const hash = window.location.hash.replace("#", "");
@@ -1276,13 +1276,13 @@ export default function App() {
 
         {/* CENTER */}
         <div className="absolute left-1/2 -translate-x-1/2 font-sans font-black text-xs sm:text-sm tracking-widest text-slate-100 uppercase text-center select-none pointer-events-none">
-          {activeTab === "home" && "Home"}
-          {activeTab === "dashboard" && "Profile"}
-          {activeTab === "report" && "Report"}
-          {activeTab === "feed" && "Feed"}
-          {activeTab === "matches" && "Matches"}
-          {activeTab === "about" && "About"}
-          {activeTab === "privacy-trust" && "Privacy & Security"}
+          {activeTab === "home" && t("nav.home", "Home")}
+          {activeTab === "dashboard" && t("nav.profile", "Profile")}
+          {activeTab === "report" && t("nav.report", "Report")}
+          {activeTab === "feed" && t("nav.feed", "Feed")}
+          {activeTab === "matches" && t("nav.matches", "Matches")}
+          {activeTab === "about" && t("nav.about", "About")}
+          {activeTab === "privacy-trust" && t("nav.privacyTrust", "Privacy & Security")}
         </div>
 
         {/* RIGHT */}
@@ -1372,28 +1372,28 @@ export default function App() {
                 {/* Grouped Sidebar Sections */}
                 {[
                   {
-                    title: "DISCOVER",
+                    title: t("common.details", "DISCOVER"),
                     items: [
-                      { id: "home", label: "Home", icon: <Home size={16} />, action: () => setActiveTab("home") },
-                      { id: "feed", label: "Community Feed", icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
-                      { id: "matches", label: "AI Matches", icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
+                      { id: "home", label: t("nav.home", "Home"), icon: <Home size={16} />, action: () => setActiveTab("home") },
+                      { id: "feed", label: t("nav.feed", "Community Feed"), icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
+                      { id: "matches", label: t("nav.matches", "AI Matches"), icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
                     ]
                   },
                   {
-                    title: "RECOVERY",
+                    title: t("nav.activity", "RECOVERY"),
                     items: [
-                      { id: "reports", label: "My Reports", icon: <FileText size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "reports" })), 50); } },
-                      { id: "recovery-rooms", label: "Recovery Rooms", icon: <MessageSquare size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "recovery" })), 50); } },
-                      { id: "saved-searches", label: "Saved Searches", icon: <Heart size={16} />, action: () => { setActiveTab("feed"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-feed", { detail: "saved" })), 50); } },
+                      { id: "reports", label: t("dashboard.tabReports", "My Reports"), icon: <FileText size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "reports" })), 50); } },
+                      { id: "recovery-rooms", label: t("dashboard.tabRecovery", "Recovery Rooms"), icon: <MessageSquare size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "recovery" })), 50); } },
+                      { id: "saved-searches", label: t("feed.searchPlaceholder", "Saved Searches"), icon: <Heart size={16} />, action: () => { setActiveTab("feed"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-feed", { detail: "saved" })), 50); } },
                     ]
                   },
                   {
-                    title: "ACCOUNT",
+                    title: t("dashboard.tabSettings", "ACCOUNT"),
                     items: [
-                      { id: "settings", label: "Settings", icon: <Settings size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "settings" })), 50); } },
-                      { id: "privacy", label: "Privacy & Security", icon: <ShieldCheck size={16} />, action: () => { setActiveTab("privacy-trust"); setPrivacySection("privacy"); } },
-                      { id: "help", label: "Help & Support", icon: <LifeBuoy size={16} />, action: () => { window.dispatchEvent(new CustomEvent("open-linco-chat")); addToast("LincoSaathii Assistant active.", "info"); } },
-                      { id: "about", label: "About LINCO", icon: <Info size={16} />, action: () => setActiveTab("about") },
+                      { id: "settings", label: t("dashboard.tabSettings", "Settings"), icon: <Settings size={16} />, action: () => { setActiveTab("dashboard"); setTimeout(() => window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "settings" })), 50); } },
+                      { id: "privacy", label: t("nav.privacyTrust", "Privacy & Security"), icon: <ShieldCheck size={16} />, action: () => { setActiveTab("privacy-trust"); setPrivacySection("privacy"); } },
+                      { id: "help", label: t("nav.saathii", "Help & Support"), icon: <LifeBuoy size={16} />, action: () => { window.dispatchEvent(new CustomEvent("open-linco-chat")); addToast("LincoSaathii Assistant active.", "info"); } },
+                      { id: "about", label: t("nav.about", "About LINCO"), icon: <Info size={16} />, action: () => setActiveTab("about") },
                     ]
                   }
                 ].map((section) => (
@@ -1534,7 +1534,7 @@ export default function App() {
             }`}
           >
             <Home size={18} className={activeTab === "home" ? "text-indigo-400" : "text-slate-500"} />
-            <span>Home</span>
+            <span>{t("nav.home", "Home")}</span>
           </button>
 
           <button
@@ -1546,7 +1546,7 @@ export default function App() {
             }`}
           >
             <Plus size={18} className={activeTab === "report" ? "text-indigo-400" : "text-slate-500"} />
-            <span>Report</span>
+            <span>{t("nav.report", "Report")}</span>
           </button>
 
           <button
@@ -1558,7 +1558,7 @@ export default function App() {
             }`}
           >
             <Sparkles size={18} className={activeTab === "matches" ? "text-indigo-400 animate-pulse" : "text-slate-500"} />
-            <span>Matches</span>
+            <span>{t("nav.matches", "Matches")}</span>
             {unreadCount > 0 && (
               <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-400 text-[7px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
                 {unreadCount}
@@ -1571,7 +1571,7 @@ export default function App() {
             className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer relative text-slate-400 hover:text-rose-400"
           >
             <Bell size={18} className="text-rose-500 hover:scale-105 transition-transform duration-150" />
-            <span>Activity</span>
+            <span>{t("nav.activity", "Activity")}</span>
             {unreadCount > 0 && (
               <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
                 {unreadCount}
@@ -1588,7 +1588,7 @@ export default function App() {
             }`}
           >
             <User size={18} className={activeTab === "dashboard" ? "text-indigo-400" : "text-slate-500"} />
-            <span>Profile</span>
+            <span>{t("nav.profile", "Profile")}</span>
           </button>
         </div>
       </nav>

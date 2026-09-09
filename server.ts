@@ -3404,25 +3404,77 @@ function getCacheKey(item: string, description: string, postId?: string): string
 }
 
 // Professional human-friendly contextual fallbacks (no raw JSON/technical messages)
-function getProfessionalFallbackMessage(context: string): string {
+function getProfessionalFallbackMessage(context: string, lang: string = "en"): string {
+  const l = (lang || "en").toLowerCase().slice(0, 2);
   switch (context) {
     case "photo-fill":
+      if (l === "hi") return "AI अस्थायी रूप से इस छवि का विवरण पढ़ने में असमर्थ रहा। कृपया विवरण मैन्युअल रूप से दर्ज करें।";
+      if (l === "gu") return "AI આ છબીની વિગતો વાંચવામાં અસ્થાયી રૂપે અસમર્થ રહ્યું. કૃપા કરીને વિગતો મેન્યુઅલી દાખલ કરો.";
+      if (l === "mr") return "AI तात्पुरत्या स्वरूपात या प्रतिमेचे तपशील वाचू शकले नाही. कृपया तपशील स्वतः प्रविष्ट करा.";
+      if (l === "ta") return "AI தற்காலிகமாக இந்தப் படத்தின் விவரங்களைப் படிக்க முடியவில்லை. தயவுசெய்து கைமுறையாக உள்ளிடவும்.";
+      if (l === "te") return "AI తాత్కాలికంగా ఈ చిత్రం వివరాలను చదవలేకపోయింది. దయచేసి వివరాలను మాన్యువల్‌గా నమోదు చేయండి.";
+      if (l === "bn") return "AI সাময়িকভাবে এই ছবির বিবরণ পড়তে অক্ষম হয়েছে। দয়া করে বিবরণ ম্যানুয়ালি লিখুন।";
+      if (l === "ur") return "AI عارضی طور پر اس تصویر کی تفصیلات پڑھنے سے قاصر رہا۔ براہ کرم دستی طور پر تفصیلات درج کریں۔";
       return "The AI was temporarily unable to read the details of this image. Please double-check your connection or enter the details manually.";
     case "voice-fill":
+      if (l === "hi") return "AI आपकी आवाज़ को समझने में असमर्थ रहा। कृपया पुनः प्रयास करें या मैन्युअल रूप से दर्ज करें।";
+      if (l === "gu") return "AI તમારો અવાજ પ્રક્રિયા કરવામાં અસમર્થ રહ્યું. કૃપા કરીને ફરી પ્રયાસ કરો અથવા મેન્યુઅલી દાખલ કરો.";
+      if (l === "mr") return "AI आपला आवाज प्रक्रिया करण्यास असमर्थ ठरले. कृपया पुन्हा प्रयत्न करा किंवा स्वतः प्रविष्ट करा.";
+      if (l === "ta") return "AI உங்கள் குரல் பதிவைச் செயல்படுத்த முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.";
+      if (l === "te") return "AI మీ వాయిస్ ట్రాన్స్‌క్రిప్ట్‌ను ప్రాసెస్ చేయలేకపోయింది. దయచేసి మళ్లీ ప్రయత్నించండి.";
+      if (l === "bn") return "AI আপনার ভয়েস প্রতিলিপি প্রক্রিয়া করতে অক্ষম হয়েছে। দয়া করে আবার চেষ্টা করুন।";
+      if (l === "ur") return "AI آپ کی آواز کے نقل پر کارروائی کرنے سے قاصر رہا۔ براہ کرم دوبارہ کوشش کریں۔";
       return "The AI was temporarily unable to process your voice transcript. Please try again or enter the details manually.";
     case "enhance-description":
+      if (l === "hi") return "विवरण सुधार सेवा अस्थायी रूप से व्यस्त है। आपका मूल विवरण सुरक्षित रख लिया गया है।";
+      if (l === "gu") return "વર્ણન સુધારણા સેવા અસ્થાયી રૂપે વ્યસ્ત છે. તમારું મૂળ વર્ણન સાચવી લેવામાં આવ્યું છે.";
+      if (l === "mr") return "वर्णन सुधारणा सेवा तात्पुरती व्यस्त आहे. आपले मूळ वर्णन जतन केले गेले आहे.";
+      if (l === "ta") return "விளக்க மேம்பாட்டு சேவை தற்காலிகமாக பிஸியாக உள்ளது. உங்கள் அசல் விளக்கம் பாதுகாக்கப்பட்டுள்ளது.";
+      if (l === "te") return "వివరణ మెరుగుదల సేవ తాత్కాలికంగా రద్దీగా ఉంది. మీ అసలు వివరణ సురక్షితంగా సేవ్ చేయబడింది.";
+      if (l === "bn") return "বিবরণ উন্নতকরণ পরিষেবা সাময়িকভাবে ব্যস্ত। আপনার মূল বিবরণ সংরক্ষিত হয়েছে।";
+      if (l === "ur") return "تفصیل میں بہتری کی سروس عارضی طور پر مصروف ہے۔ آپ کی اصل تفصیل محفوظ کر لی گئی ہے۔";
       return "The description enhancement service is temporarily busy. Your original description has been saved and is ready.";
     case "reconstruct-timeline":
+      if (l === "hi") return "AI टाइमलाइन सहायक अस्थायी रूप से अनुपलब्ध है। कृपया अपने वस्तु को खोजने के लिए अपने कदमों को मैन्युअल रूप से याद करें।";
+      if (l === "gu") return "AI સમયરેખા સહાયક અસ્થાયી રૂપે અનુપલબ્ધ છે. કૃપા કરીને તમારી વસ્તુ શોધવા માટે તમારા પગલાંને મેન્યુઅલી ટ્રેસ કરો.";
+      if (l === "mr") return "AI टाइमलाइन सहाय्यक तात्पुरता अनुपलब्ध आहे. कृपया आपल्या वस्तूचा शोध घेण्यासाठी स्वतः आपल्या हालचाली तपासा.";
+      if (l === "ta") return "AI காலவரிசை உதவியாளர் தற்காலிகமாக கிடைக்கவில்லை. உங்கள் பொருளைக் கண்டறிய உங்கள் படிகளை கைமுறையாகத் தொடரவும்.";
+      if (l === "te") return "AI కాలక్రమ సహాయకుడు తాత్కాలికంగా అందుబాటులో లేదు. దయచేసి మీ వస్తువును కనుగొనడానికి మీ దశలను మాన్యువల్‌గా గుర్తించండి.";
+      if (l === "bn") return "AI টাইমলাইন সহকারী সাময়িকভাবে অনুপলব্ধ। দয়া করে আপনার জিনিসটি খুঁজতে পদক্ষেপগুলি ম্যানুয়ালি ট্র্যাক করুন।";
+      if (l === "ur") return "AI ٹائم لائن اسسٹنٹ عارضی طور پر دستیاب نہیں ہے۔ براہ کرم اپنی چیز تلاش کرنے کے لیے اپنے اقدامات کا دستی طور پر سراغ لگائیں۔";
       return "The AI timeline assistant is temporarily unreachable. Please trace your steps manually to locate your item.";
     case "suggest-reward":
+      if (l === "hi") return "AI इनाम अनुशंसाएं अस्थायी रूप से अनुपलब्ध हैं।";
+      if (l === "gu") return "AI પુરસ્કાર ભલામણો અસ્થાયી રૂપે અનુપલબ્ધ છે.";
+      if (l === "mr") return "AI बक्षीस शिफारसी तात्पुरत्या अनुपलब्ध आहेत.";
       return "AI reward recommendations are temporarily unavailable. We suggest using a community-recommended range of ₹500 - ₹2,000 based on standard item values.";
     case "generate-verification":
+      if (l === "hi") return "AI प्रश्न निर्माण अस्थायी रूप से ऑफ़लाइन है।";
+      if (l === "gu") return "AI પ્રશ્ન નિર્માણ અસ્થાયી રૂપે ઑફલાઇન છે.";
+      if (l === "mr") return "AI प्रश्न निर्मिती तात्पुरती ऑफलाइन आहे.";
       return "AI question generation is temporarily offline. We have prepared two general verification questions for you to use.";
     case "verify-claim":
+      if (l === "hi") return "AI स्वचालित दावा सत्यापन अस्थायी रूप से अनुपलब्ध है। आपके उत्तर सुरक्षित रूप से सहेजे गए हैं और मालिक समीक्षा करेंगे।";
+      if (l === "gu") return "AI સ્વચાલિત દાવો ચકાસણી અસ્થાયી રૂપે અનુપલબ્ધ છે. તમારા જવાબો સુરક્ષિત રીતે સચવાયા છે અને માલિક તેની સમીક્ષા કરશે.";
+      if (l === "mr") return "AI स्वयंचलित दावा पडताळणी तात्पुरती अनुपलब्ध आहे. आपली उत्तरे सुरक्षितपणे जतन केली गेली आहेत.";
+      if (l === "ta") return "AI தானியங்கி கோரிக்கை சரிபார்ப்பு தற்காலிகமாக கிடைக்கவில்லை. உங்கள் பதில்கள் பாதுகாப்பாக சேமிக்கப்பட்டுள்ளன.";
+      if (l === "te") return "AI ఆటోమేటెడ్ క్లెయిమ్ ధృవీకరణ తాత్కాలికంగా అందుబాటులో లేదు. మీ సమాధానాలు సురక్షితంగా సేవ్ చేయబడ్డాయి.";
+      if (l === "bn") return "AI স্বয়ংক্রিয় দাবি যাচাইকরণ সাময়িকভাবে অনুপলব্ধ। আপনার উত্তরগুলি নিরাপদে সংরক্ষিত হয়েছে।";
+      if (l === "ur") return "AI خودکار دعویٰ کی تصدیق عارضی طور پر دستیاب نہیں ہے۔ آپ کے جوابات محفوظ کر لیے گئے ہیں۔";
       return "AI automated claim verification is temporarily unavailable. Your claim answers have been securely saved, and the owner will review them manually.";
     case "linco-saathii":
+      if (l === "hi") return "लिंको साथी अभी थोड़ा व्यस्त है। कृपया पुनः संदेश भेजें या फ़ॉर्म का उपयोग करें।";
+      if (l === "gu") return "લિંકો સાથી હાલમાં વ્યસ્ત છે. કૃપા કરીને ફરી સંદેશ મોકલો અથવા ફોર્મનો ઉપયોગ કરો.";
+      if (l === "mr") return "लिंको साथी सध्या व्यस्त आहे. कृपया पुन्हा संदेश पाठवा किंवा फॉर्म वापरा.";
+      if (l === "ta") return "லின்கோ சாத்தி தற்போது பிஸியாக உள்ளார். தயவுசெய்து மீண்டும் முயற்சிக்கவும்.";
+      if (l === "te") return "లింకో సాథి ప్రస్తుతం బిజీగా ఉన్నారు. దయచేసి మళ్లీ సందేశం పంపండి.";
+      if (l === "bn") return "লিঙ্কো সাথী বর্তমানে ব্যস্ত। দয়া করে আবার বার্তা পাঠান বা ফর্ম ব্যবহার করুন।";
+      if (l === "ur") return "لنکو ساتھی فی الحال مصروف ہے۔ براہ کرم دوبارہ پیغام بھیجیں یا فارم استعمال کریں۔";
       return "LincoSaathii is currently taking a short breather. Please try typing your message again, or use the manual forms to report your item.";
     default:
+      if (l === "hi") return "हम अनुरोधों की अस्थायी उच्च मात्रा का सामना कर रहे हैं। कृपया कुछ क्षण बाद पुनः प्रयास करें।";
+      if (l === "gu") return "અમે વિનંતીઓના અસ્થાયી ઊંચા જથ્થાનો સામનો કરી રહ્યા છીએ. કૃપા કરીને થોડી વારમાં ફરી પ્રયાસ કરો.";
+      if (l === "mr") return "आम्ही विनंत्यांच्या तात्पुरत्या उच्च प्रमाणाचा सामना करत आहोत. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.";
       return "We are experiencing a temporary high volume of requests. Please try again in a moment, or continue manually.";
   }
 }
@@ -4212,7 +4264,7 @@ function requireGeminiApiKey(req: express.Request, res: express.Response, next: 
 // 1. Photo Analyzer
 app.post("/api/ai/quick-fill-photo", requireGeminiApiKey, async (req, res) => {
   try {
-    const { image } = req.body;
+    const { image, language } = req.body;
     if (!image) return res.status(400).json({ error: "Image base64 data required" });
 
     // Separate mimeType and base64 parts
@@ -4230,6 +4282,7 @@ app.post("/api/ai/quick-fill-photo", requireGeminiApiKey, async (req, res) => {
     };
 
     const prompt = `Analyze this lost/found item photo. Identify the core item and fill out the details.
+${language && language !== "en" ? `IMPORTANT: Write the "item" name and "description" in the requested language (code: "${language}"). Keep "category" as one of the exact English category options.` : ""}
 Return ONLY a valid JSON object. Do not wrap in markdown \`\`\`json blocks.
 The JSON object MUST have exactly these keys:
 {
@@ -4271,11 +4324,12 @@ The JSON object MUST have exactly these keys:
 // 2. Voice Input Fill
 app.post("/api/ai/quick-fill-voice", requireGeminiApiKey, async (req, res) => {
   try {
-    const { transcript } = req.body;
+    const { transcript, language } = req.body;
     if (!transcript) return res.status(400).json({ error: "Transcript is required" });
 
     const prompt = `Translate and structure this spoken description of a lost or found item. Extract the item name, categorize it, and clean up the description.
 Spoken: "${transcript}"
+${language && language !== "en" ? `IMPORTANT: Write the "item" name and "description" in the requested language (code: "${language}"). Keep "category" as one of the exact English category options.` : ""}
 
 Return ONLY a valid JSON object. Do not wrap in markdown \`\`\`json blocks.
 The JSON object MUST have exactly these keys:
@@ -4515,6 +4569,7 @@ TASK:
    - For timeType, mark "EXACT", "APPROXIMATE", "RELATIVE", or "UNKNOWN".
    - For locationType, mark "USER_PROVIDED", "AI_INFERRED", or "UNKNOWN".
 4. Determine the most likely loss spot, time window, and actionable logical advice.
+5. IMPORTANT: All user-facing explanations, including "likelyLossLocation", "likelyTimeWindow", "reasoning", "analysis", and event descriptions MUST be written naturally in the user's requested language (code: "${language || "en"}").
 
 Return ONLY a valid JSON object matching this schema (do NOT include markdown backticks or extra text):
 {
@@ -4568,12 +4623,13 @@ Return ONLY a valid JSON object matching this schema (do NOT include markdown ba
 // 5. Suggest Reward
 app.post("/api/ai/suggest-reward", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, description } = req.body;
+    const { item, description, language } = req.body;
     if (!item) return res.status(400).json({ error: "Item name is required" });
 
     const prompt = `Suggest a fair, friendly reward amount in Indian Rupees (INR) for finding this lost item.
 Item: "${item}"
 Description: "${description || "No description provided."}"
+${language && language !== "en" ? `Write the "reason" field naturally in the requested language (code: "${language}").` : ""}
 
 Consider the average replacement value, emotional value, and finder motivation in India.
 Return ONLY a valid JSON object (no markdown backticks):
@@ -4616,11 +4672,11 @@ Return ONLY a valid JSON object (no markdown backticks):
 // 6. Generate Verification Questions
 app.post("/api/ai/generate-verification", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, description, postId } = req.body;
+    const { item, description, postId, language } = req.body;
     if (!item || !description) return res.status(400).json({ error: "Item and description required" });
 
     // Check Cache first to prevent duplicates and support reuse
-    const cacheKey = getCacheKey(item, description, postId);
+    const cacheKey = getCacheKey(item, description, postId + "_" + (language || "en"));
     if (verificationQuestionsCache.has(cacheKey)) {
       console.log(`[VERIFICATION-QUESTIONS-CACHE] Cache HIT for: "${item}" (postId: ${postId})`);
       return res.json(verificationQuestionsCache.get(cacheKey));
@@ -4631,6 +4687,7 @@ The questions MUST be directly based on the unique details mentioned in the item
 Do NOT generate generic questions. Keep the questions direct and hard to guess for an outsider, but easy for the true owner.
 Item Name: "${item}"
 Item Description: "${description}"
+${language && language !== "en" ? `Formulate all verification questions directly in the requested language (code: "${language}").` : ""}
 
 Return ONLY a valid JSON array of 2 or 3 strings. Do not include markdown backticks or block wrappers.
 Format:
@@ -4679,7 +4736,7 @@ Format:
 // 7. Verify Answers
 app.post("/api/ai/verify-claim", requireGeminiApiKey, async (req, res) => {
   try {
-    const { item, description, questions, answers } = req.body;
+    const { item, description, questions, answers, language } = req.body;
     if (!questions || !answers) {
       return res.status(400).json({ error: "Questions and answers are required" });
     }
@@ -4692,6 +4749,7 @@ Questions Asked and Claimant's Answers:
 ${questions.map((q: string, i: number) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || "No answer"}`).join("\n\n")}
 
 Task: Evaluate if the answers indicate genuine ownership. True owner answers should match the visual details perfectly or show high specific familiarity with contents, labels, or characteristics.
+${language && language !== "en" ? `Write the "message" field naturally and fluently in the requested language (code: "${language}").` : ""}
 Return ONLY a valid JSON object (no markdown backticks):
 {
   "verified": true or false,
@@ -4732,11 +4790,11 @@ Return ONLY a valid JSON object (no markdown backticks):
 // 8. LincoSaathii Chatbot Endpoint
 app.post("/api/ai/linco-saathii", requireGeminiApiKey, async (req, res) => {
   try {
-    const { history, currentState, message } = req.body;
+    const { history, currentState, message, language } = req.body;
 
     const systemInstruction = `You are "LincoSaathii", an ultra-friendly, empathetic AI Lost & Found companion for the platform "LINCO AI".
-Your tone is like a supportive, close Indian friend (using words like "bhai", "yaar", "pareshan mat ho", "dost", "tension mat le").
-You understand and converse beautifully in any Indian language/dialect/mix (Hindi, Hinglish, Marathi, Gujarati, English, Bhojpuri, etc.) depending on what the user speaks.
+Your tone is like a supportive, close friend (using empathetic, caring, warm language).
+${language && language !== "en" ? `You MUST converse in the user's selected language (code: "${language}"). Ensure all your responses are in this language.` : 'You understand and converse beautifully in any Indian language/dialect/mix (Hindi, Hinglish, Marathi, Gujarati, English, Bhojpuri, etc.) depending on what the user speaks.'}
 
 Your goals:
 1. Empathize deeply with the user if they lost something, or congratulate/thank them warmly if they found something.

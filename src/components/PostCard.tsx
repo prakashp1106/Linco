@@ -13,6 +13,7 @@ import { MiniMap } from "./LeafletMap";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { formatKolkataTimestamp } from "../utils/date";
 import { getWhatsAppLink } from "../utils/whatsapp";
+import { useLanguage } from "../context/LanguageContext";
 
 interface PostCardProps {
   post: Post;
@@ -49,6 +50,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onManageClaims,
   onUnlockPost,
 }) => {
+  const { t } = useLanguage();
   const isLost = post.type === "Lost";
   const itemCat = CATEGORIES.find((c) => c.id === post.category);
   const isResolved = post.status === "Resolved";
@@ -74,18 +76,18 @@ export const PostCard: React.FC<PostCardProps> = ({
             isLost ? "bg-rose-950/20 text-rose-300 border border-rose-500/20" : "bg-emerald-950/20 text-emerald-300 border border-emerald-500/20"
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isLost ? "bg-rose-400 shadow-[0_0_8px_#f43f5e]" : "bg-emerald-400 shadow-[0_0_8px_#10b981]"}`} />
-            {isLost ? "Lost" : "Found"}
+            {isLost ? t("feed.lost", "Lost") : t("feed.found", "Found")}
           </span>
           {/* Category badge */}
           {itemCat && (
             <span className="text-[10px] font-mono font-bold px-2.5 py-1 bg-[#12121a] border border-[#1c1c26] text-slate-400 rounded-full">
-              {itemCat.emoji} {itemCat.id}
+              {itemCat.emoji} {t(`category.${itemCat.id.toLowerCase().replace(/[^a-z0-9]/g, "")}`, itemCat.id)}
             </span>
           )}
           {/* Urgency tag */}
           {post.urgency && post.urgency !== "Normal" && (
             <span className="text-[10px] font-mono font-bold px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full animate-pulse">
-              ⚡ {post.urgency}
+              ⚡ {t(`urgency.${post.urgency.toLowerCase()}`, post.urgency)}
             </span>
           )}
           {/* Live Missing Since Timer */}
@@ -95,7 +97,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           {/* Resolved badge */}
           {isResolved && (
             <span className="text-[10px] font-mono font-extrabold px-2.5 py-1 bg-indigo-950/30 text-indigo-300 border border-indigo-500/20 rounded-full uppercase tracking-wider">
-              ✓ Resolved
+              ✓ {t("post.resolved", "Resolved")}
             </span>
           )}
         </div>
@@ -105,7 +107,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           {!isResolved && (
             <button
               onClick={(e) => onMarkResolved(post.id, e)}
-              title="Mark as Resolved"
+              title={t("postcard.markResolved", "Mark as Resolved")}
               className="p-1.5 rounded-xl bg-indigo-950/20 hover:bg-indigo-600 border border-indigo-500/20 text-indigo-300 hover:text-white transition cursor-pointer active:scale-90"
             >
               <CheckCircle2 size={13} />
@@ -113,7 +115,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           )}
           <button
             onClick={(e) => onDeletePost(post.id, e)}
-            title="Delete Listing"
+            title={t("postcard.deleteListing", "Delete Listing")}
             className="p-1.5 rounded-xl bg-[#12121a] hover:bg-rose-600/10 border border-[#1c1c26] hover:border-rose-500/25 text-slate-500 hover:text-rose-400 transition cursor-pointer active:scale-90"
           >
             <Trash2 size={13} />
@@ -179,10 +181,10 @@ export const PostCard: React.FC<PostCardProps> = ({
                   e.stopPropagation();
                   onUnlockPost?.(post.id, e);
                 }}
-                title="Unlock connection with Security PIN"
+                title={t("postcard.unlockWithPin", "Unlock connection with Security PIN")}
                 className="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 text-indigo-400 font-bold text-[9px] uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-95"
               >
-                <Unlock size={10} className="inline mr-1" /> Unlock Connection
+                <Unlock size={10} className="inline mr-1" /> {t("postcard.unlockConnection", "Unlock Connection")}
               </button>
             </span>
           )}
@@ -205,7 +207,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 }}
                 className="flex-1 min-w-[130px] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer shadow-md shadow-emerald-950/30 active:scale-95"
               >
-                <Sparkles size={13} /> I Have This Item
+                <Sparkles size={13} /> {t("postcard.iHaveThisItem", "I Have This Item")}
               </button>
             )}
             <button
@@ -219,12 +221,12 @@ export const PostCard: React.FC<PostCardProps> = ({
                   : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-950/20"
               } font-bold transition-all duration-150 flex items-center justify-center gap-1.5 text-xs text-center cursor-pointer active:scale-95`}
             >
-              <ShieldCheck size={14} /> {isLost ? "Verify Ownership" : "Submit Claim"}
+              <ShieldCheck size={14} /> {isLost ? t("matches.verifyOwnership", "Verify Ownership") : t("feed.claimButton", "Submit Claim")}
             </button>
           </>
         ) : (
           <div className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/15 text-emerald-400 font-bold text-xs text-center select-none flex items-center justify-center gap-1.5">
-            <CheckCircle2 size={13} className="text-emerald-400" /> Reclaimed &amp; Handed Over
+            <CheckCircle2 size={13} className="text-emerald-400" /> {t("postcard.reclaimed", "Reclaimed & Handed Over")}
           </div>
         )}
 
@@ -234,16 +236,16 @@ export const PostCard: React.FC<PostCardProps> = ({
             e.stopPropagation();
             onManageClaims(post);
           }}
-          title="Manage Claims &amp; Approve/Reject"
+          title={t("postcard.manageClaims", "Manage Claims & Approve/Reject")}
           className="px-3.5 py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-all duration-150 flex items-center justify-center gap-1.5 text-center cursor-pointer active:scale-95"
         >
-          <ShieldCheck size={14} className="text-indigo-400" /> Claims
+          <ShieldCheck size={14} className="text-indigo-400" /> {t("postcard.claims", "Claims")}
         </button>
 
         {/* Share button */}
         <button
           onClick={(e) => onSharePost(post, e)}
-          title="Share/Copy Template Text"
+          title={t("postcard.shareTemplate", "Share/Copy Template Text")}
           className="p-2.5 bg-[#12121a] border border-[#1c1c26] hover:bg-[#1a1a26] rounded-xl text-slate-400 hover:text-slate-200 transition-all duration-150 flex items-center justify-center cursor-pointer active:scale-95"
         >
           <Share2 size={13} />
@@ -253,20 +255,20 @@ export const PostCard: React.FC<PostCardProps> = ({
         <button
           type="button"
           onClick={(e) => onShareAsImage(post, e)}
-          title="Download Post as Image Card"
+          title={t("postcard.downloadCard", "Download Post as Image Card")}
           className="px-3 py-1 bg-[#12121a] border border-[#1c1c26] hover:border-indigo-500/30 hover:text-indigo-400 rounded-xl text-slate-400 transition-all duration-150 flex items-center justify-center gap-1 text-[9px] font-mono font-bold uppercase tracking-wider select-none cursor-pointer active:scale-95"
         >
-          <Download size={11} className="text-indigo-400" /> Image
+          <Download size={11} className="text-indigo-400" /> {t("postcard.image", "Image")}
         </button>
 
         {/* QR Code button */}
         <button
           type="button"
           onClick={(e) => onShowQrCode(post, e)}
-          title="Interactive QR Code &amp; Print Settings"
+          title={t("postcard.qrSettings", "Interactive QR Code & Print Settings")}
           className="px-3 py-1 bg-[#12121a] border border-[#1c1c26] hover:border-indigo-500/30 hover:text-indigo-400 rounded-xl text-slate-400 transition-all duration-150 flex items-center justify-center gap-1 text-[9px] font-mono font-bold uppercase tracking-wider select-none cursor-pointer active:scale-95"
         >
-          <QrCode size={11} className="text-indigo-400" /> QR
+          <QrCode size={11} className="text-indigo-400" /> {t("postcard.qr", "QR")}
         </button>
       </div>
 
@@ -275,10 +277,10 @@ export const PostCard: React.FC<PostCardProps> = ({
         isUnlocked ? (
           <div className="mt-4 p-4 rounded-2xl border border-indigo-500/25 bg-indigo-950/10 relative overflow-hidden">
             <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-indigo-500/20 text-[7px] font-mono font-bold tracking-widest text-indigo-300 rounded-bl-lg uppercase">
-              AI MATCH
+              {t("postcard.aiMatch", "AI MATCH")}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-indigo-300 uppercase tracking-wider mb-3">
-              <Sparkles size={11} className="text-indigo-400 animate-spin" /> Gemini detected smart matches!
+              <Sparkles size={11} className="text-indigo-400 animate-spin" /> {t("postcard.geminiMatches", "Gemini detected smart matches!")}
             </div>
             
             <div className="space-y-2.5">
@@ -299,7 +301,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition duration-150 shadow-md active:scale-95"
                     >
-                      Contact Owner <ChevronRight size={10} />
+                      {t("postcard.contactOwner", "Contact Owner")} <ChevronRight size={10} />
                     </a>
                   </div>
                 </div>
@@ -310,10 +312,10 @@ export const PostCard: React.FC<PostCardProps> = ({
           <div className="mt-4 p-4 rounded-2xl border border-[#161621] bg-[#030304]/60 text-center space-y-2.5">
             <div className="text-xs text-slate-300 font-bold flex items-center justify-center gap-2">
               <Sparkles size={13} className="text-indigo-400 animate-pulse" />
-              Gemini AI detected {postMatches.length} potential smart match{postMatches.length > 1 ? "es" : ""}!
+              {t("post.geminiPotentialMatches", `Gemini AI detected ${postMatches.length} potential smart match${postMatches.length > 1 ? "es" : ""}!`)}
             </div>
             <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-normal">
-              Only the verified creator of this listing can decrypt similarity breakdowns and contact matching owners.
+              {t("postcard.creatorNotice", "Only the verified creator of this listing can decrypt similarity breakdowns and contact matching owners.")}
             </p>
             <button
               onClick={(e) => {
@@ -322,7 +324,7 @@ export const PostCard: React.FC<PostCardProps> = ({
               }}
               className="mx-auto px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider transition-all duration-150 shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
-              🔓 Unlock to View matches
+              🔓 {t("post.unlockToViewMatches", "Unlock to View matches")}
             </button>
           </div>
         )
