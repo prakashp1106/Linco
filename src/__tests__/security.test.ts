@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  verifyAdminKeyAuth
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,27 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative API Key Authentication Enforcement", () => {
+    it("allows config update when ADMIN_API_KEY environment variable is not configured", () => {
+      expect(verifyAdminKeyAuth(undefined, undefined)).toBe(true);
+      expect(verifyAdminKeyAuth("any_key", undefined)).toBe(true);
+    });
+
+    it("rejects request when ADMIN_API_KEY is configured and no key is provided", () => {
+      expect(verifyAdminKeyAuth(undefined, "secret_admin_key_123")).toBe(false);
+      expect(verifyAdminKeyAuth("", "secret_admin_key_123")).toBe(false);
+    });
+
+    it("rejects request when provided admin key is incorrect or invalid length", () => {
+      expect(verifyAdminKeyAuth("wrong_key", "secret_admin_key_123")).toBe(false);
+      expect(verifyAdminKeyAuth("secret_admin_key_12", "secret_admin_key_123")).toBe(false);
+    });
+
+    it("allows request when valid matching admin key is provided", () => {
+      expect(verifyAdminKeyAuth("secret_admin_key_123", "secret_admin_key_123")).toBe(true);
     });
   });
 });
