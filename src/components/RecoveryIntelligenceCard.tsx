@@ -157,25 +157,25 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
     if (scoreVal >= 90) {
       return {
         text: "Very High",
-        color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-        ringColor: "stroke-emerald-500"
+        color: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        ringColor: "stroke-emerald-600"
       };
     } else if (scoreVal >= 75) {
       return {
         text: "High",
-        color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-        ringColor: "stroke-indigo-500"
+        color: "text-indigo-700 bg-indigo-50 border-indigo-200",
+        ringColor: "stroke-indigo-600"
       };
     } else if (scoreVal >= 50) {
       return {
         text: "Moderate",
-        color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        color: "text-amber-800 bg-amber-50 border-amber-200",
         ringColor: "stroke-amber-500"
       };
     } else {
       return {
         text: "Low",
-        color: "text-rose-400 bg-rose-500/10 border-rose-500/20",
+        color: "text-rose-700 bg-rose-50 border-rose-200",
         ringColor: "stroke-rose-500"
       };
     }
@@ -196,37 +196,37 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
       name: "Item Category",
       status: form.fCategory ? "Specified" : "General",
       confidence: form.fCategory ? 90 : 30,
-      icon: <Bookmark size={13} className="text-indigo-400" />
+      icon: <Bookmark size={13} className="text-indigo-600" />
     },
     {
       name: "Description Quality",
       status: descText.length >= 150 ? "Detailed" : descText.length >= 50 ? "Moderate" : "Brief",
       confidence: descText.length >= 150 ? 95 : descText.length >= 50 ? 70 : 40,
-      icon: <FileText size={13} className="text-indigo-400" />
+      icon: <FileText size={13} className="text-indigo-600" />
     },
     {
       name: "Photo Attachment",
       status: form.fImage ? "Verified" : "Missing",
       confidence: form.fImage ? 95 : 10,
-      icon: <Camera size={13} className="text-indigo-400" />
+      icon: <Camera size={13} className="text-indigo-600" />
     },
     {
       name: "Location Precision",
       status: form.fLat && form.fLng ? "GPS Pinned" : "Approximate",
       confidence: form.fLat && form.fLng ? 95 : 50,
-      icon: <MapPin size={13} className="text-indigo-400" />
+      icon: <MapPin size={13} className="text-indigo-600" />
     },
     {
       name: "Scan Perimeter",
       status: `${searchRadius}m Radius`,
       confidence: searchRadius === 2000 ? 98 : searchRadius === 1000 ? 80 : 65,
-      icon: <Compass size={13} className="text-indigo-400" />
+      icon: <Compass size={13} className="text-indigo-600" />
     },
     {
       name: "Recency Factor",
       status: "Active Index",
       confidence: 100,
-      icon: <Clock size={13} className="text-indigo-400" />
+      icon: <Clock size={13} className="text-indigo-600" />
     }
   ];
 
@@ -254,31 +254,31 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
       
       {/* SUCCESS HEADER */}
       <div className="text-center space-y-2 py-2">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-1">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-2xs mb-1">
           <CheckCircle2 size={24} />
         </div>
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-100 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Report Published Successfully
           </h2>
-          <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
+          <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 leading-relaxed">
             Your report is live in the LINCO network. Review the estimated recovery indicators and actionable recommendations below.
           </p>
         </div>
       </div>
 
       {/* INTELLIGENCE CARD */}
-      <div className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-6 shadow-xl relative overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 space-y-6 shadow-xl relative overflow-hidden text-slate-800 font-sans">
         
         {/* Section Title */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <Sparkles size={15} className="text-indigo-400" />
-            <span className="text-xs font-semibold text-slate-200">
+            <Sparkles size={15} className="text-indigo-600" />
+            <span className="text-xs font-bold text-slate-900">
               Recovery Probability Assessment
             </span>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500 font-medium">
             Realtime Analysis
           </span>
         </div>
@@ -287,7 +287,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
           
           {/* Circular Indicator (Span 5) */}
-          <div className="md:col-span-5 flex flex-col items-center justify-center p-4 bg-[#121520] border border-slate-800 rounded-xl">
+          <div className="md:col-span-5 flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs">
             <div className="relative w-32 h-32 flex items-center justify-center">
               {/* SVG Ring */}
               <svg className="w-full h-full -rotate-90">
@@ -296,7 +296,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                   cx="64"
                   cy="64"
                   r={radius}
-                  className="stroke-slate-800"
+                  className="stroke-slate-200"
                   strokeWidth={strokeWidth}
                   fill="transparent"
                 />
@@ -322,11 +322,11 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                   key={score}
                   initial={{ scale: 0.9, opacity: 0.8 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-3xl font-bold text-slate-100"
+                  className="text-3xl font-bold text-slate-900"
                 >
                   {score}%
                 </motion.span>
-                <span className="text-[10px] text-slate-400 block font-medium mt-0.5">
+                <span className="text-[10px] text-slate-500 block font-semibold mt-0.5">
                   Confidence
                 </span>
               </div>
@@ -334,8 +334,8 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
             {/* Confidence Badge */}
             <div className="mt-3 text-center space-y-1">
-              <span className="text-xs text-slate-400 block">Likelihood of Return:</span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-medium ${badge.color}`}>
+              <span className="text-xs text-slate-500 block font-medium">Likelihood of Return:</span>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-semibold shadow-2xs ${badge.color}`}>
                 {badge.text}
               </span>
             </div>
@@ -343,7 +343,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
           {/* Factors List (Span 7) */}
           <div className="md:col-span-7 space-y-2.5">
-            <h4 className="text-xs font-semibold text-slate-300 block mb-1.5">
+            <h4 className="text-xs font-bold text-slate-900 block mb-1.5">
               Assessed Recovery Factors
             </h4>
 
@@ -351,35 +351,35 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
               {factors.map((factor, i) => (
                 <div
                   key={i}
-                  className="p-2.5 rounded-xl bg-[#121520] border border-slate-800 space-y-1"
+                  className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 shadow-2xs"
                 >
                   <div className="flex items-center gap-1.5">
                     {factor.icon}
-                    <span className="text-xs text-slate-300 font-medium truncate">
+                    <span className="text-xs text-slate-800 font-semibold truncate">
                       {factor.name}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500">
                       {factor.status}
                     </span>
-                    <span className={`text-[11px] font-semibold ${
-                      factor.confidence >= 90 ? "text-emerald-400" :
-                      factor.confidence >= 70 ? "text-indigo-400" :
-                      factor.confidence >= 50 ? "text-amber-400" :
-                      "text-rose-400"
+                    <span className={`text-[11px] font-bold ${
+                      factor.confidence >= 90 ? "text-emerald-700" :
+                      factor.confidence >= 70 ? "text-indigo-700" :
+                      factor.confidence >= 50 ? "text-amber-700" :
+                      "text-rose-700"
                     }`}>
                       {factor.confidence}%
                     </span>
                   </div>
 
                   {/* Factor micro progress bar */}
-                  <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
                     <motion.div
                       className={`h-full rounded-full ${
-                        factor.confidence >= 90 ? "bg-emerald-500" :
-                        factor.confidence >= 70 ? "bg-indigo-500" :
+                        factor.confidence >= 90 ? "bg-emerald-600" :
+                        factor.confidence >= 70 ? "bg-indigo-600" :
                         factor.confidence >= 50 ? "bg-amber-500" :
                         "bg-rose-500"
                       }`}
@@ -395,25 +395,25 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
         </div>
 
         {/* ESTIMATED RECOVERY WINDOW BANNER */}
-        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center shadow-2xs">
           <div className="sm:col-span-2 space-y-1">
-            <span className="text-xs font-semibold text-slate-300 block">
+            <span className="text-xs font-bold text-slate-900 block">
               Estimated Resolution Window
             </span>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Based on historical resolution rates, item category density, and community activity in this area.
             </p>
           </div>
           <div className="text-center sm:text-right">
-            <span className="text-2xl font-bold text-indigo-400 block tracking-tight">
+            <span className="text-2xl font-bold text-indigo-600 block tracking-tight">
               {getRecoveryWindow()}
             </span>
-            <span className="text-[11px] text-slate-400 block">
+            <span className="text-[11px] text-slate-500 block font-medium">
               Estimated Timeline
             </span>
           </div>
-          <div className="col-span-1 sm:col-span-3 border-t border-slate-800 pt-2 text-[11px] text-slate-400 flex items-center gap-1.5">
-            <AlertCircle size={12} className="shrink-0 text-slate-500" />
+          <div className="col-span-1 sm:col-span-3 border-t border-slate-200 pt-2 text-[11px] text-slate-500 flex items-center gap-1.5">
+            <AlertCircle size={12} className="shrink-0 text-slate-400" />
             <span>Estimates update as new matching reports or community sightings are submitted.</span>
           </div>
         </div>
@@ -425,21 +425,21 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium flex items-center gap-2"
+              className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-semibold flex items-center gap-2 shadow-2xs"
             >
-              <RefreshCw size={13} className="text-indigo-400 animate-spin shrink-0" />
+              <RefreshCw size={13} className="text-indigo-600 animate-spin shrink-0" />
               <span>{aiAnalysisNotice}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* DYNAMIC IMPROVEMENT / SUGGESTIONS SECTION */}
-        <div className="space-y-3 pt-3 border-t border-slate-800">
+        <div className="space-y-3 pt-3 border-t border-slate-100">
           <div>
-            <h3 className="text-xs font-semibold text-slate-200">
+            <h3 className="text-xs font-bold text-slate-900">
               Recommended Enhancements
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Add details below to increase verification precision and match reliability.
             </p>
           </div>
@@ -448,12 +448,12 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
             
             {/* OPTION 1: Add report photo (if missing) */}
             {!form.fImage && (
-              <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div className="space-y-0.5">
-                  <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                    <Camera size={13} className="text-indigo-400" /> Add an item photo
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Camera size={13} className="text-indigo-600" /> Add an item photo
                   </span>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-slate-500 leading-relaxed">
                     Visual images allow precise matching comparisons with found reports.
                   </p>
                 </div>
@@ -461,7 +461,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full sm:w-auto px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full sm:w-auto px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <Camera size={12} />
                     Upload Photo
@@ -479,13 +479,13 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
             {/* OPTION 2: Add citizen reward (Lost Only) */}
             {form.fType === "Lost" && !form.fReward && (
-              <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col space-y-2.5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                      <Coins size={13} className="text-amber-400" /> Offer a finder reward
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Coins size={13} className="text-amber-500" /> Offer a finder reward
                     </span>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-500 leading-relaxed">
                       Voluntary incentives encourage community members in your area to actively check for your item.
                     </p>
                   </div>
@@ -493,7 +493,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                     <button
                       type="button"
                       onClick={() => setShowRewardInput(true)}
-                      className="px-3 py-1.5 bg-[#0c0e16] border border-slate-800 hover:border-slate-700 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs"
                     >
                       <Plus size={12} />
                       Set Reward
@@ -503,8 +503,8 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
                 {showRewardInput && (
                   <div className="flex items-center gap-2 pt-1 max-w-sm">
-                    <div className="flex items-center flex-1 rounded-lg bg-[#0c0e16] border border-slate-800 focus-within:border-indigo-500 overflow-hidden transition-all">
-                      <div className="pl-3 pr-1 py-1.5 text-slate-400 text-xs font-medium select-none shrink-0">
+                    <div className="flex items-center flex-1 rounded-lg bg-white border border-slate-200 focus-within:border-indigo-500 overflow-hidden transition-all shadow-2xs">
+                      <div className="pl-3 pr-1 py-1.5 text-slate-500 text-xs font-medium select-none shrink-0">
                         ₹
                       </div>
                       <input
@@ -513,20 +513,20 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                         placeholder="e.g. 500"
                         value={localReward}
                         onChange={(e) => setLocalReward(e.target.value.replace(/\D/g, ""))}
-                        className="w-full py-1.5 pr-3 bg-transparent outline-none text-xs text-slate-100 placeholder:text-slate-500"
+                        className="w-full py-1.5 pr-3 bg-transparent outline-none text-xs text-slate-900 placeholder:text-slate-400"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={applyReward}
-                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-xs font-medium cursor-pointer transition shrink-0"
+                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0 shadow-2xs"
                     >
                       Apply
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowRewardInput(false)}
-                      className="p-1.5 text-slate-400 hover:text-slate-200 text-xs cursor-pointer transition"
+                      className="p-1.5 text-slate-500 hover:text-slate-700 text-xs cursor-pointer transition font-medium"
                     >
                       Cancel
                     </button>
@@ -537,12 +537,12 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
             {/* OPTION 3: Enhance Description with Gemini */}
             {descText.length < 150 && (
-              <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div className="space-y-0.5">
-                  <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                    <Sparkles size={13} className="text-indigo-400" /> Enhance description with AI
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-indigo-600" /> Enhance description with AI
                   </span>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-slate-500 leading-relaxed">
                     AI assists in formatting colors, distinguishing marks, and condition details for sharper matching.
                   </p>
                 </div>
@@ -551,7 +551,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                     type="button"
                     onClick={onEnhanceDescription}
                     disabled={isEnhancing}
-                    className="w-full sm:w-auto px-3 py-1.5 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 text-indigo-300 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shrink-0"
+                    className="w-full sm:w-auto px-3 py-1.5 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shrink-0 shadow-2xs"
                   >
                     <Sparkles size={12} className={isEnhancing ? "animate-spin" : ""} />
                     {isEnhancing ? "Enhancing..." : "Auto-Enhance"}
@@ -562,13 +562,13 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
             {/* OPTION 4: Mention Brand name */}
             {!descText.toLowerCase().includes("brand") && !descText.toLowerCase().includes("make") && (
-              <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col space-y-2.5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                      <Check size={13} className="text-indigo-400" /> Add brand or manufacturer name
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Check size={13} className="text-indigo-600" /> Add brand or manufacturer name
                     </span>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-500 leading-relaxed">
                       Specifying exact brand names significantly reduces mismatch ambiguities.
                     </p>
                   </div>
@@ -576,7 +576,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                     <button
                       type="button"
                       onClick={() => setShowBrandInput(true)}
-                      className="px-3 py-1.5 bg-[#0c0e16] border border-slate-800 hover:border-slate-700 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs"
                     >
                       <Plus size={12} />
                       Add Brand
@@ -591,19 +591,19 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                       placeholder="e.g. Apple, Nike, Samsung"
                       value={brandName}
                       onChange={(e) => setBrandName(e.target.value)}
-                      className="flex-1 px-3 py-1.5 bg-[#0c0e16] border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                      className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 shadow-2xs"
                     />
                     <button
                       type="button"
                       onClick={applyBrand}
-                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-xs font-medium cursor-pointer transition shrink-0"
+                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0 shadow-2xs"
                     >
                       Save
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowBrandInput(false)}
-                      className="p-1.5 text-slate-400 hover:text-slate-200 text-xs cursor-pointer transition"
+                      className="p-1.5 text-slate-500 hover:text-slate-700 text-xs cursor-pointer transition font-medium"
                     >
                       Cancel
                     </button>
@@ -614,13 +614,13 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
 
             {/* OPTION 5: Mention Serial Number */}
             {!descText.toLowerCase().includes("serial") && !descText.toLowerCase().includes("imei") && !descText.toLowerCase().includes("s/n") && (
-              <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col space-y-2.5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
-                    <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                      <ShieldCheck size={13} className="text-indigo-400" /> Add serial number or unique mark
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <ShieldCheck size={13} className="text-indigo-600" /> Add serial number or unique mark
                     </span>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-500 leading-relaxed">
                       Serial and IMEI numbers provide definitive proof of ownership during claim verification.
                     </p>
                   </div>
@@ -628,7 +628,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                     <button
                       type="button"
                       onClick={() => setShowSerialInput(true)}
-                      className="px-3 py-1.5 bg-[#0c0e16] border border-slate-800 hover:border-slate-700 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs"
                     >
                       <Plus size={12} />
                       Add Identifier
@@ -643,19 +643,19 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                       placeholder="e.g. Serial, IMEI, or specific scratch"
                       value={serialNumber}
                       onChange={(e) => setSerialNumber(e.target.value)}
-                      className="flex-1 px-3 py-1.5 bg-[#0c0e16] border border-slate-800 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                      className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 shadow-2xs"
                     />
                     <button
                       type="button"
                       onClick={applySerial}
-                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-xs font-medium cursor-pointer transition shrink-0"
+                      className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0 shadow-2xs"
                     >
                       Save
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowSerialInput(false)}
-                      className="p-1.5 text-slate-400 hover:text-slate-200 text-xs cursor-pointer transition"
+                      className="p-1.5 text-slate-500 hover:text-slate-700 text-xs cursor-pointer transition font-medium"
                     >
                       Cancel
                     </button>
@@ -665,12 +665,12 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
             )}
 
             {/* OPTION 6: Increase Search Radius */}
-            <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
               <div className="space-y-0.5">
-                <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                  <Compass size={13} className="text-indigo-400" /> Search radius perimeter
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Compass size={13} className="text-indigo-600" /> Search radius perimeter
                 </span>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-500 leading-relaxed">
                   Adjusting the notification perimeter covers broader surrounding neighborhoods.
                 </p>
               </div>
@@ -678,7 +678,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                 <button
                   type="button"
                   onClick={toggleSearchRadius}
-                  className="w-full sm:w-auto px-3 py-1.5 bg-[#0c0e16] border border-slate-800 hover:border-slate-700 text-slate-200 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full sm:w-auto px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                 >
                   <Compass size={12} />
                   Radius: {searchRadius}m
@@ -696,16 +696,16 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
         <button
           type="button"
           onClick={handleGoToMatches}
-          className="py-2.5 px-4 rounded-xl bg-[#121520] border border-slate-800 hover:bg-slate-800 text-slate-200 text-xs font-medium transition cursor-pointer flex items-center justify-center gap-2"
+          className="py-2.5 px-4 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
         >
-          <Sparkles size={14} className="text-indigo-400" />
+          <Sparkles size={14} className="text-indigo-600" />
           View Potential Matches
         </button>
 
         <button
           type="button"
           onClick={handleGoToFeed}
-          className="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+          className="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95"
         >
           Done &amp; Return to Feed
           <ArrowRight size={14} />

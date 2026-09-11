@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { 
-  Shield, 
+  ShieldCheck, 
   Sparkles, 
   MapPin, 
   Clock, 
@@ -14,10 +14,17 @@ import {
   Search, 
   Compass, 
   Bot, 
-  ChevronDown 
+  ChevronDown,
+  Lock,
+  Heart,
+  Users,
+  Building2,
+  GraduationCap,
+  Train
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { LincoLogo } from "./LincoLogo";
+import { Linco3DVisual } from "./Linco3DVisual";
 import { useLanguage } from "../context/LanguageContext";
 
 interface LandingPageProps {
@@ -34,7 +41,7 @@ interface LandingPageProps {
   onFocusAIAssistant: () => void;
 }
 
-// Pre-configured scenarios for the Timeline Reconstructor USP Showcase
+// Pre-configured scenarios for the Timeline Reconstructor
 const SCENARIOS = [
   {
     id: "scen-1",
@@ -58,7 +65,7 @@ const SCENARIOS = [
     id: "scen-2",
     persona: "Transit Commuter",
     item: "Smartwatch & Keys",
-    triggerText: "Missing Watch at Metro/Park",
+    triggerText: "Missing Watch at Metro",
     inputTimeline: "Arrived at Station Parking at 9:00 AM. Walked to Lift Lobby 4. Had lunch at Food Court from 1:00 PM to 1:45 PM. Discovered watch missing in Conference Room at 3:30 PM.",
     checkpoints: [
       { name: "Station Parking Area", time: "9:00 AM", lossProb: "15%", radius: "25m", status: "Low Risk" },
@@ -134,262 +141,390 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       };
       setCustomResult(generatedResult);
       setIsAnalyzing(false);
-    }, 900);
+    }, 800);
   };
 
   const currentReconstructData = customResult || activeScenario;
 
   const faqs = [
     {
-      q: "How does LINCO protect my private contact information?",
-      a: "We keep your personal information completely private. When you report an item, you choose a 4-digit PIN. Your phone number is encrypted client-side and never displayed on public feeds. Only a claimant whose ownership proof you approve can request contact unlock."
+      q: "How does LINCO protect my private contact details?",
+      a: "Your personal phone number and exact identity stay completely private. When you report an item, you choose a simple 4-digit PIN. Your contact info is encrypted and hidden from public view until both finder and owner mutually verify the item."
     },
     {
-      q: "What is the Timeline Reconstructor and how does it work?",
-      a: "The Timeline Reconstructor analyzes the sequence of locations and times you traveled, maps high-probability hotspots where the item was most likely misplaced, and generates a concrete action checklist to focus your physical search."
-    },
-    {
-      q: "How does LINCO verify genuine item ownership?",
-      a: "To prevent unauthorized claims, LINCO generates dynamic verification questions based on unique details of the item. Claimants must prove ownership through these answers before details or contact exchanges can proceed."
+      q: "How does LINCO ensure items go to their genuine owners?",
+      a: "LINCO prepares non-revealing verification questions based on unique details of the item. Claimants must prove ownership through these answers before private contact can be unlocked."
     },
     {
       q: "What should I do if I find someone's belongings?",
-      a: "Tap 'I Found Something' and log key details (item type, location found, and safe custody info). The owner can search and verify their item, and you can coordinate a safe handover in a public location."
+      a: "Tap 'I Found Something', upload a quick photo or description, and specify where it is safely kept. LINCO automatically notifies potential owners so they can verify their property safely."
+    },
+    {
+      q: "Is LINCO free to use for communities?",
+      a: "Yes. LINCO is built for students, transit commuters, housing societies, and public spaces across India to make lost property recovery simple, dignified, and fast."
     }
   ];
 
   return (
-    <div className="space-y-16 select-none max-w-5xl mx-auto px-4 sm:px-6 w-full py-4">
+    <div className="space-y-20 sm:space-y-24 select-none max-w-6xl mx-auto px-4 sm:px-6 w-full py-2">
       
-      {/* 1. BRAND & HEADLINE */}
-      <section className="pt-2 sm:pt-8 text-center max-w-3xl mx-auto space-y-4">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <LincoLogo variant="stacked" size="lg" showTagline taglineText={t("home.heroTag", "Locate • Verify • Reunite")} />
-        </div>
+      {/* ========================================================================= */}
+      {/* 1. HERO SECTION: White-first, Human-made, Clear Primary CTAs */}
+      {/* ========================================================================= */}
+      <section className="pt-4 sm:pt-10 pb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          
+          {/* Left Column: Confident Typography & Clear CTAs */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            {/* Small eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              <span>India's intelligent lost &amp; found</span>
+            </div>
 
-        <div className="space-y-3">
-          <h1 className="text-3xl sm:text-5xl font-sans font-extrabold tracking-tight text-white leading-tight">
-            {t("home.heroTitle1", "Your identity stays private.")}{" "}
-            <span className="text-indigo-400">
-              {t("home.heroTitle2", "Your item doesn't.")}
-            </span>
-          </h1>
-          <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-xl mx-auto">
-            {t("home.heroDesc", "Report a lost or found item in under one minute while your identity remains private until ownership is verified.")}
-          </p>
+            {/* Large confident headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+              Lost something? <br />
+              <span className="text-indigo-600">Let's bring it back.</span>
+            </h1>
+
+            {/* Supporting text */}
+            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-xl">
+              Report lost or found belongings in under two minutes. Your contact details stay completely private until ownership is verified.
+            </p>
+
+            {/* Primary & Secondary CTAs - Extremely obvious */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+              <button
+                onClick={() => onNavigateToReport("Lost")}
+                className="px-7 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-base shadow-[0_8px_20px_rgba(79,70,229,0.25)] hover:shadow-[0_12px_28px_rgba(79,70,229,0.35)] transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer"
+                aria-label="Report Lost Item"
+              >
+                <Search size={18} />
+                <span>Report Lost Item</span>
+                <ArrowRight size={16} />
+              </button>
+
+              <button
+                onClick={() => onNavigateToReport("Found")}
+                className="px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 font-semibold text-base border border-slate-300 shadow-xs hover:border-slate-400 transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer"
+                aria-label="I Found Something"
+              >
+                <CheckCircle2 size={18} className="text-emerald-600" />
+                <span>I Found Something</span>
+              </button>
+            </div>
+
+            {/* Reassuring micro-signals */}
+            <div className="flex flex-wrap items-center gap-5 pt-3 text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Lock size={13} className="text-indigo-600" />
+                Zero contact disclosure
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck size={13} className="text-emerald-600" />
+                Verified claims only
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-500" />
+                Instant smart matching
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: 3D Central Visual Stage */}
+          <div className="lg:col-span-5 flex justify-center">
+            <Linco3DVisual />
+          </div>
+
         </div>
       </section>
 
-      {/* 2. PRIMARY ACTION CARDS: "WHAT DO YOU WANT TO DO?" */}
-      <section className="space-y-4 max-w-4xl mx-auto">
-        <div className="text-center pb-1">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            What do you want to do?
+      {/* ========================================================================= */}
+      {/* 2. HOW LINCO WORKS (4 Calm Steps) */}
+      {/* ========================================================================= */}
+      <section className="space-y-8 text-center max-w-5xl mx-auto">
+        <div className="space-y-2 max-w-xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+            Simple Process
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            How LINCO works
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Four simple steps from losing an item to safely holding it in your hands again.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-left">
+          {[
+            {
+              step: "01",
+              title: "Report",
+              desc: "Tell us what you lost or found. Add details, approximate time, and location.",
+              icon: MapPin,
+              accent: "bg-indigo-50 text-indigo-600 border-indigo-100"
+            },
+            {
+              step: "02",
+              title: "Smart Matching",
+              desc: "LINCO quietly scans existing reports to find potential matches across the community.",
+              icon: Sparkles,
+              accent: "bg-purple-50 text-purple-600 border-purple-100"
+            },
+            {
+              step: "03",
+              title: "Verify Safely",
+              desc: "Dynamic ownership questions ensure only the genuine owner can claim the item.",
+              icon: ShieldCheck,
+              accent: "bg-amber-50 text-amber-700 border-amber-100"
+            },
+            {
+              step: "04",
+              title: "Reunite",
+              desc: "Both people confirm trust, unlocking private contact for a secure, public handover.",
+              icon: CheckCircle2,
+              accent: "bg-emerald-50 text-emerald-600 border-emerald-100"
+            }
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={idx}
+                className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-[0_2px_12px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${item.accent}`}>
+                      <Icon size={20} />
+                    </div>
+                    <span className="font-mono text-xs font-bold text-slate-300">
+                      {item.step}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 3. BUILT FOR REAL PEOPLE (Everyday Environments) */}
+      {/* ========================================================================= */}
+      <section className="p-8 sm:p-12 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-8">
+        <div className="text-center space-y-2 max-w-xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+            Community Everyday
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Built for real people
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Designed for colleges, metro stations, residential complexes, and public hubs across India.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
+          {[
+            {
+              icon: GraduationCap,
+              title: "Colleges & Universities",
+              desc: "Lost a notebook, ID card, earbuds, or backpack in a lecture hall or library.",
+              color: "text-indigo-600"
+            },
+            {
+              icon: Train,
+              title: "Metros & Transit",
+              desc: "Forgot an umbrella, keys, or phone on a commute, bus stop, or railway platform.",
+              color: "text-sky-600"
+            },
+            {
+              icon: Building2,
+              title: "Societies & Neighborhoods",
+              desc: "Misplaced house keys, courier packages, or children's items in community grounds.",
+              color: "text-emerald-600"
+            },
+            {
+              icon: Users,
+              title: "Cafes & Public Places",
+              desc: "Left your wallet or sunglasses behind at a restaurant counter or coworking space.",
+              color: "text-amber-600"
+            },
+            {
+              icon: Heart,
+              title: "Kind Good Samaritans",
+              desc: "Finders who want to do the right thing without compromising their personal phone number.",
+              color: "text-rose-600"
+            },
+            {
+              icon: ShieldCheck,
+              title: "Campus Security & Desks",
+              desc: "Lost property desks streamlining custody logs without paper registers.",
+              color: "text-purple-600"
+            }
+          ].map((card, i) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={i}
+                className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-2"
+              >
+                <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <Icon size={18} className={card.color} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">{card.title}</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">{card.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 4. TRUST & PRIVACY FOUNDATION */}
+      {/* ========================================================================= */}
+      <section className="py-6 border-y border-slate-200/80 space-y-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <div className="lg:col-span-5 space-y-4 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-xs font-semibold text-emerald-700 border border-emerald-100">
+              <ShieldCheck size={14} />
+              <span>Zero-Dox Security</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-snug">
+              Your contact details stay private until both people agree to connect.
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              We never post your phone number, real name, or email on public feeds. Finding an item shouldn't cost you your peace of mind or personal privacy.
+            </p>
+          </div>
+
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+            {[
+              {
+                title: "Client-Side PIN Protection",
+                desc: "Choose a 4-digit PIN when you report. Your phone number is encrypted in your browser and never exposed.",
+                icon: Lock
+              },
+              {
+                title: "Zero-Knowledge Ownership Proof",
+                desc: "LINCO tests claimants with non-revealing questions so impostors cannot guess correct answers.",
+                icon: ShieldCheck
+              },
+              {
+                title: "Mutual Trust Unlock",
+                desc: "Both the finder and owner must tap 'I Trust This Person' before contact info is made available.",
+                icon: CheckCircle2
+              },
+              {
+                title: "Public Handover Guidelines",
+                desc: "Built-in advice for meeting in brightly lit, high-footfall public locations like metro stations.",
+                icon: MapPin
+              }
+            ].map((box, idx) => {
+              const BoxIcon = box.icon;
+              return (
+                <div key={idx} className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <BoxIcon size={15} />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900">{box.title}</h3>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">{box.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 5. COMMUNITY RECOVERY / IMPACT NUMBERS */}
+      {/* ========================================================================= */}
+      <section className="space-y-6 text-center max-w-5xl mx-auto">
+        <div className="space-y-1 max-w-md mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Real Community Impact
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+            Every return is a story saved
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Card A: I Lost Something */}
-          <div
-            onClick={() => onNavigateToReport("Lost")}
-            className="p-6 sm:p-7 rounded-2xl bg-[#0e0e13] border border-slate-800 hover:border-rose-500/40 text-left cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-5"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onNavigateToReport("Lost"); }}
-            aria-label={t("home.reportLost", "Report Lost Item")}
-          >
-            <div className="space-y-3.5">
-              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-                <Search size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-1.5 flex items-center gap-2">
-                  {t("home.reportLost", "I Lost Something")}
-                  <ArrowRight size={16} className="text-rose-400" />
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Lost a wallet, phone, keys, bag, or personal belonging? Register a search to alert the community and scan found items.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors">
-                {t("home.startReport", "Start Lost Report")}
-                <ArrowRight size={13} />
-              </span>
-            </div>
-          </div>
-
-          {/* Card B: I Found Something */}
-          <div
-            onClick={() => onNavigateToReport("Found")}
-            className="p-6 sm:p-7 rounded-2xl bg-[#0e0e13] border border-slate-800 hover:border-emerald-500/40 text-left cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-5"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onNavigateToReport("Found"); }}
-            aria-label={t("home.reportFound", "Report Found Item")}
-          >
-            <div className="space-y-3.5">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-1.5 flex items-center gap-2">
-                  {t("home.reportFound", "I Found Something")}
-                  <ArrowRight size={16} className="text-emerald-400" />
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Found someone's property in a metro, campus, or public space? Log details safely so verified owners can reclaim it.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors">
-                {t("home.reportFound", "Start Found Report")}
-                <ArrowRight size={13} />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary Actions Bar */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
-          <button
-            onClick={onNavigateToFeed}
-            className="px-4 py-2 rounded-xl bg-[#121218] border border-slate-800 hover:border-slate-700 hover:bg-[#181822] text-slate-300 hover:text-white text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
-          >
-            <Compass size={14} className="text-slate-400" />
-            {t("home.browseFeed", "Browse Community Feed")}
-          </button>
-          <button
-            onClick={onNavigateToMatches}
-            className="px-4 py-2 rounded-xl bg-[#121218] border border-slate-800 hover:border-slate-700 hover:bg-[#181822] text-slate-300 hover:text-white text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
-          >
-            <Sparkles size={14} className="text-indigo-400" />
-            {t("home.viewMatches", "Smart Matches")}
-          </button>
-          <button
-            onClick={onFocusAIAssistant}
-            className="px-4 py-2 rounded-xl bg-[#121218] border border-slate-800 hover:border-slate-700 hover:bg-[#181822] text-slate-300 hover:text-white text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
-          >
-            <Bot size={14} className="text-slate-400" />
-            {t("nav.saathii", "Linco Sathi Assistant")}
-          </button>
-        </div>
-      </section>
-
-      {/* 3. REAL PLATFORM OVERVIEW */}
-      <section className="py-2">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
               value: stats.total,
-              label: t("home.statsTotal", "Total Items Logged"),
-              color: "text-white"
+              label: "Items Registered",
+              color: "text-slate-900",
+              bg: "bg-slate-50"
             },
             {
               value: stats.lost,
-              label: t("home.statsLost", "Active Lost Searches"),
-              color: "text-rose-400"
+              label: "Active Searches",
+              color: "text-rose-600",
+              bg: "bg-rose-50/50"
             },
             {
               value: stats.found,
-              label: t("home.statsFound", "Found Items Safe"),
-              color: "text-emerald-400"
+              label: "Items Safe with Finders",
+              color: "text-emerald-700",
+              bg: "bg-emerald-50/50"
             },
             {
               value: stats.resolved,
-              label: t("home.statsResolved", "Reunited Items"),
-              color: "text-indigo-400"
+              label: "Reunited with Owners",
+              color: "text-indigo-600",
+              bg: "bg-indigo-50/50"
             }
-          ].map((item, idx) => (
+          ].map((stat, i) => (
             <div
-              key={idx}
-              className="p-4 rounded-xl bg-[#0c0c11] border border-slate-800/80 text-center"
+              key={i}
+              className={`p-5 rounded-2xl border border-slate-200/80 ${stat.bg} text-center space-y-1`}
             >
-              <div className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${item.color}`}>
-                {item.value}
+              <div className={`text-3xl sm:text-4xl font-extrabold font-display tracking-tight ${stat.color}`}>
+                {stat.value}
               </div>
-              <p className="text-[11px] text-slate-400 font-medium mt-1">{item.label}</p>
+              <p className="text-xs text-slate-600 font-medium">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. TRUST & PRIVACY FOUNDATION */}
-      <section className="py-8 border-y border-slate-800/60 max-w-4xl mx-auto">
-        <div className="space-y-6">
-          <div className="text-center space-y-1.5 max-w-xl mx-auto">
-            <h3 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-              {t("home.trustTitle", "Trusted by Design")}
-            </h3>
-            <p className="text-xl sm:text-2xl font-bold text-white">
-              Built on Privacy, Verification, and Safety
+      {/* ========================================================================= */}
+      {/* TIMELINE RECONSTRUCTOR: Search Assistant Tool */}
+      {/* ========================================================================= */}
+      <section className="p-6 sm:p-9 rounded-3xl bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)] space-y-6 max-w-5xl mx-auto text-left">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-[11px] font-semibold text-indigo-700 mb-1.5">
+              <Clock size={12} />
+              <span>Search Helper</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Timeline Reconstructor
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+              Retrace your steps to identify the most likely spot your item was misplaced.
             </p>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              {t("home.trustSubtitle", "Trusted by communities. Powered by AI. Built for everyone.")}
-            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                title: t("home.trustPrivacyTitle", "Private by Default"),
-                desc: t("home.trustPrivacyDesc", "Your contact details are kept strictly private and anonymous until a matched claim is successfully verified.")
-              },
-              {
-                title: t("home.trustProofTitle", "Verified Claims"),
-                desc: t("home.trustProofDesc", "Owner validation uses dynamic, non-revealing questions generated by smart AI to block unauthorized claims.")
-              },
-              {
-                title: t("nav.matches", "AI-Assisted Matching"),
-                desc: t("notifications.matchFoundMsg", "Deep correlation matching finds exact similarities between lost reports and found logs instantly.")
-              },
-              {
-                title: t("home.trustRecoveryTitle", "Trusted Handover"),
-                desc: t("home.trustRecoveryDesc", "Connect through secure chat, mutual verification, and guided handovers in safe public locations.")
-              }
-            ].map((indicator, idx) => (
-              <div 
-                key={idx}
-                className="p-4 rounded-xl bg-[#0c0c11] border border-slate-800/80 space-y-2"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 font-bold text-xs">✓</span>
-                  <h4 className="text-xs font-bold text-slate-200">{indicator.title}</h4>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  {indicator.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. TIMELINE RECONSTRUCTOR TOOL */}
-      <section className="py-8 px-5 sm:px-6 rounded-2xl bg-[#0c0c11] border border-slate-800/80 space-y-8 max-w-4xl mx-auto">
-        <div className="text-center space-y-2 max-w-xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[11px] font-semibold text-indigo-300">
-            <Clock size={12} />
-            <span>Search Assistant</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            {t("home.timelineShowcaseTitle", "Timeline Reconstructor")}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            {t("home.timelineShowcaseSubtitle", "Translate your daily sequence of events into a travel path, mapping key areas to simplify physical search efforts.")}
-          </p>
         </div>
 
         {/* Interactive Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Preset Scenarios */}
+          {/* Left Column: Preset Scenarios & Custom Box */}
           <div className="lg:col-span-5 space-y-4">
-            <span className="text-[11px] font-semibold text-slate-400 block">
-              {t("home.timelineTryPrompt", "Choose a common scenario:")}
+            <span className="text-xs font-semibold text-slate-700 block">
+              Try a common scenario:
             </span>
             <div className="space-y-2">
               {SCENARIOS.map((scen) => (
@@ -401,19 +536,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   }}
                   className={`w-full p-3.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col gap-1 ${
                     currentReconstructData.id === scen.id && !customResult
-                      ? "bg-[#14141e] border-indigo-500/50 text-white"
-                      : "bg-[#08080c] border-slate-800/80 hover:border-slate-700 text-slate-400"
+                      ? "bg-indigo-50/80 border-indigo-300 text-indigo-950 shadow-xs"
+                      : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-700"
                   }`}
                 >
                   <div className="flex justify-between items-center w-full">
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-bold text-slate-900">
                       {scen.triggerText}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">
-                      {scen.recoveryProbability}% confidence
+                    <span className="text-[11px] font-mono text-indigo-600 font-semibold">
+                      {scen.recoveryProbability}% chance
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 line-clamp-1">
+                  <p className="text-xs text-slate-500 line-clamp-1">
                     {scen.item}
                   </p>
                 </button>
@@ -421,58 +556,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             {/* Custom Input */}
-            <div className="space-y-2 pt-3 border-t border-slate-800/80">
-              <label className="text-[11px] font-semibold text-slate-400 block">
-                Or describe your sequence of places:
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Or describe the places you visited:
               </label>
               <textarea
                 rows={3}
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
-                placeholder="e.g. Took metro at 8:30am, went to office canteen at 1pm, noticed bag missing in room 204 at 4pm..."
-                className="w-full p-3 rounded-xl bg-[#08080c] border border-slate-800 focus:border-indigo-500 text-xs text-slate-200 placeholder:text-slate-500 resize-none outline-none"
+                placeholder="e.g. Took metro at 8:30am, visited office canteen at 1pm, noticed bag missing in room 204 at 4pm..."
+                className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:border-indigo-600 text-xs text-slate-800 placeholder:text-slate-400 resize-none outline-none"
               />
               <button
                 onClick={handleCustomAnalyze}
                 disabled={isAnalyzing || !customInput.trim()}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2"
               >
-                {isAnalyzing ? "Analyzing path..." : "Reconstruct Path"}
+                {isAnalyzing ? "Analyzing path..." : "Reconstruct My Path"}
                 <ArrowRight size={13} />
               </button>
             </div>
           </div>
 
           {/* Right Column: Reconstructed Map & Steps */}
-          <div className="lg:col-span-7 p-4 sm:p-5 rounded-xl bg-[#08080c] border border-slate-800/80 space-y-5">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+          <div className="lg:col-span-7 p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
               <div>
-                <span className="text-xs font-bold text-white block">
+                <span className="text-xs font-bold text-slate-900 block">
                   {currentReconstructData.triggerText}
                 </span>
-                <span className="text-[11px] text-slate-400">
-                  Target: {currentReconstructData.item}
+                <span className="text-xs text-slate-500">
+                  Item: {currentReconstructData.item}
                 </span>
               </div>
-              <span className="text-xs font-mono font-bold text-indigo-400 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                {currentReconstructData.recoveryProbability}% Probability
+              <span className="text-xs font-mono font-bold text-indigo-700 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200">
+                {currentReconstructData.recoveryProbability}% Match Potential
               </span>
             </div>
 
             {/* Chronological Checkpoints */}
-            <div className="space-y-3">
-              <span className="text-[11px] font-semibold text-slate-400 block">
-                Predicted High-Probability Hotspots:
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-slate-700 block">
+                High-Probability Hotspots to Check First:
               </span>
               <div className="space-y-2">
                 {currentReconstructData.checkpoints.map((cp, cIdx) => (
-                  <div key={cIdx} className="p-3 rounded-lg bg-[#0e0e14] border border-slate-800 flex justify-between items-center gap-2 text-xs">
+                  <div key={cIdx} className="p-3 rounded-xl bg-white border border-slate-200 flex justify-between items-center gap-2 text-xs">
                     <div className="space-y-0.5">
-                      <span className="font-semibold text-slate-200 block">{cp.name}</span>
-                      <span className="text-[10px] text-slate-500">{cp.time} • Radius: {cp.radius}</span>
+                      <span className="font-semibold text-slate-900 block">{cp.name}</span>
+                      <span className="text-[11px] text-slate-500">{cp.time} • Radius: {cp.radius}</span>
                     </div>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 shrink-0">
-                      Loss: {cp.lossProb}
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                      Likelihood: {cp.lossProb}
                     </span>
                   </div>
                 ))}
@@ -480,14 +615,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             {/* Recommended Next Actions */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 block">
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <span className="text-xs font-bold text-slate-700 block">
                 Recommended Actions:
               </span>
-              <ul className="space-y-1 text-xs text-slate-300">
+              <ul className="space-y-1 text-xs text-slate-600">
                 {currentReconstructData.suggestedActions.map((action, aIdx) => (
                   <li key={aIdx} className="flex items-start gap-2">
-                    <span className="text-indigo-400 font-bold mt-0.5">•</span>
+                    <span className="text-indigo-600 font-bold mt-0.5">•</span>
                     <span>{action}</span>
                   </li>
                 ))}
@@ -497,28 +632,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* ========================================================================= */}
       {/* 6. FAQ ACCORDION SECTION */}
-      <section className="space-y-6 max-w-3xl mx-auto">
+      {/* ========================================================================= */}
+      <section className="space-y-6 max-w-3xl mx-auto text-left">
         <div className="text-center space-y-1.5">
-          <h2 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-            {t("home.faqTitle", "Have questions?")}
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+            Frequently Asked
+          </span>
+          <h2 className="text-2xl font-bold text-slate-900">
+            Common questions about LINCO
           </h2>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {t("home.faqSubtitle", "Frequently Asked Questions")}
-          </p>
         </div>
 
         <div className="space-y-2.5">
           {faqs.map((faq, i) => (
-            <div key={i} className="border border-slate-800 rounded-xl bg-[#0c0c11] overflow-hidden">
+            <div key={i} className="border border-slate-200/90 rounded-2xl bg-white overflow-hidden shadow-2xs">
               <button
                 onClick={() => setOpenFAQ(openFaq === i ? null : i)}
-                className="w-full p-4 text-left flex justify-between items-center text-slate-200 hover:text-white transition cursor-pointer"
+                className="w-full p-4.5 text-left flex justify-between items-center text-slate-800 hover:text-indigo-600 transition cursor-pointer"
               >
-                <span className="text-xs sm:text-sm font-semibold pr-4 leading-relaxed">{faq.q}</span>
+                <span className="text-sm font-semibold pr-4 leading-relaxed">{faq.q}</span>
                 <ChevronDown
                   size={16}
-                  className={`text-slate-400 transition-transform ${openFaq === i ? "rotate-180 text-indigo-400" : ""}`}
+                  className={`text-slate-400 shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180 text-indigo-600" : ""}`}
                 />
               </button>
               
@@ -528,10 +665,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     initial={{ height: 0 }}
                     animate={{ height: "auto" }}
                     exit={{ height: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden bg-[#08080c]"
+                    transition={{ duration: 0.18 }}
+                    className="overflow-hidden bg-slate-50/50"
                   >
-                    <div className="p-4 pt-2 text-xs text-slate-400 leading-relaxed border-t border-slate-800">
+                    <div className="p-4.5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
                       {faq.a}
                     </div>
                   </motion.div>
@@ -542,25 +679,72 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* 7. CLEAN FOOTER */}
-      <footer className="pt-10 pb-6 border-t border-slate-800/80 text-slate-400 text-xs text-center space-y-4 max-w-4xl mx-auto">
-        <div className="flex flex-wrap justify-center items-center gap-6 text-xs text-slate-400 font-medium">
-          <button onClick={() => onNavigateToReport("Lost")} className="hover:text-white transition cursor-pointer">
+      {/* ========================================================================= */}
+      {/* 7. STRONG FINAL CTA */}
+      {/* ========================================================================= */}
+      <section className="p-8 sm:p-12 rounded-3xl bg-indigo-50/70 border border-indigo-100 text-center space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-2 max-w-lg mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Lost something? Start here.
+          </h2>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Every minute matters. File a quick report to notify nearby finders and scan existing logs.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center items-center gap-3">
+          <button
+            onClick={() => onNavigateToReport("Lost")}
+            className="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer"
+          >
+            <Search size={16} />
+            <span>Report Lost Item</span>
+            <ArrowRight size={14} />
+          </button>
+          <button
+            onClick={() => onNavigateToReport("Found")}
+            className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-sm font-semibold border border-slate-300 shadow-2xs transition flex items-center gap-2 cursor-pointer"
+          >
+            <CheckCircle2 size={16} className="text-emerald-600" />
+            <span>I Found Something</span>
+          </button>
+          <button
+            onClick={onNavigateToFeed}
+            className="px-5 py-3.5 rounded-xl bg-transparent hover:bg-white/60 text-slate-600 hover:text-slate-900 text-sm font-medium transition cursor-pointer"
+          >
+            Browse Community Feed →
+          </button>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 8. CLEAN MINIMAL CONSUMER FOOTER */}
+      {/* ========================================================================= */}
+      <footer className="pt-8 pb-12 border-t border-slate-200 text-xs text-center space-y-4 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center gap-2">
+          <LincoLogo variant="full" size="sm" theme="light" />
+        </div>
+
+        <div className="flex flex-wrap justify-center items-center gap-6 text-xs text-slate-500 font-medium">
+          <button onClick={() => onNavigateToReport("Lost")} className="hover:text-slate-900 transition cursor-pointer">
             Report Lost
           </button>
-          <button onClick={() => onNavigateToReport("Found")} className="hover:text-white transition cursor-pointer">
+          <button onClick={() => onNavigateToReport("Found")} className="hover:text-slate-900 transition cursor-pointer">
             Report Found
           </button>
-          <button onClick={onNavigateToFeed} className="hover:text-white transition cursor-pointer">
+          <button onClick={onNavigateToFeed} className="hover:text-slate-900 transition cursor-pointer">
             Browse Feed
           </button>
-          <button onClick={onNavigateToMatches} className="hover:text-white transition cursor-pointer">
+          <button onClick={onNavigateToMatches} className="hover:text-slate-900 transition cursor-pointer">
             Smart Matches
+          </button>
+          <button onClick={onFocusAIAssistant} className="hover:text-slate-900 transition cursor-pointer">
+            Linco Sathi Assistant
           </button>
         </div>
 
-        <p className="text-[11px] text-slate-500">
-          &copy; {new Date().getFullYear()} LINCO. {t("home.heroSubtitle2", "Built for safe, swift community returns.")}
+        <p className="text-[11px] text-slate-400">
+          &copy; {new Date().getFullYear()} LINCO. Intelligent community lost and found network.
         </p>
       </footer>
 

@@ -176,24 +176,24 @@ export const PinModal: React.FC<PinModalProps> = ({
             initial={{ scale: 0.97, y: 8 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.97, y: 8 }}
-            className={`w-full max-w-sm rounded-2xl bg-[#0c0e16] border border-slate-800 shadow-xl overflow-hidden relative ${
+            className={`w-full max-w-sm rounded-2xl bg-white border border-slate-200/90 shadow-2xl overflow-hidden relative ${
               shaking ? "animate-shake" : ""
             }`}
           >
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                   actionType === "delete" 
-                    ? "bg-rose-500/10 text-rose-400" 
+                    ? "bg-rose-50 text-rose-600" 
                     : actionType === "unlock" 
-                    ? "bg-indigo-500/10 text-indigo-400" 
-                    : "bg-emerald-500/10 text-emerald-400"
+                    ? "bg-indigo-50 text-indigo-600" 
+                    : "bg-emerald-50 text-emerald-600"
                 }`}>
                   <Lock size={15} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-900">
                     {actionType === "delete" 
                       ? "Confirm Deletion" 
                       : actionType === "unlock" 
@@ -204,7 +204,7 @@ export const PinModal: React.FC<PinModalProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#121520] transition cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                 aria-label="Close"
               >
                 <X size={16} />
@@ -213,7 +213,7 @@ export const PinModal: React.FC<PinModalProps> = ({
 
             {/* Body */}
             <div className="p-5 sm:p-6 space-y-5">
-              <p className="text-xs text-slate-400 leading-relaxed text-center">
+              <p className="text-xs text-slate-500 leading-relaxed text-center">
                 {actionType === "unlock" 
                   ? "Enter the 4-digit security PIN set when creating this report to view contact details."
                   : "Enter the 4-digit security PIN for this report to confirm this action."}
@@ -233,20 +233,20 @@ export const PinModal: React.FC<PinModalProps> = ({
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={handlePaste}
-                    className="w-12 h-13 text-center text-xl font-bold rounded-xl bg-[#121520] border border-slate-800 focus:border-indigo-500 outline-none text-slate-100 transition"
+                    className="w-12 h-13 text-center text-xl font-bold rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none text-slate-900 transition"
                   />
                 ))}
               </div>
 
               {/* Custom Numeric Keypad */}
-              <div className="bg-[#121520] p-3 rounded-xl border border-slate-800 space-y-2">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                 <div className="grid grid-cols-3 gap-1.5">
                   {keypadNumbers.map((digit) => (
                     <button
                       key={digit}
                       type="button"
                       onClick={() => handleKeypadPress(digit)}
-                      className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-sm font-medium text-slate-200 hover:text-white transition cursor-pointer active:scale-95"
+                      className="py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-sm font-semibold text-slate-800 transition cursor-pointer active:scale-95 shadow-2xs"
                     >
                       {digit}
                     </button>
@@ -254,21 +254,21 @@ export const PinModal: React.FC<PinModalProps> = ({
                   <button
                     type="button"
                     onClick={handleKeypadClear}
-                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-xs font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500 hover:text-slate-800 transition cursor-pointer active:scale-95 shadow-2xs"
                   >
                     Clear
                   </button>
                   <button
                     type="button"
                     onClick={() => handleKeypadPress("0")}
-                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-sm font-medium text-slate-200 hover:text-white transition cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-sm font-semibold text-slate-800 transition cursor-pointer active:scale-95 shadow-2xs"
                   >
                     0
                   </button>
                   <button
                     type="button"
                     onClick={handleKeypadBackspace}
-                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-rose-950/20 border border-slate-800/80 text-rose-400 transition flex items-center justify-center cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200 text-rose-600 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
                     aria-label="Delete"
                   >
                     <Delete size={15} />
@@ -277,8 +277,8 @@ export const PinModal: React.FC<PinModalProps> = ({
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium">
-                  <AlertTriangle size={14} className="shrink-0 text-rose-400" />
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                  <AlertTriangle size={14} className="shrink-0 text-rose-600" />
                   <p>{error}</p>
                 </div>
               )}
@@ -288,10 +288,10 @@ export const PinModal: React.FC<PinModalProps> = ({
                 disabled={submitting}
                 className={`w-full py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   actionType === "delete"
-                    ? "bg-rose-600 hover:bg-rose-500 text-white"
+                    ? "bg-rose-600 hover:bg-rose-700 text-white"
                     : actionType === "unlock"
-                    ? "bg-indigo-600 hover:bg-indigo-500 text-white"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-white"
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
                 }`}
               >
                 {submitting ? (

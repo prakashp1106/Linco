@@ -467,7 +467,7 @@ export const FeedList: React.FC<FeedListProps> = ({
   return (
     <div className="space-y-5" id="global-search-discovery-hub">
       {/* Search Header Container */}
-      <div className="bg-[#0c0e16] border border-slate-800/90 p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200/90 p-4 sm:p-5 rounded-2xl shadow-xs space-y-4">
         
         {/* Search Input Bar */}
         <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2">
@@ -476,12 +476,12 @@ export const FeedList: React.FC<FeedListProps> = ({
             <input
               ref={inputRef}
               type="text"
-              placeholder={t("feed.searchPlaceholder", "Search matching items, tags, colors, brand names, cities...")}
+              placeholder={t("feed.searchPlaceholder", "Search items, keywords, colors, brands, cities...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsRecentFocused(true)}
               onBlur={() => setTimeout(() => setIsRecentFocused(false), 200)}
-              className="w-full pl-10 pr-14 md:pr-24 py-3 rounded-xl bg-[#121520] border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 outline-none text-xs sm:text-sm font-normal text-slate-100 transition placeholder:text-slate-500"
+              className="w-full pl-10 pr-14 md:pr-24 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none text-xs sm:text-sm font-normal text-slate-900 transition placeholder:text-slate-400"
               aria-label={t("feed.universalSearchBar", "Universal Search Bar")}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -489,13 +489,13 @@ export const FeedList: React.FC<FeedListProps> = ({
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="p-1 text-slate-400 hover:text-white rounded-md transition cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-md transition cursor-pointer"
                   aria-label={t("feed.clearSearch", "Clear Search Input")}
                 >
                   <X size={14} />
                 </button>
               )}
-              <div className="hidden md:flex items-center gap-1 text-[10px] font-mono font-medium text-slate-500 bg-[#090b12] px-1.5 py-0.5 rounded border border-slate-800 pointer-events-none select-none">
+              <div className="hidden md:flex items-center gap-1 text-[10px] font-mono font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 pointer-events-none select-none">
                 ⌘K
               </div>
             </div>
@@ -507,8 +507,8 @@ export const FeedList: React.FC<FeedListProps> = ({
             onClick={handleSaveSearch}
             className={`p-3 rounded-xl border transition duration-150 cursor-pointer flex items-center justify-center shrink-0 ${
               searchQuery
-                ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20"
-                : "bg-[#121520] border-slate-800 text-slate-400 hover:text-slate-200"
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
             }`}
             title={t("feed.saveParameters", "Save Search Parameters")}
             aria-label={t("feed.saveParameters", "Save Search Parameters")}
@@ -522,8 +522,8 @@ export const FeedList: React.FC<FeedListProps> = ({
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
             className={`px-3.5 py-3 rounded-xl border font-sans font-medium text-xs flex items-center gap-2 cursor-pointer transition ${
               isAdvancedOpen || categoryFilter !== "All" || cityFilter !== "All" || dateFilter !== "All" || colorFilter !== "All" || brandFilter !== "All" || distanceFilter !== "All"
-                ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300 font-semibold"
-                : "bg-[#121520] border-slate-800 text-slate-300 hover:text-white hover:border-slate-700"
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold"
+                : "bg-slate-50 border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             }`}
             aria-label={t("feed.toggleFilters", "Toggle Advanced Filters")}
           >
@@ -540,23 +540,23 @@ export const FeedList: React.FC<FeedListProps> = ({
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              className="p-3 rounded-xl bg-[#121520] border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs"
+              className="p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 flex flex-wrap items-center justify-between gap-3 text-xs"
             >
-              <div className="flex items-center gap-2 text-slate-300">
-                <Sparkles size={13} className="text-indigo-400" />
+              <div className="flex items-center gap-2 text-indigo-900">
+                <Sparkles size={13} className="text-indigo-600" />
                 <span>
                   Detected traits:
-                  {nlpParsed.type && <span className="ml-1.5 text-slate-200 bg-[#090b12] px-2 py-0.5 rounded border border-slate-800 font-mono text-[11px]">{nlpParsed.type}</span>}
-                  {nlpParsed.city && <span className="ml-1.5 text-slate-200 bg-[#090b12] px-2 py-0.5 rounded border border-slate-800 font-mono text-[11px]">📍 {nlpParsed.city}</span>}
-                  {nlpParsed.category && <span className="ml-1.5 text-slate-200 bg-[#090b12] px-2 py-0.5 rounded border border-slate-800 font-mono text-[11px]">🏷️ {nlpParsed.category}</span>}
-                  {nlpParsed.color && <span className="ml-1.5 text-slate-200 bg-[#090b12] px-2 py-0.5 rounded border border-slate-800 font-mono text-[11px]">🎨 {nlpParsed.color}</span>}
-                  {nlpParsed.brand && <span className="ml-1.5 text-slate-200 bg-[#090b12] px-2 py-0.5 rounded border border-slate-800 font-mono text-[11px]">{nlpParsed.brand}</span>}
+                  {nlpParsed.type && <span className="ml-1.5 text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 text-[11px] font-medium">{nlpParsed.type}</span>}
+                  {nlpParsed.city && <span className="ml-1.5 text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 text-[11px] font-medium">📍 {nlpParsed.city}</span>}
+                  {nlpParsed.category && <span className="ml-1.5 text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 text-[11px] font-medium">🏷️ {nlpParsed.category}</span>}
+                  {nlpParsed.color && <span className="ml-1.5 text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 text-[11px] font-medium">🎨 {nlpParsed.color}</span>}
+                  {nlpParsed.brand && <span className="ml-1.5 text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 text-[11px] font-medium">{nlpParsed.brand}</span>}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={applyNlpFiltersAsHardFilters}
-                className="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer transition focus:outline-none"
+                className="text-[11px] text-indigo-700 hover:text-indigo-900 font-semibold cursor-pointer transition focus:outline-none"
               >
                 Apply as filters
               </button>
@@ -571,12 +571,12 @@ export const FeedList: React.FC<FeedListProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden pt-2 border-t border-slate-900 space-y-3"
+              className="overflow-hidden pt-2 border-t border-slate-100 space-y-3"
             >
               {/* Recent queries */}
               {recentSearches.length > 0 && (
                 <div className="space-y-1.5 text-left">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 block">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 block">
                     {t("feed.recentSearches", "Recent Searches")}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -585,9 +585,9 @@ export const FeedList: React.FC<FeedListProps> = ({
                         key={idx}
                         type="button"
                         onClick={() => setSearchQuery(recent)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs text-slate-300 hover:text-white hover:border-slate-600 transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                        className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                       >
-                        <Clock size={11} className="text-slate-500" />
+                        <Clock size={11} className="text-slate-400" />
                         <span>{recent}</span>
                       </button>
                     ))}
@@ -597,7 +597,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                         setRecentSearches([]);
                         localStorage.removeItem("linco-recent-searches");
                       }}
-                      className="px-2.5 py-1.5 text-[10px] text-slate-500 hover:text-red-400 font-bold transition uppercase cursor-pointer"
+                      className="px-2.5 py-1.5 text-[10px] text-slate-400 hover:text-rose-600 font-semibold transition uppercase cursor-pointer"
                     >
                       {t("common.clear", "Clear")}
                     </button>
@@ -608,7 +608,7 @@ export const FeedList: React.FC<FeedListProps> = ({
               {/* Saved Search Configurations */}
               {savedSearches.length > 0 && (
                 <div className="space-y-1.5 text-left">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 block">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 block">
                     {t("feed.savedSearches", "Saved Search Configurations")}
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -616,16 +616,16 @@ export const FeedList: React.FC<FeedListProps> = ({
                       <div
                         key={saved.id}
                         onClick={() => applySavedSearch(saved)}
-                        className="p-2.5 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-indigo-500/60 text-xs flex items-center justify-between cursor-pointer transition"
+                        className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:bg-white text-xs flex items-center justify-between cursor-pointer transition shadow-2xs"
                       >
                         <div className="flex items-center gap-2">
-                          <BookmarkCheck size={14} className="text-indigo-400 shrink-0" />
-                          <span className="font-semibold text-slate-200 truncate max-w-[150px]">{saved.name}</span>
+                          <BookmarkCheck size={14} className="text-indigo-600 shrink-0" />
+                          <span className="font-semibold text-slate-800 truncate max-w-[150px]">{saved.name}</span>
                         </div>
                         <button
                           type="button"
                           onClick={(e) => handleDeleteSavedSearch(saved.id, e)}
-                          className="p-1 text-slate-500 hover:text-red-400 hover:bg-slate-950 rounded-lg transition"
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                           title={t("feed.deleteSavedSearch", "Delete Saved Search")}
                           aria-label={t("feed.deleteSavedSearch", "Delete Saved Search")}
                         >
@@ -647,17 +647,17 @@ export const FeedList: React.FC<FeedListProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden border-t border-slate-900/60 pt-4 space-y-4"
+              className="overflow-hidden border-t border-slate-100 pt-4 space-y-4"
               id="advanced-filters-drawer"
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
                 {/* Section A: Core Type & Status */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Layers size={11} className="text-slate-400" /> {t("feed.listingRegistry", "Listing Registry")}
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Layers size={11} className="text-slate-400" /> {t("feed.listingRegistry", "Listing Type")}
                   </label>
-                  <div className="flex bg-[#121520] p-1 rounded-xl border border-slate-800">
+                  <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                     {[
                       { key: "All", label: t("feed.all", "All") },
                       { key: "Lost", label: t("feed.lost", "Lost") },
@@ -669,8 +669,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                         onClick={() => setFeedTypeFilter(type.key as any)}
                         className={`flex-1 text-xs font-medium py-1.5 rounded-lg transition cursor-pointer ${
                           feedTypeFilter === type.key
-                            ? "bg-indigo-600 text-white shadow-xs font-semibold"
-                            : "text-slate-400 hover:text-slate-200"
+                            ? "bg-white text-indigo-700 shadow-2xs font-semibold"
+                            : "text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         {type.label}
@@ -681,13 +681,13 @@ export const FeedList: React.FC<FeedListProps> = ({
 
                 {/* Section B: Category */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <Tag size={11} className="text-slate-400" /> {t("feed.category", "Category")}
                   </label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full text-xs font-medium px-3.5 py-2.5 bg-[#121520] border border-slate-800 rounded-xl text-slate-200 outline-none cursor-pointer focus:border-indigo-500 transition"
+                    className="w-full text-xs font-medium px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition"
                   >
                     <option value="All">{t("feed.allCategories", "All Categories")}</option>
                     {CATEGORIES.map((c) => (
@@ -700,7 +700,7 @@ export const FeedList: React.FC<FeedListProps> = ({
 
                 {/* Section C: City Selection */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <MapPin size={11} className="text-slate-400" /> {t("feed.city", "City")}
                   </label>
                   <select
@@ -709,7 +709,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                       setCityFilter(e.target.value);
                       if (e.target.value === "All") setDistanceFilter("All");
                     }}
-                    className="w-full text-xs font-medium px-3.5 py-2.5 bg-[#121520] border border-slate-800 rounded-xl text-slate-200 outline-none cursor-pointer focus:border-indigo-500 transition"
+                    className="w-full text-xs font-medium px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-none cursor-pointer focus:border-indigo-500 focus:bg-white transition"
                   >
                     <option value="All">{t("feed.allCities", "All Cities")}</option>
                     {CITIES.map((city) => (
@@ -727,10 +727,10 @@ export const FeedList: React.FC<FeedListProps> = ({
                 
                 {/* Date range filter */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <Calendar size={11} className="text-slate-400" /> {t("feed.dateRange", "Date Range")}
                   </label>
-                  <div className="grid grid-cols-4 gap-1 bg-[#121520] p-1 rounded-xl border border-slate-800">
+                  <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
                     {[
                       { id: "All", label: t("common.all", "Anytime") },
                       { id: "24h", label: "24h" },
@@ -743,8 +743,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                         onClick={() => setDateFilter(opt.id as any)}
                         className={`text-[11px] font-medium py-1.5 rounded-lg transition cursor-pointer ${
                           dateFilter === opt.id
-                            ? "bg-indigo-600 text-white font-semibold"
-                            : "text-slate-400 hover:text-slate-200"
+                            ? "bg-white text-indigo-700 shadow-2xs font-semibold"
+                            : "text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         {opt.label}
@@ -755,17 +755,17 @@ export const FeedList: React.FC<FeedListProps> = ({
 
                 {/* Distance Filter (only valid if a city is active to center reference) */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <Compass size={11} className="text-slate-400" /> {t("feed.proximity", "Proximity")}
                   </label>
                   <select
                     value={distanceFilter}
                     onChange={(e) => setDistanceFilter(e.target.value as any)}
                     disabled={cityFilter === "All"}
-                    className={`w-full text-xs font-medium px-3.5 py-2.5 bg-[#121520] border rounded-xl outline-none cursor-pointer focus:border-indigo-500 transition ${
+                    className={`w-full text-xs font-medium px-3.5 py-2.5 bg-slate-50 border rounded-xl outline-none cursor-pointer focus:border-indigo-500 transition ${
                       cityFilter === "All"
-                        ? "border-slate-800 text-slate-600 cursor-not-allowed opacity-50"
-                        : "border-slate-800 text-slate-200"
+                        ? "border-slate-200 text-slate-400 cursor-not-allowed opacity-60"
+                        : "border-slate-200 text-slate-800"
                     }`}
                   >
                     <option value="All">{t("feed.allProximities", "Any Distance")}</option>
@@ -778,10 +778,10 @@ export const FeedList: React.FC<FeedListProps> = ({
 
                 {/* Sorting options */}
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <ArrowUpDown size={11} className="text-slate-400" /> {t("feed.sortCatalog", "Sort")}
                   </label>
-                  <div className="grid grid-cols-4 gap-1 bg-[#121520] p-1 rounded-xl border border-slate-800">
+                  <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
                     {[
                       { id: "new", label: t("feed.newestFirst", "Newest") },
                       { id: "best", label: t("feed.bestMatch", "Best") },
@@ -794,8 +794,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                         onClick={() => setSortBy(opt.id as any)}
                         className={`text-[11px] font-medium py-1.5 rounded-lg transition cursor-pointer ${
                           sortBy === opt.id
-                            ? "bg-indigo-600 text-white font-semibold"
-                            : "text-slate-400 hover:text-slate-200"
+                            ? "bg-white text-indigo-700 shadow-2xs font-semibold"
+                            : "text-slate-600 hover:text-slate-900"
                         }`}
                       >
                         {opt.label}
@@ -808,7 +808,7 @@ export const FeedList: React.FC<FeedListProps> = ({
 
               {/* Advanced Color Palette Swatches */}
               <div className="space-y-1.5 text-left">
-                <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                   <Palette size={11} className="text-slate-400" /> {t("feed.colorSwatch", "Color")}
                 </span>
                 <div className="flex flex-wrap gap-2 items-center">
@@ -817,8 +817,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                     onClick={() => setColorFilter("All")}
                     className={`px-3 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
                       colorFilter === "All"
-                        ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300"
-                        : "bg-[#121520] border-slate-800 text-slate-400 hover:text-slate-200"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     {t("feed.allColors", "All Colors")}
@@ -844,7 +844,7 @@ export const FeedList: React.FC<FeedListProps> = ({
 
               {/* Popular Brand filters */}
               <div className="space-y-1.5 text-left">
-                <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                   <TrendingUp size={11} className="text-slate-400" /> {t("feed.hardwareBrand", "Brand")}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -853,8 +853,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                     onClick={() => setBrandFilter("All")}
                     className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
                       brandFilter === "All"
-                        ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300"
-                        : "bg-[#121520] border-slate-800 text-slate-400 hover:text-slate-200"
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     {t("feed.allBrands", "All Brands")}
@@ -866,8 +866,8 @@ export const FeedList: React.FC<FeedListProps> = ({
                       onClick={() => setBrandFilter(br)}
                       className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
                         brandFilter === br
-                          ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300"
-                          : "bg-[#121520] border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                          ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300"
                       }`}
                     >
                       {br}
@@ -881,7 +881,7 @@ export const FeedList: React.FC<FeedListProps> = ({
                 <button
                   type="button"
                   onClick={handleClearAllFilters}
-                  className="px-3 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 font-medium rounded-lg transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-medium rounded-lg transition cursor-pointer flex items-center gap-1.5"
                 >
                   <RotateCcw size={12} /> {t("feed.resetFilters", "Reset filters")}
                 </button>
@@ -892,20 +892,20 @@ export const FeedList: React.FC<FeedListProps> = ({
         </AnimatePresence>
 
         {/* List / Map View Toggles */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-          <div className="text-xs font-medium text-slate-400 flex items-center gap-2">
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+          <div className="text-xs font-medium text-slate-500 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>{sortedPosts.length} listings</span>
           </div>
 
-          <div className="flex bg-[#121520] p-0.5 rounded-lg border border-slate-800">
+          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
             <button
               type="button"
               onClick={() => setFeedViewMode("list")}
               className={`text-xs font-medium px-3 py-1.5 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
                 feedViewMode === "list"
-                  ? "bg-[#1c2234] text-indigo-300 font-semibold shadow-xs"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-indigo-700 font-semibold shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <List size={13} /> {t("feed.viewList", "List")}
@@ -915,8 +915,8 @@ export const FeedList: React.FC<FeedListProps> = ({
               onClick={() => setFeedViewMode("map")}
               className={`text-xs font-medium px-3 py-1.5 rounded-md transition flex items-center gap-1.5 cursor-pointer ${
                 feedViewMode === "map"
-                  ? "bg-[#1c2234] text-indigo-300 font-semibold shadow-xs"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-indigo-700 font-semibold shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <MapIcon size={13} /> {t("feed.viewMap", "Map")}
@@ -933,27 +933,27 @@ export const FeedList: React.FC<FeedListProps> = ({
           {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className="bg-[#07070a]/60 border border-[#161621] rounded-3xl p-6 relative overflow-hidden space-y-4 shadow-sm animate-pulse"
+              className="bg-white border border-slate-200/90 rounded-2xl p-6 relative overflow-hidden space-y-4 shadow-xs animate-pulse"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#14141e]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex gap-2">
-                  <div className="h-5 w-16 rounded-full bg-[#12121a]" />
-                  <div className="h-5 w-24 rounded-full bg-[#12121a]" />
+                  <div className="h-5 w-16 rounded-full bg-slate-100" />
+                  <div className="h-5 w-24 rounded-full bg-slate-100" />
                 </div>
-                <div className="h-6 w-16 rounded-lg bg-[#12121a]" />
+                <div className="h-6 w-16 rounded-lg bg-slate-100" />
               </div>
-              <div className="h-6 w-1/3 rounded-lg bg-[#12121a]" />
+              <div className="h-6 w-1/3 rounded-lg bg-slate-100" />
               <div className="space-y-2">
-                <div className="h-4 w-full rounded-lg bg-[#12121a]" />
-                <div className="h-4 w-5/6 rounded-lg bg-[#12121a]" />
+                <div className="h-4 w-full rounded-lg bg-slate-100" />
+                <div className="h-4 w-5/6 rounded-lg bg-slate-100" />
               </div>
               <div className="flex gap-4">
-                <div className="h-4 w-24 rounded-lg bg-[#12121a]" />
-                <div className="h-4 w-24 rounded-lg bg-[#12121a]" />
+                <div className="h-4 w-24 rounded-lg bg-slate-100" />
+                <div className="h-4 w-24 rounded-lg bg-slate-100" />
               </div>
               <div className="flex gap-2.5 pt-1">
-                <div className="h-10 rounded-xl bg-[#12121a] flex-1" />
-                <div className="h-10 rounded-xl bg-[#12121a] w-14" />
+                <div className="h-10 rounded-xl bg-slate-100 flex-1" />
+                <div className="h-10 rounded-xl bg-slate-100 w-14" />
               </div>
             </div>
           ))}
@@ -963,17 +963,17 @@ export const FeedList: React.FC<FeedListProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[#0c0e16] border border-slate-800/90 rounded-2xl p-8 sm:p-12 text-center space-y-5 max-w-md mx-auto shadow-xs"
+          className="bg-white border border-slate-200/90 rounded-2xl p-8 sm:p-12 text-center space-y-5 max-w-md mx-auto shadow-xs"
           id="search-empty-state"
         >
-          <div className="w-12 h-12 rounded-xl bg-[#121520] border border-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 mx-auto">
             <Search size={22} />
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-sm sm:text-base font-semibold text-slate-100 tracking-tight">
+            <h4 className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight">
               {t("feed.noMatchesFound", "No listings match your filters")}
             </h4>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+            <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
               {t("feed.noMatchesDesc", "Try adjusting your search terms, expanding your radius, or resetting filters to see all reported items.")}
             </p>
           </div>
@@ -981,7 +981,7 @@ export const FeedList: React.FC<FeedListProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
               onClick={handleClearAllFilters}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#121520] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 text-xs font-medium transition cursor-pointer"
             >
               {t("feed.resetFilters", "Reset filters")}
             </button>
@@ -1007,9 +1007,9 @@ export const FeedList: React.FC<FeedListProps> = ({
                 const el = document.getElementById(`post-card-${post.id}`);
                 if (el) {
                   el.scrollIntoView({ behavior: "smooth", block: "center" });
-                  el.classList.add("ring-2", "ring-cyan-500/40", "scale-[1.01]");
+                  el.classList.add("ring-2", "ring-indigo-500/40", "scale-[1.01]");
                   setTimeout(() => {
-                    el.classList.remove("ring-2", "ring-cyan-500/40", "scale-[1.01]");
+                    el.classList.remove("ring-2", "ring-indigo-500/40", "scale-[1.01]");
                   }, 2000);
                 }
               }, 200);

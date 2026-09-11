@@ -63,8 +63,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     mapRef.current = map;
 
-    // CartoDB Dark Matter fits slate theme perfectly
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    // CartoDB Positron fits clean light theme perfectly
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: "abcd",
@@ -76,7 +76,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       html: `
         <div class="relative flex items-center justify-center">
           <div class="absolute w-8 h-8 bg-rose-500/30 rounded-full animate-ping"></div>
-          <div class="w-4 h-4 bg-rose-500 rounded-full border-2 border-[#020817] shadow-lg"></div>
+          <div class="w-4 h-4 bg-rose-600 rounded-full border-2 border-white shadow-md"></div>
         </div>
       `,
       className: "custom-leaflet-marker",
@@ -169,7 +169,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         html: `
           <div class="relative flex items-center justify-center">
             <div class="absolute w-8 h-8 bg-rose-500/30 rounded-full animate-ping"></div>
-            <div class="w-4 h-4 bg-rose-500 rounded-full border-2 border-[#020817] shadow-lg"></div>
+            <div class="w-4 h-4 bg-rose-600 rounded-full border-2 border-white shadow-md"></div>
           </div>
         `,
         className: "custom-leaflet-marker",
@@ -243,7 +243,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-[#0c0e16]">
+    <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xs bg-slate-50">
       {/* Map Search Input Overlay */}
       <form onSubmit={handleSearch} className="absolute top-2.5 left-2.5 right-2.5 z-[1000] flex gap-2">
         <div className="relative flex-1">
@@ -253,7 +253,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             placeholder="Search landmark, campus, town, city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-14 py-2.5 rounded-xl bg-[#121520]/95 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 shadow-xl backdrop-blur-md"
+            className="w-full pl-9 pr-14 py-2.5 rounded-xl bg-white/95 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-300 shadow-sm backdrop-blur-md"
           />
           {searchQuery && (
             <button
@@ -262,7 +262,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 setSearchQuery("");
                 setSearchResults([]);
               }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-200 font-semibold px-1.5 py-0.5 rounded cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-700 font-semibold px-1.5 py-0.5 rounded cursor-pointer"
             >
               Clear
             </button>
@@ -271,7 +271,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <button
           type="submit"
           disabled={searchLoading}
-          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-lg shrink-0 cursor-pointer disabled:opacity-50"
+          className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
         >
           {searchLoading ? <Loader2 className="animate-spin" size={13} /> : "Search"}
         </button>
@@ -279,7 +279,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       {/* Map Search Results Autocomplete Dropdown List */}
       {searchResults.length > 0 && (
-        <div className="absolute top-14 left-2.5 right-2.5 z-[1000] max-h-48 overflow-y-auto bg-[#121520]/95 border border-slate-800 rounded-xl shadow-2xl backdrop-blur-md divide-y divide-slate-850 scrollbar-thin">
+        <div className="absolute top-14 left-2.5 right-2.5 z-[1000] max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg divide-y divide-slate-100 scrollbar-thin">
           {searchResults.map((result, index) => {
             const name = result.placeName || "Location";
             const addr = result.placeAddress || result.formatted_address || "";
@@ -288,14 +288,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 key={result.eLoc || index}
                 type="button"
                 onClick={() => handleSelectResult(result)}
-                className="w-full text-left px-4 py-3 hover:bg-slate-800/60 transition duration-150 block truncate cursor-pointer"
+                className="w-full text-left px-4 py-3 hover:bg-slate-50 transition duration-150 block truncate cursor-pointer"
               >
-                <div className="text-[11px] text-slate-200 font-semibold flex items-center gap-1.5">
+                <div className="text-[11px] text-slate-800 font-semibold flex items-center gap-1.5">
                   <span>📍</span>
                   <span>{name}</span>
                 </div>
                 {addr && (
-                  <div className="text-[10px] text-slate-400 pl-5 mt-0.5 font-normal truncate">
+                  <div className="text-[10px] text-slate-500 pl-5 mt-0.5 font-normal truncate">
                     {addr}
                   </div>
                 )}
@@ -308,7 +308,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       {/* Leaflet map container */}
       <div ref={mapContainerRef} className="w-full h-[280px] sm:h-[320px] outline-none z-0" />
       {lat && lng && (
-        <div className="absolute bottom-3 left-3 z-[1000] bg-[#0c0e16]/90 border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] text-rose-400 font-mono shadow-md backdrop-blur-md flex items-center gap-1.5">
+        <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 border border-slate-200 rounded-lg px-2.5 py-1 text-[10px] text-rose-600 font-mono shadow-xs backdrop-blur-md flex items-center gap-1.5">
           <span>📍</span>
           <span>{lat.toFixed(5)}, {lng.toFixed(5)}</span>
         </div>
@@ -343,19 +343,19 @@ export const MiniMap: React.FC<MiniMapProps> = ({ lat, lng }) => {
 
     mapRef.current = map;
 
-    // Dark Matter tiles for premium look
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    // CartoDB Positron tiles for clean light look
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: "",
       subdomains: "abcd",
       maxZoom: 20,
     }).addTo(map);
 
-    // Beautiful Pin
+    // Clean Pin
     const pinIcon = L.divIcon({
       html: `
         <div class="relative flex items-center justify-center">
-          <div class="absolute w-6 h-6 bg-cyan-500/20 rounded-full animate-pulse"></div>
-          <div class="w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#020817] shadow-lg"></div>
+          <div class="absolute w-6 h-6 bg-rose-500/20 rounded-full animate-pulse"></div>
+          <div class="w-3.5 h-3.5 bg-rose-600 rounded-full border-2 border-white shadow-md"></div>
         </div>
       `,
       className: "custom-mini-marker",
@@ -375,9 +375,9 @@ export const MiniMap: React.FC<MiniMapProps> = ({ lat, lng }) => {
   }, [lat, lng]);
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-slate-900 shadow-md bg-slate-950">
+    <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-xs bg-slate-50">
       <div ref={mapContainerRef} className="w-full h-[150px] outline-none z-0" />
-      <div className="absolute bottom-1.5 right-1.5 z-[1000] bg-slate-950/80 px-2 py-0.5 rounded text-[8px] text-slate-500 font-mono">
+      <div className="absolute bottom-1.5 right-1.5 z-[1000] bg-white/80 border border-slate-200/60 px-2 py-0.5 rounded text-[8px] text-slate-500 font-mono">
         © OpenStreetMap / MapmyIndia
       </div>
     </div>
@@ -416,8 +416,8 @@ export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
 
     mapRef.current = map;
 
-    // Dark Matter tiles for premium feel
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    // CartoDB Positron tiles for clean light look
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: "abcd",
       maxZoom: 20,
@@ -427,14 +427,14 @@ export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
     const markers: any[] = [];
     validPosts.forEach((post) => {
       const isLost = post.type === "Lost";
-      const colorClass = isLost ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]";
+      const colorClass = isLost ? "bg-rose-600" : "bg-emerald-600";
       const glowColor = isLost ? "bg-rose-500/20" : "bg-emerald-500/20";
 
       const pinIcon = L.divIcon({
         html: `
           <div class="relative flex items-center justify-center">
             <div class="absolute w-8 h-8 ${glowColor} rounded-full animate-ping"></div>
-            <div class="w-4.5 h-4.5 ${colorClass} rounded-full border-2 border-[#020817] shadow-lg flex items-center justify-center text-[8px] font-extrabold text-slate-950">
+            <div class="w-5 h-5 ${colorClass} rounded-full border-2 border-white shadow-md flex items-center justify-center text-[8px] font-extrabold text-white">
               ${isLost ? "L" : "F"}
             </div>
           </div>
@@ -445,20 +445,20 @@ export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
       });
 
       const popupContent = `
-        <div style="background-color: #020817; color: #f1f5f9; padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); font-family: 'Inter', sans-serif; width: 210px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);">
+        <div style="background-color: #ffffff; color: #0f172a; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; font-family: inherit; width: 220px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 9999px; ${isLost ? 'background-color: rgba(244,63,94,0.15); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2);' : 'background-color: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.2);'}">
+            <span style="font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 9999px; ${isLost ? 'background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;' : 'background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;'}">
               ${post.type}
             </span>
-            <span style="font-size: 9px; color: #94a3b8; font-weight: 600;">${post.category || ""}</span>
+            <span style="font-size: 9px; color: #64748b; font-weight: 600;">${post.category || ""}</span>
           </div>
-          <h4 style="font-size: 13px; font-weight: 700; color: #f8fafc; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${post.item}</h4>
-          <p style="font-size: 10px; color: #94a3b8; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${post.details}</p>
+          <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${post.item}</h4>
+          <p style="font-size: 10px; color: #64748b; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${post.details}</p>
           <div style="font-size: 9px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-bottom: 10px;">
             <span>📍</span> <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;">${post.address}</span>
           </div>
-          ${post.reward ? `<div style="font-size: 10px; color: #f59e0b; font-weight: 700; margin-bottom: 10px;">💰 Reward: ₹${post.reward}</div>` : ''}
-          <button id="btn-view-${post.id}" style="width: 100%; padding: 8px 0; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: #020817; font-size: 10px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.2s;">
+          ${post.reward ? `<div style="font-size: 10px; color: #d97706; font-weight: 700; margin-bottom: 10px;">💰 Reward: ₹${post.reward}</div>` : ''}
+          <button id="btn-view-${post.id}" style="width: 100%; padding: 8px 0; background: #0f172a; color: #ffffff; font-size: 11px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.2s;">
             View details
           </button>
         </div>
@@ -468,7 +468,7 @@ export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
         .addTo(map)
         .bindPopup(popupContent, {
           closeButton: false,
-          className: 'dark-leaflet-popup',
+          className: 'clean-light-leaflet-popup',
           minWidth: 220,
         });
 
@@ -501,9 +501,9 @@ export const FeedMap: React.FC<FeedMapProps> = ({ posts, onPinClick }) => {
   }, [posts]);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-slate-900 shadow-2xl bg-slate-950/40">
+    <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-sm bg-white">
       <div ref={mapContainerRef} className="w-full h-[400px] md:h-[450px] outline-none z-0" />
-      <div className="absolute bottom-2.5 right-2.5 z-[1000] bg-slate-950/80 px-3 py-1 rounded-lg text-[9px] text-slate-500 font-mono shadow-md backdrop-blur-md">
+      <div className="absolute bottom-2.5 right-2.5 z-[1000] bg-white/90 border border-slate-200 px-3 py-1 rounded-lg text-[9px] text-slate-500 font-mono shadow-xs backdrop-blur-md">
         © OpenStreetMap • {posts.filter(p => p.latitude && p.longitude).length} items pinned
       </div>
     </div>

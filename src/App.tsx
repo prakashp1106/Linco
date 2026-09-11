@@ -1213,9 +1213,9 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-[#08080c]">
-      {/* Subtle calm ambient vignette */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.08),rgba(255,255,255,0))] pointer-events-none z-0" />
+    <div className="relative min-h-screen text-slate-900 font-sans pb-20 bg-white">
+      {/* Subtle calm ambient dot grid */}
+      <div className="fixed inset-0 bg-subtle-grid opacity-30 pointer-events-none z-0" />
 
       {/* TOAST NOTIFICATION CONTAINER */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
@@ -1226,20 +1226,20 @@ export default function App() {
               initial={{ opacity: 0, x: 50, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 50, scale: 0.9 }}
-              className={`p-3.5 rounded-xl border backdrop-blur-lg flex justify-between items-start gap-2 shadow-2xl pointer-events-auto ${
-                t.type === "success" ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-300" :
-                t.type === "warn" ? "bg-amber-950/40 border-amber-500/20 text-amber-300" :
-                t.type === "error" ? "bg-red-950/40 border-red-500/20 text-red-300" :
-                "bg-cyan-950/40 border-cyan-500/20 text-cyan-300"
+              className={`p-3.5 rounded-xl border backdrop-blur-lg flex justify-between items-start gap-2 shadow-lg pointer-events-auto ${
+                t.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-900" :
+                t.type === "warn" ? "bg-amber-50 border-amber-200 text-amber-900" :
+                t.type === "error" ? "bg-rose-50 border-rose-200 text-rose-900" :
+                "bg-indigo-50 border-indigo-200 text-indigo-900"
               }`}
             >
               <div className="flex gap-2">
                 <span className="text-sm mt-0.5">
                   {t.type === "success" ? "✅" : t.type === "warn" ? "⚠️" : t.type === "error" ? "❌" : "ℹ️"}
                 </span>
-                <span className="text-xs font-medium leading-relaxed">{t.message}</span>
+                <span className="text-xs font-semibold leading-relaxed">{t.message}</span>
               </div>
-              <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-200 transition cursor-pointer">
+              <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-600 transition cursor-pointer">
                 <X size={14} />
               </button>
             </motion.div>
@@ -1249,17 +1249,17 @@ export default function App() {
 
       {/* TOP APP BAR */}
       <header 
-        className="fixed top-0 left-0 right-0 z-40 bg-[#0c0e16]/95 border-b border-slate-800 backdrop-blur-md px-4 py-3 flex items-center justify-between select-none"
+        className="fixed top-0 left-0 right-0 z-40 bg-white/90 border-b border-slate-200/80 backdrop-blur-md px-4 sm:px-6 py-2.5 flex items-center justify-between select-none shadow-[0_1px_3px_rgba(15,23,42,0.03)]"
         style={{
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.6rem)",
           height: "calc(env(safe-area-inset-top, 0px) + 3.75rem)",
         }}
       >
-        {/* LEFT */}
+        {/* LEFT: Logo & Mobile Menu */}
         <div className="flex items-center gap-3 z-10">
           <button 
             onClick={() => setDrawerOpen(true)}
-            className="p-2 -ml-1 rounded-xl hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
+            className="p-2 -ml-1 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer md:hidden"
             aria-label="Open navigation menu"
           >
             <Menu size={20} />
@@ -1267,43 +1267,63 @@ export default function App() {
           <LincoLogo 
             variant="full" 
             size="sm" 
+            theme="light"
             onClick={() => setActiveTab("home")} 
           />
         </div>
 
-        {/* CENTER */}
-        <div className="absolute left-1/2 -translate-x-1/2 font-sans font-black text-xs sm:text-sm tracking-widest text-slate-100 uppercase text-center select-none pointer-events-none">
-          {activeTab === "home" && t("nav.home", "Home")}
-          {activeTab === "dashboard" && t("nav.profile", "Profile")}
-          {activeTab === "report" && t("nav.report", "Report")}
-          {activeTab === "feed" && t("nav.feed", "Feed")}
-          {activeTab === "matches" && t("nav.matches", "Matches")}
-          {activeTab === "about" && t("nav.about", "About")}
-          {activeTab === "privacy-trust" && t("nav.privacyTrust", "Privacy & Security")}
-        </div>
+        {/* CENTER: Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 px-2 py-1 rounded-2xl shadow-xs">
+          {[
+            { id: "home", label: t("nav.home", "Home") },
+            { id: "report", label: t("nav.report", "Report") },
+            { id: "feed", label: t("nav.feed", "Explore") },
+            { id: "matches", label: t("nav.matches", "Matches") },
+            { id: "dashboard", label: t("nav.activity", "Activity") },
+            { id: "about", label: t("nav.about", "About") }
+          ].map((item) => {
+            const isSelected = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (item.id === "feed") loadPosts(true);
+                  setActiveTab(item.id as any);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                  isSelected
+                    ? "bg-white text-indigo-700 shadow-xs border border-slate-200/60"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
 
-        {/* RIGHT */}
-        <div className="flex items-center gap-2 sm:gap-3 z-10">
+        {/* RIGHT: Actions */}
+        <div className="flex items-center gap-2 sm:gap-2.5 z-10">
           {/* Language Selector Button */}
           <button
             onClick={openSelector}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 text-xs text-slate-300 hover:text-white transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-700 hover:text-slate-900 transition cursor-pointer"
             title="Change Language / भाषा बदलें"
             aria-label="Change Language"
           >
-            <Globe size={14} className="text-amber-400 shrink-0" />
+            <Globe size={14} className="text-indigo-600 shrink-0" />
             <span className="font-semibold text-[11px]">{meta.nativeName}</span>
           </button>
 
           {/* Notification Bell */}
           <button
             onClick={() => setNotificationsOpen(true)}
-            className="p-2 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-rose-400 transition cursor-pointer relative"
+            className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer relative"
             aria-label="Open notifications"
           >
-            <Bell size={18} className="text-rose-500 hover:scale-105 transition-transform duration-150" />
+            <Bell size={18} className="text-slate-600 hover:text-indigo-600 transition-colors" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_#ef4444]" />
+              <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
             )}
           </button>
 
@@ -1313,7 +1333,7 @@ export default function App() {
               setActiveTab("dashboard");
               window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
             }}
-            className="w-8 h-8 rounded-full overflow-hidden border border-[#232332] hover:border-indigo-400 transition cursor-pointer flex items-center justify-center text-slate-100 text-[10px] font-black uppercase"
+            className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 hover:border-indigo-500 transition cursor-pointer flex items-center justify-center text-white text-[10px] font-black uppercase shadow-2xs"
             aria-label="View Profile"
             style={profileAvatar.startsWith("linear-gradient") ? { background: profileAvatar } : {}}
           >
@@ -1343,7 +1363,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setDrawerOpen(false)}
-              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md"
+              className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs"
             />
 
             {/* Drawer Panel */}
@@ -1352,17 +1372,17 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-[#08080c] border-r border-[#161621] shadow-2xl flex flex-col justify-between overflow-hidden"
+              className="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 shadow-2xl flex flex-col justify-between overflow-hidden"
             >
-              <div className="p-6 flex-1 overflow-y-auto space-y-6">
+              <div className="p-5 flex-1 overflow-y-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-2">
-                  <LincoLogo variant="full" size="md" />
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <LincoLogo variant="full" size="sm" theme="light" />
                   <button 
                     onClick={() => setDrawerOpen(false)}
-                    className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
                   >
-                    <X size={16} />
+                    <X size={18} />
                   </button>
                 </div>
 
@@ -1373,7 +1393,7 @@ export default function App() {
                     items: [
                       { id: "home", label: t("nav.home", "Home"), icon: <Home size={16} />, action: () => setActiveTab("home") },
                       { id: "feed", label: t("nav.feed", "Community Feed"), icon: <Search size={16} />, action: () => { setActiveTab("feed"); loadPosts(true); } },
-                      { id: "matches", label: t("nav.matches", "AI Matches"), icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
+                      { id: "matches", label: t("nav.matches", "Smart Matches"), icon: <Sparkles size={16} />, action: () => setActiveTab("matches") },
                     ]
                   },
                   {
@@ -1394,28 +1414,27 @@ export default function App() {
                     ]
                   }
                 ].map((section) => (
-                  <div key={section.title} className="space-y-1.5">
-                    <h4 className="text-[10px] font-black tracking-widest text-slate-500 font-mono px-3">
+                  <div key={section.title} className="space-y-1">
+                    <h4 className="text-[10px] font-bold tracking-wider text-slate-400 font-sans px-3 uppercase">
                       {section.title}
                     </h4>
                     <div className="space-y-0.5">
                       {section.items.map((item) => {
-                        const isSelected = activeMenuId === item.id;
+                        const isSelected = activeTab === item.id;
                         return (
                           <button
                             key={item.id}
                             onClick={() => {
-                              setActiveMenuId(item.id);
                               item.action();
                               setDrawerOpen(false);
                             }}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                               isSelected 
-                                ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/10 shadow-sm" 
-                                : "text-slate-400 hover:text-slate-200 hover:bg-[#12121a]/30 border border-transparent"
+                                ? "bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-2xs" 
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent"
                             } cursor-pointer`}
                           >
-                            <span className={isSelected ? "text-indigo-400" : "text-slate-500"}>
+                            <span className={isSelected ? "text-indigo-600" : "text-slate-400"}>
                               {item.icon}
                             </span>
                             <span>{item.label}</span>
@@ -1428,22 +1447,21 @@ export default function App() {
               </div>
 
               {/* Drawer Bottom Panel */}
-              <div className="flex flex-col border-t border-[#161621] bg-[#0c0c14]/30 p-4 space-y-3">
+              <div className="flex flex-col border-t border-slate-100 bg-slate-50/70 p-4 space-y-3">
                 {/* Profile Card */}
                 {profileDetails.fullName ? (
                   <button
                     onClick={() => {
                       setActiveTab("dashboard");
-                      setActiveMenuId("profile");
                       window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
                       setDrawerOpen(false);
                     }}
-                    className="w-full text-left flex items-center justify-between p-2 rounded-xl hover:bg-slate-900/60 transition group cursor-pointer"
+                    className="w-full text-left flex items-center justify-between p-2 rounded-xl hover:bg-white transition group cursor-pointer border border-transparent hover:border-slate-200"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {profileDetails.avatar.startsWith("linear-gradient") ? (
                         <div 
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-100 text-xs font-black uppercase border border-[#232332]"
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase shadow-xs"
                           style={{ background: profileDetails.avatar }}
                         >
                           {profileDetails.fullName.charAt(0)}
@@ -1452,14 +1470,14 @@ export default function App() {
                         <img 
                           src={profileDetails.avatar} 
                           alt={profileDetails.fullName} 
-                          className="w-9 h-9 rounded-full object-cover border border-[#232332]"
+                          className="w-9 h-9 rounded-full object-cover border border-slate-200"
                         />
                       )}
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-slate-200 truncate leading-tight">
+                        <span className="text-xs font-bold text-slate-900 truncate leading-tight">
                           {profileDetails.fullName}
                         </span>
-                        <span className="text-[10px] text-slate-500 mt-0.5 group-hover:text-indigo-400 transition-colors flex items-center gap-0.5 font-bold">
+                        <span className="text-[10px] text-slate-500 mt-0.5 group-hover:text-indigo-600 transition-colors flex items-center gap-0.5 font-medium">
                           View Profile <ChevronRight size={10} className="transition-transform group-hover:translate-x-0.5" />
                         </span>
                       </div>
@@ -1469,17 +1487,16 @@ export default function App() {
                   <button
                     onClick={() => {
                       setActiveTab("dashboard");
-                      setActiveMenuId("profile");
                       window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
                       setDrawerOpen(false);
                     }}
-                    className="w-full text-left flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900/60 transition group cursor-pointer"
+                    className="w-full text-left flex items-center gap-2.5 p-2 rounded-xl hover:bg-white transition group cursor-pointer border border-transparent hover:border-slate-200"
                   >
-                    <div className="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 border border-[#232332]">
+                    <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
                       <User size={14} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-200">Complete Profile</span>
+                      <span className="text-xs font-bold text-slate-900">Complete Profile</span>
                       <span className="text-[10px] text-slate-500">View Profile →</span>
                     </div>
                   </button>
@@ -1489,9 +1506,7 @@ export default function App() {
                 <button
                   onClick={async () => {
                     try {
-                      console.log("[App] [Logout] Initiating Firebase Auth signOut...");
                       await signOut(auth);
-                      console.log("[App] [Logout] Firebase Auth signOut complete.");
                       localStorage.removeItem("linco_profile_details");
                       localStorage.removeItem("linco_profile_is_logged_in");
                       window.dispatchEvent(new Event("storage"));
@@ -1499,8 +1514,6 @@ export default function App() {
                       addToast("Successfully logged out.", "success");
                       setDrawerOpen(false);
                     } catch (err) {
-                      console.error("[App] [Logout] Firebase Auth signOut failed:", err);
-                      addToast("Error during sign out. Cleared local session.", "warn");
                       localStorage.removeItem("linco_profile_details");
                       localStorage.removeItem("linco_profile_is_logged_in");
                       window.dispatchEvent(new Event("storage"));
@@ -1508,9 +1521,9 @@ export default function App() {
                       setDrawerOpen(false);
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold tracking-wide text-rose-400 hover:text-rose-300 hover:bg-rose-950/10 transition cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer"
                 >
-                  <ShieldAlert size={16} />
+                  <ShieldAlert size={15} />
                   <span>Logout</span>
                 </button>
               </div>
@@ -1519,60 +1532,65 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* BOTTOM STICKY NAVIGATION */}
+      {/* BOTTOM STICKY NAVIGATION (Mobile-First Consumer Bar) */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 z-30 bg-[#0c0e16]/95 border-t border-slate-800 backdrop-blur-xl px-2 py-1.5 select-none"
+        className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 border-t border-slate-200 backdrop-blur-xl px-2 py-1.5 select-none shadow-[0_-2px_12px_rgba(15,23,42,0.04)] md:hidden"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0.5rem))" }}
       >
-        <div className="w-full max-w-lg mx-auto flex items-center justify-around">
+        <div className="w-full max-w-md mx-auto flex items-center justify-around">
           <button
             onClick={() => setActiveTab("home")}
-            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-semibold transition-colors cursor-pointer ${
               activeTab === "home" 
-                ? "text-indigo-400" 
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-indigo-600 font-bold" 
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <Home size={18} className={activeTab === "home" ? "text-indigo-400" : "text-slate-400"} />
+            <Home size={19} className={activeTab === "home" ? "text-indigo-600" : "text-slate-400"} />
             <span>{t("nav.home", "Home")}</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("feed")}
-            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
+            onClick={() => {
+              setActiveTab("feed");
+              loadPosts(true);
+            }}
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-semibold transition-colors cursor-pointer ${
               activeTab === "feed" 
-                ? "text-indigo-400" 
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-indigo-600 font-bold" 
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <Compass size={18} className={activeTab === "feed" ? "text-indigo-400" : "text-slate-400"} />
-            <span>{t("nav.feed", "Feed")}</span>
+            <Compass size={19} className={activeTab === "feed" ? "text-indigo-600" : "text-slate-400"} />
+            <span>{t("nav.feed", "Explore")}</span>
           </button>
 
           <button
             onClick={() => setActiveTab("report")}
-            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-semibold transition-colors cursor-pointer ${
               activeTab === "report" 
-                ? "text-indigo-400" 
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-indigo-600 font-bold" 
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <Plus size={18} className={activeTab === "report" ? "text-indigo-400" : "text-slate-400"} />
+            <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+              <Plus size={15} />
+            </div>
             <span>{t("nav.report", "Report")}</span>
           </button>
 
           <button
             onClick={() => setActiveTab("matches")}
-            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer relative ${
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-semibold transition-colors cursor-pointer relative ${
               activeTab === "matches" 
-                ? "text-indigo-400" 
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-indigo-600 font-bold" 
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <Sparkles size={18} className={activeTab === "matches" ? "text-indigo-400" : "text-slate-400"} />
+            <Sparkles size={19} className={activeTab === "matches" ? "text-indigo-600" : "text-slate-400"} />
             <span>{t("nav.matches", "Matches")}</span>
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-bold text-white">
+              <span className="absolute top-0 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-bold text-white">
                 {unreadCount}
               </span>
             )}
@@ -1580,13 +1598,13 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-semibold transition-colors cursor-pointer ${
               activeTab === "dashboard" 
-                ? "text-indigo-400" 
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-indigo-600 font-bold" 
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <User size={18} className={activeTab === "dashboard" ? "text-indigo-400" : "text-slate-400"} />
+            <User size={19} className={activeTab === "dashboard" ? "text-indigo-600" : "text-slate-400"} />
             <span>{t("nav.profile", "Profile")}</span>
           </button>
         </div>
@@ -1832,47 +1850,48 @@ export default function App() {
                   }}
                 />
 
-                <div className="bg-[#07070a]/90 border border-[#161621] rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-xl space-y-4">
-                  <h3 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                    🛡️ Trusted by Design
-                  </h3>
+                <div className="bg-white border border-slate-200/90 rounded-3xl p-5 md:p-6 shadow-xs space-y-4 text-left">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[11px] font-semibold text-indigo-700">
+                    <ShieldCheck size={13} className="text-indigo-600" />
+                    <span>Trusted by Design</span>
+                  </div>
                   
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold text-slate-100 leading-snug">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-bold text-slate-900 leading-snug">
                       Your identity stays private.
                     </p>
-                    <p className="text-sm font-bold text-slate-400 leading-snug">
-                      Your item doesn't.
+                    <p className="text-sm font-medium text-slate-500 leading-snug">
+                      Your item gets found.
                     </p>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                    Trusted by communities. Powered by AI. Built for everyone.
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Designed for genuine community recovery. No ads, no data selling, zero-dox contact protection.
                   </p>
 
-                  <div className="space-y-2 pt-3 text-[11px] font-medium text-slate-300 border-t border-[#1c1c26]/60">
+                  <div className="space-y-2 pt-3 text-xs font-medium text-slate-700 border-t border-slate-100">
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span className="text-emerald-600 font-bold">✓</span>
                       <span>Private by Default</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span className="text-emerald-600 font-bold">✓</span>
                       <span>Verified Claims</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">✓</span>
-                      <span>AI-Assisted Matching</span>
+                      <span className="text-emerald-600 font-bold">✓</span>
+                      <span>Smart Similarity Matching</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">✓</span>
-                      <span>Secure Communication</span>
+                      <span className="text-emerald-600 font-bold">✓</span>
+                      <span>Mutual Trust Contact Release</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-[#1c1c26]/60 text-[10px] font-bold uppercase tracking-wider">
-                    <span className={`w-2 h-2 rounded-full ${backendStatus === "live" ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-500 animate-pulse"}`} />
-                    <span className="text-slate-400 font-mono">
-                      {backendStatus === "live" ? "Operational • All Systems Available" : "Reconnecting..."}
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-[11px] font-medium">
+                    <span className={`w-2 h-2 rounded-full ${backendStatus === "live" ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`} />
+                    <span className="text-slate-500">
+                      {backendStatus === "live" ? "Network Operational" : "Connecting to network..."}
                     </span>
                   </div>
                 </div>

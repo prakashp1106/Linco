@@ -803,16 +803,16 @@ export function AuthFlow({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07090e]/95 backdrop-blur-sm overflow-y-auto px-4 py-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs overflow-y-auto px-4 py-8">
       {/* Main card viewport */}
-      <div className="relative w-full max-w-[420px] bg-[#0c0e16] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-center min-h-[500px] z-10 pointer-events-auto">
+      <div className="relative w-full max-w-[420px] bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-center min-h-[500px] z-10 pointer-events-auto">
         
         {!isConfigValid && (
-          <div className="absolute top-0 inset-x-0 bg-amber-950/40 border-b border-amber-800/30 px-6 py-2.5 text-xs text-amber-200 z-30 flex items-center space-x-2">
+          <div className="absolute top-0 inset-x-0 bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-xs text-amber-900 z-30 flex items-center space-x-2">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
             <div className="flex-1">
-              <span className="font-medium block">Firebase Config Missing</span>
-              <span className="text-amber-300/80 text-[11px]">Verify firebase-applet-config.json in workspace.</span>
+              <span className="font-semibold block">Firebase Config Missing</span>
+              <span className="text-amber-700 text-[11px]">Verify firebase-applet-config.json in workspace.</span>
             </div>
           </div>
         )}
@@ -828,9 +828,9 @@ export function AuthFlow({
               <LincoLogo variant="stacked" size="hero" animated showTagline taglineText="Because every lost thing has a story." />
 
               {/* Progress Indicator */}
-              <div className="w-24 h-1 bg-slate-800 rounded-full overflow-hidden relative mt-4">
+              <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden relative mt-4">
                 <div 
-                  className="absolute top-0 bottom-0 w-1/2 bg-indigo-500 rounded-full animate-pulse"
+                  className="absolute top-0 bottom-0 w-1/2 bg-indigo-600 rounded-full animate-pulse"
                   style={{ left: "25%" }}
                 />
               </div>
@@ -846,7 +846,7 @@ export function AuthFlow({
               {/* Header */}
               <div className="text-center space-y-2 pt-2">
                 <LincoLogo variant="stacked" size="lg" className="mb-2" />
-                <p className="text-xs text-slate-400 leading-relaxed max-w-[290px] mx-auto">
+                <p className="text-xs text-slate-600 leading-relaxed max-w-[290px] mx-auto">
                   Recover lost belongings safely through trusted citizens and intelligent verification.
                 </p>
               </div>
@@ -857,9 +857,9 @@ export function AuthFlow({
                 <button
                   disabled={loading}
                   onClick={() => navigateTo("signup")}
-                  className="w-full h-11 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-slate-200 font-medium text-xs transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                  className="w-full h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 font-semibold text-xs transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                 >
-                  <Mail size={14} className="text-indigo-400 shrink-0" />
+                  <Mail size={14} className="text-indigo-600 shrink-0" />
                   <span>Get Started with Email</span>
                 </button>
 
@@ -867,7 +867,7 @@ export function AuthFlow({
                 <button
                   disabled={loading}
                   onClick={handleGoogleSignIn}
-                  className="w-full h-11 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-slate-200 font-medium text-xs transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+                  className="w-full h-11 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-xs transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path fill="#EA4335" d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.93 1 12 1 7.24 1 3.2 3.73 1.24 7.74l3.8 2.95C5.93 7.33 8.74 5.04 12 5.04z" />
@@ -882,9 +882,9 @@ export function AuthFlow({
                 <button
                   type="button"
                   onClick={handlePhoneAuthClick}
-                  className="w-full h-11 rounded-xl bg-[#121520]/70 hover:bg-[#121520] border border-slate-800/80 text-slate-400 font-medium text-xs transition flex items-center justify-center gap-2.5 cursor-pointer group"
+                  className="w-full h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-xs transition flex items-center justify-center gap-2.5 cursor-pointer group shadow-2xs"
                 >
-                  <svg className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-slate-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-slate-700 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                     <line x1="12" y1="18" x2="12" y2="18.01" />
                   </svg>
@@ -893,12 +893,12 @@ export function AuthFlow({
               </div>
 
               {/* Navigation Footer */}
-              <div className="text-center pt-2 pb-1 border-t border-slate-800/60">
-                <span className="text-xs text-slate-400">
+              <div className="text-center pt-2 pb-1 border-t border-slate-100">
+                <span className="text-xs text-slate-500">
                   Already have an account?{" "}
                   <button 
                     onClick={() => navigateTo("login")}
-                    className="text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer hover:underline ml-1"
+                    className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
                     Sign In
                   </button>
@@ -916,22 +916,22 @@ export function AuthFlow({
               {/* Back Button */}
               <button 
                 onClick={() => navigateTo("welcome")}
-                className="p-2 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-slate-800"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition inline-flex items-center justify-center cursor-pointer border border-slate-200 shadow-2xs"
               >
                 <ArrowLeft size={14} />
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-semibold text-lg text-slate-100">Welcome Back</h2>
-                <p className="text-xs text-slate-400">Sign in to your LINCO account to resume tracking.</p>
+                <h2 className="font-bold text-lg text-slate-900">Welcome Back</h2>
+                <p className="text-xs text-slate-500">Sign in to your LINCO account to resume tracking.</p>
               </div>
 
               <form onSubmit={(e) => handleEmailLogin(e)} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300 block">Email or Username</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Email or Username</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
                     </span>
                     <input
@@ -939,28 +939,28 @@ export function AuthFlow({
                       placeholder="you@domain.com or username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.email ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.email && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.email}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.email}</span>
                   )}
                 </div>
 
                 {/* Password Field */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-medium text-slate-300 block">Password</label>
+                    <label className="text-xs font-semibold text-slate-700 block">Password</label>
                     <button
                       type="button"
                       onClick={() => navigateTo("forgot_password")}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
                     >
                       Forgot Password?
                     </button>
                   </div>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Lock size={14} />
                     </span>
                     <input
@@ -968,18 +968,18 @@ export function AuthFlow({
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full pl-11! pr-11! h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.password ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-11! h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.password ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 text-slate-500 hover:text-slate-300 cursor-pointer p-1 rounded hover:bg-slate-800/40"
+                      className="absolute right-3.5 text-slate-400 hover:text-slate-600 cursor-pointer p-1 rounded hover:bg-slate-100"
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                   {errors.password && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.password}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.password}</span>
                   )}
                 </div>
 
@@ -987,7 +987,7 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Sign In</span>
@@ -996,11 +996,11 @@ export function AuthFlow({
 
               {/* Create Account link */}
               <div className="text-center pt-1">
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-500">
                   New to LINCO?{" "}
                   <button
                     onClick={() => navigateTo("signup")}
-                    className="text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer hover:underline ml-1"
+                    className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
                     Create Account
                   </button>
@@ -1018,22 +1018,22 @@ export function AuthFlow({
               {/* Back Button */}
               <button 
                 onClick={() => navigateTo("welcome")}
-                className="p-2 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-slate-800"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition inline-flex items-center justify-center cursor-pointer border border-slate-200 shadow-2xs"
               >
                 <ArrowLeft size={14} />
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-semibold text-lg text-slate-100">Create Account</h2>
-                <p className="text-xs text-slate-400">Join the smart local recovery network.</p>
+                <h2 className="font-bold text-lg text-slate-900">Create Account</h2>
+                <p className="text-xs text-slate-500">Join the smart local recovery network.</p>
               </div>
 
               <form onSubmit={(e) => handleSignup(e)} className="space-y-3 pt-1">
                 {/* Full Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Full Name</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Full Name</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <User size={14} />
                     </span>
                     <input
@@ -1041,39 +1041,39 @@ export function AuthFlow({
                       placeholder="John Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.fullName ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.fullName && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.fullName}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.fullName}</span>
                   )}
                 </div>
 
                 {/* Username */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Username</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Username</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
-                      <Sparkles size={14} className="text-slate-500" />
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
+                      <Sparkles size={14} className="text-slate-400" />
                     </span>
                     <input
                       type="text"
                       placeholder="john_doe"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.username ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.username ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.username && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.username}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.username}</span>
                   )}
                 </div>
 
                 {/* Email */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Email Address</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Email Address</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
                     </span>
                     <input
@@ -1081,19 +1081,19 @@ export function AuthFlow({
                       placeholder="john@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.email ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.email && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.email}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.email}</span>
                   )}
                 </div>
 
                 {/* Password */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Password</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Password</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Lock size={14} />
                     </span>
                     <input
@@ -1101,26 +1101,26 @@ export function AuthFlow({
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full pl-11! pr-11! h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.password ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-11! h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.password ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 text-slate-500 hover:text-slate-300 cursor-pointer p-1 rounded hover:bg-slate-800/40"
+                      className="absolute right-3.5 text-slate-400 hover:text-slate-600 cursor-pointer p-1 rounded hover:bg-slate-100"
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                   {errors.password && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.password}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.password}</span>
                   )}
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Confirm Password</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Confirm Password</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Lock size={14} />
                     </span>
                     <input
@@ -1128,11 +1128,11 @@ export function AuthFlow({
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.confirmPassword ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.confirmPassword ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.confirmPassword && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.confirmPassword}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.confirmPassword}</span>
                   )}
                 </div>
 
@@ -1143,14 +1143,14 @@ export function AuthFlow({
                       type="checkbox"
                       checked={acceptPrivacy}
                       onChange={(e) => setAcceptPrivacy(e.target.checked)}
-                      className="mt-0.5 rounded border-slate-800 bg-[#121520] text-indigo-600 focus:ring-indigo-500/30 w-3.5 h-3.5 cursor-pointer accent-indigo-600"
+                      className="mt-0.5 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500/30 w-3.5 h-3.5 cursor-pointer accent-indigo-600"
                     />
-                    <span className="text-[11px] text-slate-400 leading-normal select-none group-hover:text-slate-300 transition-colors">
-                      I accept the <span className="text-indigo-400 hover:underline">Privacy Policy</span> and consent to encrypted data sharing.
+                    <span className="text-[11px] text-slate-600 leading-normal select-none group-hover:text-slate-900 transition-colors">
+                      I accept the <span className="text-indigo-600 hover:underline font-semibold">Privacy Policy</span> and consent to encrypted data sharing.
                     </span>
                   </label>
                   {errors.privacy && (
-                    <span className="text-[11px] text-rose-400 block font-medium">{errors.privacy}</span>
+                    <span className="text-[11px] text-rose-600 block font-semibold">{errors.privacy}</span>
                   )}
                 </div>
 
@@ -1158,7 +1158,7 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-2 disabled:opacity-60"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Create Account</span>
@@ -1167,11 +1167,11 @@ export function AuthFlow({
 
               {/* Already have an account */}
               <div className="text-center pt-1">
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-500">
                   Already registered?{" "}
                   <button
                     onClick={() => navigateTo("login")}
-                    className="text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer hover:underline ml-1"
+                    className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
                     Sign In
                   </button>
@@ -1189,22 +1189,22 @@ export function AuthFlow({
               {/* Back Button */}
               <button 
                 onClick={() => navigateTo("login")}
-                className="p-2 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] text-slate-400 hover:text-white transition inline-flex items-center justify-center cursor-pointer border border-slate-800"
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition inline-flex items-center justify-center cursor-pointer border border-slate-200 shadow-2xs"
               >
                 <ArrowLeft size={14} />
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-semibold text-lg text-slate-100">Reset Password</h2>
-                <p className="text-xs text-slate-400">We'll transmit a secure recovery connection link to retrieve control of your profile.</p>
+                <h2 className="font-bold text-lg text-slate-900">Reset Password</h2>
+                <p className="text-xs text-slate-500">We'll transmit a secure recovery connection link to retrieve control of your profile.</p>
               </div>
 
               <form onSubmit={(e) => handleForgotPasswordSubmit(e)} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300 block">Email Address</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Email Address</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
                     </span>
                     <input
@@ -1212,11 +1212,11 @@ export function AuthFlow({
                       placeholder="name@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none placeholder-slate-500 transition ${errors.email ? "border-rose-500/50 focus:border-rose-500" : ""}`}
+                      className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
                     />
                   </div>
                   {errors.email && (
-                    <span className="text-[11px] text-rose-400 font-medium">{errors.email}</span>
+                    <span className="text-[11px] text-rose-600 font-semibold">{errors.email}</span>
                   )}
                 </div>
 
@@ -1224,7 +1224,7 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-2 disabled:opacity-60"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Send Reset Link</span>
@@ -1235,7 +1235,7 @@ export function AuthFlow({
               <div className="text-center pt-2">
                 <button
                   onClick={() => navigateTo("login")}
-                  className="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
                 >
                   Return to Sign In
                 </button>
@@ -1250,11 +1250,11 @@ export function AuthFlow({
               className="p-8 space-y-5 relative z-20 pointer-events-auto"
             >
               <div className="space-y-1 text-center">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-1.5">
-                  <User size={18} className="text-indigo-400" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center mx-auto mb-1.5">
+                  <User size={18} className="text-indigo-600" />
                 </div>
-                <h2 className="font-semibold text-lg text-slate-100">Set Up Your Profile</h2>
-                <p className="text-xs text-slate-400 leading-normal">
+                <h2 className="font-bold text-lg text-slate-900">Set Up Your Profile</h2>
+                <p className="text-xs text-slate-500 leading-normal">
                   Complete your profile so citizens can coordinate handovers with you.
                 </p>
               </div>
@@ -1265,7 +1265,7 @@ export function AuthFlow({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-full border border-slate-800 hover:border-indigo-500 transition overflow-hidden flex items-center justify-center bg-[#121520] cursor-pointer"
+                    className="w-16 h-16 rounded-full border border-slate-200 hover:border-indigo-500 transition overflow-hidden flex items-center justify-center bg-slate-100 cursor-pointer shadow-2xs"
                   >
                     {avatarUrl.startsWith("linear-gradient") ? (
                       <div 
@@ -1282,7 +1282,7 @@ export function AuthFlow({
                   <button
                     type="button"
                     onClick={cameraActive ? stopCamera : startCamera}
-                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-900 border border-slate-800 hover:border-indigo-500 transition text-slate-400 hover:text-white cursor-pointer"
+                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white border border-slate-200 hover:border-indigo-500 transition text-slate-600 hover:text-slate-900 cursor-pointer shadow-2xs"
                   >
                     <Camera size={11} />
                   </button>
@@ -1290,7 +1290,7 @@ export function AuthFlow({
 
                 {cameraActive ? (
                   <div className="space-y-2 w-full flex flex-col items-center">
-                    <div className="relative w-40 aspect-square rounded-xl overflow-hidden border border-slate-800 bg-black">
+                    <div className="relative w-40 aspect-square rounded-xl overflow-hidden border border-slate-200 bg-black shadow-2xs">
                       <video 
                         ref={videoRef} 
                         autoPlay 
@@ -1302,14 +1302,14 @@ export function AuthFlow({
                       <button
                         type="button"
                         onClick={stopCamera}
-                        className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 font-medium rounded-lg text-xs cursor-pointer"
+                        className="px-2.5 py-1 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer shadow-2xs"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={capturePhoto}
-                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs cursor-pointer"
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs cursor-pointer shadow-2xs"
                       >
                         Take Snapshot
                       </button>
@@ -1320,9 +1320,9 @@ export function AuthFlow({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-2.5 py-1 bg-[#121520] border border-slate-800 text-slate-300 font-medium rounded-lg text-xs cursor-pointer hover:border-slate-700 flex items-center gap-1.5"
+                      className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer hover:bg-slate-50 flex items-center gap-1.5 shadow-2xs"
                     >
-                      <Upload size={12} className="text-indigo-400" />
+                      <Upload size={12} className="text-indigo-600" />
                       <span>Choose Photo</span>
                     </button>
                   </div>
@@ -1340,9 +1340,9 @@ export function AuthFlow({
               <form onSubmit={(e) => handleProfileSetupSubmit(e)} className="space-y-3.5">
                 {/* Full Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Full Name (Required)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Full Name (Required)</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <User size={13} />
                     </span>
                     <input
@@ -1350,7 +1350,7 @@ export function AuthFlow({
                       placeholder="e.g. Rahul Sharma"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none transition"
+                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
                       required
                     />
                   </div>
@@ -1358,15 +1358,15 @@ export function AuthFlow({
 
                 {/* Username */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Username (Required)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Username (Required)</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 text-xs font-mono z-10 pointer-events-none">@</span>
+                    <span className="absolute left-3.5 text-slate-400 text-xs font-mono z-10 pointer-events-none">@</span>
                     <input
                       type="text"
                       placeholder="rahul_sharma"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none transition"
+                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
                       required
                     />
                   </div>
@@ -1374,9 +1374,9 @@ export function AuthFlow({
 
                 {/* City */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">City / Neighborhood (Required)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">City / Neighborhood (Required)</label>
                   <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <MapPin size={13} />
                     </span>
                     <input
@@ -1384,7 +1384,7 @@ export function AuthFlow({
                       placeholder="e.g. Kolkata, Salt Lake"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none transition"
+                      className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
                       required
                     />
                   </div>
@@ -1392,9 +1392,9 @@ export function AuthFlow({
 
                 {/* Bio */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300 block">Short Bio (Optional)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">Short Bio (Optional)</label>
                   <div className="relative flex items-start">
-                    <span className="absolute left-3.5 top-3 text-slate-500 z-10 pointer-events-none">
+                    <span className="absolute left-3.5 top-3 text-slate-400 z-10 pointer-events-none">
                       <AlignLeft size={13} />
                     </span>
                     <textarea
@@ -1402,7 +1402,7 @@ export function AuthFlow({
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={2}
-                      className="w-full pl-11! pr-4 py-2.5 text-xs text-slate-100 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl outline-none resize-none transition"
+                      className="w-full pl-11! pr-4 py-2.5 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none resize-none transition shadow-2xs"
                     />
                   </div>
                 </div>
@@ -1411,7 +1411,7 @@ export function AuthFlow({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-2 disabled:opacity-60"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Complete Profile Setup</span>

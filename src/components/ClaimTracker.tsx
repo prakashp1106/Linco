@@ -39,26 +39,26 @@ interface ClaimTrackerProps {
 
 export const SafeRecoveryGuidelines: React.FC = () => {
   return (
-    <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 space-y-3" id="safe-recovery-guidelines">
-      <h4 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 shadow-2xs text-left" id="safe-recovery-guidelines">
+      <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-indigo-600" />
         Safe Recovery Protocols
       </h4>
-      <div className="space-y-2 text-xs text-slate-400 leading-relaxed">
+      <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
         <div className="flex gap-2.5">
-          <span className="text-indigo-400 font-semibold shrink-0">1.</span>
+          <span className="text-indigo-600 font-bold shrink-0">1.</span>
           <p>Meet in public, highly visible, well-lit spaces like a metro station or cafe.</p>
         </div>
         <div className="flex gap-2.5">
-          <span className="text-indigo-400 font-semibold shrink-0">2.</span>
+          <span className="text-indigo-600 font-bold shrink-0">2.</span>
           <p>Never go alone—bring a friend or family member along for the handover.</p>
         </div>
         <div className="flex gap-2.5">
-          <span className="text-indigo-400 font-semibold shrink-0">3.</span>
+          <span className="text-indigo-600 font-bold shrink-0">3.</span>
           <p>Verify the item carefully in hand before releasing rewards or completing.</p>
         </div>
         <div className="flex gap-2.5">
-          <span className="text-indigo-400 font-semibold shrink-0">4.</span>
+          <span className="text-indigo-600 font-bold shrink-0">4.</span>
           <p>Use our Secure Chat to document and agree on meeting details.</p>
         </div>
       </div>
@@ -87,8 +87,8 @@ export const RecoveryTimelineSteps: React.FC<{ status: string; claimantTrusted: 
   ];
 
   return (
-    <div className="space-y-3 p-4 rounded-xl bg-[#121520] border border-slate-800" id="recovery-timeline-steps">
-      <h4 className="text-xs font-semibold text-slate-200">Recovery Status Timeline</h4>
+    <div className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs text-left" id="recovery-timeline-steps">
+      <h4 className="text-xs font-bold text-slate-900">Recovery Status Timeline</h4>
       <div className="space-y-3">
         {steps.map((step, idx) => {
           const stepNum = idx + 1;
@@ -98,24 +98,24 @@ export const RecoveryTimelineSteps: React.FC<{ status: string; claimantTrusted: 
           return (
             <div key={idx} className="flex gap-3 text-left items-start">
               <div className="flex flex-col items-center shrink-0">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all ${
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all shadow-2xs ${
                   isCompleted 
-                    ? "bg-emerald-500 text-white" 
+                    ? "bg-emerald-600 text-white" 
                     : isActive 
-                    ? "bg-indigo-600 text-white ring-2 ring-indigo-400/30" 
-                    : "bg-[#0c0e16] border border-slate-800 text-slate-500"
+                    ? "bg-indigo-600 text-white ring-2 ring-indigo-200" 
+                    : "bg-white border border-slate-200 text-slate-400"
                 }`}>
                   {isCompleted ? "✓" : stepNum}
                 </div>
                 {idx < steps.length - 1 && (
                   <div className={`w-[1px] h-5 my-1 ${
-                    isCompleted ? "bg-emerald-500/40" : isActive ? "bg-indigo-500/40" : "bg-slate-800"
+                    isCompleted ? "bg-emerald-300" : isActive ? "bg-indigo-300" : "bg-slate-200"
                   }`} />
                 )}
               </div>
               <div className="space-y-0.5 pb-0.5">
-                <span className={`text-xs font-medium block ${
-                  isActive ? "text-indigo-400 font-semibold" : isCompleted ? "text-emerald-400 font-medium" : "text-slate-400"
+                <span className={`text-xs block ${
+                  isActive ? "text-indigo-700 font-bold" : isCompleted ? "text-emerald-700 font-semibold" : "text-slate-600 font-medium"
                 }`}>
                   {step.label}
                 </span>
@@ -302,21 +302,21 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs overflow-y-auto"
           id="claim-tracker-overlay"
         >
           <motion.div
             initial={{ scale: 0.96, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, y: 12 }}
-            className={`bg-[#0c0e16] border border-slate-800 rounded-2xl p-5 md:p-6 w-full max-w-4xl shadow-2xl relative my-8 overflow-hidden max-h-[90vh] flex flex-col ${
+            className={`bg-white border border-slate-200 rounded-2xl p-5 md:p-6 w-full max-w-4xl shadow-xl relative my-8 overflow-hidden max-h-[90vh] flex flex-col text-slate-800 font-sans ${
               shaking ? "animate-shake" : ""
             }`}
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer z-10"
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
             >
               <X size={16} />
             </button>
@@ -324,14 +324,14 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
             {!claim ? (
               /* Track Lookup Screen */
               <div className="space-y-5 overflow-y-auto py-2">
-                <div className="border-b border-slate-800 pb-4">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 w-fit mb-2">
+                <div className="border-b border-slate-100 pb-4 text-left">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200 w-fit mb-2 shadow-2xs">
                     <ShieldCheck size={13} /> Secure Recovery Room
                   </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-slate-100">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900">
                     Enter Recovery Room
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     Access your secure, privacy-first hand-back workspace. Enter your Claim ID to chat safely, establish mutual trust, and coordinate your safe recovery.
                   </p>
                 </div>
@@ -348,10 +348,10 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                     />
                   </div>
 
-                  <div className="md:col-span-7 bg-[#121520] border border-slate-800 p-5 sm:p-6 rounded-xl flex flex-col justify-center space-y-4">
+                  <div className="md:col-span-7 bg-slate-50 border border-slate-200 p-5 sm:p-6 rounded-xl flex flex-col justify-center space-y-4 shadow-2xs">
                     <form onSubmit={handleLookupSubmit} className="space-y-4">
                       <div className="space-y-1.5 text-left">
-                        <label className="block text-xs font-medium text-slate-300">
+                        <label className="block text-xs font-semibold text-slate-700">
                           Claim ID / Verification ID
                         </label>
                         <input
@@ -359,20 +359,20 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                           placeholder="E.g., claim_1690000000"
                           value={claimId}
                           onChange={(e) => setClaimId(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#0c0e16] border border-slate-800 focus:border-indigo-500 outline-none text-xs text-slate-200 transition"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-900 transition shadow-2xs"
                           required
                         />
-                        <span className="text-xs text-slate-400 leading-relaxed block">
+                        <span className="text-xs text-slate-500 leading-relaxed block">
                           You can find your unique Claim ID on the confirmation screen of your submitted claim, or check your bookmarked magic link.
                         </span>
                       </div>
 
                       {errorMsg && (
-                        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1 text-left">
-                          <div className="flex items-center gap-2 text-rose-300 text-xs font-semibold">
-                            <AlertTriangle size={14} className="shrink-0 text-rose-400" /> Search Failed
+                        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1 text-left">
+                          <div className="flex items-center gap-2 text-rose-700 text-xs font-semibold">
+                            <AlertTriangle size={14} className="shrink-0 text-rose-600" /> Search Failed
                           </div>
-                          <p className="text-xs text-slate-400 leading-relaxed">
+                          <p className="text-xs text-rose-600 leading-relaxed">
                             {errorMsg}
                           </p>
                         </div>
@@ -382,14 +382,14 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                         <button
                           type="button"
                           onClick={onClose}
-                          className="flex-1 py-2.5 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                          className="flex-1 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer shadow-2xs"
                         >
                           Close
                         </button>
                         <button
                           type="submit"
                           disabled={loading}
-                          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition cursor-pointer text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95"
                         >
                           {loading ? (
                             <>
@@ -409,17 +409,17 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
               <div className="flex-1 flex flex-col overflow-hidden space-y-4">
                 
                 {/* Header info */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-slate-800 shrink-0 gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-slate-100 shrink-0 gap-3">
                   <div className="text-left">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs">
                         Room Active
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-500">
                         ID: {claim.id}
                       </span>
                     </div>
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-200 mt-1">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 mt-1">
                       Safe Handover: {claim.postTitle}
                     </h3>
                   </div>
@@ -427,14 +427,14 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={refreshClaimDetails}
-                      className="p-2 rounded-lg bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                      className="p-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer shadow-2xs"
                       title="Sync Room state"
                     >
                       <RefreshCw size={13} />
                     </button>
                     <button
                       onClick={() => setClaim(null)}
-                      className="px-3 py-1.5 rounded-lg bg-[#121520] hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer shadow-2xs"
                     >
                       Lookup another
                     </button>
@@ -459,29 +459,29 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                     {/* Conditional Recovery States */}
                     {claim.status === "Pending" || claim.status === "Under Review" ? (
                       /* 1. Waiting for Finder Approval State */
-                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left space-y-2.5">
-                        <div className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold">
-                          <Clock size={13} className="animate-spin" /> Awaiting Finder Approval
+                      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-2.5 shadow-2xs">
+                        <div className="flex items-center gap-1.5 text-amber-800 text-xs font-bold">
+                          <Clock size={13} className="animate-spin text-amber-600" /> Awaiting Finder Approval
                         </div>
-                        <p className="text-xs text-slate-400 leading-relaxed">
+                        <p className="text-xs text-amber-700 leading-relaxed">
                           Your claim has been submitted and is currently being evaluated by the item finder. Once approved, the secure private chat and mutual trust protocols will automatically activate.
                         </p>
-                        <div className="p-3 bg-[#0c0e16] rounded-lg border border-slate-800 text-xs text-slate-400">
+                        <div className="p-3 bg-white rounded-lg border border-amber-200 text-xs text-slate-600">
                           Estimated response time: ~4 hours. You can bookmark the magic link below to return to this room at any time.
                         </div>
                       </div>
                     ) : claim.status === "Rejected" ? (
                       /* 2. Rejected State */
-                      <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-left space-y-2.5">
-                        <div className="flex items-center gap-1.5 text-rose-400 text-xs font-semibold">
-                          <AlertTriangle size={13} /> Claim Evaluation Unsuccessful
+                      <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-left space-y-2.5 shadow-2xs">
+                        <div className="flex items-center gap-1.5 text-rose-800 text-xs font-bold">
+                          <AlertTriangle size={13} className="text-rose-600" /> Claim Evaluation Unsuccessful
                         </div>
-                        <p className="text-xs text-slate-400 leading-relaxed">
+                        <p className="text-xs text-rose-700 leading-relaxed">
                           The finder could not verify item ownership based on the answers provided. Please double check that your details and description match.
                         </p>
                         <a 
                           href="mailto:lincoindia00@gmail.com?subject=Claim Appeal"
-                          className="block text-center py-2 bg-rose-500/10 hover:bg-rose-500/15 text-rose-400 font-medium text-xs rounded-lg border border-rose-500/20"
+                          className="block text-center py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold text-xs rounded-lg border border-rose-200 shadow-2xs"
                         >
                           Submit Verification Appeal
                         </a>
@@ -491,31 +491,31 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                       <div className="space-y-4">
                         
                         {/* Trust Confirmation Section */}
-                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 text-left space-y-3">
+                        <div className="p-4 rounded-xl bg-white border border-slate-200 text-left space-y-3 shadow-2xs">
                           <div className="flex items-center justify-between">
-                            <h4 className="text-xs font-semibold text-slate-200">
+                            <h4 className="text-xs font-bold text-slate-900">
                               Mutual Trust Check
                             </h4>
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-slate-500 font-medium">
                               Privacy Lock
                             </span>
                           </div>
                           
-                          <p className="text-xs text-slate-400 leading-relaxed">
-                            Direct contacts remain hidden to protect against spam or unsafe situations. Once both you and the finder click **Confirm Trust**, contact numbers will automatically unlock.
+                          <p className="text-xs text-slate-600 leading-relaxed">
+                            Direct contacts remain hidden to protect against spam or unsafe situations. Once both you and the finder click <strong>Confirm Trust</strong>, contact numbers will automatically unlock.
                           </p>
 
                           {/* Confidence Meters */}
                           <div className="space-y-2 py-1 text-xs">
-                            <div className="flex justify-between items-center bg-[#0c0e16] px-3 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400">Owner (You):</span>
-                              <span className={claim.claimantTrusted ? "text-emerald-400 font-medium" : "text-amber-400"}>
+                            <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                              <span className="text-slate-600 font-medium">Owner (You):</span>
+                              <span className={claim.claimantTrusted ? "text-emerald-700 font-semibold" : "text-amber-700 font-medium"}>
                                 {claim.claimantTrusted ? "✓ Trust Confirmed" : "Awaiting Confirmation"}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center bg-[#0c0e16] px-3 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400">Finder:</span>
-                              <span className={claim.finderTrusted ? "text-emerald-400 font-medium" : "text-amber-400"}>
+                            <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                              <span className="text-slate-600 font-medium">Finder:</span>
+                              <span className={claim.finderTrusted ? "text-emerald-700 font-semibold" : "text-amber-700 font-medium"}>
                                 {claim.finderTrusted ? "✓ Trust Confirmed" : "Awaiting Confirmation"}
                               </span>
                             </div>
@@ -525,7 +525,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                             <button
                               onClick={handleConfirmTrust}
                               disabled={loading}
-                              className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition active:scale-97 cursor-pointer"
+                              className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition active:scale-97 cursor-pointer shadow-2xs"
                             >
                               Confirm I Trust Finder
                             </button>
@@ -534,25 +534,25 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
 
                         {/* Unlocked Contacts Section */}
                         {(claim.status === "Contact Unlocked" || claim.status === "Resolved" || (claim.claimantTrusted && claim.finderTrusted)) && (
-                          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-left space-y-3 animate-fade-in">
-                            <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
-                              <LockOpen size={13} /> Contact Channel Unlocked
+                          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-left space-y-3 animate-fade-in shadow-2xs">
+                            <div className="flex items-center gap-1.5 text-emerald-800 text-xs font-bold">
+                              <LockOpen size={13} className="text-emerald-600" /> Contact Channel Unlocked
                             </div>
                             
-                            <p className="text-xs text-slate-300 leading-relaxed">
+                            <p className="text-xs text-emerald-800 leading-relaxed">
                               Mutual trust established! You can now access telephone and messaging links to coordinate the safe handover meeting.
                             </p>
 
-                            <div className="bg-[#0c0e16] p-3 rounded-lg border border-slate-800 space-y-2 text-center">
-                              <span className="text-xs text-slate-400 block">Finder's Contact Number</span>
-                              <p className="text-base font-semibold text-emerald-400 tracking-wider">
+                            <div className="bg-white p-3 rounded-lg border border-emerald-200 space-y-2 text-center shadow-2xs">
+                              <span className="text-xs text-slate-500 block font-medium">Finder's Contact Number</span>
+                              <p className="text-base font-bold text-emerald-700 tracking-wider">
                                 {claim.revealedOwnerContact || "+91 8838271822"}
                               </p>
                               
                               <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                                 <button
                                   onClick={() => handleCopyContact(claim.revealedOwnerContact || "+91 8838271822")}
-                                  className="py-1.5 rounded-lg bg-[#121520] border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer font-medium"
+                                  className="py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition cursor-pointer font-semibold shadow-2xs"
                                 >
                                   Copy Number
                                 </button>
@@ -560,7 +560,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                                   href={getWhatsAppLink(claim.revealedOwnerContact || "8838271822", `Hi! I verified my claim for '${claim.postTitle}' on LINCO. Let's arrange a handover meeting!`)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-center transition cursor-pointer flex items-center justify-center gap-1 font-medium"
+                                  className="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-center transition cursor-pointer flex items-center justify-center gap-1 font-semibold shadow-2xs"
                                 >
                                   <MessageSquare size={12} /> WhatsApp
                                 </a>
@@ -570,24 +570,24 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                         )}
 
                         {/* Direct Handover Receipt confirmation */}
-                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 text-left space-y-3">
-                          <h4 className="text-xs font-semibold text-slate-200">
+                        <div className="p-4 rounded-xl bg-white border border-slate-200 text-left space-y-3 shadow-2xs">
+                          <h4 className="text-xs font-bold text-slate-900">
                             Confirm Meeting Handover
                           </h4>
-                          <p className="text-xs text-slate-400 leading-relaxed">
+                          <p className="text-xs text-slate-600 leading-relaxed">
                             Once you meet and have your item back in hand, please confirm below to complete the recovery loop.
                           </p>
 
                           <div className="space-y-2 py-1 text-xs">
-                            <div className="flex justify-between items-center bg-[#0c0e16] px-3 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400">Received (You):</span>
-                              <span className={claim.ownerConfirmedReceived ? "text-emerald-400 font-medium" : "text-slate-400"}>
+                            <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                              <span className="text-slate-600 font-medium">Received (You):</span>
+                              <span className={claim.ownerConfirmedReceived ? "text-emerald-700 font-semibold" : "text-slate-500"}>
                                 {claim.ownerConfirmedReceived ? "✓ Yes, Received" : "Awaiting Confirmation"}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center bg-[#0c0e16] px-3 py-2 rounded-lg border border-slate-800">
-                              <span className="text-slate-400">Returned (Finder):</span>
-                              <span className={claim.finderConfirmedReturned ? "text-emerald-400 font-medium" : "text-slate-400"}>
+                            <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                              <span className="text-slate-600 font-medium">Returned (Finder):</span>
+                              <span className={claim.finderConfirmedReturned ? "text-emerald-700 font-semibold" : "text-slate-500"}>
                                 {claim.finderConfirmedReturned ? "✓ Yes, Returned" : "Awaiting Confirmation"}
                               </span>
                             </div>
@@ -597,7 +597,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                             <button
                               onClick={handleConfirmReceipt}
                               disabled={loading}
-                              className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition active:scale-97 cursor-pointer"
+                              className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition active:scale-97 cursor-pointer shadow-2xs"
                             >
                               I Have Received My Item
                             </button>
@@ -609,14 +609,14 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                   </div>
 
                   {/* Right Column (7/12) - Secure Handover Chat Box */}
-                  <div className="lg:col-span-7 bg-[#121520] border border-slate-800 rounded-xl flex flex-col overflow-hidden h-full min-h-[350px]">
+                  <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden h-full min-h-[350px] shadow-2xs">
                     
                     {/* Chat header */}
-                    <div className="px-4 py-2.5 border-b border-slate-800 bg-[#0c0e16] flex items-center gap-2 shrink-0">
+                    <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50 flex items-center gap-2 shrink-0">
                       <div className="w-2 h-2 rounded-full bg-emerald-500" />
                       <div className="text-left">
-                        <span className="text-xs font-medium text-slate-200 block">Secure Recovery Chat</span>
-                        <span className="text-[11px] text-slate-400 block">Coordinated handover channel</span>
+                        <span className="text-xs font-bold text-slate-900 block">Secure Recovery Chat</span>
+                        <span className="text-[11px] text-slate-500 block">Coordinated handover channel</span>
                       </div>
                     </div>
 
@@ -624,8 +624,8 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                     <div className="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages-container">
                       {claim.status === "Pending" || claim.status === "Under Review" ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2">
-                          <Lock size={20} className="text-slate-500" />
-                          <p className="text-xs text-slate-400 max-w-xs">
+                          <Lock size={20} className="text-slate-400" />
+                          <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
                             Chat is locked. Once the finder evaluates and approves your verification answers, the private room chat activates.
                           </p>
                         </div>
@@ -640,8 +640,8 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                               <div className={`max-w-[85%] rounded-xl px-3 py-2 text-left text-xs ${
                                 isMe 
-                                  ? "bg-indigo-600 text-white font-medium rounded-tr-none" 
-                                  : "bg-[#0c0e16] border border-slate-800 text-slate-200 rounded-tl-none"
+                                  ? "bg-indigo-600 text-white font-medium rounded-tr-none shadow-2xs" 
+                                  : "bg-slate-100 border border-slate-200 text-slate-800 rounded-tl-none shadow-2xs"
                               }`}>
                                 <span className="block text-[10px] opacity-75 mb-0.5 font-medium">
                                   {isMe ? "You" : "Item Finder"}
@@ -656,7 +656,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                     </div>
 
                     {/* Chat input form */}
-                    <form onSubmit={handleSendMessage} className="p-2.5 border-t border-slate-800 bg-[#0c0e16] flex gap-2 shrink-0">
+                    <form onSubmit={handleSendMessage} className="p-2.5 border-t border-slate-100 bg-slate-50 flex gap-2 shrink-0">
                       <input
                         type="text"
                         placeholder={
@@ -667,12 +667,12 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         disabled={claim.status === "Pending" || claim.status === "Under Review" || claim.status === "Rejected" || sendingMsg}
-                        className="flex-1 px-3 py-2 rounded-lg bg-[#121520] border border-slate-800 focus:border-indigo-500 outline-none text-xs text-slate-200 transition placeholder-slate-500"
+                        className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-200 focus:border-indigo-500 outline-none text-xs text-slate-900 transition placeholder-slate-400 shadow-2xs"
                       />
                       <button
                         type="submit"
                         disabled={!newMessage.trim() || sendingMsg}
-                        className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white transition cursor-pointer"
+                        className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white transition cursor-pointer shadow-2xs"
                       >
                         <Send size={13} />
                       </button>
@@ -682,8 +682,8 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                 </div>
 
                 {/* Bookmark / Magic Link */}
-                <div className="space-y-1 text-left bg-[#121520] p-2.5 rounded-xl border border-slate-800 shrink-0">
-                  <span className="block text-xs font-medium text-slate-400">
+                <div className="space-y-1 text-left bg-slate-50 p-2.5 rounded-xl border border-slate-200 shrink-0 shadow-2xs">
+                  <span className="block text-xs font-semibold text-slate-700">
                     Recovery Room Direct Bookmark Link
                   </span>
                   <div className="flex gap-2">
@@ -691,11 +691,11 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                       type="text"
                       readOnly
                       value={getMagicLink()}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-[#0c0e16] border border-slate-800 text-xs text-slate-300 outline-none truncate"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 outline-none truncate shadow-2xs"
                     />
                     <button
                       onClick={handleCopyMagicLink}
-                      className="px-3 py-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 text-xs font-medium transition flex items-center gap-1 border border-indigo-500/20 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition flex items-center gap-1 border border-indigo-200 cursor-pointer shadow-2xs"
                     >
                       {copiedLink ? "Copied" : "Copy"}
                     </button>
@@ -705,7 +705,7 @@ export const ClaimTracker: React.FC<ClaimTrackerProps> = ({
                 <div className="pt-2 shrink-0 flex gap-3">
                   <button
                     onClick={onClose}
-                    className="w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition text-xs font-medium cursor-pointer"
+                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition text-xs font-semibold cursor-pointer shadow-2xs"
                   >
                     Close Recovery Room
                   </button>

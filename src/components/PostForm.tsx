@@ -556,15 +556,15 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
   }
 
   return (
-    <div className="bg-[#07070a] border border-[#161621] rounded-[32px] p-6 sm:p-8 md:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden" id="post-form-card">
+    <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden text-slate-900" id="post-form-card">
       {/* Clean Stepper Header */}
-      <div className="mb-8 pb-5 border-b border-[#181b2a] flex flex-col gap-5 text-left">
+      <div className="mb-8 pb-5 border-b border-slate-100 flex flex-col gap-5 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <span className="text-[11px] font-sans font-bold tracking-wider text-indigo-400 uppercase bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+            <span className="text-[11px] font-medium tracking-wider text-slate-600 uppercase bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
               Verified Community Listing
             </span>
-            <h2 className="text-xl md:text-2xl font-bold text-slate-100 mt-2.5">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900 mt-2.5">
               {form.fType === "Lost" ? "Report a Lost Item" : "Report a Found Item"}
             </h2>
             {/* Encouraging subtitle */}
@@ -572,7 +572,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               key={currentStep}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-xs sm:text-sm text-slate-400 mt-1 font-medium flex items-center gap-1.5"
+              className="text-xs sm:text-sm text-slate-500 mt-1 font-medium flex items-center gap-1.5"
             >
               {getEncouragingText(currentStep)}
             </motion.p>
@@ -580,12 +580,12 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
           {currentStep <= 8 && (
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <span className="font-mono text-[11px] font-bold tracking-wider text-slate-400">
-                Step <span className="text-indigo-400">{getVisualStepNumber(currentStep)}</span> of {totalSteps}
+              <span className="font-mono text-[11px] font-bold tracking-wider text-slate-500">
+                Step <span className="text-slate-900 font-bold">{getVisualStepNumber(currentStep)}</span> of {totalSteps}
               </span>
-              <div className="w-28 sm:w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
+              <div className="w-28 sm:w-36 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
                 <motion.div
-                  className="absolute top-0 left-0 h-full bg-indigo-500 rounded-full"
+                  className="absolute top-0 left-0 h-full bg-slate-900 rounded-full"
                   initial={{ width: "12%" }}
                   animate={{ width: `${(getVisualStepNumber(currentStep) / totalSteps) * 100}%` }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
@@ -594,7 +594,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             </div>
           )}
           {currentStep === 9 && (
-            <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-[11px] tracking-wider uppercase font-mono shrink-0">
+            <div className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-[11px] tracking-wider uppercase font-mono shrink-0">
               Final Review
             </div>
           )}
@@ -602,7 +602,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
         {/* Stepper Timeline Tracker */}
         {currentStep <= 8 && (
-          <div className="w-full border-t border-[#181b2a] pt-4">
+          <div className="w-full border-t border-slate-100 pt-4">
             <div className="flex items-center justify-between gap-1 w-full overflow-x-auto pb-2 scrollbar-none">
               {stepNames.map((name, i) => {
                 const stepNum = i + 1;
@@ -617,20 +617,20 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         onClick={() => setCurrentStep(stepNum)}
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold border transition-all duration-200 ${
                           isCompleted
-                            ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300 cursor-pointer"
+                            ? "bg-slate-900 border-slate-900 text-white cursor-pointer"
                             : isCurrent
-                            ? "bg-indigo-600 border-indigo-500 text-white shadow-sm"
-                            : "bg-[#0c0e15] border-slate-800 text-slate-500 cursor-not-allowed"
+                            ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                            : "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
                         }`}
                       >
                         {isCompleted ? <Check size={12} className="stroke-[2.5]" /> : stepNum}
                       </button>
-                      <span className={`text-[11px] font-medium tracking-tight hidden sm:inline ${isCurrent ? "text-slate-200" : isCompleted ? "text-slate-400" : "text-slate-600"}`}>
+                      <span className={`text-[11px] font-medium tracking-tight hidden sm:inline ${isCurrent ? "text-slate-900 font-semibold" : isCompleted ? "text-slate-600" : "text-slate-400"}`}>
                         {name}
                       </span>
                     </div>
                     {i < stepNames.length - 1 && (
-                      <div className={`h-[1px] flex-1 min-w-[8px] ${currentStep > stepNum ? "bg-indigo-500/40" : "bg-[#181b2a]"}`} />
+                      <div className={`h-[1px] flex-1 min-w-[8px] ${currentStep > stepNum ? "bg-slate-900" : "bg-slate-200"}`} />
                     )}
                   </React.Fragment>
                 );
@@ -642,7 +642,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
       {/* Draft Restore Notification */}
       {draftRestoredNotice && (
-        <div className="mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="mb-5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2">
             <span className="text-base">📝</span>
             <span className="font-semibold">
@@ -653,14 +653,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             <button
               type="button"
               onClick={restoreDraft}
-              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold cursor-pointer transition"
+              className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer transition"
             >
               {t("report.restoreDraft", "Restore Draft")}
             </button>
             <button
               type="button"
               onClick={dismissDraft}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold cursor-pointer transition"
+              className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold cursor-pointer transition"
             >
               {t("report.dismiss", "Dismiss")}
             </button>
@@ -675,9 +675,9 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-5 p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-cyan-300 text-[10px] font-bold flex items-center gap-2 text-left"
+            className="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-[10px] font-semibold flex items-center gap-2 text-left"
           >
-            <Sparkles size={12} className="shrink-0 text-cyan-400 animate-spin" />
+            <Sparkles size={12} className="shrink-0 text-slate-700 animate-spin" />
             <span>{aiFillNotice}</span>
           </motion.div>
         )}
@@ -685,31 +685,31 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
       {/* Live Completeness Score Card */}
       {currentStep <= 8 && (
-        <div className="mb-6 p-4 rounded-2xl bg-[#0c0c14]/80 border border-[#1c1c26] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-6 p-4 rounded-2xl bg-slate-50/80 border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block">
+            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
               Report Quality
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-slate-100">{completenessStars}</span>
-              <span className="text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-800/80 px-2 py-0.5 rounded-md font-mono">
+              <span className="text-sm font-bold text-slate-900">{completenessStars}</span>
+              <span className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md font-mono">
                 {completenessScore}% Complete
               </span>
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-widest block mb-1">
-              ✨ Recommendations to improve AI matching:
+            <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+              ✨ Recommendations to improve matching:
             </span>
             {completenessTips.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {completenessTips.slice(0, 2).map((tip, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-300 bg-[#030304] border border-[#1c1c26] px-2.5 py-1 rounded-xl"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-700 bg-white border border-slate-200 px-2.5 py-1 rounded-xl"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                     {tip}
                   </span>
                 ))}
@@ -720,8 +720,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 )}
               </div>
             ) : (
-              <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-                ✓ Stellar report content ready for perfect Gemini comparative scan!
+              <span className="text-xs text-emerald-600 font-medium flex items-center gap-1.5">
+                ✓ Stellar report content ready for verified comparative scan!
               </span>
             )}
           </div>
@@ -739,8 +739,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Which path are we reporting?</h3>
-              <p className="text-xs text-slate-500">Pick a flow to begin your AI-assisted retrieval journey.</p>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Which path are we reporting?</h3>
+              <p className="text-xs text-slate-500">Pick a flow to begin your retrieval process.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -751,26 +751,24 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   setLocalErrors({});
                   setTimeout(() => setCurrentStep(2), 250); // Auto advances smoothly
                 }}
-                className={`p-6 sm:p-8 rounded-[24px] border text-left flex flex-col justify-between h-56 transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                className={`p-6 sm:p-8 rounded-2xl border text-left flex flex-col justify-between h-56 transition-all duration-200 group cursor-pointer relative overflow-hidden ${
                   form.fType === "Lost"
-                    ? "bg-rose-950/15 border-rose-500/80 text-rose-300 shadow-[0_0_30px_rgba(239,68,68,0.15)] scale-[1.01]"
-                    : "bg-[#07070a]/90 border-[#161621] hover:border-rose-500/30 text-slate-400 hover:text-slate-200"
+                    ? "bg-rose-50 border-2 border-rose-500 text-rose-950 shadow-sm"
+                    : "bg-white border-slate-200 hover:border-rose-300 text-slate-700 hover:bg-slate-50/50"
                 }`}
               >
-                {/* Visual Accent */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 blur-2xl rounded-full" />
                 <div className="flex justify-between items-start">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-200 ${
-                    form.fType === "Lost" ? "bg-rose-500/20 text-rose-400" : "bg-slate-900/50 text-slate-400 group-hover:bg-rose-500/10 group-hover:text-rose-400"
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all duration-200 ${
+                    form.fType === "Lost" ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-600 group-hover:bg-rose-50 group-hover:text-rose-600"
                   }`}>
                     🔴
                   </div>
-                  {form.fType === "Lost" && <Check size={16} className="text-rose-400 stroke-[3]" />}
+                  {form.fType === "Lost" && <Check size={18} className="text-rose-600 stroke-[3]" />}
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-slate-100 tracking-tight uppercase">I Lost Something</h4>
+                  <h4 className="text-sm font-bold text-slate-900 tracking-tight">I Lost Something</h4>
                   <p className="text-xs text-slate-500 leading-normal">
-                    Create a detailed recovery ticket. Gemini matching scans active folders instantly.
+                    Create a detailed recovery ticket. Active reports scan active community records instantly.
                   </p>
                 </div>
               </button>
@@ -782,24 +780,22 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   setLocalErrors({});
                   setTimeout(() => setCurrentStep(2), 250); // Auto advances smoothly
                 }}
-                className={`p-6 sm:p-8 rounded-[24px] border text-left flex flex-col justify-between h-56 transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                className={`p-6 sm:p-8 rounded-2xl border text-left flex flex-col justify-between h-56 transition-all duration-200 group cursor-pointer relative overflow-hidden ${
                   form.fType === "Found"
-                    ? "bg-emerald-950/15 border-emerald-500/80 text-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.15)] scale-[1.01]"
-                    : "bg-[#07070a]/90 border-[#161621] hover:border-emerald-500/30 text-slate-400 hover:text-slate-200"
+                    ? "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 shadow-sm"
+                    : "bg-white border-slate-200 hover:border-emerald-300 text-slate-700 hover:bg-slate-50/50"
                 }`}
               >
-                {/* Visual Accent */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-2xl rounded-full" />
                 <div className="flex justify-between items-start">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-200 ${
-                    form.fType === "Found" ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-900/50 text-slate-400 group-hover:bg-emerald-500/10 group-hover:text-emerald-400"
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all duration-200 ${
+                    form.fType === "Found" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
                   }`}>
                     🟢
                   </div>
-                  {form.fType === "Found" && <Check size={16} className="text-emerald-400 stroke-[3]" />}
+                  {form.fType === "Found" && <Check size={18} className="text-emerald-600 stroke-[3]" />}
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-slate-100 tracking-tight uppercase">I Found Something</h4>
+                  <h4 className="text-sm font-bold text-slate-900 tracking-tight">I Found Something</h4>
                   <p className="text-xs text-slate-500 leading-normal">
                     Report cataloged findings. Coordinate safely to locate the verified rightful owner.
                   </p>
@@ -807,7 +803,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               </button>
             </div>
             {localErrors.type && (
-              <p className="text-[11px] text-rose-400 font-semibold flex items-center gap-1.5">
+              <p className="text-[11px] text-rose-600 font-semibold flex items-center gap-1.5">
                 <AlertCircle size={12} /> {localErrors.type}
               </p>
             )}
@@ -828,8 +824,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
-                      {t("report.step2.itemName", "Item Name")} <span className="text-rose-500 font-bold">*</span>
+                    <label className="text-sm font-semibold text-slate-900 tracking-tight">
+                      {t("report.step2.itemName", "Item Name")} <span className="text-rose-600 font-bold">*</span>
                     </label>
                     <ContextualHelp fieldKey="itemName" />
                   </div>
@@ -851,10 +847,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     form.setFItem(e.target.value);
                     setLocalErrors((prev) => ({ ...prev, item: "" }));
                   }}
-                  className="w-full h-12 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                  className="w-full h-12 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
                 />
                 <div className="mt-2.5 flex flex-wrap gap-2 items-center">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick Suggestions:</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Quick Suggestions:</span>
                   {["Black Wallet", "Brown Leather Wallet", "Blue Backpack", "iPhone", "College ID Card"].map((suggestion) => (
                     <button
                       key={suggestion}
@@ -863,14 +859,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         form.setFItem(suggestion);
                         setLocalErrors((prev) => ({ ...prev, item: "" }));
                       }}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#1c1c26] bg-[#030304]/40 hover:border-cyan-500/40 hover:text-cyan-300 text-slate-400 transition cursor-pointer"
+                      className="text-[10px] font-medium px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 text-slate-600 transition cursor-pointer"
                     >
                       +{suggestion}
                     </button>
                   ))}
                 </div>
                 {localErrors.item && (
-                  <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1 font-semibold">
+                  <p className="text-[10px] text-rose-600 mt-1.5 flex items-center gap-1 font-semibold">
                     <AlertCircle size={11} /> {localErrors.item}
                   </p>
                 )}
@@ -880,8 +876,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
-                      {t("report.step2.description", "Item Description")} <span className="text-rose-500 font-bold">*</span>
+                    <label className="text-sm font-semibold text-slate-900 tracking-tight">
+                      {t("report.step2.description", "Item Description")} <span className="text-rose-600 font-bold">*</span>
                     </label>
                     <ContextualHelp fieldKey="description" />
                   </div>
@@ -899,9 +895,9 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       type="button"
                       onClick={handleEnhanceDescription}
                       disabled={ai.enhanceLoading || !form.fDetails.trim()}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-[9px] font-extrabold text-cyan-300 uppercase transition disabled:opacity-40 cursor-pointer"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[9px] font-bold uppercase transition disabled:opacity-40 cursor-pointer shadow-2xs"
                     >
-                      <Sparkles size={11} className={ai.enhanceLoading ? "animate-spin text-cyan-400" : "text-cyan-400"} />
+                      <Sparkles size={11} className={ai.enhanceLoading ? "animate-spin text-white" : "text-white"} />
                       {ai.enhanceLoading ? "Enhancing..." : "✨ Improve Description"}
                     </button>
                   </div>
@@ -914,10 +910,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     form.setFDetails(e.target.value);
                     setLocalErrors((prev) => ({ ...prev, details: "" }));
                   }}
-                  className="w-full px-4 py-3 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition leading-relaxed placeholder:text-slate-600 shadow-inner resize-y font-mono"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition leading-relaxed placeholder:text-slate-400 shadow-2xs resize-y"
                 />
                 <div className="mt-2 flex flex-wrap gap-2 items-center">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Suggest useful details:</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Suggest useful details:</span>
                   {[
                     { label: "Brand", placeholder: "Brand: Apple" },
                     { label: "Color", placeholder: "Color: Space Gray" },
@@ -936,29 +932,29 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         form.setFDetails(form.fDetails + addition);
                         setLocalErrors((prev) => ({ ...prev, details: "" }));
                       }}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#1c1c26] bg-[#030304]/40 hover:border-cyan-500/40 hover:text-cyan-300 text-slate-400 transition cursor-pointer"
+                      className="text-[10px] font-medium px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 text-slate-600 transition cursor-pointer"
                     >
                       💡 {item.label}
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-400 block mt-2 leading-normal">
-                  💡 Description details help the Gemini match scanner match items accurately. Try clicking above detail anchors to easily format!
+                <span className="text-[10px] text-slate-500 block mt-2 leading-normal">
+                  💡 Description details help community members and automated scans match items accurately.
                 </span>
                 {localErrors.details && (
-                  <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1 font-semibold">
+                  <p className="text-[10px] text-rose-600 mt-1.5 flex items-center gap-1 font-semibold">
                     <AlertCircle size={11} /> {localErrors.details}
                   </p>
                 )}
               </div>
 
               {/* Advanced Specific Characteristics (Color, Brand, Model, Material) */}
-              <div className="pt-2 border-t border-[#1c1c26]/60">
+              <div className="pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                    <label className="text-sm font-semibold text-slate-900 tracking-tight">
                       {t("report.step2.characteristics", "Item Characteristics")}{" "}
-                      <span className="text-slate-500 font-normal text-xs">(Color, Brand, Model, Material)</span>
+                      <span className="text-slate-400 font-normal text-xs">(Color, Brand, Model, Material)</span>
                     </label>
                     <ContextualHelp fieldKey="identifying" />
                   </div>
@@ -974,7 +970,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   placeholder="e.g. Color: Space Gray, Brand: Apple, Model: iPhone 15 Pro, Material: Titanium & Glass"
                   value={form.fCharacteristics || ""}
                   onChange={(e) => form.setFCharacteristics(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                  className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
                 />
               </div>
 
@@ -982,9 +978,9 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                    <label className="text-sm font-semibold text-slate-900 tracking-tight">
                       {t("report.step2.uniqueMarks", "Unique Marks & Secret Identifiers")}{" "}
-                      <span className="text-slate-500 font-normal text-xs">(Scratches, stickers, engravings, serial number)</span>
+                      <span className="text-slate-400 font-normal text-xs">(Scratches, stickers, engravings, serial number)</span>
                     </label>
                     <ContextualHelp fieldKey="identifying" />
                   </div>
@@ -1000,16 +996,16 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   placeholder="e.g. Small scratch on bottom right edge, NASA sticker on rear, customized keychain attached"
                   value={form.fUniqueMarks || ""}
                   onChange={(e) => form.setFUniqueMarks(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                  className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
                 />
               </div>
 
               {/* Contents (for wallets, bags, boxes) */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-semibold text-slate-200 tracking-tight">
+                  <label className="text-sm font-semibold text-slate-900 tracking-tight">
                     {t("report.step2.contents", "Inner Contents")}{" "}
-                    <span className="text-slate-500 font-normal text-xs">(For wallets, bags, cases, or compartments)</span>
+                    <span className="text-slate-400 font-normal text-xs">(For wallets, bags, cases, or compartments)</span>
                   </label>
                   <VoiceInputButton
                     fieldName="Inner Contents"
@@ -1023,15 +1019,15 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   placeholder="e.g. College ID card, Metro pass, 2 keys, blue ballpoint pen inside pouch"
                   value={form.fContents || ""}
                   onChange={(e) => form.setFContents(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition-all placeholder:text-slate-600 shadow-inner"
+                  className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
                 />
               </div>
 
               {/* Condition (Specifically required for Found reports) */}
               {!isLost && (
                 <div className="pt-2">
-                  <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
-                    Found Item Condition <span className="text-emerald-400 font-bold">*</span>
+                  <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2">
+                    Found Item Condition <span className="text-emerald-600 font-bold">*</span>
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {["Brand New / Intact", "Good Condition", "Used / Scratched", "Damaged / Broken"].map((cond) => (
@@ -1039,10 +1035,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         key={cond}
                         type="button"
                         onClick={() => form.setFCondition(cond)}
-                        className={`text-xs py-2.5 px-2 rounded-xl border font-bold transition-all duration-150 cursor-pointer flex items-center justify-center text-center ${
+                        className={`text-xs py-2.5 px-2 rounded-xl border font-semibold transition-all duration-150 cursor-pointer flex items-center justify-center text-center ${
                           form.fCondition === cond
-                            ? "bg-emerald-500/15 border-emerald-400 text-emerald-300 shadow-md scale-[1.01]"
-                            : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                            ? "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                         }`}
                       >
                         {cond}
@@ -1054,8 +1050,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Category selection - embedded beautifully */}
               <div className="pt-1">
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2.5">
-                  Item Category <span className="text-rose-500 font-bold">*</span>
+                <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2.5">
+                  Item Category <span className="text-rose-600 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {CATEGORIES.map((cat) => (
@@ -1066,20 +1062,20 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         form.setFCategory(cat.id);
                         setLocalErrors((prev) => ({ ...prev, category: "" }));
                       }}
-                      className={`text-[11px] px-3 py-3 rounded-xl border transition-all duration-150 font-bold cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`text-[11px] px-3 py-3 rounded-xl border transition-all duration-150 font-semibold cursor-pointer flex items-center justify-center gap-1.5 ${
                         form.fCategory === cat.id
-                          ? "bg-cyan-500/10 border-cyan-400/50 text-cyan-300 scale-[1.01] shadow-[0_0_12px_rgba(6,182,212,0.15)]"
-                          : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                          ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                          : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       <span>{cat.emoji}</span>
                       <span className="truncate">{cat.id}</span>
-                      {form.fCategory === cat.id && <Check size={10} className="text-cyan-400 shrink-0" />}
+                      {form.fCategory === cat.id && <Check size={12} className="text-white shrink-0" />}
                     </button>
                   ))}
                 </div>
                 {localErrors.category && (
-                  <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1 font-semibold">
+                  <p className="text-[10px] text-rose-600 mt-1.5 flex items-center gap-1 font-semibold">
                     <AlertCircle size={11} /> {localErrors.category}
                   </p>
                 )}
@@ -1087,8 +1083,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Urgency Level Selector */}
               <div className="pt-1">
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2.5">
-                  Report Urgency Level <span className="text-rose-500 font-bold">*</span>
+                <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2.5">
+                  Report Urgency Level <span className="text-rose-600 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {URGENCY_LEVELS.map((level) => {
@@ -1098,21 +1094,15 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         key={level.id}
                         type="button"
                         onClick={() => form.setFUrgency(level.id)}
-                        className={`text-xs py-3 px-1 rounded-xl border font-bold transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 ${
+                        className={`text-xs py-3 px-1 rounded-xl border font-semibold transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 ${
                           isSelected
-                            ? level.id === "Medical"
-                              ? "bg-rose-500/10 border-rose-500/50 text-rose-300 shadow-md scale-[1.01]"
-                              : level.id === "Urgent"
-                              ? "bg-amber-500/10 border-amber-500/50 text-amber-300 shadow-md scale-[1.01]"
-                              : level.id === "Contains ID"
-                              ? "bg-pink-500/10 border-pink-500/50 text-pink-300 shadow-md scale-[1.01]"
-                              : "bg-cyan-500/10 border-cyan-500/50 text-cyan-300 shadow-md scale-[1.01]"
-                            : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                            ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                         }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${level.id === "Medical" ? "animate-pulse" : ""}`}
-                          style={{ backgroundColor: level.color }}
+                          className={`w-2 h-2 rounded-full ${isSelected ? "bg-white" : ""}`}
+                          style={!isSelected ? { backgroundColor: level.color } : {}}
                         />
                         <span>{level.id}</span>
                       </button>
@@ -1134,8 +1124,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Visual Authentication</h3>
-              <p className="text-xs text-slate-500">Adding an image allows our Gemini Matching Engine to run comparative visual analysis.</p>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Visual Authentication</h3>
+              <p className="text-xs text-slate-500">Adding an image allows our matching engine to run comparative visual analysis.</p>
             </div>
 
             {/* Drag & Drop Upload Zone */}
@@ -1144,54 +1134,53 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={triggerFileSelect}
-              className={`relative p-10 rounded-[28px] border-2 border-dashed transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center group min-h-[220px] overflow-hidden ${
+              className={`relative p-10 rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center group min-h-[220px] overflow-hidden ${
                 isDragging
-                  ? "border-cyan-400 bg-cyan-950/10 shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                  : "border-[#1c1c26] bg-[#030304]/40 hover:border-cyan-500/30 hover:bg-[#07070a]"
+                  ? "border-slate-900 bg-slate-100"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100/60"
               }`}
             >
               {ai.photoLoading && (
-                <div className="absolute inset-0 bg-[#030304]/90 flex flex-col items-center justify-center gap-3 z-20">
-                  <div className="w-12 h-12 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                  <span className="text-[10px] font-mono font-bold text-cyan-400 animate-pulse tracking-wider">GEMINI VISUAL SCANNING INTERACTION</span>
-                  <div className="absolute inset-x-0 h-[2px] bg-cyan-500/60 shadow-[0_0_8px_#06b6d4] animate-scan top-0" />
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-20">
+                  <div className="w-10 h-10 rounded-full border-2 border-slate-900 border-t-transparent animate-spin" />
+                  <span className="text-[10px] font-mono font-bold text-slate-900 animate-pulse tracking-wider">VISUAL SCANNING IN PROGRESS</span>
                 </div>
               )}
 
               {form.fImage ? (
-                <div className="absolute inset-0 z-10 group/img flex items-center justify-center bg-[#030304]/80">
+                <div className="absolute inset-0 z-10 group/img flex items-center justify-center bg-slate-900/10">
                   <img src={form.fImage} alt="Uploaded item draft" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-[#030304]/80 opacity-0 group-hover/img:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-200">
+                  <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover/img:opacity-100 flex flex-col items-center justify-center gap-2 transition duration-200">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         form.setFImage(null);
                       }}
-                      className="py-2.5 px-4 bg-rose-500/90 hover:bg-rose-600 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-rose-950/30"
+                      className="py-2 px-4 bg-rose-600 hover:bg-rose-700 rounded-xl text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow-xs"
                     >
                       <Trash2 size={13} /> Remove Image
                     </button>
-                    <span className="text-[10px] text-slate-400 font-medium">Click anywhere else to replace</span>
+                    <span className="text-[10px] text-white/90 font-medium">Click anywhere else to replace</span>
                   </div>
-                  <span className="absolute bottom-3 left-3 bg-cyan-500/20 border border-cyan-400/30 text-[10px] text-cyan-300 px-3 py-1 rounded-md font-bold font-mono shadow-md backdrop-blur-md">
-                    ✓ SECURELY INDEXED
+                  <span className="absolute bottom-3 left-3 bg-white/95 border border-slate-200 text-[10px] text-emerald-700 px-3 py-1 rounded-md font-bold font-mono shadow-xs backdrop-blur-md">
+                    ✓ IMAGE ATTACHED
                   </span>
                 </div>
               ) : null}
 
-              <UploadCloud size={40} className="text-slate-500 group-hover:text-cyan-400 transition-all duration-300 mb-4" />
-              <span className="text-sm font-semibold text-slate-200">Drag &amp; Drop or Upload Photo</span>
-              <p className="text-xs text-slate-500 mt-1.5 leading-normal max-w-sm">
-                Supports Camera Snapshot or Library. Photos are auto-scrubbed of personal EXIF tags for your security.
+              <UploadCloud size={36} className="text-slate-400 group-hover:text-slate-700 transition-all duration-200 mb-3" />
+              <span className="text-sm font-semibold text-slate-800">Drag &amp; Drop or Upload Photo</span>
+              <p className="text-xs text-slate-500 mt-1 leading-normal max-w-sm">
+                Supports Camera Snapshot or File. Photos are stripped of private device metadata.
               </p>
               
               <div className="flex gap-2 mt-4 z-10">
-                <span className="text-[9px] bg-cyan-950/40 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-bold font-mono">
-                  📸 CAMERA SUPPORTED
+                <span className="text-[9px] bg-white text-slate-600 border border-slate-200 px-2.5 py-1 rounded-full font-medium">
+                  📸 Camera Supported
                 </span>
-                <span className="text-[9px] bg-violet-950/40 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded font-bold font-mono">
-                  🖼️ GALLERY COMPATIBLE
+                <span className="text-[9px] bg-white text-slate-600 border border-slate-200 px-2.5 py-1 rounded-full font-medium">
+                  🖼️ Gallery / Files
                 </span>
               </div>
 
@@ -1208,36 +1197,36 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-5 rounded-[20px] bg-[#0c0c14] border border-[#1c1c26] space-y-3 shadow-md"
+                className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 shadow-2xs"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    🔍 Photo Quality &amp; Clarity Diagnostics
+                  <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    🔍 Photo Clarity Diagnostics
                   </h4>
-                  <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20 uppercase font-mono">
-                    Passed Checks
+                  <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase font-mono">
+                    Passed
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Our local client-side computer vision heuristics have validated the image to optimize Gemini visual indexing.
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Image validated for clear visual matching against cataloged community listings.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-[#030304]/60 border border-emerald-500/10 px-3 py-2 rounded-xl">
-                    <span className="w-4 h-4 rounded-full bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-[10px] shrink-0">✓</span>
-                    <span>✓ Object centered &amp; identified</span>
+                  <div className="flex items-center gap-2 text-xs font-medium text-emerald-800 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                    <span className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-[10px] shrink-0 font-bold">✓</span>
+                    <span>Object centered &amp; identified</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-[#030304]/60 border border-emerald-500/10 px-3 py-2 rounded-xl">
-                    <span className="w-4 h-4 rounded-full bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-[10px] shrink-0">✓</span>
-                    <span>✓ Clear lighting profile</span>
+                  <div className="flex items-center gap-2 text-xs font-medium text-emerald-800 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                    <span className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-[10px] shrink-0 font-bold">✓</span>
+                    <span>Clear lighting profile</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 bg-[#030304]/60 border border-amber-500/10 px-3 py-2 rounded-xl">
-                    <span className="w-4 h-4 rounded-full bg-amber-950/40 border border-amber-500/30 flex items-center justify-center text-[10px] shrink-0">⚠</span>
-                    <span>⚠ Ambient light slightly low</span>
+                  <div className="flex items-center gap-2 text-xs font-medium text-amber-800 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                    <span className="w-4 h-4 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-[10px] shrink-0 font-bold">⚠</span>
+                    <span>Acceptable contrast</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-[#030304]/60 border border-[#1c1c26] px-3 py-2 rounded-xl">
-                    <span className="w-4 h-4 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-[10px] shrink-0">✓</span>
-                    <span>✓ Sharp resolution &amp; focus</span>
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                    <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-[10px] shrink-0 font-bold">✓</span>
+                    <span>Sharp resolution</span>
                   </div>
                 </div>
               </motion.div>
@@ -1250,7 +1239,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   form.setFImage(null);
                   setCurrentStep(4);
                 }}
-                className="text-xs font-bold text-slate-400 hover:text-white transition duration-200 py-2 px-4 rounded-xl border border-[#161621] bg-[#07070a]/40"
+                className="text-xs font-medium text-slate-500 hover:text-slate-900 transition py-2 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
               >
                 Skip Photo Upload →
               </button>
@@ -1268,7 +1257,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Spatial Mapping</h3>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Spatial Mapping</h3>
               <p className="text-xs text-slate-500">Provide the approximate area where the event transpired.</p>
             </div>
 
@@ -1277,8 +1266,8 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-200 tracking-tight">
-                      {t("report.step4.address", "Incident Address / Location")} <span className="text-rose-500 font-bold">*</span>
+                    <label className="text-sm font-semibold text-slate-900 tracking-tight">
+                      {t("report.step4.address", "Incident Address / Location")} <span className="text-rose-600 font-bold">*</span>
                     </label>
                     <ContextualHelp fieldKey="location" />
                   </div>
@@ -1303,20 +1292,20 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         form.setFAddress(e.target.value);
                         setLocalErrors((prev) => ({ ...prev, address: "" }));
                       }}
-                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/25 outline-none text-xs text-slate-100 transition placeholder:text-slate-600 shadow-inner"
+                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition placeholder:text-slate-400 shadow-2xs"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleUseCurrentLocation}
-                    className="h-12 px-5 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                    className="h-12 px-5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0 shadow-2xs"
                     title="Retrieve Coordinates via Device GPS"
                   >
-                    <MapPin size={14} className="animate-pulse text-indigo-400" /> <span>Current Location</span>
+                    <MapPin size={14} className="text-rose-400" /> <span>Current Location</span>
                   </button>
                 </div>
                 {localErrors.address && (
-                  <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1 font-semibold">
+                  <p className="text-[10px] text-rose-600 mt-1.5 flex items-center gap-1 font-semibold">
                     <AlertCircle size={11} /> {localErrors.address}
                   </p>
                 )}
@@ -1324,7 +1313,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Map & Distance directly below address */}
               <div className="space-y-4">
-                <div className="rounded-2xl overflow-hidden border border-[#161621] shadow-xl relative">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative">
                   <ErrorBoundary fallbackTitle="Interactive Map Error">
                     <InteractiveMap
                       onChange={(lat, lng) => {
@@ -1342,10 +1331,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
 
                 {/* Distance Radius component below map */}
-                <div className="p-5 rounded-2xl bg-[#030304]/60 border border-[#161621] space-y-3 text-left">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-left">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-300 tracking-tight">Search Accuracy Distance Radius</span>
-                    <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xs font-semibold text-slate-800 tracking-tight">Search Accuracy Distance Radius</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-2xs">
                       Within {distanceRadius} meters
                     </span>
                   </div>
@@ -1357,10 +1346,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     step="50"
                     value={distanceRadius}
                     onChange={(e) => setDistanceRadius(parseInt(e.target.value))}
-                    className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-900 rounded-lg outline-none"
+                    className="w-full accent-slate-900 cursor-pointer h-1.5 bg-slate-200 rounded-lg outline-none"
                   />
                   
-                  <div className="flex justify-between text-[10px] text-slate-500 font-mono font-bold uppercase">
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono font-medium">
                     <span>50m (Exact Spot)</span>
                     <span>500m (Campus)</span>
                     <span>2000m (City Ward)</span>
@@ -1370,34 +1359,34 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 {/* Location intelligence dashboard */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
                   {/* Search Radius */}
-                  <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] space-y-1 shadow-inner">
+                  <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-1 shadow-2xs">
                     <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Estimated Search Area</span>
-                    <p className="text-sm font-black text-cyan-300">
+                    <p className="text-sm font-bold text-slate-900">
                       ~{(Math.PI * Math.pow(distanceRadius, 2) / 1000000).toFixed(2)} km²
                     </p>
-                    <span className="text-[10px] text-slate-400 block font-mono">Radius: {distanceRadius}m</span>
+                    <span className="text-[10px] text-slate-500 block font-mono">Radius: {distanceRadius}m</span>
                   </div>
 
                   {/* Nearby Landmark */}
-                  <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] space-y-1 shadow-inner min-w-0">
+                  <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-1 shadow-2xs min-w-0">
                     <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Nearby Landmark anchor</span>
-                    <p className="text-sm font-black text-slate-200 truncate" title={getNearbyLandmark()}>
+                    <p className="text-sm font-bold text-slate-900 truncate" title={getNearbyLandmark()}>
                       📍 {getNearbyLandmark()}
                     </p>
-                    <span className="text-[10px] text-slate-400 block font-mono">Isolates search perimeter</span>
+                    <span className="text-[10px] text-slate-500 block font-mono">Isolates search perimeter</span>
                   </div>
 
                   {/* Area Confidence */}
-                  <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] space-y-1 shadow-inner">
+                  <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-1 shadow-2xs">
                     <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Area Confidence index</span>
-                    <p className={`text-sm font-black ${
+                    <p className={`text-sm font-bold ${
                       form.fLat !== 18.5204 || form.fLng !== 73.8567
-                        ? "text-emerald-400"
-                        : "text-amber-400"
+                        ? "text-emerald-700"
+                        : "text-amber-700"
                     }`}>
                       {form.fLat !== 18.5204 || form.fLng !== 73.8567 ? "98% (GPS High Precision)" : "64% (Approximate Area)"}
                     </p>
-                    <span className="text-[10px] text-slate-400 block font-mono">Coordinates matched</span>
+                    <span className="text-[10px] text-slate-500 block font-mono">Coordinates matched</span>
                   </div>
                 </div>
               </div>
@@ -1415,14 +1404,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Timeline Window</h3>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Timeline Window</h3>
               <p className="text-xs text-slate-500">Providing the hour and date window is crucial to establish chronologies.</p>
             </div>
 
             <div className="space-y-5">
               {/* Day selection */}
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2.5">
+                <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2.5">
                   When did this happen?
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -1431,10 +1420,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       key={day}
                       type="button"
                       onClick={() => setTimelineDate(day)}
-                      className={`py-3 px-4 rounded-xl border font-bold text-xs transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`py-3 px-4 rounded-xl border font-semibold text-xs transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 ${
                         timelineDate === day
-                          ? "bg-cyan-500/10 border-cyan-400/50 text-cyan-300 shadow-md scale-[1.01]"
-                          : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                          ? "bg-slate-900 border-slate-900 text-white shadow-2xs"
+                          : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       {day === "Today" && "📅"}
@@ -1450,7 +1439,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       type="date"
                       value={customDateVal}
                       onChange={(e) => setCustomDateVal(e.target.value)}
-                      className="w-full h-12 px-4 bg-[#030304]/60 border border-[#1c1c26] rounded-xl focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 text-xs text-slate-100 outline-none font-mono"
+                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-1 focus:ring-slate-300 text-xs text-slate-900 outline-none font-mono"
                     />
                   </div>
                 )}
@@ -1458,7 +1447,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Time Selection */}
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2.5">
+                <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2.5">
                   Approximate Time Window
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -1467,10 +1456,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       key={timeSlot}
                       type="button"
                       onClick={() => setTimelineTime(timeSlot)}
-                      className={`py-2.5 px-3 rounded-xl border font-bold text-xs transition-all duration-150 cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                      className={`py-2.5 px-3 rounded-xl border font-semibold text-xs transition-all duration-150 cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
                         timelineTime === timeSlot
-                          ? "bg-cyan-500/10 border-cyan-400/50 text-cyan-300 scale-[1.01] shadow-sm"
-                          : "bg-[#030304]/30 border-[#1c1c26] text-slate-400 hover:border-slate-800"
+                          ? "bg-slate-900 border-slate-900 text-white shadow-2xs"
+                          : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       <span className="text-sm">
@@ -1490,19 +1479,19 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       type="time"
                       value={customTimeVal}
                       onChange={(e) => setCustomTimeVal(e.target.value)}
-                      className="w-full h-12 px-4 bg-[#030304]/60 border border-[#1c1c26] rounded-xl focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 text-xs text-slate-100 outline-none font-mono"
+                      className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-1 focus:ring-slate-300 text-xs text-slate-900 outline-none font-mono"
                     />
                   </div>
                 )}
               </div>
 
               {/* Why this helps AI card */}
-              <div className="p-4 rounded-xl bg-[#030304]/50 border border-[#161621] space-y-1">
-                <h4 className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                  💡 How this assists Gemini Search
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  💡 How this assists Matching
                 </h4>
-                <p className="text-xs text-slate-400 leading-normal font-medium">
-                  By providing precise date and time boundaries, we filter out unrelated submissions and isolate overlapping visual checkpoints automatically.
+                <p className="text-xs text-slate-500 leading-normal font-medium">
+                  By providing precise date and time boundaries, we filter out unrelated submissions and isolate overlapping spatial checkpoints automatically.
                 </p>
               </div>
 
@@ -1531,17 +1520,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Citizen Reward (Optional)</h3>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Citizen Reward (Optional)</h3>
               <p className="text-xs text-slate-500">Provide an incentive to finders. Entirely optional.</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
+                <label className="block text-sm font-semibold text-slate-900 tracking-tight mb-2">
                   Offered Reward Amount (₹)
                 </label>
-                <div className="flex items-center h-12 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/25 overflow-hidden transition-all shadow-inner">
-                  <div className="flex items-center justify-center pl-4 pr-2 text-emerald-400 font-bold text-sm select-none shrink-0">
+                <div className="flex items-center h-12 rounded-xl bg-white border border-slate-200 focus-within:border-slate-400 focus-within:ring-1 focus-within:ring-slate-300 overflow-hidden transition-all shadow-2xs">
+                  <div className="flex items-center justify-center pl-4 pr-2 text-emerald-700 font-bold text-sm select-none shrink-0">
                     ₹
                   </div>
                   <input
@@ -1550,7 +1539,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     placeholder="e.g. 500, 1000, 2500"
                     value={form.fReward}
                     onChange={(e) => form.setFReward(e.target.value.replace(/\D/g, ""))}
-                    className="w-full h-full pr-4 bg-transparent outline-none text-xs text-slate-100 font-mono font-bold placeholder:text-slate-600"
+                    className="w-full h-full pr-4 bg-transparent outline-none text-xs text-slate-900 font-mono font-bold placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -1562,10 +1551,10 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     key={preset}
                     type="button"
                     onClick={() => form.setFReward(preset === "0" ? "" : preset)}
-                    className={`text-xs font-bold px-4 py-2.5 rounded-xl border transition-all duration-150 cursor-pointer ${
+                    className={`text-xs font-semibold px-4 py-2.5 rounded-xl border transition-all duration-150 cursor-pointer ${
                       (preset === "0" && !form.fReward) || (form.fReward === preset && preset !== "0")
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-black shadow-md scale-[1.01]"
-                        : "bg-[#030304]/30 border-[#1c1c26] hover:border-slate-800 text-slate-400"
+                        ? "bg-slate-900 border-slate-900 text-white shadow-2xs"
+                        : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
                     }`}
                   >
                     {preset === "0" ? "No Reward" : `₹${preset}`}
@@ -1600,21 +1589,21 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             className="space-y-6 text-left"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Contact Safeguards</h3>
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Contact Safeguards</h3>
               <p className="text-xs text-slate-500">Secure validation ensures communication only happens upon verified claim matches.</p>
             </div>
 
             <div className="space-y-5">
               {/* Contact number */}
               <div>
-                <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2.5 flex justify-between items-center">
-                  <span>Contact Mobile Number <span className="text-rose-500 font-bold">*</span></span>
-                  <span className="text-[10px] text-emerald-400 font-bold lowercase font-mono tracking-normal flex items-center gap-1 bg-emerald-950/40 border border-emerald-900/30 px-2 py-0.5 rounded-full">
-                    <ShieldCheck size={11} /> AES Client Decryption Active
+                <label className="text-sm font-semibold text-slate-900 tracking-tight mb-2.5 flex justify-between items-center">
+                  <span>Contact Mobile Number <span className="text-rose-600 font-bold">*</span></span>
+                  <span className="text-[10px] text-emerald-700 font-medium font-mono tracking-normal flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <ShieldCheck size={11} /> Client Encryption Active
                   </span>
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex items-center justify-center h-12 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] text-sm text-slate-300 font-bold select-none shrink-0 gap-1.5">
+                  <div className="flex items-center justify-center h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 font-semibold select-none shrink-0 gap-1.5">
                     <span className="text-base">🇮🇳</span>
                     <span>+91</span>
                   </div>
@@ -1628,20 +1617,20 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                       form.setFContact(e.target.value.replace(/\D/g, ""));
                       setLocalErrors((prev) => ({ ...prev, contact: "" }));
                     }}
-                    className="flex-1 h-12 px-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-sm text-slate-100 font-semibold tracking-wider placeholder:text-slate-600 shadow-inner"
+                    className="flex-1 h-12 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm text-slate-900 font-semibold tracking-wider placeholder:text-slate-400 shadow-2xs"
                   />
                 </div>
                 {localErrors.contact && (
-                  <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1 font-semibold">
+                  <p className="text-[10px] text-rose-600 mt-1.5 flex items-center gap-1 font-semibold">
                     <AlertCircle size={11} /> {localErrors.contact}
                   </p>
                 )}
               </div>
 
               {/* WhatsApp Toggle */}
-              <div className="p-5 rounded-2xl bg-[#030304]/60 border border-[#161621] flex items-center justify-between gap-4">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
                 <div className="space-y-0.5">
-                  <span className="text-xs font-bold text-slate-200 block flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-900 block flex items-center gap-1.5">
                     🟢 Same number is active on WhatsApp
                   </span>
                   <span className="text-xs text-slate-500 block leading-relaxed">
@@ -1655,17 +1644,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     onChange={() => setIsWhatsAppSame(!isWhatsAppSame)}
                     className="sr-only peer"
                   />
-                  <div className="w-10 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950"></div>
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
                 </label>
               </div>
 
               {/* Privacy protection panel */}
-              <div className="p-5 rounded-2xl bg-cyan-950/10 border border-cyan-500/20 text-cyan-300 text-xs flex items-start gap-3.5 leading-relaxed">
-                <ShieldCheck size={18} className="text-cyan-400 shrink-0 mt-0.5" />
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-3.5 leading-relaxed">
+                <ShieldCheck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-[11px] text-slate-200 uppercase tracking-wider mb-1.5">🛡️ Contact Details Privacy Vault</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                    Contact remains entirely **private, masked and hidden** from general feeds, searches, search engines, and visitors. It is only unlocked and safely decrypted on-device for a corresponding finder **after you manually review and approve their claim dossier** in your dashboard.
+                  <h4 className="font-bold text-[11px] text-slate-900 uppercase tracking-wider mb-1">🛡️ Contact Details Privacy Vault</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                    Contact remains entirely <strong>private, masked and hidden</strong> from general feeds, searches, search engines, and visitors. It is only unlocked and safely decrypted on-device for a corresponding finder <strong>after you manually review and approve their claim dossier</strong> in your dashboard.
                   </p>
                 </div>
               </div>
@@ -1673,50 +1662,43 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
           </motion.div>
         )}
 
-        {/* STEP 8: SECURITY PIN (MOST PREMIUM VISUAL LOCK CARD) */}
+        {/* STEP 8: SECURITY PIN (PROTECTION CARD) */}
         {currentStep === 8 && (
           <motion.div
             key="step-pin"
-            initial={{ opacity: 0, scale: 0.97 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-6 text-left"
           >
             <div className="text-center space-y-1.5 max-w-sm mx-auto">
-              <h3 className="text-lg font-bold text-slate-100 flex items-center justify-center gap-2">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center justify-center gap-2">
                 🔐 Protect Your Ownership
               </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 This PIN secures your posting. Keep it safe to manage claims or mark as resolved.
               </p>
             </div>
 
-            {/* Beautiful Security Pass Card Styling */}
-            <div className="relative mx-auto max-w-sm bg-gradient-to-br from-[#0c0c14] to-[#040407] border border-[#1c1c26] p-6 sm:p-8 rounded-[28px] shadow-[0_24px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl overflow-hidden group">
-              {/* Card background neon glows */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-cyan-500/20 transition duration-500" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-violet-500/10 blur-2xl rounded-full pointer-events-none group-hover:bg-violet-500/20 transition duration-500" />
-
-              <div className="flex items-center justify-between mb-5">
+            {/* Security Pass Card Styling */}
+            <div className="relative mx-auto max-w-sm bg-slate-50 border border-slate-200 p-6 sm:p-7 rounded-2xl shadow-sm overflow-hidden group">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-6 bg-cyan-400/10 rounded-lg border border-cyan-400/20 flex items-center justify-center font-mono text-[9px] font-bold text-cyan-300">
-                    SECURE
-                  </div>
-                  <div className="w-4 h-4 bg-amber-500/20 rounded-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                  <div className="px-2.5 py-0.5 bg-slate-900 text-white rounded-md font-mono text-[9px] font-bold">
+                    OWNER PASS
                   </div>
                 </div>
-                <ShieldCheck size={20} className="text-cyan-400" />
+                <ShieldCheck size={20} className="text-slate-800" />
               </div>
 
               {/* Big PIN Display */}
-              <div className="my-6 text-center space-y-2.5">
+              <div className="my-5 text-center space-y-2">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">ADMIN KEYPASS CODE</span>
-                <div className="flex justify-center items-center gap-3">
+                <div className="flex justify-center items-center gap-2.5">
                   {form.fSecurityPin.split("").map((digit, i) => (
                     <span
                       key={i}
-                      className="w-11 h-14 bg-slate-950 rounded-xl border border-[#161621] flex items-center justify-center font-mono text-xl font-bold text-cyan-300 shadow-inner"
+                      className="w-11 h-14 bg-white rounded-xl border border-slate-300 flex items-center justify-center font-mono text-xl font-bold text-slate-900 shadow-2xs"
                     >
                       {showPin ? digit : "•"}
                     </span>
@@ -1725,7 +1707,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   {Array.from({ length: Math.max(0, 4 - form.fSecurityPin.length) }).map((_, i) => (
                     <span
                       key={i}
-                      className="w-11 h-14 bg-slate-950 rounded-xl border border-[#161621]/40 flex items-center justify-center font-mono text-xl font-bold text-slate-600 animate-pulse"
+                      className="w-11 h-14 bg-white rounded-xl border border-dashed border-slate-300 flex items-center justify-center font-mono text-xl font-bold text-slate-400"
                     >
                       -
                     </span>
@@ -1734,46 +1716,46 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               </div>
 
               {/* Visual protections checkmarks */}
-              <div className="space-y-3 text-xs text-slate-300 border-t border-[#161621] pt-5 font-medium leading-relaxed">
+              <div className="space-y-2.5 text-xs text-slate-700 border-t border-slate-200 pt-4 font-normal leading-relaxed">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={13} className="text-cyan-400 shrink-0" />
-                  <span>🔐 **Approve Claims**: Authenticate verified matching claimants</span>
+                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <span><strong>Approve Claims</strong>: Authenticate verified matching claimants</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={13} className="text-cyan-400 shrink-0" />
-                  <span>💬 **Unlock Contact**: Secure mutual coordination pathways</span>
+                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <span><strong>Unlock Contact</strong>: Safe mutual communication pathways</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={13} className="text-cyan-400 shrink-0" />
-                  <span>🏁 **Resolve Item**: Archive listing once recovery completes</span>
+                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <span><strong>Resolve Item</strong>: Archive listing once recovery completes</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 size={13} className="text-cyan-400 shrink-0" />
-                  <span>🛡️ **Protect Ownership**: Stop malicious deletion or tampering</span>
+                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <span><strong>Protect Ownership</strong>: Prevent unauthorized deletion</span>
                 </div>
               </div>
             </div>
 
             {/* Input & Generator Actions */}
             <div className="space-y-4 max-w-sm mx-auto">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 <div className="relative flex-1">
-                  <Lock size={14} className="absolute left-4 top-3.5 text-slate-500" />
+                  <Lock size={14} className="absolute left-4 top-3.5 text-slate-400" />
                   <input
                     type={showPin ? "text" : "password"}
                     maxLength={4}
-                    placeholder="Set My PIN"
+                    placeholder="Set 4-Digit PIN"
                     value={form.fSecurityPin}
                     onChange={(e) => {
                       form.setFSecurityPin(e.target.value.replace(/\D/g, ""));
                       setLocalErrors((prev) => ({ ...prev, securityPin: "" }));
                     }}
-                    className="w-full h-12 pl-11 pr-14 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-sm font-mono font-bold tracking-widest text-slate-200 transition-all shadow-inner"
+                    className="w-full h-12 pl-11 pr-14 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-sm font-mono font-bold tracking-widest text-slate-900 transition-all shadow-2xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPin(!showPin)}
-                    className="absolute right-4 top-3.5 text-slate-500 hover:text-white transition p-0.5 text-xs font-bold cursor-pointer"
+                    className="absolute right-4 top-3.5 text-slate-500 hover:text-slate-900 transition p-0.5 text-xs font-semibold cursor-pointer"
                   >
                     {showPin ? "Hide" : "Show"}
                   </button>
@@ -1782,14 +1764,14 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 <button
                   type="button"
                   onClick={handleGenerateSecurePin}
-                  className="h-12 px-4 bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 text-violet-400 text-xs font-bold uppercase rounded-xl transition cursor-pointer shrink-0 flex items-center justify-center gap-2"
+                  className="h-12 px-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl transition cursor-pointer shrink-0 flex items-center justify-center gap-2 shadow-2xs"
                 >
-                  <RefreshCw size={13} className={aiFillNotice ? "animate-spin" : ""} /> Generate Secure PIN
+                  <RefreshCw size={13} className={aiFillNotice ? "animate-spin" : ""} /> Generate PIN
                 </button>
               </div>
 
               {localErrors.securityPin && (
-                <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1.5 font-semibold justify-center">
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1.5 font-semibold justify-center">
                   <AlertCircle size={12} /> {localErrors.securityPin}
                 </p>
               )}
@@ -1806,28 +1788,28 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             exit={{ opacity: 0, scale: 0.98 }}
             className="space-y-6 text-left"
           >
-            {/* Draft Review Receipt (Extremely Premium Slate look) */}
-            <div className="rounded-[28px] bg-[#0c0c14] border border-[#1c1c26] relative overflow-hidden p-6 sm:p-8 space-y-6 shadow-2xl">
-              <div className="absolute top-0 right-0 px-4 py-1.5 text-[10px] font-mono font-bold uppercase bg-cyan-500/15 border-l border-b border-cyan-500/25 text-cyan-300 rounded-bl-2xl">
+            {/* Draft Review Receipt */}
+            <div className="rounded-2xl bg-white border border-slate-200 relative overflow-hidden p-6 sm:p-8 space-y-6 shadow-sm">
+              <div className="absolute top-0 right-0 px-3.5 py-1 text-[10px] font-mono font-bold uppercase bg-slate-100 border-l border-b border-slate-200 text-slate-700 rounded-bl-xl">
                 Draft Finalized
               </div>
 
               {/* Title Header */}
-              <div className="pb-5 border-b border-[#161621] flex justify-between items-start gap-4 pr-24">
+              <div className="pb-5 border-b border-slate-100 flex justify-between items-start gap-4 pr-24">
                 <div>
-                  <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg font-sans tracking-widest inline-block ${
+                  <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-md font-sans tracking-wide inline-block ${
                     isLost
-                      ? "bg-rose-500/10 border border-rose-500/20 text-rose-300"
-                      : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                      ? "bg-rose-50 border border-rose-200 text-rose-700"
+                      : "bg-emerald-50 border border-emerald-200 text-emerald-700"
                   }`}>
                     {form.fType} Report
                   </span>
-                  <h3 className="text-xl font-bold text-slate-100 mt-3 tracking-tight">{form.fItem}</h3>
+                  <h3 className="text-xl font-bold text-slate-900 mt-2 tracking-tight">{form.fItem}</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="p-2 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 text-slate-400 hover:text-cyan-300 transition duration-150 flex items-center gap-1.5 text-xs font-medium"
+                  className="p-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition duration-150 flex items-center gap-1.5 text-xs font-medium cursor-pointer"
                   title="Edit title & details"
                 >
                   <Pencil size={13} />
@@ -1836,12 +1818,12 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               </div>
 
               {form.fImage && (
-                <div className="relative rounded-2xl overflow-hidden border border-[#161621] max-h-56 shadow-lg group">
+                <div className="relative rounded-xl overflow-hidden border border-slate-200 max-h-56 shadow-2xs group">
                   <img src={form.fImage} alt="Draft attachment preview" className="w-full h-56 object-cover" referrerPolicy="no-referrer" />
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="absolute right-3 bottom-3 p-2 rounded-xl bg-black/70 border border-slate-800 text-slate-200 hover:text-white hover:bg-black/90 transition duration-150 flex items-center gap-1.5 text-xs font-semibold"
+                    className="absolute right-3 bottom-3 p-2 rounded-xl bg-white/90 border border-slate-200 text-slate-800 hover:text-slate-950 hover:bg-white transition duration-150 flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
                   >
                     <Pencil size={13} /> Change Photo
                   </button>
@@ -1849,62 +1831,62 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               )}
 
               {/* Grid Metadata */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Category */}
-                <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Category</span>
-                    <span className="text-slate-200 font-bold text-xs">📂 {form.fCategory || "Property"}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Category</span>
+                    <span className="text-slate-900 font-semibold text-xs">📂 {form.fCategory || "Property"}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
                   >
                     <Pencil size={11} />
                   </button>
                 </div>
 
                 {/* Incident Location */}
-                <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                   <div className="min-w-0 flex-1">
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Incident Location</span>
-                    <span className="text-slate-200 font-bold text-xs block truncate">📍 {form.fAddress}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Incident Location</span>
+                    <span className="text-slate-900 font-semibold text-xs block truncate">📍 {form.fAddress}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(4)}
-                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition shrink-0"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition shrink-0 cursor-pointer"
                   >
                     <Pencil size={11} />
                   </button>
                 </div>
 
                 {/* Contact Mobile Number */}
-                <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Contact Mobile Number</span>
-                    <span className="text-slate-200 font-mono font-bold text-xs">+91 {form.fContact} {isWhatsAppSame && "(WhatsApp Active ✔)"}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Contact Mobile Number</span>
+                    <span className="text-slate-900 font-mono font-semibold text-xs">+91 {form.fContact} {isWhatsAppSame && "(WhatsApp Active ✔)"}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(7)}
-                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
                   >
                     <Pencil size={11} />
                   </button>
                 </div>
 
                 {/* Urgency Level */}
-                <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Urgency Level</span>
-                    <span className="text-slate-200 font-bold text-xs">{form.fUrgency}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Urgency Level</span>
+                    <span className="text-slate-900 font-semibold text-xs">{form.fUrgency}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
                   >
                     <Pencil size={11} />
                   </button>
@@ -1912,15 +1894,15 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
                 {/* Offered Reward (Conditional) */}
                 {isLost && (
-                  <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Offered Reward</span>
-                      <span className="text-emerald-400 font-mono font-black text-xs">{form.fReward ? `₹${form.fReward}` : "No Reward"}</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Offered Reward</span>
+                      <span className="text-emerald-700 font-mono font-bold text-xs">{form.fReward ? `₹${form.fReward}` : "No Reward"}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(6)}
-                      className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition"
+                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
                     >
                       <Pencil size={11} />
                     </button>
@@ -1928,15 +1910,15 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 )}
 
                 {/* Security PIN */}
-                <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] flex justify-between items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center gap-2">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-0.5">Security PIN</span>
-                    <span className="text-cyan-400 font-mono font-black text-xs">🔒 {form.fSecurityPin} (Write this down!)</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-0.5">Security PIN</span>
+                    <span className="text-slate-900 font-mono font-bold text-xs">🔒 {form.fSecurityPin} (Keep safe!)</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(8)}
-                    className="p-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-500 hover:text-cyan-300 hover:border-cyan-500/30 transition"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition cursor-pointer"
                   >
                     <Pencil size={11} />
                   </button>
@@ -1944,36 +1926,36 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               </div>
 
               {/* Description Details Review */}
-              <div className="pt-4 border-t border-[#161621] relative group">
+              <div className="pt-4 border-t border-slate-100 relative group">
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Description details</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Description details</span>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="text-[11px] text-slate-400 hover:text-cyan-300 flex items-center gap-1"
+                    className="text-[11px] text-slate-600 hover:text-slate-900 flex items-center gap-1 font-medium cursor-pointer"
                   >
                     <Pencil size={11} /> Edit Description
                   </button>
                 </div>
-                <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap bg-[#030304]/60 p-4 rounded-xl border border-[#1c1c26] font-mono">
+                <p className="text-slate-800 text-xs leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono">
                   {form.fDetails}
                 </p>
               </div>
 
               {/* Timeline Details Review */}
               {form.fTimeline && (
-                <div className="pt-4 border-t border-[#161621] relative group">
+                <div className="pt-4 border-t border-slate-100 relative group">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Temporal parameters</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Temporal parameters</span>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(5)}
-                      className="text-[11px] text-slate-400 hover:text-cyan-300 flex items-center gap-1"
+                      className="text-[11px] text-slate-600 hover:text-slate-900 flex items-center gap-1 font-medium cursor-pointer"
                     >
                       <Pencil size={11} /> Edit Timeline
                     </button>
                   </div>
-                  <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap bg-[#030304]/60 p-4 rounded-xl border border-[#1c1c26] font-mono">
+                  <p className="text-slate-800 text-xs leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono">
                     {form.fTimeline}
                   </p>
                 </div>
@@ -1981,42 +1963,42 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Review Experience Intelligence Checklist */}
               {((isLost && !form.fReward) || !form.fImage || (form.fDetails && form.fDetails.length < 100)) && (
-                <div className="pt-4 border-t border-[#161621] space-y-2.5">
-                  <span className="text-[10px] text-amber-400 uppercase font-black tracking-wider block">
-                    ⚡ Recommended Adjustments for Perfect Matching:
+                <div className="pt-4 border-t border-slate-100 space-y-2.5">
+                  <span className="text-[10px] text-amber-800 uppercase font-bold tracking-wider block">
+                    ⚡ Recommended Adjustments for Optimal Matching:
                   </span>
                   <div className="space-y-2">
                     {isLost && !form.fReward && (
-                      <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between gap-3">
-                        <span className="leading-relaxed font-medium">💰 **Adding a citizen reward** may increase community response &amp; incentivize quick returns.</span>
+                      <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between gap-3">
+                        <span className="leading-relaxed font-normal">💰 <strong>Adding a citizen reward</strong> may increase community response &amp; incentivize returns.</span>
                         <button
                           type="button"
                           onClick={() => setCurrentStep(6)}
-                          className="text-[10px] font-bold px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-200 rounded-lg hover:bg-amber-500/25 transition shrink-0 uppercase cursor-pointer"
+                          className="text-[10px] font-semibold px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-lg hover:bg-amber-100 transition shrink-0 uppercase cursor-pointer"
                         >
                           Add Reward
                         </button>
                       </div>
                     )}
                     {!form.fImage && (
-                      <div className="p-3.5 rounded-xl bg-cyan-500/5 border border-cyan-500/20 text-cyan-300 text-xs flex items-center justify-between gap-3">
-                        <span className="leading-relaxed font-medium">📷 **Adding a photo** provides comparative spatial visuals for the Gemini scanning engine.</span>
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center justify-between gap-3">
+                        <span className="leading-relaxed font-normal">📷 <strong>Adding a photo</strong> provides comparative visuals for smart image matching.</span>
                         <button
                           type="button"
                           onClick={() => setCurrentStep(3)}
-                          className="text-[10px] font-bold px-3 py-1.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 rounded-lg hover:bg-cyan-500/25 transition shrink-0 uppercase cursor-pointer"
+                          className="text-[10px] font-semibold px-3 py-1.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 transition shrink-0 uppercase cursor-pointer"
                         >
                           Add Photo
                         </button>
                       </div>
                     )}
                     {form.fDetails && form.fDetails.length < 100 && (
-                      <div className="p-3.5 rounded-xl bg-violet-500/5 border border-violet-500/20 text-violet-300 text-xs flex items-center justify-between gap-3">
-                        <span className="leading-relaxed font-medium">📝 **Expanding description** with colors, brand names, or scratches prevents mismatch duplicates.</span>
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center justify-between gap-3">
+                        <span className="leading-relaxed font-normal">📝 <strong>Expanding description</strong> with colors, brand names, or markings prevents duplicates.</span>
                         <button
                           type="button"
                           onClick={() => setCurrentStep(2)}
-                          className="text-[10px] font-bold px-3 py-1.5 bg-violet-500/15 border border-violet-500/30 text-violet-200 rounded-lg hover:bg-violet-500/25 transition shrink-0 uppercase cursor-pointer"
+                          className="text-[10px] font-semibold px-3 py-1.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 transition shrink-0 uppercase cursor-pointer"
                         >
                           Add Details
                         </button>
@@ -2027,40 +2009,40 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
               )}
 
               {/* Automatic Match Reminder notification bar */}
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-violet-950/10 border border-violet-900/30 text-violet-300 text-xs leading-relaxed font-medium">
-                <BellRing size={16} className="shrink-0 text-violet-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs leading-relaxed font-normal">
+                <BellRing size={16} className="shrink-0 text-slate-800 mt-0.5" />
                 <p>
-                  <strong>Gemini Smart Match active:</strong> Upon publishing, our matching scanner automatically reconciles this post with corresponding directory indexes, filtering for potential coordinates and notifying you in your feed immediately.
+                  <strong>Smart Match active:</strong> Upon publishing, our engine automatically reconciles this post with corresponding directory items, filtering for potential coordinates and notifying you in your feed immediately.
                 </p>
               </div>
             </div>
 
             {/* Error/Success Feedbacks */}
             {submitError && (
-              <div className="flex items-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              <div className="flex items-center gap-2 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
                 <AlertCircle size={14} className="shrink-0" />
                 <p className="font-semibold">{submitError}</p>
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+              <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs">
                 <Check size={14} className="shrink-0 animate-bounce" />
-                <p className="font-semibold">⚡ Report successfully published! Checking Gemini AI Matches...</p>
+                <p className="font-semibold">⚡ Report successfully published! Checking AI Matches...</p>
               </div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* REDESIGNED FLOATING NAVIGATION CONTROLS BAR */}
-      <div className="flex gap-4 mt-8 pt-5 border-t border-[#161621] text-left">
+      {/* NAVIGATION CONTROLS BAR */}
+      <div className="flex gap-3 mt-8 pt-5 border-t border-slate-200 text-left">
         {currentStep > 1 && (
           <button
             type="button"
             onClick={handleGoBack}
             disabled={submitting}
-            className="py-3 px-5 rounded-xl bg-[#030304] border border-[#1c1c26] hover:border-slate-800 text-slate-400 hover:text-white transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-bold disabled:opacity-40"
+            className="py-3 px-5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold disabled:opacity-40 shadow-2xs"
           >
             <ChevronLeft size={14} /> Back
           </button>
@@ -2070,7 +2052,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
           <button
             type="button"
             onClick={validateAndNext}
-            className="flex-1 py-3.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 uppercase shadow-lg shadow-cyan-950/20 ml-auto"
+            className="flex-1 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 uppercase shadow-2xs ml-auto"
           >
             Continue <ChevronRight size={14} />
           </button>
@@ -2079,7 +2061,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
             type="button"
             onClick={handleFinalSubmit}
             disabled={submitting}
-            className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-black hover:text-black tracking-wide shadow-lg transition duration-150 cursor-pointer text-xs uppercase flex items-center justify-center gap-1.5"
+            className="flex-1 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold tracking-wide shadow-2xs transition duration-150 cursor-pointer text-xs uppercase flex items-center justify-center gap-1.5"
           >
             {submitting ? "Publishing on Network..." : "Publish Report & Match 🚀"}
           </button>

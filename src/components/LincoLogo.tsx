@@ -8,6 +8,7 @@ export interface LincoLogoProps {
   monochrome?: boolean;
   showTagline?: boolean;
   taglineText?: string;
+  theme?: "light" | "dark";
   onClick?: () => void;
 }
 
@@ -19,6 +20,7 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
   monochrome = false,
   showTagline = false,
   taglineText = "Locate • Verify • Reunite",
+  theme = "light",
   onClick
 }) => {
   // Resolve pixel sizes for standard variants
@@ -166,17 +168,21 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
     );
   }
 
+  const textBaseClass = theme === "dark" ? "text-white" : "text-slate-900";
+  const taglineClass = theme === "dark" ? "text-indigo-400" : "text-indigo-600";
+  const subtextClass = theme === "dark" ? "text-slate-400" : "text-slate-500";
+
   if (variant === "wordmark") {
     return (
       <div 
         className={`inline-flex flex-col items-start ${className}`}
         onClick={onClick}
       >
-        <span className="font-sans font-black text-xl tracking-tight text-white select-none">
+        <span className={`font-sans font-black text-xl tracking-tight ${textBaseClass} select-none`}>
           LINCO
         </span>
         {showTagline && (
-          <span className="font-mono text-[9px] font-semibold text-indigo-400/90 tracking-widest uppercase mt-0.5">
+          <span className={`font-mono text-[9px] font-semibold ${taglineClass} tracking-widest uppercase mt-0.5`}>
             {taglineText}
           </span>
         )}
@@ -192,14 +198,14 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
       >
         {renderIcon()}
         <div className="flex flex-col items-center">
-          <span className="font-sans font-extrabold tracking-tight text-white text-2xl sm:text-3xl select-none">
+          <span className={`font-sans font-extrabold tracking-tight ${textBaseClass} text-2xl sm:text-3xl select-none`}>
             LINCO
           </span>
-          <span className="font-mono text-[10px] sm:text-xs font-semibold text-indigo-400 tracking-[0.2em] uppercase mt-1">
+          <span className={`font-mono text-[10px] sm:text-xs font-semibold ${taglineClass} tracking-[0.2em] uppercase mt-1`}>
             AI Lost & Found India
           </span>
           {showTagline && (
-            <span className="font-sans text-xs text-slate-400 font-medium tracking-wide mt-1.5 max-w-xs">
+            <span className={`font-sans text-xs ${subtextClass} font-medium tracking-wide mt-1.5 max-w-xs`}>
               {taglineText}
             </span>
           )}
@@ -238,12 +244,12 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
       {renderIcon()}
       <div className="flex flex-col leading-none">
         <div className="flex items-center gap-1.5">
-          <span className={`font-sans font-black tracking-tight text-white select-none ${textSizeClass} group-hover:text-indigo-200 transition-colors`}>
+          <span className={`font-sans font-black tracking-tight ${textBaseClass} select-none ${textSizeClass} group-hover:text-indigo-600 transition-colors`}>
             LINCO
           </span>
         </div>
         {showTagline && (
-          <span className="font-mono text-[9px] font-semibold text-indigo-400/90 tracking-wider uppercase mt-1">
+          <span className={`font-mono text-[9px] font-semibold ${taglineClass} tracking-wider uppercase mt-1`}>
             {taglineText}
           </span>
         )}
