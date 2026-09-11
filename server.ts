@@ -2980,6 +2980,13 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  if (process.env.ADMIN_API_KEY) {
+    const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+    if (!providedKey || providedKey !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative key." });
+    }
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
