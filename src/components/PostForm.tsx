@@ -1294,7 +1294,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <MapPin size={16} className="absolute left-4 top-3.5 text-slate-500" />
+                    <MapPin size={16} className="absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       placeholder="e.g. Pune University Library cafeteria, Block A elevators, Wagholi area"
@@ -1303,16 +1303,16 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                         form.setFAddress(e.target.value);
                         setLocalErrors((prev) => ({ ...prev, address: "" }));
                       }}
-                      className="w-full h-12 pl-12 pr-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 transition placeholder:text-slate-600 shadow-inner"
+                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/25 outline-none text-xs text-slate-100 transition placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleUseCurrentLocation}
-                    className="h-12 px-5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                    className="h-12 px-5 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
                     title="Retrieve Coordinates via Device GPS"
                   >
-                    <MapPin size={14} className="animate-pulse" /> <span>Current Location</span>
+                    <MapPin size={14} className="animate-pulse text-indigo-400" /> <span>Current Location</span>
                   </button>
                 </div>
                 {localErrors.address && (
@@ -1324,7 +1324,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
 
               {/* Map & Distance directly below address */}
               <div className="space-y-4">
-                <div className="rounded-[24px] overflow-hidden h-60 border border-[#161621] shadow-xl relative">
+                <div className="rounded-2xl overflow-hidden border border-[#161621] shadow-xl relative">
                   <ErrorBoundary fallbackTitle="Interactive Map Error">
                     <InteractiveMap
                       onChange={(lat, lng) => {
@@ -1540,16 +1540,17 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 <label className="block text-sm font-semibold text-slate-200 tracking-tight mb-2">
                   Offered Reward Amount (₹)
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-emerald-400 font-bold text-sm">
+                <div className="flex items-center h-12 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus-within:border-emerald-500/80 focus-within:ring-1 focus-within:ring-emerald-500/25 overflow-hidden transition-all shadow-inner">
+                  <div className="flex items-center justify-center pl-4 pr-2 text-emerald-400 font-bold text-sm select-none shrink-0">
                     ₹
-                  </span>
+                  </div>
                   <input
                     type="text"
+                    inputMode="numeric"
                     placeholder="e.g. 500, 1000, 2500"
                     value={form.fReward}
                     onChange={(e) => form.setFReward(e.target.value.replace(/\D/g, ""))}
-                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#030304]/60 border border-[#1c1c26] focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/25 outline-none text-xs text-slate-100 font-mono font-bold shadow-inner"
+                    className="w-full h-full pr-4 bg-transparent outline-none text-xs text-slate-100 font-mono font-bold placeholder:text-slate-600"
                   />
                 </div>
               </div>

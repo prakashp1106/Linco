@@ -49,10 +49,10 @@ export const VerificationTimeline: React.FC<{ currentStep: number }> = ({ curren
   ];
 
   return (
-    <div className="py-4 px-1" id="verification-timeline">
+    <div className="py-3 px-1" id="verification-timeline">
       <div className="flex items-center justify-between relative">
         {/* Progress Line */}
-        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#1c1c26] z-0">
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-slate-800 z-0">
           <motion.div 
             className="h-full bg-indigo-500"
             initial={{ width: "0%" }}
@@ -69,23 +69,21 @@ export const VerificationTimeline: React.FC<{ currentStep: number }> = ({ curren
           
           return (
             <div key={idx} className="flex flex-col items-center relative z-10">
-              <motion.div 
-                className={`w-7 h-7 rounded-full flex items-center justify-center border font-mono text-[10px] font-bold ${
+              <div 
+                className={`w-6 h-6 rounded-full flex items-center justify-center border text-[10px] font-medium transition-all ${
                   isCompleted 
-                    ? "bg-indigo-500 border-indigo-500 text-white" 
+                    ? "bg-indigo-600 border-indigo-600 text-white" 
                     : isActive 
-                    ? "bg-[#0c0c14] border-indigo-400 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.35)]" 
-                    : "bg-[#07070a] border-[#1c1c26] text-slate-500"
+                    ? "bg-[#0c0e16] border-indigo-500 text-indigo-400" 
+                    : "bg-[#0c0e16] border-slate-800 text-slate-500"
                 }`}
-                animate={isActive ? { scale: [1, 1.08, 1] } : {}}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
               >
-                {isCompleted ? <Check size={11} strokeWidth={3} /> : stepNum}
-              </motion.div>
-              <span className={`text-[9px] font-bold mt-1.5 uppercase tracking-wider ${isActive ? "text-indigo-400" : isCompleted ? "text-slate-300" : "text-slate-500"}`}>
+                {isCompleted ? <Check size={11} strokeWidth={2.5} /> : stepNum}
+              </div>
+              <span className={`text-[10px] font-medium mt-1.5 ${isActive ? "text-indigo-400" : isCompleted ? "text-slate-300" : "text-slate-500"}`}>
                 {step.label}
               </span>
-              <span className="text-[7px] text-slate-600 font-mono hidden sm:block mt-0.5">
+              <span className="text-[9px] text-slate-500 hidden sm:block mt-0.5">
                 {step.desc}
               </span>
             </div>
@@ -104,23 +102,23 @@ export const TrustScoreCard: React.FC<{ aiScore: number }> = ({ aiScore }) => {
 
   const confidenceMetrics = [
     { label: "Verified Match", val: aiScore, icon: BadgeCheck, color: "text-indigo-400", bg: "bg-indigo-500" },
-    { label: "AI Confidence", val: getSubScore(4), icon: Sparkles, color: "text-purple-400", bg: "bg-purple-500" },
-    { label: "Location Confidence", val: getSubScore(-3), icon: MapPin, color: "text-cyan-400", bg: "bg-cyan-500" },
-    { label: "Timeline Confidence", val: getSubScore(-6), icon: Clock, color: "text-amber-400", bg: "bg-amber-500" },
-    { label: "Description Confidence", val: getSubScore(8), icon: FileText, color: "text-teal-400", bg: "bg-teal-500" },
-    { label: "Photo Confidence", val: getSubScore(5), icon: ImageIcon, color: "text-emerald-400", bg: "bg-emerald-500" }
+    { label: "AI Confidence", val: getSubScore(4), icon: Sparkles, color: "text-indigo-400", bg: "bg-indigo-500" },
+    { label: "Location Confidence", val: getSubScore(-3), icon: MapPin, color: "text-indigo-400", bg: "bg-indigo-500" },
+    { label: "Timeline Confidence", val: getSubScore(-6), icon: Clock, color: "text-indigo-400", bg: "bg-indigo-500" },
+    { label: "Description Confidence", val: getSubScore(8), icon: FileText, color: "text-indigo-400", bg: "bg-indigo-500" },
+    { label: "Photo Confidence", val: getSubScore(5), icon: ImageIcon, color: "text-indigo-400", bg: "bg-indigo-500" }
   ];
 
   return (
-    <div className="p-4 rounded-2xl bg-[#0c0c14] border border-[#1c1c26] space-y-4" id="trust-score-card">
-      <div className="flex justify-between items-center pb-2 border-b border-[#161621]">
+    <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 space-y-3 text-left" id="trust-score-card">
+      <div className="flex justify-between items-center pb-2 border-b border-slate-800">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="text-indigo-400" size={14} />
-          <span className="text-[10px] font-mono font-bold text-slate-300 uppercase tracking-widest">
+          <span className="text-xs font-semibold text-slate-300">
             Ownership Integrity Index
           </span>
         </div>
-        <span className="text-xs font-mono font-black text-indigo-400 bg-indigo-950/40 border border-indigo-500/20 px-2 py-0.5 rounded">
+        <span className="text-xs font-medium text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">
           {aiScore}% High Integrity
         </span>
       </div>
@@ -130,14 +128,14 @@ export const TrustScoreCard: React.FC<{ aiScore: number }> = ({ aiScore }) => {
           const Icon = m.icon;
           return (
             <div key={idx} className="space-y-1">
-              <div className="flex justify-between items-center text-[9px] font-mono font-bold">
+              <div className="flex justify-between items-center text-[10px]">
                 <span className="text-slate-400 flex items-center gap-1">
-                  <Icon size={10} className={m.color} />
+                  <Icon size={11} className={m.color} />
                   {m.label}
                 </span>
-                <span className="text-slate-300">{m.val}%</span>
+                <span className="text-slate-300 font-medium">{m.val}%</span>
               </div>
-              <div className="h-1.5 bg-[#030304] rounded-full overflow-hidden border border-[#161621]">
+              <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
                 <motion.div 
                   className={`h-full ${m.bg}`}
                   initial={{ width: 0 }}
@@ -156,30 +154,30 @@ export const TrustScoreCard: React.FC<{ aiScore: number }> = ({ aiScore }) => {
 // SECURITY EXPLANATION CARD
 export const SecurityExplanationCard: React.FC = () => {
   return (
-    <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0c0c14] to-[#08080c] border border-[#161621] space-y-3 shadow-md" id="security-explanation-card">
-      <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+    <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 space-y-2.5 text-left" id="security-explanation-card">
+      <h4 className="text-xs font-semibold text-indigo-400 flex items-center gap-1.5">
         <ShieldCheck size={14} /> Safe Ownership Verification
       </h4>
-      <p className="text-[11px] text-slate-400 leading-relaxed">
+      <p className="text-xs text-slate-400 leading-relaxed">
         We use secure, private steps to ensure handovers are completely safe, authentic, and trouble-free.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-[10px] sm:text-[11px]">
-        <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🔒 Your information stays protected</span>
-          <span className="text-slate-400 block leading-normal text-[10px]">Your contact details are fully protected. Only verified matched parties can unlock them.</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+        <div className="p-2.5 rounded-lg bg-[#0c0e16] border border-slate-800 space-y-0.5">
+          <span className="font-medium text-slate-200 block">🔒 Information Protected</span>
+          <span className="text-slate-400 block leading-relaxed text-[11px]">Your contact details are fully protected. Only verified matched parties can unlock them.</span>
         </div>
-        <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🛡 Secure Contact Sharing</span>
-          <span className="text-slate-400 block leading-normal text-[10px]">Contact options are only unlocked once mutual ownership is verified. Your phone is never shown publicly.</span>
+        <div className="p-2.5 rounded-lg bg-[#0c0e16] border border-slate-800 space-y-0.5">
+          <span className="font-medium text-slate-200 block">🛡 Secure Contact Sharing</span>
+          <span className="text-slate-400 block leading-relaxed text-[11px]">Contact options are only unlocked once mutual ownership is verified. Your phone is never shown publicly.</span>
         </div>
-        <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🤖 AI helps verify genuine matches</span>
-          <span className="text-slate-400 block leading-normal text-[10px]">Our AI evaluates claims to confirm genuine details and protect against fraudulent claims.</span>
+        <div className="p-2.5 rounded-lg bg-[#0c0e16] border border-slate-800 space-y-0.5">
+          <span className="font-medium text-slate-200 block">🤖 Genuine Match Verification</span>
+          <span className="text-slate-400 block leading-relaxed text-[11px]">AI evaluates claims to confirm genuine details and protect against fraudulent claims.</span>
         </div>
-        <div className="p-2.5 rounded-xl bg-[#030304]/60 border border-[#161621] space-y-1">
-          <span className="font-bold text-slate-200 block">🔑 Safe Handover Code</span>
-          <span className="text-slate-400 block leading-normal text-[10px]">Unique verification tracking codes protect both parties and let you coordinate a safe, easy meeting.</span>
+        <div className="p-2.5 rounded-lg bg-[#0c0e16] border border-slate-800 space-y-0.5">
+          <span className="font-medium text-slate-200 block">🔑 Safe Handover Code</span>
+          <span className="text-slate-400 block leading-relaxed text-[11px]">Unique verification tracking codes protect both parties and let you coordinate a safe meeting.</span>
         </div>
       </div>
     </div>
@@ -298,53 +296,48 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
           id="claim-modal-overlay"
         >
           <motion.div
             initial={{ scale: 0.96, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, y: 12 }}
-            className="bg-[#07070a] border border-[#161621] rounded-3xl p-5 md:p-6.5 w-full max-w-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.95)] relative my-8"
+            className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-5 md:p-6 w-full max-w-2xl shadow-2xl relative my-8"
           >
-            {/* Elegant header glow */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500 opacity-60" />
-            
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-[#12121a] text-slate-500 hover:text-slate-300 transition cursor-pointer z-10"
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer z-10"
             >
-              <X size={15} />
+              <X size={16} />
             </button>
 
             {!createdClaim ? (
-              <div className="space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#12121a] pb-3">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-indigo-400 uppercase tracking-widest bg-indigo-950/30 px-3 py-1 rounded-full border border-indigo-500/10 w-fit mb-1.5">
-                      <ShieldCheck size={12} className="text-indigo-400" /> Safe Ownership Verification
-                    </div>
-                    <h3 className="text-base sm:text-lg font-display font-black text-slate-100">
-                      Prove Ownership: {claimingPost.item}
-                    </h3>
+              <div className="space-y-4">
+                <div className="border-b border-slate-800 pb-3 text-left">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 w-fit mb-1.5">
+                    <ShieldCheck size={13} className="text-indigo-400" /> Safe Ownership Verification
                   </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-100">
+                    Prove Ownership: {claimingPost.item}
+                  </h3>
                 </div>
 
                 {/* PREMIUM TIMELINE */}
                 <VerificationTimeline currentStep={2} />
 
-                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed font-sans">
+                <p className="text-xs text-slate-400 leading-relaxed text-left">
                   To ensure items are returned to their rightful owners, we verify matches before sharing contact details.
-                  Please answer the simple verification questions below.
+                  Please answer the verification questions below.
                 </p>
 
                 {/* Loader */}
                 {loading && (
-                  <div className="py-14 text-center text-[12px] text-slate-400 font-medium space-y-3.5 bg-[#030304]/60 rounded-2xl border border-[#161621] p-6">
-                    <RefreshCw className="animate-spin inline-block text-indigo-400" size={24} />
-                    <p className="font-sans tracking-wide text-[11px] text-slate-400 animate-pulse">
-                      AI is helping prepare your verification questions...
+                  <div className="py-12 text-center text-xs text-slate-400 font-medium space-y-3 bg-[#121520] rounded-xl border border-slate-800 p-6">
+                    <RefreshCw className="animate-spin inline-block text-indigo-400" size={20} />
+                    <p className="text-xs text-slate-400">
+                      Preparing your verification questions...
                     </p>
                   </div>
                 )}
@@ -353,25 +346,25 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 {!loading && claimQuestions.length > 0 && (
                   <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
                     {/* Claimant Name & Contact */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#030304]/60 p-3.5 rounded-2xl border border-[#161621]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#121520] p-3.5 rounded-xl border border-slate-800 text-left">
                       <div className="space-y-1">
-                        <label className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
-                          <User size={11} className="text-slate-500" /> claimant name
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                          <User size={12} className="text-slate-400" /> Claimant Name
                         </label>
                         <input
                           type="text"
-                          placeholder="Your official name"
+                          placeholder="Your full name"
                           value={claimantName}
                           onChange={(e) => setClaimantName(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-200 transition"
+                          className="w-full px-3 py-2 rounded-lg bg-[#0c0e16] border border-slate-800 focus:border-indigo-500 outline-none text-xs text-slate-200 transition"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
-                          <Phone size={11} className="text-slate-500" /> WhatsApp Mobile
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                          <Phone size={12} className="text-slate-400" /> WhatsApp Mobile
                         </label>
                         <div className="flex gap-2">
-                          <div className="flex items-center justify-center px-3 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] text-xs text-slate-400 font-bold select-none shrink-0 gap-1">
+                          <div className="flex items-center justify-center px-2.5 py-2 rounded-lg bg-[#0c0e16] border border-slate-800 text-xs text-slate-400 font-medium select-none shrink-0 gap-1">
                             <span>🇮🇳</span>
                             <span>+91</span>
                           </div>
@@ -382,32 +375,32 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                             placeholder="9876543210"
                             value={claimantContact}
                             onChange={(e) => setClaimantContact(e.target.value.replace(/\D/g, ""))}
-                            className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-200 transition"
+                            className="flex-1 px-3 py-2 rounded-lg bg-[#0c0e16] border border-slate-800 focus:border-indigo-500 outline-none text-xs text-slate-200 transition"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* AI Questions */}
-                    <div className="space-y-3.5">
-                      <div className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest border-b border-[#12121a] pb-1.5 flex items-center gap-1.5">
-                        <Sparkles size={11} className="text-indigo-400" /> Verify Item Details
+                    <div className="space-y-3 text-left">
+                      <div className="text-xs font-semibold text-slate-200 border-b border-slate-800 pb-1.5 flex items-center gap-1.5">
+                        <Sparkles size={13} className="text-indigo-400" /> Verify Item Details
                       </div>
                       {claimQuestions.map((q, idx) => (
-                        <div key={idx} className="space-y-2 bg-[#030304]/30 border border-[#161621] p-3.5 rounded-2xl">
-                          <label className="block text-[11px] font-bold text-slate-200 leading-relaxed">
+                        <div key={idx} className="space-y-1.5 bg-[#121520] border border-slate-800 p-3 rounded-xl">
+                          <label className="block text-xs font-medium text-slate-200 leading-relaxed">
                             Q{idx + 1}: {q}
                           </label>
                           <textarea
                             rows={2}
-                            placeholder="Please explain in detail (mention markings, inner contents, purchase details if applicable)..."
+                            placeholder="Describe in detail (mention markings, inner contents, purchase details if applicable)..."
                             value={claimAnswers[idx] || ""}
                             onChange={(e) => {
                               const updated = [...claimAnswers];
                               updated[idx] = e.target.value;
                               setClaimAnswers(updated);
                             }}
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-xs text-slate-200 transition resize-none leading-relaxed"
+                            className="w-full px-3 py-2 rounded-lg bg-[#0c0e16] border border-slate-800 focus:border-indigo-500 outline-none text-xs text-slate-200 transition resize-none leading-relaxed"
                           />
                         </div>
                       ))}
@@ -417,27 +410,27 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                     <SecurityExplanationCard />
 
                     {errorMsg && (
-                      <div className="text-[11px] text-rose-300 flex items-center gap-2 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 font-semibold font-mono">
+                      <div className="text-xs text-rose-300 flex items-center gap-2 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 font-medium text-left">
                         <AlertTriangle size={14} className="shrink-0 text-rose-400" /> {errorMsg}
                       </div>
                     )}
 
-                    <div className="flex gap-2.5 pt-2">
+                    <div className="flex gap-2.5 pt-1">
                       <button
                         onClick={onClose}
                         disabled={submitting}
-                        className="flex-1 py-3 rounded-xl bg-[#030304] border border-[#1c1c26] text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer disabled:opacity-50 hover:bg-[#12121a]"
+                        className="flex-1 py-2.5 rounded-xl bg-[#121520] border border-slate-800 text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer disabled:opacity-50 hover:bg-slate-800"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSubmitClaim}
                         disabled={submitting}
-                        className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black transition cursor-pointer text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-950/40 uppercase tracking-widest active:scale-[0.98]"
+                        className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer text-xs flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm active:scale-95"
                       >
                         {submitting ? (
                           <>
-                            <RefreshCw className="animate-spin text-white" size={13} /> submitting...
+                            <RefreshCw className="animate-spin text-white" size={13} /> Submitting...
                           </>
                         ) : (
                           "Submit Verification"
@@ -449,17 +442,17 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
               </div>
             ) : (
               /* Success State */
-              <div className="space-y-5 animate-fade-in text-center py-2">
+              <div className="space-y-4 animate-fade-in text-center py-2">
                 <div className="flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-emerald-950/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-                    <CheckCircle size={28} />
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <CheckCircle size={24} />
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-base sm:text-lg font-display font-black text-slate-100">Verification Registered</h3>
-                  <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-1 font-sans">
-                    Your details have been saved securely. Our AI helper has matched your description.
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-100">Verification Registered</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
+                    Your details have been saved securely. The item finder will review your verification answers.
                   </p>
                 </div>
 
@@ -470,43 +463,43 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 <TrustScoreCard aiScore={createdClaim.aiScore} />
 
                 {/* Tracking Details Box */}
-                <div className="bg-[#030304]/60 border border-[#161621] p-4 rounded-2xl text-left space-y-3 shadow-inner">
-                  <div className="flex justify-between items-center pb-2 border-b border-[#12121a]">
-                    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+                <div className="bg-[#121520] border border-slate-800 p-4 rounded-xl text-left space-y-2.5">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                    <span className="text-xs text-slate-400">
                       Verification ID (Claim ID)
                     </span>
-                    <span className="text-xs font-mono font-bold text-slate-300">
+                    <span className="text-xs font-mono font-medium text-slate-200">
                       {createdClaim.id}
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 pt-1">
-                    <div className="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-                      AI Match Details
+                  <div className="space-y-1 pt-0.5">
+                    <div className="text-xs text-slate-400">
+                      Match Assessment
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-relaxed font-mono italic bg-[#07070a] p-3 rounded-xl border border-[#1c1c26] pl-3 border-l-2 border-indigo-500/50">
+                    <p className="text-xs text-slate-300 leading-relaxed bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800">
                       "{createdClaim.aiReason}"
                     </p>
                   </div>
                 </div>
 
                 {/* Magic Link Area */}
-                <div className="space-y-1.5 text-left bg-[#030304]/30 p-3 rounded-xl border border-[#161621]">
-                  <label className="block text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wider">
-                    Direct check-in link (bookmark this to return later)
+                <div className="space-y-1 text-left bg-[#121520] p-3 rounded-xl border border-slate-800">
+                  <label className="block text-xs font-medium text-slate-400">
+                    Direct recovery room link (bookmark to return)
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       readOnly
                       value={getMagicLink()}
-                      className="flex-1 px-3 py-2.5 rounded-xl bg-[#07070a] border border-[#1c1c26] text-[10px] font-mono text-slate-400 outline-none truncate"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-[#0c0e16] border border-slate-800 text-xs text-slate-300 outline-none truncate"
                     />
                     <button
                       onClick={handleCopyMagicLink}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-black transition flex items-center gap-1.5 cursor-pointer uppercase border border-indigo-500/25 active:scale-[0.97]"
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 text-xs font-medium transition flex items-center gap-1 cursor-pointer border border-indigo-500/20"
                     >
-                      <Copy size={11} /> {copiedLink ? "Copied" : "Copy"}
+                      <Copy size={12} /> {copiedLink ? "Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
@@ -514,9 +507,9 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 <div className="pt-2">
                   <button
                     onClick={onClose}
-                    className="w-full py-3 rounded-xl bg-[#030304] hover:bg-[#12121a] border border-[#1c1c26] text-slate-300 hover:text-white transition text-xs font-black uppercase tracking-wider cursor-pointer active:scale-[0.97]"
+                    className="w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition text-xs font-medium cursor-pointer"
                   >
-                    Done &amp; Await Owner Sign-off
+                    Done &amp; Await Finder Review
                   </button>
                 </div>
               </div>

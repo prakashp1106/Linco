@@ -200,10 +200,10 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="relative w-full max-w-md bg-[#090b10] border-l border-[#1a1d2d] shadow-2xl h-full flex flex-col justify-between z-10"
+        className="relative w-full max-w-md bg-[#0c0e16] border-l border-slate-800 shadow-2xl h-full flex flex-col justify-between z-10"
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-[#181b2a] flex items-center justify-between select-none bg-[#0a0d14]">
+        <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between select-none bg-[#121520]">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
               <Bell size={18} />
@@ -260,8 +260,8 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
                     key={notif.id}
                     className={`p-4 rounded-2xl flex flex-col gap-3 transition border ${
                       !notif.read 
-                        ? `bg-[#0f1320] ${taxonomy.cardBorder} shadow-[0_4px_20px_-4px_rgba(79,70,229,0.15)]` 
-                        : "bg-[#0a0c13] border-[#161826] hover:border-slate-800 opacity-90"
+                        ? `bg-[#121520] ${taxonomy.cardBorder} shadow-lg` 
+                        : "bg-[#0c0e16] border-slate-800/80 hover:border-slate-700 opacity-90"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -328,7 +328,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-[#07080d] border-t border-[#141624] text-center select-none">
+        <div className="p-4 bg-[#0c0e16] border-t border-slate-800 text-center select-none">
           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
             {t("notifications.networkFooter", "Verified Community Network • LINCO India")}
           </span>

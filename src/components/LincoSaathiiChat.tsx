@@ -343,37 +343,31 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
 
   return (
     <>
-      {/* 1. SIDEBAR PROMO CARD (REPLACES CRAMPED SIDEBAR CHAT) */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-4">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
-        
+      {/* 1. SIDEBAR PROMO CARD */}
+      <div className="bg-[#121520] border border-slate-800 rounded-xl p-5 relative overflow-hidden space-y-3.5">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 to-violet-500 blur-[4px] animate-pulse opacity-50" />
-            <div className="w-10 h-10 rounded-2xl bg-slate-950 border border-cyan-500/30 p-1.5 relative z-10 flex items-center justify-center">
-              <RobotAvatarIcon size={24} className="text-cyan-400" />
-            </div>
+          <div className="w-9 h-9 rounded-lg bg-[#0c0e16] border border-slate-800 flex items-center justify-center shrink-0">
+            <RobotAvatarIcon size={18} className="text-indigo-400" />
           </div>
           <div>
-            <h4 className="text-sm font-extrabold text-slate-100 tracking-wide flex items-center gap-1.5 font-sans">
+            <h4 className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
               LINCO Sathi
-              <span className="text-[9px] font-bold uppercase tracking-widest bg-cyan-400/10 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-400/20">AI Assistant</span>
+              <span className="text-[10px] font-medium bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20">AI Assistant</span>
             </h4>
-            <p className="text-xs text-slate-500 font-medium">Your Conversational Companion</p>
+            <p className="text-xs text-slate-500">Conversational report assistant</p>
           </div>
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed font-sans font-medium">
-          Report your lost or found item in under 60 seconds. Speak or type in Hinglish, Hindi, or English. Our AI automatically extracts fields, reverse-geocodes locations, and formats your entry.
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Report your lost or found item quickly. Speak or type in Hinglish, Hindi, or English to extract details, address, and category.
         </p>
 
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-600 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-lg shadow-cyan-500/10 cursor-pointer flex items-center justify-center gap-2 border border-cyan-400/20 active:scale-[0.98]"
+          className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-2"
         >
-          <Sparkles size={14} className="animate-pulse" />
-          Start AI Report Assistant
+          <Sparkles size={14} />
+          <span>Start AI Report Assistant</span>
         </button>
       </div>
 
@@ -383,14 +377,14 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-violet-600 text-slate-950 flex items-center justify-center shadow-2xl relative group cursor-pointer border border-cyan-400/30"
+          className="w-12 h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-950/40 relative group cursor-pointer border border-indigo-500/30 transition"
           title="Open AI Assistant"
         >
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400"></span>
           </span>
-          <RobotAvatarIcon size={24} className="text-slate-950 group-hover:rotate-12 transition-transform duration-200" />
+          <RobotAvatarIcon size={20} className="text-white" />
         </motion.button>
       </div>
 
@@ -432,29 +426,32 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
               }}
             >
               {/* Header */}
-              <div className="px-6 py-4 border-b border-slate-800 bg-[#08080c]/95 backdrop-blur-md flex items-center justify-between shrink-0 relative z-20">
+              <div className="px-5 py-3.5 border-b border-slate-800 bg-[#0c0e16] flex items-center justify-between shrink-0 relative z-20">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-slate-900 border border-cyan-500/20 flex items-center justify-center">
-                    <RobotAvatarIcon size={20} className="text-cyan-400 animate-pulse" />
+                  <div className="w-8 h-8 rounded-lg bg-[#121520] border border-slate-800 flex items-center justify-center">
+                    <RobotAvatarIcon size={18} className="text-indigo-400" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-black text-slate-100 tracking-wide flex items-center gap-1.5 uppercase font-mono">
-                      🤖 LINCO Sathi
+                    <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
+                      LINCO Sathi
+                      <span className="text-[10px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">
+                        AI Assistant
+                      </span>
                     </h2>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Your AI Lost & Found Assistant</p>
+                    <p className="text-[11px] text-slate-400">Conversational Lost & Found Assistant</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* Step Progress indicator */}
-                  <div className="hidden sm:flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-2.5">
                     <div className="text-right">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-none">Onboarding Progress</p>
-                      <p className="text-xs text-cyan-400 font-black tracking-widest mt-0.5 font-mono">Step {activeStep} of 8</p>
+                      <p className="text-[10px] text-slate-400 font-medium">Progress</p>
+                      <p className="text-xs text-indigo-300 font-semibold font-mono">Step {activeStep} of 8</p>
                     </div>
                     <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all duration-300"
+                        className="h-full bg-indigo-500 transition-all duration-300"
                         style={{ width: `${(activeStep / 8) * 100}%` }}
                       />
                     </div>
@@ -463,7 +460,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                   {/* Close button */}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-100 border border-slate-800 transition duration-200 cursor-pointer"
+                    className="p-1.5 rounded-lg bg-[#121520] hover:bg-slate-800 text-slate-400 hover:text-slate-100 border border-slate-800 transition duration-150 cursor-pointer"
                   >
                     <X size={16} />
                   </button>
@@ -471,9 +468,9 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
               </div>
 
               {/* Progress bar for mobile */}
-              <div className="sm:hidden w-full h-[3px] bg-slate-950 shrink-0">
+              <div className="sm:hidden w-full h-[2px] bg-slate-900 shrink-0">
                 <div 
-                  className="h-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all duration-300"
+                  className="h-full bg-indigo-500 transition-all duration-300"
                   style={{ width: `${(activeStep / 8) * 100}%` }}
                 />
               </div>
@@ -481,60 +478,60 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
               {/* Split Content Pane: Listing preview on Left, Chat window on Right */}
               <div className="flex-1 flex overflow-hidden">
                 {/* Left Preview Pane (Desktop Only) */}
-                <div className="hidden md:flex w-[320px] border-r border-slate-800/80 bg-slate-950/40 p-6 flex-col justify-between shrink-0 overflow-y-auto">
-                  <div className="space-y-5">
+                <div className="hidden md:flex w-[300px] border-r border-slate-800 bg-[#0c0e16] p-5 flex-col justify-between shrink-0 overflow-y-auto">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 font-mono">Real-time Draft Preview</h3>
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" />
+                      <h3 className="text-xs font-semibold text-slate-300">Draft Preview</h3>
+                      <span className="w-2 h-2 rounded-full bg-indigo-400" />
                     </div>
 
                     {/* Listing Card */}
-                    <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 space-y-4 shadow-xl">
+                    <div className="bg-[#121520] border border-slate-800 rounded-xl p-4 space-y-3.5">
                       {/* Image preview */}
-                      <div className="aspect-video w-full rounded-xl bg-slate-950 border border-slate-800/50 flex items-center justify-center overflow-hidden relative group">
+                      <div className="aspect-video w-full rounded-lg bg-[#0c0e16] border border-slate-800 flex items-center justify-center overflow-hidden relative">
                         {currentState.image ? (
                           <img src={currentState.image} alt="Draft uploaded" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="flex flex-col items-center text-slate-600">
-                            <ImageIcon size={24} className="opacity-60 mb-1" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest font-mono">No Image Uploaded</span>
+                          <div className="flex flex-col items-center text-slate-500">
+                            <ImageIcon size={22} className="opacity-60 mb-1" />
+                            <span className="text-[10px] font-medium">No Image Uploaded</span>
                           </div>
                         )}
-                        <span className="absolute top-2 left-2 text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950/80 border border-slate-800 text-slate-400">
+                        <span className="absolute top-2 left-2 text-[10px] font-medium px-2 py-0.5 rounded bg-slate-900/90 border border-slate-800 text-slate-300">
                           {currentState.type || "Lost"}
                         </span>
                       </div>
 
                       {/* Info details */}
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         <div>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">Item / Category</p>
-                          <h4 className="text-xs font-extrabold text-slate-200 mt-0.5 truncate">
+                          <p className="text-[10px] text-slate-400 font-medium">Item & Category</p>
+                          <h4 className="text-xs font-semibold text-slate-200 mt-0.5 truncate">
                             {currentState.item || "Untitled Item Draft"}
                           </h4>
-                          <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 bg-slate-950 rounded text-slate-400 mt-1">
+                          <span className="inline-block text-[10px] font-medium px-2 py-0.5 bg-[#0c0e16] border border-slate-800 rounded text-slate-400 mt-1">
                             {currentState.category || "Unassigned"}
                           </span>
                         </div>
 
                         <div>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">📍 Location</p>
-                          <p className="text-[11px] text-slate-300 font-semibold mt-0.5 truncate flex items-center gap-1">
-                            <MapPin size={10} className="text-cyan-400 shrink-0" />
+                          <p className="text-[10px] text-slate-400 font-medium">Location</p>
+                          <p className="text-xs text-slate-300 font-normal mt-0.5 truncate flex items-center gap-1">
+                            <MapPin size={11} className="text-indigo-400 shrink-0" />
                             {currentState.address || "Not specified yet"}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest font-mono">📝 Details</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">
+                          <p className="text-[10px] text-slate-400 font-medium">Details</p>
+                          <p className="text-xs text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">
                             {currentState.details || "Provide additional markings or descriptors..."}
                           </p>
                         </div>
 
-                        <div className="pt-2 border-t border-slate-800/50 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
-                          <span className="text-slate-500">Security PIN</span>
-                          <span className="text-slate-300 font-mono tracking-widest">
+                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] font-medium">
+                          <span className="text-slate-400">Security PIN</span>
+                          <span className="text-slate-300 font-mono">
                             {currentState.securityPin ? "****" : "Unset"}
                           </span>
                         </div>
@@ -542,37 +539,37 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-[9px] text-slate-600 font-mono tracking-widest text-center mt-4">
-                    LINCO AI ENCRYPTION STANDARD
+                  <div className="text-[10px] text-slate-500 text-center mt-4">
+                    Protected with end-to-end verification
                   </div>
                 </div>
 
                 {/* Right Chat Area (Main Window) */}
-                <div className="flex-1 flex flex-col bg-slate-950/20 overflow-hidden relative">
-                  {/* Premium Voice Assistant Toast Message */}
+                <div className="flex-1 flex flex-col bg-[#07090e] overflow-hidden relative">
+                  {/* Voice Assistant Toast Message */}
                   <AnimatePresence>
                     {showVoiceToast && (
                       <motion.div
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000000] w-[90%] max-w-sm bg-slate-950/95 border border-cyan-500/30 p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl flex gap-3 items-start"
+                        className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000000] w-[90%] max-w-sm bg-[#121520] border border-slate-800 p-4 rounded-xl shadow-xl flex gap-3 items-start"
                       >
-                        <div className="p-2 bg-cyan-950/80 rounded-xl text-cyan-400 border border-cyan-500/20 shrink-0">
+                        <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 border border-indigo-500/20 shrink-0">
                           <Mic size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-xs sm:text-sm text-slate-100 flex items-center gap-1.5">
-                            Voice Assistant <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold text-cyan-300">Coming Soon</span>
+                          <h4 className="font-semibold text-xs sm:text-sm text-slate-100 flex items-center gap-1.5">
+                            Voice Assistant <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded font-medium">Coming Soon</span>
                           </h4>
-                          <p className="text-slate-300 text-[11px] sm:text-xs mt-1 leading-relaxed">
-                            Voice conversations are coming soon. We are building a more powerful AI voice experience.
+                          <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                            Voice conversations are coming soon. You can continue typing or using one-tap options below.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setShowVoiceToast(false)}
-                          className="text-slate-500 hover:text-slate-300 transition shrink-0 p-1 hover:bg-slate-900 rounded-lg cursor-pointer"
+                          className="text-slate-400 hover:text-slate-200 transition shrink-0 p-1 hover:bg-slate-800 rounded-lg cursor-pointer"
                         >
                           <X size={14} />
                         </button>
@@ -590,25 +587,25 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         return (
                           <div 
                             key={m.id}
-                            className={`flex gap-3.5 ${isModel ? "justify-start" : "justify-end"}`}
+                            className={`flex gap-3 ${isModel ? "justify-start" : "justify-end"}`}
                           >
                             {isModel && (
-                              <div className="w-8 h-8 rounded-lg bg-slate-900 border border-cyan-500/10 flex items-center justify-center shrink-0 shadow">
-                                <RobotAvatarIcon size={16} />
+                              <div className="w-8 h-8 rounded-lg bg-[#121520] border border-slate-800 flex items-center justify-center shrink-0 shadow-sm">
+                                <RobotAvatarIcon size={16} className="text-indigo-400" />
                               </div>
                             )}
                             <div className="max-w-[80%]">
                               <div 
-                                className={`px-4 py-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+                                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm leading-relaxed shadow-sm ${
                                   isModel 
-                                    ? "bg-slate-900 text-slate-100 border border-slate-800/60 rounded-tl-sm font-medium" 
-                                    : "bg-gradient-to-r from-cyan-500/15 to-violet-600/15 border border-cyan-500/20 text-cyan-100 font-semibold rounded-tr-sm"
+                                    ? "bg-[#121520] text-slate-200 border border-slate-800 rounded-tl-sm font-normal" 
+                                    : "bg-indigo-600 text-white font-medium rounded-tr-sm"
                                 }`}
                                 style={{ whiteSpace: "pre-line" }}
                               >
                                 {m.content}
                               </div>
-                              <span className={`text-[9px] text-slate-600 mt-1 block font-mono ${!isModel ? "text-right" : ""}`}>
+                              <span className={`text-[10px] text-slate-500 mt-1 block font-mono ${!isModel ? "text-right" : ""}`}>
                                 {m.timestamp}
                               </span>
                             </div>
@@ -619,31 +616,31 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                       {/* Display Guided onboarding interactive pills based on current step */}
                       <div className="pl-11 pt-1">
                         {activeStep === 1 && (
-                          <div className="flex flex-wrap gap-3">
+                          <div className="flex flex-wrap gap-2.5">
                             <button
                               onClick={() => handleSelectType("Lost")}
-                              className="px-5 py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow-md"
+                              className="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 active:scale-95"
                             >
-                              🔴 Lost Item
+                              <span>Lost Item</span>
                             </button>
                             <button
                               onClick={() => handleSelectType("Found")}
-                              className="px-5 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow-md"
+                              className="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5 active:scale-95"
                             >
-                              🟢 Found Item
+                              <span>Found Item</span>
                             </button>
                           </div>
                         )}
 
                         {activeStep === 2 && (
-                          <div className="space-y-3">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Suggested item categories</p>
+                          <div className="space-y-2.5">
+                            <p className="text-[11px] text-slate-400 font-medium">Suggested item categories</p>
                             <div className="flex flex-wrap gap-2">
                               {CATEGORIES.map((cat) => (
                                 <button
                                   key={cat.name}
                                   onClick={() => handleSelectCategory(cat.name)}
-                                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800/80 border border-slate-800/80 text-slate-300 hover:text-slate-100 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+                                  className="px-3 py-1.5 rounded-lg bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-slate-100 text-xs font-medium transition cursor-pointer flex items-center gap-1.5"
                                 >
                                   <span>{cat.icon}</span>
                                   <span>{cat.name}</span>
@@ -654,23 +651,23 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         )}
 
                         {activeStep === 3 && (
-                          <div className="flex flex-wrap gap-3">
+                          <div className="flex flex-wrap gap-2.5">
                             <button
                               onClick={handleUseCurrentLocation}
-                              className="px-4 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2 active:scale-95 shadow"
+                              className="px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-medium text-xs transition cursor-pointer flex items-center gap-1.5 active:scale-95"
                             >
-                              <MapPin size={14} className="animate-pulse" />
-                              Use My Current GPS Location
+                              <MapPin size={13} />
+                              Use Current GPS Location
                             </button>
                             <button
                               onClick={() => setInputMessage("Pune Station")}
-                              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 text-xs font-bold transition cursor-pointer"
+                              className="px-3 py-2 rounded-xl bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium transition cursor-pointer"
                             >
                               Pune Station
                             </button>
                             <button
                               onClick={() => setInputMessage("Baner, Pune")}
-                              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 text-xs font-bold transition cursor-pointer"
+                              className="px-3 py-2 rounded-xl bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium transition cursor-pointer"
                             >
                               Baner, Pune
                             </button>
@@ -678,8 +675,8 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         )}
 
                         {activeStep === 5 && (
-                          <div className="space-y-3">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Set Urgency Level</p>
+                          <div className="space-y-2.5">
+                            <p className="text-[11px] text-slate-400 font-medium">Set Urgency Level</p>
                             <div className="flex flex-wrap gap-2">
                               {["Normal", "Contains ID", "Urgent", "Critical"].map((urg) => (
                                 <button
@@ -688,7 +685,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                                     onFieldUpdate({ urgency: urg });
                                     handleSendMessage(`Set urgency level to ${urg}`);
                                   }}
-                                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+                                  className="px-3 py-1.5 rounded-lg bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium transition cursor-pointer"
                                 >
                                   {urg}
                                 </button>
@@ -698,17 +695,17 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         )}
 
                         {activeStep === 6 && (
-                          <div className="flex flex-wrap gap-3">
+                          <div className="flex flex-wrap gap-2.5">
                             <button
                               onClick={() => cameraInputRef.current?.click()}
-                              className="px-4 py-3 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 text-violet-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2"
+                              className="px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-medium text-xs transition cursor-pointer flex items-center gap-1.5"
                             >
                               <Camera size={14} />
                               Take Live Photo
                             </button>
                             <button
                               onClick={() => fileInputRef.current?.click()}
-                              className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer flex items-center gap-2"
+                              className="px-3.5 py-2 rounded-xl bg-[#121520] hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs transition cursor-pointer flex items-center gap-1.5"
                             >
                               <ImageIcon size={14} />
                               Choose from Gallery
@@ -718,7 +715,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                                 onFieldUpdate({ image: null });
                                 handleSendMessage("Skip photo upload");
                               }}
-                              className="px-4 py-3 rounded-xl bg-slate-950/40 hover:bg-slate-900 border border-transparent text-slate-500 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer"
+                              className="px-3 py-2 rounded-xl bg-transparent hover:bg-[#121520] text-slate-500 hover:text-slate-400 font-medium text-xs transition cursor-pointer"
                             >
                               Skip Photo
                             </button>
@@ -726,19 +723,19 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         )}
 
                         {activeStep === 8 && (
-                          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-md space-y-4 shadow-xl">
+                          <div className="bg-[#121520] border border-slate-800 rounded-xl p-4 max-w-md space-y-3.5 shadow-lg">
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 size={18} className="text-emerald-400" />
-                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">Onboarding Review Completed!</h4>
+                              <CheckCircle2 size={16} className="text-emerald-400" />
+                              <h4 className="text-xs font-semibold text-slate-200">Onboarding Review Completed</h4>
                             </div>
                             
-                            <div className="space-y-1.5 text-xs text-slate-400 leading-relaxed font-sans">
-                              <p>• <span className="font-bold text-slate-300">Type:</span> {currentState.type}</p>
-                              <p>• <span className="font-bold text-slate-300">Item:</span> {currentState.item}</p>
-                              <p>• <span className="font-bold text-slate-300">Category:</span> {currentState.category}</p>
-                              <p>• <span className="font-bold text-slate-300">Location:</span> {currentState.address}</p>
-                              <p>• <span className="font-bold text-slate-300">Contact:</span> {currentState.contact}</p>
-                              <p>• <span className="font-bold text-slate-300">Security PIN:</span> {currentState.securityPin || "0000"}</p>
+                            <div className="space-y-1 text-xs text-slate-400 leading-relaxed font-sans">
+                              <p>• <span className="text-slate-300">Type:</span> {currentState.type}</p>
+                              <p>• <span className="text-slate-300">Item:</span> {currentState.item}</p>
+                              <p>• <span className="text-slate-300">Category:</span> {currentState.category}</p>
+                              <p>• <span className="text-slate-300">Location:</span> {currentState.address}</p>
+                              <p>• <span className="text-slate-300">Contact:</span> {currentState.contact}</p>
+                              <p>• <span className="text-slate-300">Security PIN:</span> {currentState.securityPin || "0000"}</p>
                             </div>
 
                             <button
@@ -757,27 +754,27 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                                   setIsOpen(false);
                                 }, 800);
                               }}
-                              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-lg cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
                             >
-                              ⚡ Publish Post Now
+                              Publish Post Now
                             </button>
                           </div>
                         )}
                       </div>
 
-                      {/* Thinking Shimmer Loading Indicator */}
+                      {/* Thinking Indicator */}
                       {(isThinking || chatLoading) && (
-                        <div className="flex gap-3.5 justify-start">
-                          <div className="w-8 h-8 rounded-lg bg-slate-900 border border-cyan-500/10 flex items-center justify-center shrink-0">
-                            <RobotAvatarIcon size={16} />
+                        <div className="flex gap-3 justify-start">
+                          <div className="w-8 h-8 rounded-lg bg-[#121520] border border-slate-800 flex items-center justify-center shrink-0">
+                            <RobotAvatarIcon size={16} className="text-indigo-400" />
                           </div>
                           <div className="max-w-[80%]">
-                            <div className="px-4 py-3 bg-slate-900 border border-slate-800/80 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2">
-                              <span className="text-xs text-slate-400 font-mono font-medium animate-pulse">LINCO Sathi is thinking...</span>
+                            <div className="px-4 py-2.5 bg-[#121520] border border-slate-800 rounded-xl rounded-tl-sm shadow-sm flex items-center gap-2">
+                              <span className="text-xs text-slate-400 font-medium">Thinking...</span>
                               <div className="flex gap-1 items-center">
-                                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse delay-100" />
+                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse delay-200" />
                               </div>
                             </div>
                           </div>
@@ -788,21 +785,21 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Manual pagination/navigation bar for conversational steps */}
-                  <div className="px-6 py-2 border-t border-b border-slate-900 bg-slate-950/45 flex items-center justify-between text-xs font-bold text-slate-500 shrink-0">
+                  {/* Step navigation bar */}
+                  <div className="px-5 py-2 border-t border-b border-slate-800 bg-[#0c0e16] flex items-center justify-between text-xs text-slate-400 shrink-0">
                     <button
                       onClick={handleManualPrevStep}
                       disabled={activeStep === 1}
-                      className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800/40 text-slate-400 disabled:opacity-30 cursor-pointer"
+                      className="flex items-center gap-1 px-2.5 py-1 bg-[#121520] hover:bg-slate-800 rounded-lg border border-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer text-xs"
                     >
                       <ChevronLeft size={14} />
                       Back
                     </button>
-                    <span className="font-mono text-[10px] tracking-widest uppercase">Conversational step {activeStep} of 8</span>
+                    <span className="font-mono text-[11px] text-slate-400">Step {activeStep} of 8</span>
                     <button
                       onClick={handleManualNextStep}
                       disabled={activeStep === 8}
-                      className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-850 rounded-lg border border-slate-800/40 text-slate-400 disabled:opacity-30 cursor-pointer"
+                      className="flex items-center gap-1 px-2.5 py-1 bg-[#121520] hover:bg-slate-800 rounded-lg border border-slate-800 text-slate-300 disabled:opacity-30 cursor-pointer text-xs"
                     >
                       Next
                       <ChevronRight size={14} />
@@ -810,14 +807,14 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                   </div>
 
                   {/* Input Form Area */}
-                  <div className="p-3 sm:p-5 border-t border-slate-800 bg-slate-950/90 backdrop-blur shrink-0">
+                  <div className="p-3 sm:p-4 border-t border-slate-800 bg-[#0c0e16] shrink-0">
                     <div className="max-w-2xl mx-auto">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
                           handleSendMessage();
                         }}
-                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-900/80 border border-slate-800/80 rounded-2xl p-1.5 focus-within:border-cyan-500/50 transition-all shadow-inner"
+                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#121520] border border-slate-800 rounded-xl p-1.5 focus-within:border-indigo-500 transition-colors"
                       >
                         {/* Interactive Action Buttons (Voice, Camera, Upload) */}
                         <div className="flex items-center gap-1 shrink-0 px-1 pt-1 sm:pt-0">
@@ -825,7 +822,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           <button
                             type="button"
                             onClick={triggerVoiceToast}
-                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
+                            className="p-2 rounded-lg bg-[#0c0e16] hover:bg-slate-800 text-slate-400 hover:text-indigo-400 border border-slate-800 transition cursor-pointer"
                             title="Voice Assistant"
                           >
                             <Mic size={15} />
@@ -835,7 +832,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           <button
                             type="button"
                             onClick={() => cameraInputRef.current?.click()}
-                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
+                            className="p-2 rounded-lg bg-[#0c0e16] hover:bg-slate-800 text-slate-400 hover:text-indigo-400 border border-slate-800 transition cursor-pointer"
                             title="Take Live Camera Shot"
                           >
                             <Camera size={15} />
@@ -845,14 +842,14 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2 rounded-xl bg-slate-950/60 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-slate-800/40 transition duration-200 cursor-pointer"
+                            className="p-2 rounded-lg bg-[#0c0e16] hover:bg-slate-800 text-slate-400 hover:text-indigo-400 border border-slate-800 transition cursor-pointer"
                             title="Upload from Gallery"
                           >
                             <ImageIcon size={15} />
                           </button>
                         </div>
 
-                        {/* Text Input Area with zero overlap */}
+                        {/* Text Input Area */}
                         <div className="flex-1 flex items-center gap-2 px-1">
                           <input
                             type="text"
@@ -860,14 +857,14 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             disabled={isThinking || chatLoading}
-                            className="w-full bg-transparent py-2 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 transition font-sans"
+                            className="w-full bg-transparent py-1.5 text-xs sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 font-sans"
                           />
 
                           {/* Send Button */}
                           <button
                             type="submit"
                             disabled={isThinking || chatLoading || !inputMessage.trim()}
-                            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-slate-950 font-bold transition duration-200 disabled:opacity-30 cursor-pointer shadow shrink-0"
+                            className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition disabled:opacity-30 cursor-pointer shrink-0"
                             title="Send Message"
                           >
                             <Send size={14} />
@@ -876,8 +873,8 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                       </form>
 
                       {/* Small Info line */}
-                      <p className="text-[8px] text-slate-500 text-center mt-2 font-mono tracking-widest uppercase select-none">
-                        LINCO Conversational Intelligence Core Model 3.5
+                      <p className="text-[10px] text-slate-500 text-center mt-2">
+                        Powered by AI • Information is encrypted & private
                       </p>
                     </div>
                   </div>

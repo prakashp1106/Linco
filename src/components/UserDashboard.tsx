@@ -478,31 +478,29 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="bg-[#0b0c10] border border-[#1b1c23] rounded-3xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-6 shadow-2xl relative overflow-hidden"
+            className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-6 sm:p-7 max-w-md mx-auto text-center space-y-5 shadow-xl relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[#6366f1]" />
-            
-            <div className="space-y-2">
-              <h2 className="text-lg font-bold text-slate-100 tracking-tight">Set up your profile</h2>
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-semibold text-slate-100 tracking-tight">Set up your profile</h2>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Welcome to LINCO. Tell us a bit about yourself so citizens can coordinate lost and found handovers with you. You can skip this and proceed instantly.
+                Tell us a bit about yourself so citizens can coordinate lost and found handovers with you. You can skip this and proceed instantly.
               </p>
             </div>
 
             {/* Inline Avatar Selection */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+            <div className="space-y-2.5">
+              <span className="text-xs font-medium text-slate-400 block">
                 Choose Profile Picture
               </span>
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => setPhotoModal("photo")}
-                  className="w-20 h-20 rounded-full border-2 border-slate-800 hover:border-[#6366f1] transition relative group overflow-hidden flex items-center justify-center cursor-pointer bg-slate-950 shadow-inner"
+                  className="w-20 h-20 rounded-full border border-slate-800 hover:border-indigo-500 transition relative group overflow-hidden flex items-center justify-center cursor-pointer bg-[#121520]"
                 >
                   {isGradient(editForm.avatar) ? (
                     <div 
-                      className="w-full h-full flex items-center justify-center text-slate-100 text-2xl font-black uppercase"
+                      className="w-full h-full flex items-center justify-center text-slate-100 text-2xl font-bold uppercase"
                       style={{ background: editForm.avatar }}
                     >
                       {editForm.fullName ? editForm.fullName.charAt(0) : "U"}
@@ -514,7 +512,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       className="w-full h-full object-cover"
                     />
                   )}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <Camera size={14} className="text-white" />
                   </div>
                 </button>
@@ -524,14 +522,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       key={idx}
                       type="button"
                       onClick={() => setEditForm(p => ({ ...p, avatar: preset }))}
-                      className="w-6 h-6 rounded-full border border-slate-900 transition hover:scale-110 cursor-pointer"
+                      className="w-6 h-6 rounded-full border border-slate-800 transition hover:scale-105 cursor-pointer"
                       style={{ background: preset }}
                     />
                   ))}
                   <button
                     type="button"
                     onClick={() => setPhotoModal("photo")}
-                    className="w-6 h-6 rounded-full bg-slate-850 hover:bg-slate-800 border border-slate-800 text-[10px] flex items-center justify-center text-slate-400 font-bold transition hover:scale-110 cursor-pointer"
+                    className="w-6 h-6 rounded-full bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-[11px] flex items-center justify-center text-slate-400 font-medium transition cursor-pointer"
                   >
                     +
                   </button>
@@ -539,64 +537,64 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </div>
             </div>
 
-            <form onSubmit={handleCreateProfileSubmit} className="space-y-4 text-left">
+            <form onSubmit={handleCreateProfileSubmit} className="space-y-3.5 text-left">
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Full Name</label>
+                <label className="text-xs font-medium text-slate-300 block">Full Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Liam Smith"
                   value={editForm.fullName}
                   onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-3.5 h-11 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Username</label>
+                <label className="text-xs font-medium text-slate-300 block">Username</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. liamsmith"
                   value={editForm.username}
                   onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-3.5 h-11 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">Bio (Optional)</label>
+                <label className="text-xs font-medium text-slate-300 block">Bio (Optional)</label>
                 <textarea
                   placeholder="e.g. Ready to help find and return lost items."
                   value={editForm.bio}
                   onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                   rows={2}
-                  className="w-full px-4 py-3 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition resize-none"
+                  className="w-full px-3.5 py-2.5 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition resize-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-slate-400 tracking-wider font-mono block">City</label>
+                <label className="text-xs font-medium text-slate-300 block">City</label>
                 <input
                   type="text"
                   placeholder="e.g. Kolkata, India"
                   value={editForm.location}
                   onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 h-11 bg-[#09090c] border border-slate-900 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
+                  className="w-full px-3.5 h-11 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                 />
               </div>
 
               <div className="pt-2 space-y-2">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold rounded-xl text-xs tracking-wide transition cursor-pointer flex items-center justify-center"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl text-xs transition cursor-pointer flex items-center justify-center shadow-xs"
                 >
                   Create Profile
                 </button>
                 <button
                   type="button"
                   onClick={handleSkipProfile}
-                  className="w-full h-11 bg-transparent border border-slate-900 hover:border-slate-850 hover:bg-[#0c0d14]/40 text-slate-400 font-bold rounded-xl text-xs tracking-wide transition cursor-pointer flex items-center justify-center"
+                  className="w-full h-11 bg-transparent border border-slate-800 hover:bg-slate-800/40 text-slate-400 font-medium rounded-xl text-xs transition cursor-pointer flex items-center justify-center"
                 >
                   Skip for Now
                 </button>
@@ -615,35 +613,35 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           >
             {/* SCREEN 2A: MODERN MINIMAL PROFILE PAGE */}
             {!showSettings ? (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 
                 {/* PROFILE BANNER & COVER SECTION */}
-                <div className="relative rounded-3xl overflow-hidden border border-[#1b1c23] bg-[#0c0d14] shadow-xl">
+                <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-[#0c0e16] shadow-md">
                   {/* Banner graphic */}
                   <div 
                     className="h-36 sm:h-44 w-full relative transition-all duration-300"
                     style={getGradientStyle(profile.banner)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#08080c]/90 via-[#08080c]/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0e16] via-[#0c0e16]/30 to-transparent" />
                     
                     {/* Cover graphic update */}
                     <button
                       onClick={() => setPhotoModal("banner")}
-                      className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 border border-slate-800 backdrop-blur-md text-[10px] font-bold text-slate-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition cursor-pointer"
+                      className="absolute top-3.5 right-3.5 bg-black/60 hover:bg-black/80 border border-slate-800 backdrop-blur-md text-[11px] font-medium text-slate-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition cursor-pointer"
                     >
-                      <Camera size={11} />
+                      <Camera size={12} />
                       <span>Change Cover</span>
                     </button>
                   </div>
 
                   {/* Profile info metadata block */}
-                  <div className="px-6 pb-6 pt-12 sm:pt-8 relative flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
+                  <div className="px-6 pb-6 pt-12 sm:pt-6 relative flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
                     {/* Circular floating avatar */}
                     <div className="absolute -top-14 sm:-top-16 left-1/2 sm:left-6 -translate-x-1/2 sm:translate-x-0">
-                      <div className="w-24 h-24 sm:w-26 sm:h-26 rounded-full p-0.5 bg-[#0c0d14] border border-[#20212a] shadow-2xl relative group overflow-hidden">
+                      <div className="w-24 h-24 sm:w-26 sm:h-26 rounded-full p-0.5 bg-[#0c0e16] border-2 border-slate-800 shadow-xl relative group overflow-hidden">
                         {isGradient(profile.avatar) ? (
                           <div 
-                            className="w-full h-full rounded-full flex items-center justify-center text-slate-100 text-3xl font-black uppercase"
+                            className="w-full h-full rounded-full flex items-center justify-center text-slate-100 text-3xl font-bold uppercase"
                             style={{ background: profile.avatar }}
                           >
                             {profile.fullName.charAt(0)}
@@ -669,26 +667,28 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {/* Meta fields */}
                     <div className="text-center sm:text-left sm:pl-28 space-y-1 w-full pt-2 sm:pt-0">
-                      <h2 className="text-lg font-bold text-slate-100 leading-tight">
-                        {profile.fullName}
-                      </h2>
-                      <span className="text-[10px] font-mono text-slate-500 bg-slate-900/50 px-2 py-0.5 rounded border border-slate-850 self-center sm:self-auto inline-block">
-                        @{profile.username}
-                      </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                        <h2 className="text-lg font-semibold text-slate-100 leading-tight">
+                          {profile.fullName}
+                        </h2>
+                        <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 self-center sm:self-auto inline-block">
+                          @{profile.username}
+                        </span>
+                      </div>
                       
                       {profile.bio && (
-                        <p className="text-xs text-slate-400 mt-2 font-normal leading-relaxed max-w-md">
+                        <p className="text-xs text-slate-400 mt-1 font-normal leading-relaxed max-w-md">
                           {profile.bio}
                         </p>
                       )}
 
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-[10px] text-slate-500">
-                        <div className="flex items-center gap-1">
-                          <MapPin size={11} className="text-slate-600" />
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-1.5 text-xs text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin size={12} className="text-slate-500" />
                           <span>{profile.location}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar size={11} className="text-slate-600" />
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={12} className="text-slate-500" />
                           <span>Member since {profile.memberSince}</span>
                         </div>
                       </div>
@@ -696,15 +696,35 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </div>
                 </div>
 
+                {/* STATS OVERVIEW BAR */}
+                <div className="grid grid-cols-4 gap-2.5">
+                  <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-3 text-center">
+                    <div className="text-base font-semibold text-slate-100">{stats.total}</div>
+                    <div className="text-[11px] text-slate-400 font-medium">Total Items</div>
+                  </div>
+                  <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-3 text-center">
+                    <div className="text-base font-semibold text-rose-400">{stats.lost}</div>
+                    <div className="text-[11px] text-slate-400 font-medium">Lost</div>
+                  </div>
+                  <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-3 text-center">
+                    <div className="text-base font-semibold text-emerald-400">{stats.found}</div>
+                    <div className="text-[11px] text-slate-400 font-medium">Found</div>
+                  </div>
+                  <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-3 text-center">
+                    <div className="text-base font-semibold text-indigo-400">{stats.resolved}</div>
+                    <div className="text-[11px] text-slate-400 font-medium">Resolved</div>
+                  </div>
+                </div>
+
                 {/* PRIMARY ACTIONS */}
-                <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-900">
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-850">
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setEditForm(profile);
                         setIsEditing(!isEditing);
                       }}
-                      className="px-4 py-2 bg-transparent hover:bg-slate-900 border border-slate-800 text-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-3.5 py-2 bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-slate-300 rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
                     >
                       <Edit3 size={13} />
                       <span>Edit Profile</span>
@@ -712,7 +732,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     <button
                       onClick={handleShareProfile}
-                      className="px-4 py-2 bg-transparent hover:bg-slate-900 border border-slate-800 text-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-3.5 py-2 bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-slate-300 rounded-xl font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
                     >
                       <Share2 size={13} />
                       <span>Share Profile</span>
@@ -724,7 +744,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       setShowSettings(true);
                       setActiveCategory(null);
                     }}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-indigo-400 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                    className="px-3.5 py-2 bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-400 font-medium text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
                   >
                     <Settings size={13} />
                     <span>Settings</span>
@@ -742,52 +762,52 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     >
                       <form 
                         onSubmit={handleEditProfileSubmit} 
-                        className="bg-[#0b0c11] border border-[#1b1c24] rounded-2xl p-5 space-y-4"
+                        className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-5 space-y-4"
                       >
-                        <h3 className="text-xs font-bold uppercase text-indigo-400 tracking-wider">
+                        <h3 className="text-xs font-semibold uppercase text-indigo-400 tracking-wider">
                           Edit Profile Details
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+                            <label className="text-xs font-medium text-slate-300 block">Full Name</label>
                             <input
                               type="text"
                               required
                               value={editForm.fullName}
                               onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
-                              className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                              className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username</label>
+                            <label className="text-xs font-medium text-slate-300 block">Username</label>
                             <input
                               type="text"
                               required
                               value={editForm.username}
                               onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                              className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                              className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Biography</label>
+                          <label className="text-xs font-medium text-slate-300 block">Biography</label>
                           <textarea
                             value={editForm.bio}
                             onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                             rows={2}
-                            className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition resize-none"
+                            className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition resize-none"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">City</label>
+                          <label className="text-xs font-medium text-slate-300 block">City</label>
                           <input
                             type="text"
                             value={editForm.location}
                             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                            className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                            className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                           />
                         </div>
 
@@ -795,13 +815,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => setIsEditing(false)}
-                            className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-bold rounded-lg text-[11px] cursor-pointer"
+                            className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-medium rounded-lg text-xs cursor-pointer hover:bg-slate-800/40"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
-                            className="px-3.5 py-1.5 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-lg text-[11px] cursor-pointer"
+                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs cursor-pointer"
                           >
                             Save Changes
                           </button>
@@ -823,7 +843,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 className="space-y-6"
               >
                 {/* Header Back Row */}
-                <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <button
                     onClick={() => {
                       if (activeCategory) {
@@ -832,12 +852,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         setShowSettings(false);
                       }
                     }}
-                    className="flex items-center gap-1.5 text-slate-400 hover:text-white transition text-xs font-bold cursor-pointer"
+                    className="flex items-center gap-1.5 text-slate-400 hover:text-white transition text-xs font-medium cursor-pointer"
                   >
                     <ChevronLeft size={16} />
                     <span>{activeCategory ? "Back to Settings" : "Back to Profile"}</span>
                   </button>
-                  <h3 className="text-xs font-black uppercase text-slate-300 tracking-wider font-mono">
+                  <h3 className="text-xs font-semibold uppercase text-slate-300 tracking-wider">
                     {activeCategory ? `${activeCategory}` : "Settings"}
                   </h3>
                   <div className="w-12" /> {/* alignment spacer */}
@@ -845,113 +865,113 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 {/* GROUPED MENU LIST */}
                 {!activeCategory ? (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     
                     {/* SECTION 1: ACCOUNT */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-black text-slate-500 tracking-wider uppercase font-mono px-1">
-                        ACCOUNT
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+                        Account
                       </h4>
-                      <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+                      <div className="bg-[#0c0e16] border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/60">
                         <button
                           onClick={() => {
                             setShowSettings(false);
                             setEditForm(profile);
                             setIsEditing(true);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs"
                         >
-                          <span className="text-slate-300 font-bold">Edit Profile</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <span className="text-slate-300 font-medium">Edit Profile</span>
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={() => setActiveCategory("Email")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs"
                         >
                           <div className="flex justify-between items-center w-full pr-2">
-                            <span className="text-slate-300 font-bold">Email</span>
-                            <span className="text-[11px] text-slate-500 font-normal">{settingsEmail}</span>
+                            <span className="text-slate-300 font-medium">Email</span>
+                            <span className="text-xs text-slate-400">{settingsEmail}</span>
                           </div>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={() => setActiveCategory("Password")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs"
                         >
                           <div className="flex justify-between items-center w-full pr-2">
-                            <span className="text-slate-300 font-bold">Password</span>
-                            <span className="text-[11px] text-slate-500 font-normal">••••••••</span>
+                            <span className="text-slate-300 font-medium">Password</span>
+                            <span className="text-xs text-slate-400 font-mono">••••••••</span>
                           </div>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
                       </div>
                     </div>
 
                     {/* SECTION 2: PRIVACY */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-black text-slate-500 tracking-wider uppercase font-mono px-1">
-                        PRIVACY
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+                        Privacy
                       </h4>
-                      <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+                      <div className="bg-[#0c0e16] border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/60">
                         <button
                           onClick={() => setActiveCategory("Blocked Users")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs"
                         >
-                          <span className="text-slate-300 font-bold">Blocked Users</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <span className="text-slate-300 font-medium">Blocked Users</span>
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={handleExportJSON}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs"
                         >
-                          <span className="text-slate-300 font-bold">Download My Data</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <span className="text-slate-300 font-medium">Download My Data</span>
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={() => setDeleteStep(1)}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs text-rose-400"
+                          className="w-full px-4 py-3 text-left hover:bg-rose-500/10 flex items-center justify-between transition cursor-pointer text-xs text-rose-400"
                         >
-                          <span className="font-bold">Delete Account</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <span className="font-medium">Delete Account</span>
+                          <ChevronRight size={14} className="text-rose-500/60" />
                         </button>
                       </div>
                     </div>
 
                     {/* SECTION 3: NOTIFICATIONS */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-black text-slate-500 tracking-wider uppercase font-mono px-1">
-                        NOTIFICATIONS
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+                        Notifications
                       </h4>
-                      <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl p-4 space-y-4">
+                      <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="text-xs font-bold text-slate-300 block">Push Notifications</span>
-                            <span className="text-[10px] text-slate-500">Updates for immediate matches & chats</span>
+                            <span className="text-xs font-medium text-slate-200 block">Push Notifications</span>
+                            <span className="text-[11px] text-slate-400">Updates for immediate matches & chats</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => setNotifPush(!notifPush)}
-                            className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifPush ? 'bg-[#6366f1] justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
+                            className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifPush ? 'bg-indigo-600 justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
                           >
-                            <div className="w-4 h-4 bg-white rounded-full shadow" />
+                            <div className="w-4 h-4 bg-white rounded-full shadow-xs" />
                           </button>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-900">
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-800">
                           <div>
-                            <span className="text-xs font-bold text-slate-300 block">Email Reports</span>
-                            <span className="text-[10px] text-slate-500">Weekly digests of unclaimed items</span>
+                            <span className="text-xs font-medium text-slate-200 block">Email Reports</span>
+                            <span className="text-[11px] text-slate-400">Weekly digests of unclaimed items</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => setNotifEmail(!notifEmail)}
-                            className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifEmail ? 'bg-[#6366f1] justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
+                            className={`w-9 h-5 rounded-full p-0.5 transition flex items-center ${notifEmail ? 'bg-indigo-600 justify-end' : 'bg-slate-800 justify-start'} cursor-pointer`}
                           >
-                            <div className="w-4 h-4 bg-white rounded-full shadow" />
+                            <div className="w-4 h-4 bg-white rounded-full shadow-xs" />
                           </button>
                         </div>
                       </div>
@@ -959,13 +979,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {/* SECTION 4: APPEARANCE */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-black text-slate-500 tracking-wider uppercase font-mono px-1">
-                        APPEARANCE
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+                        Appearance
                       </h4>
-                      <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl p-4 space-y-4">
+                      <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-4 space-y-4">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-300">Theme</span>
-                          <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-850">
+                          <span className="text-xs font-medium text-slate-200">Theme</span>
+                          <div className="flex bg-[#121520] p-0.5 rounded-lg border border-slate-800">
                             {["light", "dark"].map((themeOption) => (
                               <button
                                 key={themeOption}
@@ -973,10 +993,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                                   setSettingsTheme(themeOption);
                                   addToast(`Theme set to ${themeOption}`, "info");
                                 }}
-                                className={`px-2.5 py-1 text-[10px] font-bold rounded-md capitalize transition ${
+                                className={`px-2.5 py-1 text-[11px] font-medium rounded-md capitalize transition ${
                                   settingsTheme === themeOption 
-                                    ? "bg-slate-900 text-[#6366f1]" 
-                                    : "text-slate-500 hover:text-slate-300"
+                                    ? "bg-slate-800 text-indigo-400 shadow-xs" 
+                                    : "text-slate-400 hover:text-slate-200"
                                 } cursor-pointer`}
                               >
                                 {themeOption}
@@ -985,9 +1005,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-900">
-                          <span className="text-xs font-bold text-slate-300">Language</span>
-                          <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-850">
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+                          <span className="text-xs font-medium text-slate-200">Language</span>
+                          <div className="flex bg-[#121520] p-0.5 rounded-lg border border-slate-800">
                             {[
                               { code: "en", label: "EN" },
                               { code: "hi", label: "हि" },
@@ -999,10 +1019,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                                   setSettingsLang(langOption.code);
                                   addToast(`Language set to ${langOption.code === 'en' ? 'English' : langOption.code === 'hi' ? 'Hindi' : 'Bengali'}`, "info");
                                 }}
-                                className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition ${
+                                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition ${
                                   settingsLang === langOption.code 
-                                    ? "bg-slate-900 text-[#6366f1]" 
-                                    : "text-slate-500 hover:text-slate-300"
+                                    ? "bg-slate-800 text-indigo-400 shadow-xs" 
+                                    : "text-slate-400 hover:text-slate-200"
                                 } cursor-pointer`}
                               >
                                 {langOption.label}
@@ -1015,35 +1035,35 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {/* SECTION 5: SUPPORT */}
                     <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-black text-slate-500 tracking-wider uppercase font-mono px-1">
-                        SUPPORT
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider px-1">
+                        Support
                       </h4>
-                      <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+                      <div className="bg-[#0c0e16] border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/60">
                         <button
                           onClick={() => {
                             setShowSettings(false);
                             window.dispatchEvent(new CustomEvent("open-linco-chat"));
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-bold"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-medium"
                         >
-                          <span>Help</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <span>Help & Assistant</span>
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={() => setActiveCategory("Contact")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-bold"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-medium"
                         >
                           <span>Contact</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
 
                         <button
                           onClick={() => setActiveCategory("About")}
-                          className="w-full px-4 py-3 text-left hover:bg-slate-900/40 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-bold"
+                          className="w-full px-4 py-3 text-left hover:bg-slate-800/30 flex items-center justify-between transition cursor-pointer text-xs text-slate-300 font-medium"
                         >
                           <span>About</span>
-                          <ChevronRight size={14} className="text-slate-600" />
+                          <ChevronRight size={14} className="text-slate-500" />
                         </button>
                       </div>
                     </div>
@@ -1055,7 +1075,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         setShowSettings(false);
                         addToast("Logged out successfully.", "success");
                       }}
-                      className="w-full py-3 bg-rose-950/10 hover:bg-rose-950/20 border border-rose-900/10 text-rose-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                      className="w-full py-3 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer"
                     >
                       <LogOut size={13} />
                       <span>Logout from LINCO</span>
@@ -1064,22 +1084,22 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 ) : (
                   
                   /* NESTED SETTINGS VIEWER */
-                  <div className="bg-[#0b0c10] border border-slate-900 rounded-2xl p-5 space-y-4">
+                  <div className="bg-[#0c0e16] border border-slate-800 rounded-xl p-5 space-y-4">
                     {activeCategory === "Email" && (
                       <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">Update Email Address</span>
+                        <span className="text-xs font-medium text-slate-200 block">Update Email Address</span>
                         <input
                           type="email"
                           value={settingsEmail}
                           onChange={(e) => setSettingsEmail(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                          className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                         />
                         <button
                           onClick={() => {
                             setActiveCategory(null);
                             addToast("Email updated successfully", "success");
                           }}
-                          className="px-4 py-2 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-lg text-xs transition cursor-pointer"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs transition cursor-pointer"
                         >
                           Save Email
                         </button>
@@ -1088,21 +1108,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {activeCategory === "Password" && (
                       <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">Change Password</span>
+                        <span className="text-xs font-medium text-slate-200 block">Change Password</span>
                         <div className="space-y-3">
                           <input
                             type="password"
                             placeholder="Current Password"
                             value={settingsPassword}
                             onChange={(e) => setSettingsPassword(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                            className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                           />
                           <input
                             type="password"
                             placeholder="New Password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-[#6366f1] rounded-xl text-xs text-slate-100 outline-none transition"
+                            className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-indigo-500 rounded-xl text-xs text-slate-100 outline-none transition"
                           />
                         </div>
                         <button
@@ -1112,7 +1132,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             setNewPassword("");
                             addToast("Password changed successfully", "success");
                           }}
-                          className="px-4 py-2 bg-[#6366f1] hover:bg-[#5053df] text-white font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Change Password
                         </button>
@@ -1121,18 +1141,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {activeCategory === "Blocked Users" && (
                       <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">Blocked Users</span>
+                        <span className="text-xs font-medium text-slate-200 block">Blocked Users</span>
                         {blockedUsers.length > 0 ? (
                           <div className="space-y-2">
                             {blockedUsers.map((username) => (
-                              <div key={username} className="flex justify-between items-center bg-slate-950 px-3 py-2 rounded-xl border border-slate-900">
+                              <div key={username} className="flex justify-between items-center bg-[#121520] px-3 py-2 rounded-xl border border-slate-800">
                                 <span className="text-xs font-mono text-slate-300">@{username}</span>
                                 <button
                                   onClick={() => {
                                     setBlockedUsers(blockedUsers.filter(u => u !== username));
                                     addToast(`Unblocked @${username}`, "info");
                                   }}
-                                  className="text-[10px] font-bold text-[#6366f1] hover:underline cursor-pointer"
+                                  className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
                                 >
                                   Unblock
                                 </button>
@@ -1140,18 +1160,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-slate-500">No blocked users.</p>
+                          <p className="text-xs text-slate-400">No blocked users.</p>
                         )}
                       </div>
                     )}
 
                     {activeCategory === "Contact" && (
                       <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">Contact LINCO Support</span>
+                        <span className="text-xs font-medium text-slate-200 block">Contact LINCO Support</span>
                         <p className="text-xs text-slate-400 leading-relaxed">
-                          For general support, data access requests or neighborhood coordination queries, contact our lead developers at:
+                          For general support, data access requests or neighborhood coordination queries, contact our team at:
                         </p>
-                        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900 space-y-2 text-xs text-slate-300 font-mono">
+                        <div className="bg-[#121520] p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs text-slate-300">
                           <div>📧 Email: support@linco.org</div>
                           <div>🌐 Web: https://linco.org</div>
                           <div>📍 Address: Kolkata Grid Ingress Hub</div>
@@ -1161,11 +1181,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                     {activeCategory === "About" && (
                       <div className="space-y-4">
-                        <span className="text-xs font-bold text-slate-200 block">About LINCO</span>
+                        <span className="text-xs font-medium text-slate-200 block">About LINCO</span>
                         <p className="text-xs text-slate-400 leading-relaxed">
-                          LINCO is a private lost and found handover application that helps you find and recover misplaced objects using smart Gemini AI semantic matches.
+                          LINCO is a community lost and found handover application that helps you find and recover misplaced objects using smart Gemini AI semantic matches.
                         </p>
-                        <div className="p-3 bg-slate-950 rounded-xl border border-slate-900 space-y-1.5 text-[10px] text-slate-400 font-mono">
+                        <div className="p-3 bg-[#121520] rounded-xl border border-slate-800 space-y-1.5 text-xs text-slate-400">
                           <div>Application Version: v1.3.0 Stable</div>
                           <div>Infrastructure: Sandboxed Local Client</div>
                           <div>License: Apache-2.0 Open Source</div>
@@ -1193,7 +1213,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => { stopCamera(); setPhotoModal(null); }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
 
             {/* Modal Box */}
@@ -1201,15 +1221,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0b0c10] border border-slate-800 rounded-3xl p-6 w-full max-w-sm relative z-10 space-y-5 shadow-2xl"
+              className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-6 w-full max-w-sm relative z-10 space-y-5 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-slate-900 pb-3">
-                <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h4 className="text-xs font-semibold uppercase text-slate-200 tracking-wider">
                   Update {photoModal === "photo" ? "Profile Photo" : "Banner"}
                 </h4>
                 <button
                   onClick={() => { stopCamera(); setPhotoModal(null); }}
-                  className="p-1 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -1218,7 +1238,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               {/* VIDEO CAMERA STREAM */}
               {cameraActive && photoModal === "photo" ? (
                 <div className="space-y-3">
-                  <div className="relative aspect-square w-full max-w-[200px] mx-auto rounded-2xl overflow-hidden border border-slate-800 bg-black">
+                  <div className="relative aspect-square w-full max-w-[200px] mx-auto rounded-xl overflow-hidden border border-slate-800 bg-black">
                     <video 
                       ref={videoRef} 
                       autoPlay 
@@ -1229,13 +1249,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <div className="flex gap-2 justify-center">
                     <button
                       onClick={stopCamera}
-                      className="px-3 py-1.5 bg-slate-900 border border-slate-800 text-slate-400 font-bold rounded-lg text-xs cursor-pointer"
+                      className="px-3.5 py-1.5 bg-[#121520] border border-slate-800 text-slate-400 font-medium rounded-lg text-xs cursor-pointer hover:bg-slate-800"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={capturePhoto}
-                      className="px-3 py-1.5 bg-[#6366f1] text-white font-bold rounded-lg text-xs cursor-pointer"
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-xs cursor-pointer"
                     >
                       Capture Photo
                     </button>
@@ -1249,9 +1269,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     {photoModal === "photo" && (
                       <button
                         onClick={startCamera}
-                        className="p-3 bg-[#111218] border border-[#20212a] hover:border-slate-700 rounded-xl text-xs font-bold text-slate-300 transition cursor-pointer flex items-center justify-center gap-2"
+                        className="p-3 bg-[#121520] border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-medium text-slate-300 transition cursor-pointer flex items-center justify-center gap-2"
                       >
-                        <Camera size={13} className="text-indigo-400" />
+                        <Camera size={14} className="text-indigo-400" />
                         <span>Use Camera Stream</span>
                       </button>
                     )}
@@ -1264,29 +1284,29 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           bannerFileInputRef.current?.click();
                         }
                       }}
-                      className="p-3 bg-[#111218] border border-[#20212a] hover:border-slate-700 rounded-xl text-xs font-bold text-slate-300 transition cursor-pointer flex items-center justify-center gap-2"
+                      className="p-3 bg-[#121520] border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-medium text-slate-300 transition cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <Share2 size={13} className="text-cyan-400" />
-                      <span>Choose From Gallery (Cloudinary)</span>
+                      <Share2 size={14} className="text-cyan-400" />
+                      <span>Choose From Gallery</span>
                     </button>
                   </div>
 
                   {/* Cloudinary/Web URL Input */}
-                  <form onSubmit={handleCloudinaryUrlSubmit} className="space-y-2 pt-2 border-t border-slate-900">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Or Paste Cloudinary / Web URL
+                  <form onSubmit={handleCloudinaryUrlSubmit} className="space-y-2 pt-2 border-t border-slate-800">
+                    <label className="text-xs font-medium text-slate-400 block">
+                      Or Paste Image URL
                     </label>
                     <div className="flex gap-1.5">
                       <input
                         type="url"
-                        placeholder="https://res.cloudinary.com/..."
+                        placeholder="https://..."
                         value={cloudinaryUrl}
                         onChange={(e) => setCloudinaryUrl(e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-900 rounded-lg text-xs text-slate-200 outline-none"
+                        className="flex-1 px-3 py-1.5 bg-[#121520] border border-slate-800 rounded-lg text-xs text-slate-200 outline-none focus:border-indigo-500"
                       />
                       <button
                         type="submit"
-                        className="px-3 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg text-xs font-bold hover:bg-slate-800"
+                        className="px-3 bg-slate-800 border border-slate-750 text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-750"
                       >
                         Add
                       </button>
@@ -1294,8 +1314,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </form>
 
                   {/* Curated presets preview list */}
-                  <div className="space-y-2.5 pt-2 border-t border-slate-900">
-                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                  <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                    <span className="text-xs font-medium text-slate-400 block">
                       Or Choose Preset Theme
                     </span>
                     <div className="flex gap-2 justify-center">
@@ -1303,7 +1323,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         <button
                           key={idx}
                           onClick={() => selectPreset(preset, photoModal)}
-                          className="w-8 h-8 rounded-full border border-slate-900 transition transform hover:scale-110 cursor-pointer shadow-sm"
+                          className="w-8 h-8 rounded-full border border-slate-800 transition transform hover:scale-110 cursor-pointer shadow-xs"
                           style={{ background: preset }}
                         />
                       ))}
@@ -1342,7 +1362,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => { if (!reauthenticating) setDeleteStep(0); }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
 
             {/* Modal Body */}
@@ -1350,11 +1370,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#0b0c10] border border-red-500/20 rounded-3xl p-6 w-full max-w-sm relative z-10 space-y-4 shadow-2xl"
+              className="bg-[#0c0e16] border border-rose-500/30 rounded-2xl p-6 w-full max-w-sm relative z-10 space-y-4 shadow-2xl"
             >
-              <div className="flex items-center gap-2 text-red-400 border-b border-red-950/20 pb-3">
+              <div className="flex items-center gap-2 text-rose-400 border-b border-rose-950/40 pb-3">
                 <AlertTriangle size={18} />
-                <h4 className="text-xs font-black uppercase tracking-wider font-mono">
+                <h4 className="text-xs font-semibold uppercase tracking-wider">
                   Confirm Deletion
                 </h4>
               </div>
@@ -1367,13 +1387,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase">Type your password to confirm</label>
+                      <label className="text-xs font-medium text-slate-400 block">Type your password to confirm</label>
                       <input
                         type="password"
                         placeholder="••••••••"
                         value={reauthPassword}
                         onChange={(e) => setReauthPassword(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#111218] border border-[#20212a] focus:border-red-500 rounded-xl text-xs text-slate-100 outline-none"
+                        className="w-full px-3 py-2 bg-[#121520] border border-slate-800 focus:border-rose-500 rounded-xl text-xs text-slate-100 outline-none"
                       />
                     </div>
                   </div>
@@ -1381,14 +1401,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => setDeleteStep(0)}
-                      className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-bold rounded-lg text-xs cursor-pointer"
+                      className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-medium rounded-lg text-xs cursor-pointer hover:bg-slate-800/40"
                     >
                       Cancel
                     </button>
                     <button
                       disabled={!reauthPassword}
                       onClick={() => setDeleteStep(2)}
-                      className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs cursor-pointer disabled:opacity-40"
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-lg text-xs cursor-pointer disabled:opacity-40"
                     >
                       Continue
                     </button>
@@ -1399,7 +1419,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               {deleteStep === 2 && (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Type <strong className="text-red-400 font-mono">DELETE</strong> below to permanently destroy your LINCO profile and credentials.
+                    Type <strong className="text-rose-400 font-mono">DELETE</strong> below to permanently destroy your LINCO profile and credentials.
                   </p>
                   
                   <input
@@ -1407,20 +1427,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     placeholder="DELETE"
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#111218] border border-red-950 focus:border-red-500 rounded-xl text-xs text-slate-100 outline-none font-mono text-center tracking-widest"
+                    className="w-full px-3 py-2 bg-[#121520] border border-rose-900 focus:border-rose-500 rounded-xl text-xs text-slate-100 outline-none font-mono text-center tracking-widest"
                   />
 
                   <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => setDeleteStep(1)}
-                      className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-bold rounded-lg text-xs cursor-pointer"
+                      className="px-3.5 py-1.5 bg-transparent border border-slate-800 text-slate-400 font-medium rounded-lg text-xs cursor-pointer hover:bg-slate-800/40"
                     >
                       Back
                     </button>
                     <button
                       disabled={deleteConfirmText !== "DELETE" || reauthenticating}
                       onClick={handleDeleteAccountFinal}
-                      className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs cursor-pointer disabled:opacity-40"
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-lg text-xs cursor-pointer disabled:opacity-40"
                     >
                       {reauthenticating ? "Deleting..." : "Permanently Delete"}
                     </button>

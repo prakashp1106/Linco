@@ -53,11 +53,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const initialLng = lng || defaultLng;
     const initialZoom = lat && lng ? 16 : 12;
 
-    // Initialize Map
+    // Initialize Map with zoom control placed at bottomright to prevent top search bar overlap
     const map = L.map(mapContainerRef.current, {
-      zoomControl: true,
+      zoomControl: false,
       scrollWheelZoom: true,
     }).setView([initialLat, initialLng], initialZoom);
+
+    L.control.zoom({ position: "bottomright" }).addTo(map);
 
     mapRef.current = map;
 
@@ -241,17 +243,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-slate-900 shadow-2xl bg-slate-950">
-      {/* MapmyIndia Search Input Overlay */}
-      <form onSubmit={handleSearch} className="absolute top-2 left-2 right-2 z-[1000] flex gap-1.5">
+    <div className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-[#0c0e16]">
+      {/* Map Search Input Overlay */}
+      <form onSubmit={handleSearch} className="absolute top-2.5 left-2.5 right-2.5 z-[1000] flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
           <input
             type="text"
-            placeholder="Search local landmark, college, village, city (MapmyIndia)..."
+            placeholder="Search landmark, campus, town, city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-14 py-2.5 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 shadow-lg backdrop-blur-md"
+            className="w-full pl-9 pr-14 py-2.5 rounded-xl bg-[#121520]/95 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 shadow-xl backdrop-blur-md"
           />
           {searchQuery && (
             <button
@@ -260,7 +262,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 setSearchQuery("");
                 setSearchResults([]);
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white font-bold p-1 rounded-full cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-200 font-semibold px-1.5 py-0.5 rounded cursor-pointer"
             >
               Clear
             </button>
@@ -269,15 +271,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <button
           type="submit"
           disabled={searchLoading}
-          className="px-3.5 py-2.5 bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-400 hover:to-violet-400 text-slate-950 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-lg"
+          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-lg shrink-0 cursor-pointer disabled:opacity-50"
         >
           {searchLoading ? <Loader2 className="animate-spin" size={13} /> : "Search"}
         </button>
       </form>
 
-      {/* MapmyIndia Search Results Autocomplete Dropdown List */}
+      {/* Map Search Results Autocomplete Dropdown List */}
       {searchResults.length > 0 && (
-        <div className="absolute top-12 left-2 right-2 z-[1000] max-h-48 overflow-y-auto bg-slate-950/95 border border-slate-800 rounded-xl shadow-2xl backdrop-blur-md divide-y divide-slate-900/60 scrollbar-thin">
+        <div className="absolute top-14 left-2.5 right-2.5 z-[1000] max-h-48 overflow-y-auto bg-[#121520]/95 border border-slate-800 rounded-xl shadow-2xl backdrop-blur-md divide-y divide-slate-850 scrollbar-thin">
           {searchResults.map((result, index) => {
             const name = result.placeName || "Location";
             const addr = result.placeAddress || result.formatted_address || "";
@@ -286,13 +288,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 key={result.eLoc || index}
                 type="button"
                 onClick={() => handleSelectResult(result)}
-                className="w-full text-left px-4 py-3 hover:bg-slate-900/80 transition duration-150 block truncate"
+                className="w-full text-left px-4 py-3 hover:bg-slate-800/60 transition duration-150 block truncate cursor-pointer"
               >
-                <div className="text-[11px] text-slate-200 font-bold flex items-center gap-1">
-                  📍 {name}
+                <div className="text-[11px] text-slate-200 font-semibold flex items-center gap-1.5">
+                  <span>📍</span>
+                  <span>{name}</span>
                 </div>
                 {addr && (
-                  <div className="text-[9px] text-slate-500 pl-4 mt-0.5 font-medium truncate">
+                  <div className="text-[10px] text-slate-400 pl-5 mt-0.5 font-normal truncate">
                     {addr}
                   </div>
                 )}
@@ -303,10 +306,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       )}
 
       {/* Leaflet map container */}
-      <div ref={mapContainerRef} className="w-full h-[260px] md:h-[300px] outline-none z-0" />
+      <div ref={mapContainerRef} className="w-full h-[280px] sm:h-[320px] outline-none z-0" />
       {lat && lng && (
-        <div className="absolute bottom-2 left-2 z-[1000] bg-slate-950/90 border border-slate-900 rounded-lg px-2.5 py-1 text-[10px] text-rose-400 font-mono shadow-md backdrop-blur-md">
-          📌 {lat.toFixed(5)}, {lng.toFixed(5)}
+        <div className="absolute bottom-3 left-3 z-[1000] bg-[#0c0e16]/90 border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] text-rose-400 font-mono shadow-md backdrop-blur-md flex items-center gap-1.5">
+          <span>📍</span>
+          <span>{lat.toFixed(5)}, {lng.toFixed(5)}</span>
         </div>
       )}
     </div>

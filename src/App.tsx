@@ -23,7 +23,8 @@ import {
   LifeBuoy,
   ShieldAlert,
   ChevronRight,
-  Globe
+  Globe,
+  Compass
 } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
@@ -1212,13 +1213,9 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-dot-grid">
-      <CanvasParticles />
-
-      {/* Rotating blurs */}
-      <div className="fixed -top-[20%] -left-[20%] w-[60vw] h-[60vw] bg-radial from-cyan-500/10 via-transparent to-transparent blur-[120px] pointer-events-none z-0 animate-orb-slow-1" />
-      <div className="fixed -bottom-[20%] -right-[20%] w-[50vw] h-[50vw] bg-radial from-violet-600/10 via-transparent to-transparent blur-[120px] pointer-events-none z-0 animate-orb-slow-2" />
-      <div className="fixed top-[40%] left-[35%] w-[35vw] h-[35vw] bg-radial from-pink-500/5 via-transparent to-transparent blur-[100px] pointer-events-none z-0 animate-orb-slow-3" />
+    <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-[#08080c]">
+      {/* Subtle calm ambient vignette */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.08),rgba(255,255,255,0))] pointer-events-none z-0" />
 
       {/* TOAST NOTIFICATION CONTAINER */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
@@ -1252,7 +1249,7 @@ export default function App() {
 
       {/* TOP APP BAR */}
       <header 
-        className="fixed top-0 left-0 right-0 z-40 bg-[#08080c]/95 border-b border-[#161621] backdrop-blur-md px-4 py-3 flex items-center justify-between select-none"
+        className="fixed top-0 left-0 right-0 z-40 bg-[#0c0e16]/95 border-b border-slate-800 backdrop-blur-md px-4 py-3 flex items-center justify-between select-none"
         style={{
           paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
           height: "calc(env(safe-area-inset-top, 0px) + 3.75rem)",
@@ -1523,57 +1520,59 @@ export default function App() {
       </AnimatePresence>
 
       {/* BOTTOM STICKY NAVIGATION */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#07070a]/90 border-t border-[#161621] backdrop-blur-xl px-4 py-2 flex items-center justify-around select-none shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        <div className="w-full max-w-md mx-auto flex gap-1 items-center justify-around">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-30 bg-[#0c0e16]/95 border-t border-slate-800 backdrop-blur-xl px-2 py-1.5 select-none"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0.5rem))" }}
+      >
+        <div className="w-full max-w-lg mx-auto flex items-center justify-around">
           <button
             onClick={() => setActiveTab("home")}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
               activeTab === "home" 
                 ? "text-indigo-400" 
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Home size={18} className={activeTab === "home" ? "text-indigo-400" : "text-slate-500"} />
+            <Home size={18} className={activeTab === "home" ? "text-indigo-400" : "text-slate-400"} />
             <span>{t("nav.home", "Home")}</span>
           </button>
 
           <button
+            onClick={() => setActiveTab("feed")}
+            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
+              activeTab === "feed" 
+                ? "text-indigo-400" 
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Compass size={18} className={activeTab === "feed" ? "text-indigo-400" : "text-slate-400"} />
+            <span>{t("nav.feed", "Feed")}</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("report")}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
               activeTab === "report" 
                 ? "text-indigo-400" 
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Plus size={18} className={activeTab === "report" ? "text-indigo-400" : "text-slate-500"} />
+            <Plus size={18} className={activeTab === "report" ? "text-indigo-400" : "text-slate-400"} />
             <span>{t("nav.report", "Report")}</span>
           </button>
 
           <button
             onClick={() => setActiveTab("matches")}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer relative ${
+            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer relative ${
               activeTab === "matches" 
                 ? "text-indigo-400" 
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Sparkles size={18} className={activeTab === "matches" ? "text-indigo-400 animate-pulse" : "text-slate-500"} />
+            <Sparkles size={18} className={activeTab === "matches" ? "text-indigo-400" : "text-slate-400"} />
             <span>{t("nav.matches", "Matches")}</span>
             {unreadCount > 0 && (
-              <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-400 text-[7px] font-black text-slate-950 shadow-[0_0_8px_#06b6d4]">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setNotificationsOpen(true)}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer relative text-slate-400 hover:text-rose-400"
-          >
-            <Bell size={18} className="text-rose-500 hover:scale-105 transition-transform duration-150" />
-            <span>{t("nav.activity", "Activity")}</span>
-            {unreadCount > 0 && (
-              <span className="absolute top-0.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[7px] font-black text-white shadow-[0_0_10px_#ef4444] animate-pulse">
+              <span className="absolute top-1 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-bold text-white">
                 {unreadCount}
               </span>
             )}
@@ -1581,13 +1580,13 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
               activeTab === "dashboard" 
                 ? "text-indigo-400" 
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <User size={18} className={activeTab === "dashboard" ? "text-indigo-400" : "text-slate-500"} />
+            <User size={18} className={activeTab === "dashboard" ? "text-indigo-400" : "text-slate-400"} />
             <span>{t("nav.profile", "Profile")}</span>
           </button>
         </div>

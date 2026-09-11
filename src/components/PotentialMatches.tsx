@@ -514,84 +514,84 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   ) => {
     if (status === "RESOLVED") {
       return {
-        label: "🎉 Reunited & Resolved",
-        style: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold",
+        label: "Reunited & Resolved",
+        style: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-medium",
         icon: <CheckCircle2 size={12} className="text-emerald-400" />
       };
     }
     if (status === "OWNER_RECEIVED_CONFIRMED") {
       return {
-        label: "Owner Confirmed Item Received (1/2 Handover Confirmations)",
-        style: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+        label: "Owner Confirmed Return • Awaiting Finder",
+        style: "bg-teal-500/15 text-teal-300 border-teal-500/30 font-medium",
         icon: <CheckCheck size={12} className="text-teal-400" />
       };
     }
     if (status === "FINDER_HANDOVER_CONFIRMED") {
       return {
-        label: "Finder Confirmed Handover Complete (1/2 Handover Confirmations)",
-        style: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+        label: "Finder Confirmed Handover • Awaiting Owner",
+        style: "bg-teal-500/15 text-teal-300 border-teal-500/30 font-medium",
         icon: <CheckCheck size={12} className="text-teal-400" />
       };
     }
     if (status === "HANDOVER_PENDING") {
       return {
         label: "Safe Handover In Progress",
-        style: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
-        icon: <MapPin size={12} className="text-cyan-400 animate-bounce" />
+        style: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30 font-medium",
+        icon: <MapPin size={12} className="text-cyan-400" />
       };
     }
     if (ownerApproved && finderApproved && ownerTrusted && finderTrusted) {
       return {
-        label: "Mutual Trust Established (WhatsApp & Direct Handover Unlocked)",
-        style: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+        label: "Mutual Trust Confirmed • Contact Unlocked",
+        style: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-medium",
         icon: <ShieldCheck size={12} className="text-emerald-400" />
       };
     }
     if (status === "VERIFIED_CONNECTION" || (ownerApproved && finderApproved)) {
       return {
-        label: "Verified Connection (Secure Chat Unlocked)",
-        style: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
-        icon: <ShieldCheck size={12} className="text-cyan-400" />
+        label: "Verified Match • Secure Chat Ready",
+        style: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30 font-medium",
+        icon: <ShieldCheck size={12} className="text-indigo-400" />
       };
     }
     if (status === "MUTUAL_TRUST_PENDING" || (ownerApproved && finderApproved)) {
       return {
-        label: "Mutual Trust Pending (Owner/Finder confirmation required)",
-        style: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-        icon: <Clock size={12} className="text-amber-400 animate-pulse" />
+        label: "Mutual Trust Pending Confirmation",
+        style: "bg-amber-500/15 text-amber-300 border-amber-500/30 font-medium",
+        icon: <Clock size={12} className="text-amber-400" />
       };
     }
     if (status === "OWNER_REVIEW_PENDING") {
       return {
-        label: "Community Finding Reported (Owner Review Pending)",
-        style: "bg-purple-500/15 text-purple-300 border-purple-500/30",
-        icon: <Sparkles size={12} className="text-purple-400 animate-pulse" />
+        label: "Found Report Received • Review Pending",
+        style: "bg-purple-500/15 text-purple-300 border-purple-500/30 font-medium",
+        icon: <Sparkles size={12} className="text-purple-400" />
       };
     }
     if (status === "OWNER_APPROVED") {
       return {
-        label: "Owner Approved (1/2 Approvals)",
-        style: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+        label: "Owner Approved • Awaiting Finder",
+        style: "bg-blue-500/15 text-blue-300 border-blue-500/30 font-medium",
         icon: <CheckCircle2 size={12} className="text-blue-400" />
       };
     }
     if (status === "FINDER_APPROVED") {
       return {
-        label: "Finder Approved (1/2 Approvals)",
-        style: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+        label: "Finder Approved • Awaiting Owner",
+        style: "bg-blue-500/15 text-blue-300 border-blue-500/30 font-medium",
         icon: <CheckCircle2 size={12} className="text-blue-400" />
       };
     }
     if (status === "REJECTED") {
       return {
-        label: "Connection Rejected",
-        style: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+        label: "Connection Closed",
+        style: "bg-rose-500/15 text-rose-300 border-rose-500/30 font-medium",
         icon: <XCircle size={12} className="text-rose-400" />
       };
     }
     return {
-      label: "AI Forensic Match",
-      style: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+      label: "Potential Match",
+      style: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30 font-medium",
       icon: <Sparkles size={12} className="text-indigo-400" />
     };
   };
@@ -816,64 +816,62 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Header Card */}
-      <div className="bg-[#07070a]/80 backdrop-blur-md rounded-3xl border border-[#161621] p-5 sm:p-6 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-indigo-500/10 via-cyan-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
-          <div className="text-left space-y-1.5">
+      <div className="bg-[#0c0e16] rounded-2xl border border-slate-800 p-5 sm:p-6 shadow-xs">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="text-left space-y-1">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
                 <Sparkles size={16} />
-              </span>
-              <h2 className="text-lg sm:text-xl font-display font-extrabold text-white tracking-tight">
-                AI Smart Matches & Mutual Verification
+              </div>
+              <h2 className="text-base sm:text-lg font-semibold text-slate-100 tracking-tight">
+                Potential Matches
               </h2>
             </div>
-            <p className="text-xs text-slate-400 max-w-xl font-mono leading-relaxed">
-              Gemini continuously compares Lost and Found listings. Connections follow strict mutual verification before Secure Chat coordinates item handover.
+            <p className="text-xs text-slate-400 max-w-xl leading-relaxed">
+              Automated comparisons between lost and found listings. Contact details remain protected until mutual verification is complete.
             </p>
           </div>
 
-          {/* View Filter Pill Switcher */}
-          <div className="flex bg-[#030304] p-1 rounded-2xl border border-[#161621] shrink-0 self-stretch sm:self-auto">
+          {/* View Filter Switcher */}
+          <div className="flex bg-[#121520] p-1 rounded-xl border border-slate-800 shrink-0 self-stretch sm:self-auto">
             <button
               onClick={() => setViewFilter("my")}
-              className={`flex-1 sm:flex-initial text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 sm:flex-initial text-xs font-medium px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 viewFilter === "my"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50"
+                  ? "bg-[#1e2436] text-white shadow-xs"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Shield size={12} />
-              <span>My Matches</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/80 border border-slate-700">
+              <Shield size={13} />
+              <span>My Listings</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#0c0e16] border border-slate-700 text-slate-300">
                 {filteredMatches.length}
               </span>
             </button>
             <button
               onClick={() => setViewFilter("all")}
-              className={`flex-1 sm:flex-initial text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 sm:flex-initial text-xs font-medium px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 viewFilter === "all"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50"
+                  ? "bg-[#1e2436] text-white shadow-xs"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Compass size={12} />
-              <span>Public Matches</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/80 border border-slate-700">
+              <Compass size={13} />
+              <span>All Matches</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#0c0e16] border border-slate-700 text-slate-300">
                 {matches.filter((m) => m.status !== "Dismissed").length}
               </span>
             </button>
           </div>
         </div>
 
-        {/* Dynamic Controls Bar */}
-        <div className="mt-6 pt-5 border-t border-[#12121a] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        {/* Controls Bar */}
+        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-            <label className="text-xs font-mono font-bold text-slate-400 flex items-center gap-1.5 shrink-0">
-              <Sliders size={13} className="text-indigo-400" />
-              <span>Threshold:</span>
-              <span className="text-indigo-400 font-extrabold text-sm">{threshold}%</span>
+            <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5 shrink-0">
+              <Sliders size={13} className="text-slate-400" />
+              <span>Similarity threshold:</span>
+              <span className="text-slate-100 font-semibold">{threshold}%</span>
             </label>
             <input
               type="range"
@@ -882,23 +880,23 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
               step="5"
               value={threshold}
               onChange={handleThresholdChange}
-              className="w-full sm:w-44 accent-indigo-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
+              className="w-full sm:w-40 accent-indigo-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
             />
             <button
               onClick={handleSaveThreshold}
               disabled={savingThreshold}
-              className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/40 text-[11px] font-mono font-bold text-slate-300 hover:text-indigo-300 transition cursor-pointer active:scale-95 disabled:opacity-50"
+              className="w-full sm:w-auto px-3 py-1 rounded-lg bg-[#121520] border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer disabled:opacity-50"
             >
-              {savingThreshold ? "Updating..." : "Save Baseline"}
+              {savingThreshold ? "Saving..." : "Save"}
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono flex items-center justify-between sm:justify-end gap-2">
-            <span>Security: <strong>Mutual Approval Required</strong></span>
+          <div className="text-xs text-slate-400 flex items-center justify-between sm:justify-end gap-2">
+            <span>Mutual verification required</span>
             <button
               onClick={loadData}
               title="Refresh Matches"
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-indigo-400 transition cursor-pointer"
+              className="p-1.5 rounded-lg bg-[#121520] border border-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer"
             >
               <RefreshCw size={12} />
             </button>
@@ -909,7 +907,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
       {/* Loading State */}
       {loading ? (
         <div className="space-y-4">
-          <div className="bg-[#07070a]/60 border border-[#161621] rounded-2xl p-4 flex items-center justify-center gap-3 text-slate-400 font-mono text-xs animate-pulse">
+          <div className="bg-[#121520] border border-slate-800 rounded-xl p-4 flex items-center justify-center gap-3 text-slate-400 text-xs">
             <Sparkles size={14} className="text-indigo-400 animate-spin" />
             <span>{loadingMessage}</span>
           </div>
@@ -918,27 +916,27 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="bg-[#07070a]/90 rounded-2xl border border-[#161621] p-5 space-y-4 animate-pulse relative overflow-hidden flex flex-col justify-between h-[300px]"
+                className="bg-[#0c0e16] rounded-2xl border border-slate-800 p-5 space-y-4 animate-pulse relative overflow-hidden flex flex-col justify-between h-[300px]"
               >
-                <div className="flex justify-between items-center pb-2 border-b border-slate-900/40">
-                  <div className="h-4 w-16 bg-slate-900 rounded" />
-                  <div className="h-4 w-20 bg-slate-900 rounded" />
+                <div className="flex justify-between items-center pb-2 border-b border-slate-800/60">
+                  <div className="h-4 w-16 bg-slate-800 rounded" />
+                  <div className="h-4 w-20 bg-slate-800 rounded" />
                 </div>
-                <div className="grid grid-cols-2 gap-3 pb-3 border-b border-[#12121a]">
-                  <div className="p-2.5 rounded-xl border border-slate-900/60 space-y-2.5">
-                    <div className="h-3 w-10 bg-slate-900 rounded" />
-                    <div className="h-16 bg-slate-900 rounded-lg" />
-                    <div className="h-3 w-16 bg-slate-900 rounded" />
+                <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-800/60">
+                  <div className="p-2.5 rounded-xl border border-slate-800/60 space-y-2.5">
+                    <div className="h-3 w-10 bg-slate-800 rounded" />
+                    <div className="h-16 bg-slate-800 rounded-lg" />
+                    <div className="h-3 w-16 bg-slate-800 rounded" />
                   </div>
-                  <div className="p-2.5 rounded-xl border border-slate-900/60 space-y-2.5">
-                    <div className="h-3 w-10 bg-slate-900 rounded" />
-                    <div className="h-16 bg-slate-900 rounded-lg" />
-                    <div className="h-3 w-16 bg-slate-900 rounded" />
+                  <div className="p-2.5 rounded-xl border border-slate-800/60 space-y-2.5">
+                    <div className="h-3 w-10 bg-slate-800 rounded" />
+                    <div className="h-16 bg-slate-800 rounded-lg" />
+                    <div className="h-3 w-16 bg-slate-800 rounded" />
                   </div>
                 </div>
                 <div className="flex justify-between items-center pt-2">
-                  <div className="h-4 w-24 bg-slate-900 rounded" />
-                  <div className="h-8 w-24 bg-slate-900 rounded-lg" />
+                  <div className="h-4 w-24 bg-slate-800 rounded" />
+                  <div className="h-8 w-24 bg-slate-800 rounded-lg" />
                 </div>
               </div>
             ))}
@@ -946,23 +944,23 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
         </div>
       ) : filteredMatches.length === 0 ? (
         /* Empty State */
-        <div className="bg-[#07070a]/30 border border-[#161621] rounded-3xl p-12 text-center max-w-xl mx-auto space-y-5 shadow-2xl relative overflow-hidden">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-3xl shadow-inner">
-            ✨
+        <div className="bg-[#0c0e16] border border-slate-800 rounded-2xl p-8 sm:p-10 text-center max-w-xl mx-auto space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+            <Sparkles size={20} />
           </div>
-          <div className="space-y-2">
-            <h4 className="font-display font-extrabold text-sm text-slate-200 uppercase tracking-wider">
+          <div className="space-y-1.5">
+            <h4 className="font-semibold text-sm text-slate-100">
               No Potential Matches Found
             </h4>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto font-mono">
+            <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
               {viewFilter === "my"
-                ? "None of your reported items have triggered opposite-type match alerts exceeding your confidence setting. Create details or decrease the Smart Match threshold!"
+                ? "None of your reported items have triggered match alerts exceeding your confidence setting. Add details or adjust the match threshold."
                 : "No active cross-listings meet or exceed the AI forensic match criteria. When a matching item is reported, LINCO will present it here."}
             </p>
           </div>
           <button
             onClick={handleImproveReport}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-black uppercase tracking-wider transition shadow-lg cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer"
           >
             <span>Improve Your Report</span>
             <ArrowRight size={13} />
@@ -1001,129 +999,126 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                 <motion.div
                   key={m.matchId}
                   layout
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#07070a]/95 rounded-2xl border border-[#161621] p-5 space-y-4 hover:border-slate-800 transition-all duration-300 shadow-xl relative overflow-hidden flex flex-col justify-between group"
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  className="bg-[#0c0e16] rounded-2xl border border-slate-800 hover:border-slate-700/80 p-5 space-y-4 transition duration-200 shadow-xs flex flex-col justify-between group"
                 >
-                  {/* Glowing decorative indicator */}
-                  <div className={`absolute top-0 left-0 w-full h-[2px] ${confidence.barColor} opacity-80`} />
-
-                  {/* Top Bar: Confidence and AI Status Badge */}
+                  {/* Top Bar: Confidence and Status Badge */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${statusBadge.style}`}>
+                    <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-lg border flex items-center gap-1.5 ${statusBadge.style}`}>
                       {statusBadge.icon}
                       <span>{statusBadge.label}</span>
                     </span>
                     
-                    <span className={`text-[10px] font-black font-mono px-2.5 py-1 rounded-lg border ${confidence.badgeStyle}`}>
-                      {m.matchScore}% Match
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border ${confidence.badgeStyle}`}>
+                      {m.matchScore}% match
                     </span>
                   </div>
 
                   {/* Side-by-Side Images Panel */}
-                  <div className="grid grid-cols-2 gap-3.5 pb-2">
+                  <div className="grid grid-cols-2 gap-3 pb-1">
                     {/* Lost side */}
-                    <div className="space-y-2 text-left bg-[#030304]/30 p-2.5 rounded-xl border border-rose-500/10 relative overflow-hidden">
-                      <div className="absolute top-1.5 left-1.5 z-10">
-                        <span className="text-[8px] tracking-wider uppercase font-black px-2 py-0.5 rounded bg-rose-950/90 text-rose-300 border border-rose-500/20">
-                          🚨 Lost
+                    <div className="space-y-2 text-left bg-[#121520] p-2.5 rounded-xl border border-slate-800/80 relative overflow-hidden">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">
+                          Lost
                         </span>
                       </div>
                       
                       {lostPost.image ? (
-                        <div className="h-28 sm:h-32 rounded-lg overflow-hidden border border-[#161621] bg-slate-900/10">
+                        <div className="h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-800 bg-[#0c0e16]">
                           <img
                             src={lostPost.image}
-                            alt="Lost item illustration"
-                            className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                            alt="Lost item"
+                            className="w-full h-full object-cover transition duration-300 group-hover:scale-102"
                             referrerPolicy="no-referrer"
                           />
                         </div>
                       ) : (
-                        <div className="h-28 sm:h-32 rounded-lg border border-dashed border-slate-800 bg-[#030304]/50 flex flex-col items-center justify-center text-xs text-slate-600 font-mono font-bold">
-                          <span>No Photo</span>
+                        <div className="h-28 sm:h-32 rounded-lg border border-dashed border-slate-800 bg-[#0c0e16] flex flex-col items-center justify-center text-xs text-slate-500 font-medium">
+                          <span>No photo</span>
                         </div>
                       )}
                       
                       <div className="space-y-0.5 min-w-0">
-                        <h4 className="text-[11px] font-extrabold text-slate-100 truncate">
+                        <h4 className="text-xs font-semibold text-slate-200 truncate">
                           {lostPost.item}
                         </h4>
-                        <p className="text-[9px] text-slate-500 truncate flex items-center gap-0.5">
-                          <MapPin size={9} className="shrink-0" /> {lostPost.address}
+                        <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
+                          <MapPin size={11} className="shrink-0 text-slate-500" /> {lostPost.address}
                         </p>
                       </div>
                     </div>
 
                     {/* Found side */}
-                    <div className="space-y-2 text-left bg-[#030304]/30 p-2.5 rounded-xl border border-emerald-500/10 relative overflow-hidden">
-                      <div className="absolute top-1.5 left-1.5 z-10">
-                        <span className="text-[8px] tracking-wider uppercase font-black px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-500/20">
-                          ✅ Found
+                    <div className="space-y-2 text-left bg-[#121520] p-2.5 rounded-xl border border-slate-800/80 relative overflow-hidden">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                          Found
                         </span>
                       </div>
 
                       {foundPost.image ? (
-                        <div className="h-28 sm:h-32 rounded-lg overflow-hidden border border-[#161621] bg-slate-900/10">
+                        <div className="h-28 sm:h-32 rounded-lg overflow-hidden border border-slate-800 bg-[#0c0e16]">
                           <img
                             src={foundPost.image}
-                            alt="Found item illustration"
-                            className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                            alt="Found item"
+                            className="w-full h-full object-cover transition duration-300 group-hover:scale-102"
                             referrerPolicy="no-referrer"
                           />
                         </div>
                       ) : (
-                        <div className="h-28 sm:h-32 rounded-lg border border-dashed border-slate-800 bg-[#030304]/50 flex flex-col items-center justify-center text-xs text-slate-600 font-mono font-bold">
-                          <span>No Photo</span>
+                        <div className="h-28 sm:h-32 rounded-lg border border-dashed border-slate-800 bg-[#0c0e16] flex flex-col items-center justify-center text-xs text-slate-500 font-medium">
+                          <span>No photo</span>
                         </div>
                       )}
 
                       <div className="space-y-0.5 min-w-0">
-                        <h4 className="text-[11px] font-extrabold text-slate-100 truncate">
+                        <h4 className="text-xs font-semibold text-slate-200 truncate">
                           {foundPost.item}
                         </h4>
-                        <p className="text-[9px] text-slate-500 truncate flex items-center gap-0.5">
-                          <MapPin size={9} className="shrink-0" /> {foundPost.address}
+                        <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
+                          <MapPin size={11} className="shrink-0 text-slate-500" /> {foundPost.address}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Mutual Approval Steps Mini Progress */}
-                  <div className="bg-[#030304]/60 p-2.5 rounded-xl border border-[#12121a] flex items-center justify-between text-[10px] font-mono">
+                  {/* Mutual Approval Steps Progress */}
+                  <div className="bg-[#121520] p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
                       <span className={`w-2 h-2 rounded-full ${m.ownerApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
-                      <span className={m.ownerApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                        Owner: {m.ownerApproved ? "Approved ✓" : "Pending"}
+                      <span className={m.ownerApproved ? "text-emerald-400 font-medium" : "text-slate-400"}>
+                        Owner: {m.ownerApproved ? "Verified" : "Pending"}
                       </span>
                     </div>
-                    <span className="text-slate-700">|</span>
+                    <span className="text-slate-700">·</span>
                     <div className="flex items-center gap-1.5">
                       <span className={`w-2 h-2 rounded-full ${m.finderApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
-                      <span className={m.finderApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                        Finder: {m.finderApproved ? "Approved ✓" : "Pending"}
+                      <span className={m.finderApproved ? "text-emerald-400 font-medium" : "text-slate-400"}>
+                        Finder: {m.finderApproved ? "Verified" : "Pending"}
                       </span>
                     </div>
-                    <span className="text-slate-700">|</span>
+                    <span className="text-slate-700">·</span>
                     <div className="flex items-center gap-1">
                       {(m.ownerApproved && m.finderApproved) || m.matchStatus === "VERIFIED_CONNECTION" ? (
-                        <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                          <Unlock size={10} /> Chat Live
+                        <span className="text-emerald-400 font-medium flex items-center gap-1">
+                          <Unlock size={11} /> Chat Active
                         </span>
                       ) : (
-                        <span className="text-slate-500 flex items-center gap-0.5">
-                          <Lock size={10} /> Chat Locked
+                        <span className="text-slate-500 flex items-center gap-1">
+                          <Lock size={11} /> Chat Locked
                         </span>
                       )}
                     </div>
                   </div>
 
                   {/* Action Group */}
-                  <div className="flex flex-wrap gap-2 pt-3 border-t border-[#12121a] mt-auto">
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-800 mt-auto">
                     <button
                       onClick={() => handleDismissMatch(m.matchId)}
-                      className="px-3 py-2.5 rounded-xl bg-[#030304] border border-[#1c1c26] hover:border-red-500/30 text-slate-500 hover:text-red-400 transition cursor-pointer flex items-center justify-center shrink-0"
+                      className="px-2.5 py-2 rounded-xl bg-[#121520] border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 transition cursor-pointer flex items-center justify-center shrink-0"
                       title="Dismiss Match"
                     >
                       <Trash2 size={13} />
@@ -1131,20 +1126,20 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                     <button
                       onClick={(e) => toggleSaveMatch(m.matchId, e)}
-                      className={`px-3 py-2.5 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
+                      className={`px-2.5 py-2 rounded-xl border transition cursor-pointer flex items-center justify-center shrink-0 ${
                         isSaved
-                          ? "bg-pink-500/15 border-pink-500/40 text-pink-400"
-                          : "bg-[#030304] border-[#1c1c26] text-slate-500 hover:text-pink-400 hover:border-pink-500/20"
+                          ? "bg-pink-500/10 border-pink-500/30 text-pink-400"
+                          : "bg-[#121520] border-slate-800 text-slate-400 hover:text-pink-400"
                       }`}
-                      title={isSaved ? "Saved to Watchlist" : "Save Match"}
+                      title={isSaved ? "Saved" : "Save Match"}
                     >
                       <Heart size={13} className={isSaved ? "fill-pink-500" : ""} />
                     </button>
 
                     <button
                       onClick={(e) => handleShareMatch(m, e)}
-                      className="px-3 py-2.5 rounded-xl bg-[#030304] border border-[#1c1c26] text-slate-500 hover:text-slate-300 transition cursor-pointer flex items-center justify-center shrink-0"
-                      title="Share Match Link"
+                      className="px-2.5 py-2 rounded-xl bg-[#121520] border border-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer flex items-center justify-center shrink-0"
+                      title="Share Match"
                     >
                       <Share2 size={13} />
                     </button>
@@ -1154,10 +1149,10 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         setSelectedMatch(m);
                         setActiveModalTab("compare");
                       }}
-                      className="flex-1 min-w-[110px] py-2.5 rounded-xl bg-[#161622] hover:bg-[#20202e] border border-[#2c2c3e] text-indigo-300 hover:text-indigo-200 transition cursor-pointer flex items-center justify-center gap-1 text-[10px] font-extrabold uppercase tracking-wider"
+                      className="flex-1 min-w-[100px] py-2 px-3 rounded-xl bg-[#121520] hover:bg-[#1a1f2e] border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-medium"
                     >
-                      <Eye size={12} />
-                      Inspect & Review
+                      <Eye size={13} />
+                      Review
                     </button>
 
                     <button
@@ -1166,17 +1161,17 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         const isMutuallyApproved = (m.ownerApproved && m.finderApproved) || m.matchStatus === "VERIFIED_CONNECTION";
                         setActiveModalTab(isMutuallyApproved ? "chat" : "verification");
                       }}
-                      className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white transition cursor-pointer flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-950/50"
+                      className="flex-1 min-w-[120px] py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold"
                     >
                       {(m.ownerApproved && m.finderApproved) || m.matchStatus === "VERIFIED_CONNECTION" ? (
                         <>
-                          <MessageSquare size={12} />
-                          Open Chat (Live)
+                          <MessageSquare size={13} />
+                          Open Chat
                         </>
                       ) : (
                         <>
-                          <ShieldCheck size={12} />
-                          Verify & Approve
+                          <ShieldCheck size={13} />
+                          Verify &amp; Approve
                         </>
                       )}
                     </button>
@@ -1211,33 +1206,33 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
           const isMutuallyApproved = (selectedMatch.ownerApproved && selectedMatch.finderApproved) || selectedMatch.matchStatus === "VERIFIED_CONNECTION";
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#07070a] border border-[#161621] w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col my-4 max-h-[92vh]"
+                className="bg-[#0c0e16] border border-slate-800 w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col my-4 max-h-[90vh]"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#12121a] bg-[#030304]/80 backdrop-blur-md">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-[#121520]">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setSelectedMatch(null)}
-                      className="px-2.5 py-1.5 rounded-xl bg-[#12121a] border border-[#1c1c26] text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-[#0c0e16] border border-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                       title="Back to matches list"
                     >
                       <span>← Back</span>
                     </button>
                     <div className="flex items-center gap-2">
-                      <Sparkles className="text-indigo-400" size={17} />
-                      <h3 className="font-display font-extrabold text-xs sm:text-sm text-slate-100 uppercase tracking-wider">
+                      <Sparkles className="text-indigo-400" size={16} />
+                      <h3 className="font-semibold text-xs sm:text-sm text-slate-100 tracking-tight">
                         Forensic Audit & Mutual Approval ({selectedMatch.matchScore}% Confidence)
                       </h3>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedMatch(null)}
-                    className="p-1.5 rounded-lg bg-[#12121a] border border-[#1c1c26] text-slate-400 hover:text-white cursor-pointer transition"
+                    className="p-1.5 rounded-lg bg-[#0c0e16] border border-slate-800 text-slate-400 hover:text-white cursor-pointer transition"
                     aria-label="Close modal"
                   >
                     <X size={15} />
@@ -1245,24 +1240,24 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                 </div>
 
                 {/* Status Bar */}
-                <div className="px-4 py-2.5 bg-[#0a0a10] border-b border-[#141420] flex flex-wrap items-center justify-between gap-2">
+                <div className="px-4 py-2.5 bg-[#0c0e16] border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded border flex items-center gap-1 ${statusBadge.style}`}>
+                    <span className={`text-[10px] font-medium uppercase px-2.5 py-0.5 rounded-md border flex items-center gap-1 ${statusBadge.style}`}>
                       {statusBadge.icon}
                       <span>{statusBadge.label}</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+                    <span className="text-[11px] text-slate-400 hidden sm:inline">
                       Both Owner and Finder must approve verification before Chat unlocks.
                     </span>
                   </div>
 
                   {/* Navigation Tabs inside Modal */}
-                  <div className="flex bg-[#030304] p-0.5 rounded-xl border border-[#1a1a26] overflow-x-auto max-w-full">
+                  <div className="flex bg-[#121520] p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
                     <button
                       onClick={() => setActiveModalTab("compare")}
-                      className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg transition cursor-pointer whitespace-nowrap ${
+                      className={`px-3 py-1 text-[11px] font-medium rounded-lg transition cursor-pointer whitespace-nowrap ${
                         activeModalTab === "compare"
-                          ? "bg-slate-800 text-indigo-400 border border-slate-700"
+                          ? "bg-[#0c0e16] text-white border border-slate-700 shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
@@ -1270,9 +1265,9 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     </button>
                     <button
                       onClick={() => setActiveModalTab("verification")}
-                      className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                      className={`px-3 py-1 text-[11px] font-medium rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                         activeModalTab === "verification"
-                          ? "bg-slate-800 text-indigo-400 border border-slate-700"
+                          ? "bg-[#0c0e16] text-white border border-slate-700 shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
@@ -1280,19 +1275,19 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     </button>
                     <button
                       onClick={() => setActiveModalTab("trust")}
-                      className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                      className={`px-3 py-1 text-[11px] font-medium rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                         activeModalTab === "trust"
-                          ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                          ? "bg-[#0c0e16] text-white border border-slate-700 shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
-                      <Handshake size={11} /> Trust & WhatsApp
+                      <Handshake size={11} /> Trust & Contact
                     </button>
                     <button
                       onClick={() => setActiveModalTab("handover")}
-                      className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                      className={`px-3 py-1 text-[11px] font-medium rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                         activeModalTab === "handover"
-                          ? "bg-slate-800 text-cyan-400 border border-slate-700"
+                          ? "bg-[#0c0e16] text-white border border-slate-700 shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
@@ -1300,9 +1295,9 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     </button>
                     <button
                       onClick={() => setActiveModalTab("chat")}
-                      className={`px-3 py-1 text-[10px] font-mono font-bold rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                      className={`px-3 py-1 text-[11px] font-medium rounded-lg transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
                         activeModalTab === "chat"
-                          ? "bg-slate-800 text-indigo-400 border border-slate-700"
+                          ? "bg-[#0c0e16] text-white border border-slate-700 shadow-xs"
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
@@ -1319,17 +1314,17 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       {/* Side-by-Side Comparison */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                         {/* Lost Report Card */}
-                        <div className="space-y-4 text-left p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10">
-                          <div className="flex justify-between items-center pb-2 border-b border-rose-500/15">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1">
+                        <div className="space-y-4 text-left p-4 rounded-xl bg-[#121520] border border-slate-800">
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                              🚨 Lost Report
+                              Lost Report
                             </span>
                             <span className="text-[10px] font-mono text-slate-500">{lostPost.timestamp}</span>
                           </div>
 
                           {lostPost.image ? (
-                            <div className="rounded-xl overflow-hidden border border-[#161621] max-h-44">
+                            <div className="rounded-xl overflow-hidden border border-slate-800 max-h-44">
                               <img
                                 src={lostPost.image}
                                 alt="Lost item illustration"
@@ -1338,54 +1333,54 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               />
                             </div>
                           ) : (
-                            <div className="h-40 rounded-xl border border-dashed border-slate-800 bg-[#030304]/60 flex flex-col items-center justify-center text-xs text-slate-600 font-mono font-bold">
+                            <div className="h-40 rounded-xl border border-dashed border-slate-800 bg-[#0c0e16] flex flex-col items-center justify-center text-xs text-slate-500">
                               <span>No Image Provided</span>
                             </div>
                           )}
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Item Name</span>
-                            <h4 className="text-sm font-extrabold text-slate-100">{lostPost.item}</h4>
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Item Name</span>
+                            <h4 className="text-sm font-semibold text-slate-100">{lostPost.item}</h4>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3.5 text-xs">
                             <div>
-                              <span className="text-[8px] text-slate-500 uppercase font-black block">Category</span>
-                              <span className="text-slate-300 font-bold">📂 {lostPost.category}</span>
+                              <span className="text-[10px] text-slate-500 uppercase font-medium block">Category</span>
+                              <span className="text-slate-300 font-medium">{lostPost.category}</span>
                             </div>
                             <div>
-                              <span className="text-[8px] text-slate-500 uppercase font-black block">Reward</span>
-                              <span className="text-emerald-400 font-mono font-black">
+                              <span className="text-[10px] text-slate-500 uppercase font-medium block">Reward</span>
+                              <span className="text-emerald-400 font-mono font-semibold">
                                 {lostPost.reward ? `₹${lostPost.reward}` : "No Reward"}
                               </span>
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Location & Address</span>
-                            <p className="text-xs text-slate-300 font-mono">{lostPost.address}</p>
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Location & Address</span>
+                            <p className="text-xs text-slate-300">{lostPost.address}</p>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Details Description</span>
-                            <p className="text-xs text-slate-300 leading-relaxed bg-[#030304]/40 p-2.5 rounded-xl border border-[#12121a]">
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Details Description</span>
+                            <p className="text-xs text-slate-300 leading-relaxed bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800/80">
                               {lostPost.details}
                             </p>
                           </div>
                         </div>
 
                         {/* Found Report Card */}
-                        <div className="space-y-4 text-left p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                          <div className="flex justify-between items-center pb-2 border-b border-emerald-500/15">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                        <div className="space-y-4 text-left p-4 rounded-xl bg-[#121520] border border-slate-800">
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              ✅ Found Report
+                              Found Report
                             </span>
                             <span className="text-[10px] font-mono text-slate-500">{foundPost.timestamp}</span>
                           </div>
 
                           {foundPost.image ? (
-                            <div className="rounded-xl overflow-hidden border border-[#161621] max-h-44">
+                            <div className="rounded-xl overflow-hidden border border-slate-800 max-h-44">
                               <img
                                 src={foundPost.image}
                                 alt="Found item illustration"
@@ -1394,35 +1389,35 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               />
                             </div>
                           ) : (
-                            <div className="h-40 rounded-xl border border-dashed border-slate-800 bg-[#030304]/60 flex flex-col items-center justify-center text-xs text-slate-600 font-mono font-bold">
+                            <div className="h-40 rounded-xl border border-dashed border-slate-800 bg-[#0c0e16] flex flex-col items-center justify-center text-xs text-slate-500">
                               <span>No Image Provided</span>
                             </div>
                           )}
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Item Name</span>
-                            <h4 className="text-sm font-extrabold text-slate-100">{foundPost.item}</h4>
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Item Name</span>
+                            <h4 className="text-sm font-semibold text-slate-100">{foundPost.item}</h4>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3.5 text-xs">
                             <div>
-                              <span className="text-[8px] text-slate-500 uppercase font-black block">Category</span>
-                              <span className="text-slate-300 font-bold">📂 {foundPost.category}</span>
+                              <span className="text-[10px] text-slate-500 uppercase font-medium block">Category</span>
+                              <span className="text-slate-300 font-medium">{foundPost.category}</span>
                             </div>
                             <div>
-                              <span className="text-[8px] text-slate-500 uppercase font-black block">Finder Contact</span>
-                              <span className="text-slate-300 font-mono font-bold">{foundPost.maskedContact || "Verified Finder"}</span>
+                              <span className="text-[10px] text-slate-500 uppercase font-medium block">Finder Contact</span>
+                              <span className="text-slate-300 font-mono font-medium">{foundPost.maskedContact || "Verified Finder"}</span>
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Location & Address</span>
-                            <p className="text-xs text-slate-300 font-mono">{foundPost.address}</p>
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Location & Address</span>
+                            <p className="text-xs text-slate-300">{foundPost.address}</p>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[8px] text-slate-500 uppercase font-black block">Details Description</span>
-                            <p className="text-xs text-slate-300 leading-relaxed bg-[#030304]/40 p-2.5 rounded-xl border border-[#12121a]">
+                            <span className="text-[10px] text-slate-500 uppercase font-medium block">Details Description</span>
+                            <p className="text-xs text-slate-300 leading-relaxed bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800/80">
                               {foundPost.details}
                             </p>
                           </div>
@@ -1431,69 +1426,69 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                       {/* Distance & Forensic Analytics */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#161621] text-left space-y-2">
-                          <span className="text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">
-                            📍 Spatial Distance
+                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 text-left space-y-2">
+                          <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block">
+                            Spatial Distance
                           </span>
-                          <p className="text-sm font-black text-slate-200">{distance.text}</p>
-                          <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
+                          <p className="text-sm font-semibold text-slate-200">{distance.text}</p>
+                          <p className="text-xs text-slate-400 leading-relaxed">
                             {distance.km !== null && distance.km <= 5
                               ? "✓ Exceptional spatial alignment! Reported within close geographic radius."
                               : "Items reported further apart. Check transit or commuting route alignment."}
                           </p>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-[#030304]/60 border border-[#161621] text-left space-y-2">
-                          <span className="text-[9px] font-mono font-bold text-indigo-400 uppercase tracking-wider block">
-                            🕒 AI Forensic Reason
+                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 text-left space-y-2">
+                          <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block">
+                            AI Forensic Reason
                           </span>
-                          <p className="text-xs text-slate-300 font-mono italic leading-relaxed">
+                          <p className="text-xs text-slate-300 italic leading-relaxed">
                             "{selectedMatch.reason}"
                           </p>
                         </div>
                       </div>
 
                       {/* Quick Mutual Approval Decision Strip */}
-                      <div className="p-4 rounded-2xl bg-[#060810] border border-[#161828] text-left space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#121422]">
+                      <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 text-left space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
                           <div className="flex items-center gap-2">
                             <ShieldCheck size={16} className="text-indigo-400" />
-                            <span className="text-xs font-bold text-slate-200">
+                            <span className="text-xs font-semibold text-slate-200">
                               Mutual Approval Review — {userRole} Perspective
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[10px] font-mono">
-                            <span className="text-slate-500">Match Status:</span>
-                            <span className="text-cyan-400 font-bold">{selectedMatch.matchStatus}</span>
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <span className="text-slate-400">Match Status:</span>
+                            <span className="text-indigo-400 font-semibold">{selectedMatch.matchStatus}</span>
                           </div>
                         </div>
 
                         {selectedMatch.ownerApproved && selectedMatch.finderApproved ? (
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                            <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1.5">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <span className="text-xs text-emerald-300 font-medium flex items-center gap-1.5">
                               <CheckCircle size={14} /> Mutual approval confirmed. Both parties have verified.
                             </span>
                             <button
                               type="button"
                               onClick={() => setActiveModalTab("chat")}
-                              className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider cursor-pointer transition shrink-0"
+                              className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs cursor-pointer transition shrink-0"
                             >
                               Open Secure Chat →
                             </button>
                           </div>
                         ) : (userRole === "Owner" && selectedMatch.ownerApproved) ? (
-                          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-300 font-medium">
+                          <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3 text-xs text-indigo-300 font-medium">
                             <span>✓ You marked: <strong>"This looks like my item"</strong>. Waiting for finder's confirmation.</span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-400">1/2 Approved</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 text-indigo-400">1/2 Approved</span>
                           </div>
                         ) : (userRole === "Finder" && selectedMatch.finderApproved) ? (
-                          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-300 font-medium">
+                          <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3 text-xs text-indigo-300 font-medium">
                             <span>✓ You confirmed: <strong>"Yes, this is the owner"</strong>. Waiting for owner's confirmation.</span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-400">1/2 Approved</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 text-indigo-400">1/2 Approved</span>
                           </div>
                         ) : (
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <p className="text-xs text-slate-400 font-mono">
+                            <p className="text-xs text-slate-400">
                               {userRole === "Finder"
                                 ? "Does this lost report match the item you found? Confirm to proceed toward Secure Chat."
                                 : "Does this found report match your lost item? Confirm to notify the finder."}
@@ -1503,7 +1498,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 type="button"
                                 onClick={() => handleApproveMatch(userRole)}
                                 disabled={actionLoading}
-                                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition flex items-center gap-1.5 disabled:opacity-50"
+                                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs cursor-pointer transition flex items-center gap-1.5 disabled:opacity-50"
                               >
                                 <CheckCircle size={13} />
                                 {actionLoading
@@ -1516,7 +1511,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 type="button"
                                 onClick={() => handleRejectMatch(userRole)}
                                 disabled={actionLoading}
-                                className="px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition disabled:opacity-50"
+                                className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-semibold text-xs cursor-pointer transition disabled:opacity-50"
                               >
                                 <XCircle size={13} />
                                 {userRole === "Finder" ? "No, details do not match" : "Not my item"}
@@ -1531,12 +1526,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                   {activeModalTab === "verification" && (
                     <div className="space-y-6 text-left">
                       {/* Mutual Verification Overview Banner */}
-                      <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-mono font-extrabold text-indigo-300 uppercase tracking-wider">
+                      <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
                           <ShieldCheck size={15} className="text-indigo-400" />
                           <span>Mutual Verification Protocol</span>
                         </div>
-                        <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                        <p className="text-xs text-slate-300 leading-relaxed">
                           To maintain zero-trust security and prevent fraudulent handovers, both the Owner and Finder submit verification details. Chat stays strictly locked until both parties approve each other's answers.
                         </p>
                       </div>
@@ -1544,12 +1539,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       {/* Approval Tracker Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Owner Verification Status */}
-                        <div className="p-4 rounded-2xl bg-[#030304]/80 border border-[#161621] space-y-3">
-                          <div className="flex justify-between items-center pb-2 border-b border-[#12121a]">
-                            <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                               <span className="w-2 h-2 rounded-full bg-rose-400" /> Owner Status
                             </span>
-                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                               selectedMatch.ownerApproved
                                 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                                 : selectedMatch.ownerVerification
@@ -1561,7 +1556,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           </div>
 
                           {selectedMatch.ownerVerification ? (
-                            <div className="space-y-2 text-xs font-mono">
+                            <div className="space-y-2 text-xs">
                               <p className="text-slate-400">
                                 Submitted By: <strong className="text-slate-200">{selectedMatch.ownerVerification.respondentName}</strong>
                               </p>
@@ -1570,9 +1565,9 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </p>
                               <div className="space-y-1.5 pt-1">
                                 {selectedMatch.ownerVerification.questions?.map((q, idx) => (
-                                  <div key={idx} className="bg-slate-900/40 p-2 rounded-lg border border-slate-800/80">
-                                    <span className="text-[9px] text-slate-500 block font-bold">Q: {q}</span>
-                                    <span className="text-[11px] text-slate-300 font-sans block mt-0.5">
+                                  <div key={idx} className="bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800/80">
+                                    <span className="text-[10px] text-slate-500 block font-medium">Q: {q}</span>
+                                    <span className="text-xs text-slate-300 block mt-0.5">
                                       A: {selectedMatch.ownerVerification?.answers?.[idx] || "N/A"}
                                     </span>
                                   </div>
@@ -1580,19 +1575,19 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-slate-500 font-mono">
+                            <p className="text-xs text-slate-500">
                               The item owner has not submitted verification answers yet.
                             </p>
                           )}
                         </div>
 
                         {/* Finder Verification Status */}
-                        <div className="p-4 rounded-2xl bg-[#030304]/80 border border-[#161621] space-y-3">
-                          <div className="flex justify-between items-center pb-2 border-b border-[#12121a]">
-                            <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                        <div className="p-4 rounded-xl bg-[#121520] border border-slate-800 space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                               <span className="w-2 h-2 rounded-full bg-emerald-400" /> Finder Status
                             </span>
-                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                               selectedMatch.finderApproved
                                 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                                 : selectedMatch.finderVerification
@@ -1604,7 +1599,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           </div>
 
                           {selectedMatch.finderVerification ? (
-                            <div className="space-y-2 text-xs font-mono">
+                            <div className="space-y-2 text-xs">
                               <p className="text-slate-400">
                                 Submitted By: <strong className="text-slate-200">{selectedMatch.finderVerification.respondentName}</strong>
                               </p>
@@ -1613,9 +1608,9 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </p>
                               <div className="space-y-1.5 pt-1">
                                 {selectedMatch.finderVerification.questions?.map((q, idx) => (
-                                  <div key={idx} className="bg-slate-900/40 p-2 rounded-lg border border-slate-800/80">
-                                    <span className="text-[9px] text-slate-500 block font-bold">Q: {q}</span>
-                                    <span className="text-[11px] text-slate-300 font-sans block mt-0.5">
+                                  <div key={idx} className="bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800/80">
+                                    <span className="text-[10px] text-slate-500 block font-medium">Q: {q}</span>
+                                    <span className="text-xs text-slate-300 block mt-0.5">
                                       A: {selectedMatch.finderVerification?.answers?.[idx] || "N/A"}
                                     </span>
                                   </div>
@@ -1623,7 +1618,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-slate-500 font-mono">
+                            <p className="text-xs text-slate-500">
                               The item finder has not submitted verification answers yet.
                             </p>
                           )}
@@ -1631,23 +1626,23 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       </div>
 
                       {/* Action Form: Submit My Verification OR Review & Approve Counterparty */}
-                      <div className="p-5 rounded-2xl bg-[#030304]/90 border border-[#161621] space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#12121a]">
+                      <div className="p-4 sm:p-5 rounded-xl bg-[#121520] border border-slate-800 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                           <div>
-                            <h4 className="text-sm font-display font-extrabold text-slate-100 uppercase tracking-wider">
+                            <h4 className="text-sm font-semibold text-slate-100">
                               Participant Action Controls
                             </h4>
-                            <p className="text-xs text-slate-400 font-mono">
+                            <p className="text-xs text-slate-400">
                               Select your role to submit details or review and verify this connection.
                             </p>
                           </div>
 
                           {/* Role Selector */}
-                          <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                          <div className="flex bg-[#0c0e16] p-1 rounded-xl border border-slate-800">
                             <button
                               type="button"
                               onClick={() => setUserRole("Owner")}
-                              className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
                                 userRole === "Owner"
                                   ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
                                   : "text-slate-400 hover:text-slate-200"
@@ -1658,7 +1653,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                             <button
                               type="button"
                               onClick={() => setUserRole("Finder")}
-                              className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
                                 userRole === "Finder"
                                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                                   : "text-slate-400 hover:text-slate-200"
@@ -1675,36 +1670,36 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           <form onSubmit={handleSubmitVerification} className="space-y-4 pt-2">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">Your Name</label>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Your Name</label>
                                 <input
                                   type="text"
                                   placeholder="Full Name"
                                   value={respondentName}
                                   onChange={(e) => setRespondentName(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                   required
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">WhatsApp / Contact</label>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">WhatsApp / Contact</label>
                                 <input
                                   type="text"
                                   placeholder="+91 98765 43210"
                                   value={respondentContact}
                                   onChange={(e) => setRespondentContact(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                   required
                                 />
                               </div>
                             </div>
 
                             <div className="space-y-3">
-                              <label className="text-[10px] font-mono font-bold text-slate-400 uppercase block">
+                              <label className="text-[10px] font-semibold text-slate-400 uppercase block">
                                 Forensic Verification Questions
                               </label>
 
                               <div className="space-y-1">
-                                <span className="text-[10px] text-slate-400 font-mono">1. What are the secret markings, serial codes, or inner engravings?</span>
+                                <span className="text-[11px] text-slate-400">1. What are the secret markings, serial codes, or inner engravings?</span>
                                 <input
                                   type="text"
                                   placeholder="e.g., small scratch on bottom left, serial ending in 492"
@@ -1714,12 +1709,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                     next[0] = e.target.value;
                                     setVerificationAnswers(next);
                                   }}
-                                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-[10px] text-slate-400 font-mono">2. What specific accessories, cards, or contents were inside/attached?</span>
+                                <span className="text-[11px] text-slate-400">2. What specific accessories, cards, or contents were inside/attached?</span>
                                 <input
                                   type="text"
                                   placeholder="e.g., metro card in sleeve, blue charging cable"
@@ -1729,12 +1724,12 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                     next[1] = e.target.value;
                                     setVerificationAnswers(next);
                                   }}
-                                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <span className="text-[10px] text-slate-400 font-mono">3. Where precisely was the item lost or found at the exact location?</span>
+                                <span className="text-[11px] text-slate-400">3. Where precisely was the item lost or found at the exact location?</span>
                                 <input
                                   type="text"
                                   placeholder="e.g., near bench #3 at gate 2"
@@ -1744,7 +1739,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                     next[2] = e.target.value;
                                     setVerificationAnswers(next);
                                   }}
-                                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                 />
                               </div>
                             </div>
@@ -1753,7 +1748,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               <button
                                 type="submit"
                                 disabled={submittingVerification}
-                                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-lg shadow-indigo-950/50 disabled:opacity-50"
+                                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer disabled:opacity-50"
                               >
                                 {submittingVerification ? "Submitting..." : "Submit Verification Answers"}
                               </button>
@@ -1762,41 +1757,41 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         )}
 
                         {/* Approval / Rejection Controls for Pending Submissions */}
-                        <div className="pt-3 border-t border-[#12121a] space-y-3">
+                        <div className="pt-3 border-t border-slate-800 space-y-3">
                           {selectedMatch.ownerApproved && selectedMatch.finderApproved ? (
-                            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-emerald-300 text-xs font-medium">
                                 <CheckCircle size={15} />
-                                <span>🎉 Mutual Approval Complete! Connection verified. Secure Chat is unlocked.</span>
+                                <span>Mutual Approval Complete! Connection verified. Secure Chat is unlocked.</span>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => setActiveModalTab("chat")}
-                                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shrink-0"
+                                className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer shrink-0"
                               >
                                 <MessageSquare size={13} />
                                 Open Secure Chat →
                               </button>
                             </div>
                           ) : (userRole === "Owner" && selectedMatch.ownerApproved) ? (
-                            <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 text-cyan-300 text-xs font-semibold">
-                                <Clock size={15} className="animate-spin text-cyan-400" />
+                            <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-indigo-300 text-xs font-medium">
+                                <Clock size={15} className="animate-spin text-indigo-400" />
                                 <span>✓ You marked: <strong>"This looks like my item"</strong>. Waiting for finder's confirmation to unlock Secure Chat.</span>
                               </div>
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-400">1/2 Approvals</span>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 text-indigo-400">1/2 Approvals</span>
                             </div>
                           ) : (userRole === "Finder" && selectedMatch.finderApproved) ? (
-                            <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 text-cyan-300 text-xs font-semibold">
-                                <Clock size={15} className="animate-spin text-cyan-400" />
+                            <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-indigo-300 text-xs font-medium">
+                                <Clock size={15} className="animate-spin text-indigo-400" />
                                 <span>✓ You confirmed: <strong>"Yes, this is the owner"</strong>. Waiting for owner's confirmation to unlock Secure Chat.</span>
                               </div>
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-400">1/2 Approvals</span>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 text-indigo-400">1/2 Approvals</span>
                             </div>
                           ) : (
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                              <div className="text-xs text-slate-400 font-mono">
+                              <div className="text-xs text-slate-400">
                                 {userRole === "Finder"
                                   ? "Review the owner's evidence and answers. Does this match what you found?"
                                   : "Review the found item details and AI analysis. Does this look like your item?"}
@@ -1807,7 +1802,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                   type="button"
                                   onClick={() => handleApproveMatch(userRole)}
                                   disabled={actionLoading}
-                                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                                 >
                                   <CheckCircle size={13} />
                                   {actionLoading
@@ -1821,7 +1816,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                   type="button"
                                   onClick={() => handleRejectMatch(userRole)}
                                   disabled={actionLoading}
-                                  className="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                  className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                                 >
                                   <XCircle size={13} />
                                   {userRole === "Finder" ? "No, details do not match" : "Not my item"}
@@ -1839,49 +1834,48 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     const revealed = getMatchRevealedContact(selectedMatch, viewerRoleKey);
                     const isOwnerTrustedConfirmed = Boolean(selectedMatch.ownerTrusted || (selectedMatch as any).ownerTrustConfirmed);
                     const isFinderTrustedConfirmed = Boolean(selectedMatch.finderTrusted || (selectedMatch as any).finderTrustConfirmed);
-                    const isBothTrusted = Boolean((isOwnerTrustedConfirmed && isFinderTrustedConfirmed) || selectedMatch.matchStatus === "RESOLVED");
                     const waMessage = `Hi! Reaching out via LINCO regarding the matched ${lostPost.item} report. Let's coordinate safe handover.`;
                     const waLink = revealed.whatsappUrl || (revealed.isEligible ? getWhatsAppLink(revealed.contact, waMessage) : "");
 
                     return (
                       <div className="space-y-6 text-left">
                         {/* Explainer Banner */}
-                        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
                           <div className="flex items-center gap-2 text-emerald-400">
                             <ShieldCheck size={16} />
-                            <h4 className="text-xs font-display font-extrabold uppercase tracking-wider">
+                            <h4 className="text-xs font-semibold uppercase tracking-wider">
                               Mutual Trust & Protected WhatsApp Contact
                             </h4>
                           </div>
-                          <p className="text-xs text-slate-300 font-mono leading-relaxed">
+                          <p className="text-xs text-slate-300 leading-relaxed">
                             To ensure safety and privacy across the community, direct WhatsApp and contact numbers are revealed as soon as <strong>BOTH parties click "I Trust This Person"</strong>.
                           </p>
                         </div>
 
                         {/* Mutual Trust Status Checklist */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className={`p-4 rounded-2xl border ${isOwnerTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
+                          <div className={`p-4 rounded-xl border ${isOwnerTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#121520] border-slate-800"}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-200">Owner Trust</span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isOwnerTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
+                              <span className="text-xs font-semibold text-slate-200">Owner Trust</span>
+                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${isOwnerTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
                                 {isOwnerTrustedConfirmed ? "Confirmed ✓" : "Pending Confirmation"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-400 font-mono mt-2">
+                            <p className="text-xs text-slate-400 mt-2">
                               {isOwnerTrustedConfirmed
                                 ? "Owner has confirmed trust."
                                 : "Awaiting owner trust confirmation."}
                             </p>
                           </div>
 
-                          <div className={`p-4 rounded-2xl border ${isFinderTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#030304]/60 border-[#161621]"}`}>
+                          <div className={`p-4 rounded-xl border ${isFinderTrustedConfirmed ? "bg-emerald-950/20 border-emerald-500/30" : "bg-[#121520] border-slate-800"}`}>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-200">Finder Trust</span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isFinderTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
+                              <span className="text-xs font-semibold text-slate-200">Finder Trust</span>
+                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${isFinderTrustedConfirmed ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400"}`}>
                                 {isFinderTrustedConfirmed ? "Confirmed ✓" : "Pending Confirmation"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-400 font-mono mt-2">
+                            <p className="text-xs text-slate-400 mt-2">
                               {isFinderTrustedConfirmed
                                 ? "Finder has confirmed trust."
                                 : "Awaiting finder trust confirmation."}
@@ -1890,35 +1884,35 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         </div>
 
                         {/* Contact Card (Revealed if eligible, masked if not) */}
-                        <div className="p-5 rounded-2xl bg-[#030304] border border-[#161621] space-y-4">
-                          <div className="flex items-center justify-between border-b border-[#12121a] pb-3">
+                        <div className="p-4 sm:p-5 rounded-xl bg-[#121520] border border-slate-800 space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                             <div className="flex items-center gap-2">
                               <Phone size={14} className="text-indigo-400" />
-                              <span className="text-xs font-display font-bold text-slate-200 uppercase tracking-wider">
+                              <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
                                 {userRole === "Owner" ? "Finder's Verified Contact" : "Owner's Verified Contact"}
                               </span>
                             </div>
                             {revealed.isEligible ? (
-                              <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                              <span className="text-[10px] font-medium text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
                                 <Unlock size={10} /> Unlocked
                               </span>
                             ) : (
-                              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-950/40 px-2.5 py-0.5 rounded border border-amber-500/20 flex items-center gap-1">
+                              <span className="text-[10px] font-medium text-amber-400 bg-amber-950/40 px-2.5 py-0.5 rounded border border-amber-500/20 flex items-center gap-1">
                                 <Lock size={10} /> Masked & Protected
                               </span>
                             )}
                           </div>
 
                           <div className="space-y-2">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#07070d] border border-[#141420]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#0c0e16] border border-slate-800/80">
                               <div>
-                                <span className="text-[10px] font-mono text-slate-500 uppercase block">Contact Name / Alias</span>
-                                <span className="text-xs font-bold text-slate-200">{revealed.name}</span>
+                                <span className="text-[10px] text-slate-500 uppercase block font-medium">Contact Name / Alias</span>
+                                <span className="text-xs font-semibold text-slate-200">{revealed.name}</span>
                               </div>
 
                               <div>
-                                <span className="text-[10px] font-mono text-slate-500 uppercase block">Phone / WhatsApp</span>
-                                <span className="text-xs font-mono font-extrabold text-white">
+                                <span className="text-[10px] text-slate-500 uppercase block font-medium">Phone / WhatsApp</span>
+                                <span className="text-xs font-mono font-semibold text-white">
                                   {revealed.isEligible ? revealed.contact : revealed.maskedContact}
                                 </span>
                               </div>
@@ -1931,7 +1925,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                     href={waLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 min-w-[160px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/50"
+                                    className="flex-1 min-w-[160px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition flex items-center justify-center gap-2 cursor-pointer"
                                   >
                                     <Phone size={13} />
                                     <span>Open WhatsApp Chat</span>
@@ -1940,13 +1934,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 )}
                                 <a
                                   href={`tel:${revealed.contact}`}
-                                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                  className="px-4 py-2 rounded-xl bg-[#0c0e16] hover:bg-slate-800 text-white text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer border border-slate-800"
                                 >
                                   <Phone size={13} /> Direct Call
                                 </a>
                               </div>
                             ) : (
-                              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 font-mono flex items-center gap-2">
+                              <div className="p-3 rounded-xl bg-[#0c0e16] border border-slate-800/80 text-xs text-slate-400 flex items-center gap-2">
                                 <Lock size={13} className="text-amber-400 shrink-0" />
                                 <span>Both users must click "I Trust This Person" below to reveal active WhatsApp link and phone number.</span>
                               </div>
@@ -1956,11 +1950,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                         {/* Confirm Trust Action */}
                         {((userRole === "Owner" && !isOwnerTrustedConfirmed) || (userRole === "Finder" && !isFinderTrustedConfirmed)) && (
-                          <div className="p-5 rounded-2xl bg-gradient-to-b from-[#0c0c16] to-[#06060c] border border-indigo-500/20 space-y-4">
-                            <h5 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-display">
+                          <div className="p-4 sm:p-5 rounded-xl bg-[#121520] border border-slate-800 space-y-3">
+                            <h5 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
                               Confirm Trust as {userRole}
                             </h5>
-                            <p className="text-xs text-slate-400 font-mono">
+                            <p className="text-xs text-slate-400">
                               By clicking trust, you authorize exchanging direct WhatsApp contact for safe item handover.
                             </p>
 
@@ -1968,7 +1962,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                               type="button"
                               onClick={() => handleConfirmTrust(userRole)}
                               disabled={submittingTrust}
-                              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-emerald-950/50"
+                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                               <Handshake size={15} />
                               {submittingTrust ? "Confirming..." : "I Trust This Person"}
@@ -1986,35 +1980,35 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       <div className="space-y-6 text-left">
                         {/* Handover Status Banner */}
                         {isResolved ? (
-                          <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-emerald-950/40 border border-emerald-500/40 text-center space-y-3 shadow-2xl">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400 text-xl">
-                              🎉
+                          <div className="p-6 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-center space-y-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400 text-lg">
+                              ✓
                             </div>
                             <div className="space-y-1">
-                              <h4 className="text-sm font-display font-extrabold text-white uppercase tracking-wider">
+                              <h4 className="text-sm font-semibold text-white">
                                 Item Successfully Reunited & Resolved!
                               </h4>
-                              <p className="text-xs text-slate-300 font-mono max-w-md mx-auto leading-relaxed">
+                              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
                                 Both owner and finder have confirmed the safe handover. Case resolved!
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })}
-                              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5"
+                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition cursor-pointer inline-flex items-center gap-1.5"
                             >
                               Celebrate Reunion ✨
                             </button>
                           </div>
                         ) : (
-                          <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 space-y-2">
-                            <div className="flex items-center gap-2 text-cyan-400">
+                          <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2">
+                            <div className="flex items-center gap-2 text-indigo-400">
                               <MapPin size={16} />
-                              <h4 className="text-xs font-display font-extrabold uppercase tracking-wider">
+                              <h4 className="text-xs font-semibold uppercase tracking-wider">
                                 Safe Handover Protocol
                               </h4>
                             </div>
-                            <p className="text-xs text-slate-300 font-mono leading-relaxed">
+                            <p className="text-xs text-slate-300 leading-relaxed">
                               Coordinate a public meetup location (e.g. Metro Station, Police Helpdesk, or campus security). Once physically handed over, both parties confirm below to resolve the case.
                             </p>
                           </div>
@@ -2022,31 +2016,31 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                         {/* Handover Details Form */}
                         {!isResolved && (
-                          <div className="p-5 rounded-2xl bg-[#030304] border border-[#161621] space-y-4">
-                            <h5 className="text-xs font-display font-bold text-slate-200 uppercase tracking-wider">
+                          <div className="p-4 sm:p-5 rounded-xl bg-[#121520] border border-slate-800 space-y-4">
+                            <h5 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
                               Handover Location & Schedule
                             </h5>
 
                             <div className="space-y-3">
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">Public Meeting Spot</label>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Public Meeting Spot</label>
                                 <input
                                   type="text"
                                   placeholder="e.g. Kolkata Metro Station Gate #2 Concourse"
                                   value={handoverMeetingPlace}
                                   onChange={(e) => setHandoverMeetingPlace(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-cyan-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">Scheduled Date / Time</label>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Scheduled Date / Time</label>
                                 <input
                                   type="text"
                                   placeholder="e.g. Today at 4:00 PM"
                                   value={handoverScheduledTime}
                                   onChange={(e) => setHandoverScheduledTime(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-white outline-none focus:border-cyan-500"
+                                  className="w-full px-3.5 py-2 rounded-xl bg-[#0c0e16] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                                 />
                               </div>
                             </div>
@@ -2056,7 +2050,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 type="button"
                                 onClick={handleStartHandover}
                                 disabled={startingHandover}
-                                className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-cyan-950/50"
+                                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                               >
                                 <MapPin size={13} />
                                 {startingHandover ? "Scheduling..." : "Schedule Safe Handover"}
@@ -2067,11 +2061,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                         {/* Handover Completion Confirmation Buttons */}
                         {!isResolved && (
-                          <div className="p-5 rounded-2xl bg-[#06060c] border border-[#161621] space-y-4">
-                            <h5 className="text-xs font-display font-bold text-slate-200 uppercase tracking-wider">
+                          <div className="p-4 sm:p-5 rounded-xl bg-[#121520] border border-slate-800 space-y-3">
+                            <h5 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
                               Confirm Handover & Resolve Case
                             </h5>
-                            <p className="text-[11px] text-slate-400 font-mono">
+                            <p className="text-xs text-slate-400">
                               Once physically handed over at the meetup spot, confirm to finalize the return.
                             </p>
 
@@ -2080,7 +2074,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 type="button"
                                 onClick={() => handleConfirmHandover("Finder")}
                                 disabled={confirmingHandover}
-                                className="flex-1 px-4 py-3 rounded-xl bg-teal-600/20 hover:bg-teal-600 border border-teal-500/30 text-teal-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-300 font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                               >
                                 <CheckCheck size={14} />
                                 I handed over this item
@@ -2090,7 +2084,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 type="button"
                                 onClick={() => handleConfirmHandover("Owner")}
                                 disabled={confirmingHandover}
-                                className="flex-1 px-4 py-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-300 hover:text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-300 font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                               >
                                 <CheckCheck size={14} />
                                 I received my item
@@ -2106,29 +2100,29 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     <div className="space-y-4">
                       {/* Check if Mutually Approved */}
                       {!isMutuallyApproved ? (
-                        <div className="p-8 rounded-3xl bg-[#030304]/80 border border-[#161621] text-center space-y-4">
-                          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
-                            <Lock size={24} />
+                        <div className="p-6 sm:p-8 rounded-xl bg-[#121520] border border-slate-800 text-center space-y-4">
+                          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+                            <Lock size={20} />
                           </div>
                           <div className="space-y-1 max-w-md mx-auto">
-                            <h4 className="text-sm font-display font-extrabold text-slate-100 uppercase tracking-wider">
+                            <h4 className="text-sm font-semibold text-slate-100">
                               Secure Chat Unlocks After Verification
                             </h4>
-                            <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                            <p className="text-xs text-slate-400 leading-relaxed">
                               Once the claim is verified, end-to-end Secure Chat automatically opens between both parties.
                             </p>
                           </div>
 
-                          <div className="flex justify-center gap-4 text-xs font-mono pt-2">
+                          <div className="flex justify-center gap-4 text-xs pt-1">
                             <div className="flex items-center gap-1.5">
-                              <span className={`w-2.5 h-2.5 rounded-full ${selectedMatch.ownerApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
-                              <span className={selectedMatch.ownerApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                              <span className={`w-2 h-2 rounded-full ${selectedMatch.ownerApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
+                              <span className={selectedMatch.ownerApproved ? "text-emerald-400 font-medium" : "text-slate-500"}>
                                 Owner: {selectedMatch.ownerApproved ? "Verified ✓" : "Pending"}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <span className={`w-2.5 h-2.5 rounded-full ${selectedMatch.finderApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
-                              <span className={selectedMatch.finderApproved ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                              <span className={`w-2 h-2 rounded-full ${selectedMatch.finderApproved ? "bg-emerald-400" : "bg-slate-600"}`} />
+                              <span className={selectedMatch.finderApproved ? "text-emerald-400 font-medium" : "text-slate-500"}>
                                 Finder: {selectedMatch.finderApproved ? "Verified ✓" : "Pending"}
                               </span>
                             </div>
@@ -2137,31 +2131,31 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           <button
                             type="button"
                             onClick={() => setActiveModalTab("verification")}
-                            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-lg shadow-indigo-950/50"
+                            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer"
                           >
                             Go to Verification Tab
                           </button>
                         </div>
                       ) : (
                         /* Mutually Approved Secure Handover Chat */
-                        <div className="bg-[#030304] border border-[#161621] rounded-2xl flex flex-col h-[400px] overflow-hidden">
+                        <div className="bg-[#121520] border border-slate-800 rounded-xl flex flex-col h-[400px] overflow-hidden">
                           {/* Chat Header */}
-                          <div className="px-4 py-3 border-b border-[#12121a] bg-[#07070d] flex items-center justify-between">
+                          <div className="px-4 py-3 border-b border-slate-800 bg-[#0c0e16] flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                              <span className="text-xs font-mono font-bold text-slate-200">
+                              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                              <span className="text-xs font-semibold text-slate-200">
                                 End-to-End Secure Handover Chat
                               </span>
                             </div>
-                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
+                            <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
                               ✓ Verified Connection
                             </span>
                           </div>
 
                           {/* Chat Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#030305]/40 text-left">
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0c0e16] text-left">
                             {(!selectedMatch.messages || selectedMatch.messages.length === 0) ? (
-                              <div className="text-center py-12 text-slate-500 text-xs font-mono">
+                              <div className="text-center py-12 text-slate-500 text-xs">
                                 Connection verified! Send a message to coordinate safe handover.
                               </div>
                             ) : (
@@ -2172,7 +2166,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 if (isSystem) {
                                   return (
                                     <div key={msg.id} className="text-center my-2">
-                                      <span className="inline-block px-3 py-1 rounded-full bg-indigo-950/40 border border-indigo-500/20 text-indigo-300 text-[10px] font-mono">
+                                      <span className="inline-block px-3 py-1 rounded-full bg-[#121520] border border-slate-800 text-indigo-300 text-[10px]">
                                         {msg.text}
                                       </span>
                                     </div>
@@ -2182,13 +2176,13 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 return (
                                   <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                                     <div
-                                      className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs ${
+                                      className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-xs ${
                                         isMe
-                                          ? "bg-indigo-600 text-white rounded-tr-none"
-                                          : "bg-[#0c0c14] border border-[#1e1e2d] text-slate-200 rounded-tl-none"
+                                          ? "bg-indigo-600 text-white rounded-tr-xs"
+                                          : "bg-[#121520] border border-slate-800 text-slate-200 rounded-tl-xs"
                                       }`}
                                     >
-                                      <span className="block text-[8px] opacity-70 font-mono mb-0.5 font-bold">
+                                      <span className="block text-[9px] opacity-70 mb-0.5 font-medium">
                                         {msg.sender}
                                       </span>
                                       <p className="break-words leading-relaxed font-sans">{msg.text}</p>
@@ -2201,20 +2195,20 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           </div>
 
                           {/* Chat Input Bar */}
-                          <form onSubmit={handleSendChat} className="p-3 border-t border-[#12121a] bg-[#07070d] flex items-center gap-2">
+                          <form onSubmit={handleSendChat} className="p-3 border-t border-slate-800 bg-[#0c0e16] flex items-center gap-2">
                             <input
                               type="text"
                               placeholder="Type a message to coordinate handover..."
                               value={chatMessage}
                               onChange={(e) => setChatMessage(e.target.value)}
-                              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"
+                              className="flex-1 px-3.5 py-2 rounded-xl bg-[#121520] border border-slate-800 text-xs text-white outline-none focus:border-slate-700"
                               required
                             />
 
                             <button
                               type="submit"
                               disabled={sendingChat || !chatMessage.trim()}
-                              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shrink-0 disabled:opacity-50 shadow-lg shadow-indigo-950/50"
+                              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1 shrink-0 disabled:opacity-50"
                             >
                               <Send size={12} />
                               <span>{sendingChat ? "Sending..." : "Send"}</span>
@@ -2227,10 +2221,10 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                 </div>
 
                 {/* Footer Controls */}
-                <div className="p-4 border-t border-[#12121a] bg-[#030304]/90 flex flex-wrap gap-3 justify-between items-center">
+                <div className="p-4 border-t border-slate-800 bg-[#121520] flex flex-wrap gap-3 justify-between items-center">
                   <button
                     onClick={() => handleDismissMatch(selectedMatch.matchId)}
-                    className="px-4 py-2.5 rounded-xl bg-[#030304] hover:bg-[#12121a] text-slate-400 hover:text-red-400 border border-[#1c1c26] text-xs font-bold transition flex items-center gap-1 uppercase cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-[#0c0e16] hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Trash2 size={13} />
                     Dismiss Match
@@ -2239,10 +2233,10 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                   <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                     <button
                       onClick={(e) => toggleSaveMatch(selectedMatch.matchId, e)}
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-extrabold uppercase transition cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-3.5 py-2 rounded-xl border text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                         savedMatches.includes(selectedMatch.matchId)
-                          ? "bg-pink-500/15 border-pink-500/40 text-pink-400"
-                          : "bg-[#030304] border-[#1c1c26] text-slate-400 hover:text-white"
+                          ? "bg-pink-500/15 border-pink-500/30 text-pink-400"
+                          : "bg-[#0c0e16] border-slate-800 text-slate-400 hover:text-white"
                       }`}
                     >
                       <Heart size={13} className={savedMatches.includes(selectedMatch.matchId) ? "fill-pink-500" : ""} />
@@ -2251,7 +2245,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
 
                     <button
                       onClick={(e) => handleShareMatch(selectedMatch, e)}
-                      className="px-4 py-2.5 rounded-xl bg-[#030304] hover:bg-[#12121a] text-slate-400 hover:text-white border border-[#1c1c26] text-xs font-extrabold uppercase transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl bg-[#0c0e16] hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <Share2 size={13} />
                       Share
@@ -2264,7 +2258,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         const oppositePostId = targetPostToClaim.id === lostPost.id ? foundPost.id : lostPost.id;
                         onStartClaim(targetPostToClaim, oppositePostId);
                       }}
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white text-xs font-black tracking-wider uppercase transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-indigo-950/40"
+                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <ShieldCheck size={14} /> Direct Claim
                     </button>

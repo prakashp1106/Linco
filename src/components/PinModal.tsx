@@ -169,41 +169,54 @@ export const PinModal: React.FC<PinModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
           id="pin-modal-overlay"
         >
           <motion.div
-            initial={{ scale: 0.96, y: 12 }}
+            initial={{ scale: 0.97, y: 8 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.96, y: 12 }}
-            className={`w-full max-w-sm rounded-3xl bg-[#07070a] border border-[#161621] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.95)] relative ${
+            exit={{ scale: 0.97, y: 8 }}
+            className={`w-full max-w-sm rounded-2xl bg-[#0c0e16] border border-slate-800 shadow-xl overflow-hidden relative ${
               shaking ? "animate-shake" : ""
             }`}
           >
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 via-cyan-400 to-indigo-500 opacity-60" />
-            
             {/* Header */}
-            <div className="p-5 border-b border-[#12121a] bg-[#07070a]/90 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Lock size={15} className={actionType === "delete" ? "text-rose-400" : actionType === "unlock" ? "text-indigo-400" : "text-emerald-400"} />
-                <span className="text-[11px] font-mono font-extrabold text-slate-300 uppercase tracking-widest">
-                  {actionType === "delete" ? "Authenticate Deletion" : actionType === "unlock" ? "Unlock Connection Keys" : "Verify Resolution"}
-                </span>
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  actionType === "delete" 
+                    ? "bg-rose-500/10 text-rose-400" 
+                    : actionType === "unlock" 
+                    ? "bg-indigo-500/10 text-indigo-400" 
+                    : "bg-emerald-500/10 text-emerald-400"
+                }`}>
+                  <Lock size={15} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-100">
+                    {actionType === "delete" 
+                      ? "Confirm Deletion" 
+                      : actionType === "unlock" 
+                      ? "Unlock Details" 
+                      : "Mark Resolved"}
+                  </h3>
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-[#12121a] transition cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#121520] transition cursor-pointer"
+                aria-label="Close"
               >
-                <X size={15} />
+                <X size={16} />
               </button>
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-5">
-              <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed text-center font-mono">
+            <div className="p-5 sm:p-6 space-y-5">
+              <p className="text-xs text-slate-400 leading-relaxed text-center">
                 {actionType === "unlock" 
-                  ? "Enter the 4-digit Security PIN to decrypt contact information safely."
-                  : "Enter the 4-digit Security PIN specified when publishing this report to authorize."}
+                  ? "Enter the 4-digit security PIN set when creating this report to view contact details."
+                  : "Enter the 4-digit security PIN for this report to confirm this action."}
               </p>
 
               {/* Box inputs */}
@@ -220,20 +233,20 @@ export const PinModal: React.FC<PinModalProps> = ({
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={handlePaste}
-                    className="w-12 h-14 text-center text-2xl font-bold rounded-2xl bg-[#030304] border border-[#1c1c26] focus:border-indigo-500 outline-none text-indigo-400 transition"
+                    className="w-12 h-13 text-center text-xl font-bold rounded-xl bg-[#121520] border border-slate-800 focus:border-indigo-500 outline-none text-slate-100 transition"
                   />
                 ))}
               </div>
 
               {/* Custom Numeric Keypad */}
-              <div className="bg-[#030304]/60 p-4 rounded-2xl border border-[#161621] space-y-3">
-                <div className="grid grid-cols-3 gap-2">
+              <div className="bg-[#121520] p-3 rounded-xl border border-slate-800 space-y-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {keypadNumbers.map((digit) => (
                     <button
                       key={digit}
                       type="button"
                       onClick={() => handleKeypadPress(digit)}
-                      className="py-3 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-sm font-bold text-slate-200 hover:text-indigo-400 transition cursor-pointer active:scale-95"
+                      className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-sm font-medium text-slate-200 hover:text-white transition cursor-pointer active:scale-95"
                     >
                       {digit}
                     </button>
@@ -241,30 +254,31 @@ export const PinModal: React.FC<PinModalProps> = ({
                   <button
                     type="button"
                     onClick={handleKeypadClear}
-                    className="py-3 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-[10px] uppercase font-bold text-slate-500 transition cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-xs font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer active:scale-95"
                   >
                     Clear
                   </button>
                   <button
                     type="button"
                     onClick={() => handleKeypadPress("0")}
-                    className="py-3 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-sm font-bold text-slate-200 hover:text-indigo-400 transition cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-[#181c2b] border border-slate-800/80 text-sm font-medium text-slate-200 hover:text-white transition cursor-pointer active:scale-95"
                   >
                     0
                   </button>
                   <button
                     type="button"
                     onClick={handleKeypadBackspace}
-                    className="py-3 rounded-xl bg-[#07070a] hover:bg-red-950/20 border border-[#1c1c26] text-rose-400 transition flex items-center justify-center cursor-pointer active:scale-95"
+                    className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-rose-950/20 border border-slate-800/80 text-rose-400 transition flex items-center justify-center cursor-pointer active:scale-95"
+                    aria-label="Delete"
                   >
-                    <Delete size={14} />
+                    <Delete size={15} />
                   </button>
                 </div>
               </div>
 
               {error && (
-                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold font-mono">
-                  <AlertTriangle size={14} className="shrink-0 text-rose-400 animate-bounce" />
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium">
+                  <AlertTriangle size={14} className="shrink-0 text-rose-400" />
                   <p>{error}</p>
                 </div>
               )}
@@ -272,23 +286,23 @@ export const PinModal: React.FC<PinModalProps> = ({
               <button
                 onClick={() => handleConfirm()}
                 disabled={submitting}
-                className={`w-full py-3 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                className={`w-full py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${
                   actionType === "delete"
-                    ? "bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/20"
+                    ? "bg-rose-600 hover:bg-rose-500 text-white"
                     : actionType === "unlock"
-                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-950/20"
-                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/20"
+                    ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                    : "bg-emerald-600 hover:bg-emerald-500 text-white"
                 }`}
               >
                 {submitting ? (
-                  <span className="flex items-center gap-2 font-mono">
-                    <RefreshCw className="animate-spin inline-block" size={13} />
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="animate-spin inline-block" size={14} />
                     Verifying...
                   </span>
                 ) : (
                   <>
-                    <CheckCircle2 size={13} />
-                    {actionType === "unlock" ? "Decrypt & Unlock" : "Confirm Request"}
+                    <CheckCircle2 size={15} />
+                    {actionType === "unlock" ? "Unlock Details" : "Confirm"}
                   </>
                 )}
               </button>

@@ -64,9 +64,9 @@ export const PostCard: React.FC<PostCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(idx * 0.04, 0.2) }}
       onClick={() => onIncrementViews(post.id)}
-      className={`bg-[#07070a]/80 hover:bg-[#0c0c11]/90 border rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.85)] hover:border-[#222230] cursor-pointer relative overflow-hidden group ${
-        isLost ? "border-l-4 border-l-rose-500/80 border-[#1c1c26]" : "border-l-4 border-l-emerald-500/80 border-[#1c1c26]"
-      } ${isResolved ? "opacity-60 border-l-slate-600/50" : ""} ${postMatches.length > 0 ? "border-r border-r-indigo-500/20 shadow-[0_4px_24px_rgba(99,102,241,0.08)]" : ""}`}
+      className={`bg-[#0c0c11] hover:bg-[#111118] border border-slate-800/80 hover:border-slate-700 rounded-2xl p-5 sm:p-6 transition-all duration-200 cursor-pointer relative overflow-hidden group ${
+        isResolved ? "opacity-60" : ""
+      } ${postMatches.length > 0 ? "ring-1 ring-indigo-500/20" : ""}`}
     >
       {/* Top Metadata Row */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3.5 pb-2.5 border-b border-[#14141e]">
@@ -272,22 +272,22 @@ export const PostCard: React.FC<PostCardProps> = ({
         </button>
       </div>
 
-      {/* ACTIVE GOOGLE GEMINI AI MATCH ALERTS (DISPLAYED INSIDE POST CARD) */}
+      {/* ACTIVE SMART AI MATCH ALERTS (DISPLAYED INSIDE POST CARD) */}
       {postMatches.length > 0 && (
         isUnlocked ? (
-          <div className="mt-4 p-4 rounded-2xl border border-indigo-500/25 bg-indigo-950/10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-indigo-500/20 text-[7px] font-mono font-bold tracking-widest text-indigo-300 rounded-bl-lg uppercase">
-              {t("postcard.aiMatch", "AI MATCH")}
+          <div className="mt-4 p-4 rounded-xl border border-indigo-500/25 bg-indigo-950/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-indigo-500/20 text-[8px] font-mono font-bold tracking-wider text-indigo-300 rounded-bl-lg uppercase">
+              {t("postcard.aiMatch", "SMART MATCH")}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-indigo-300 uppercase tracking-wider mb-3">
-              <Sparkles size={11} className="text-indigo-400 animate-spin" /> {t("postcard.geminiMatches", "Gemini detected smart matches!")}
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-300 mb-3">
+              <Sparkles size={12} className="text-indigo-400" /> {t("postcard.geminiMatches", "Smart similarity matches detected")}
             </div>
             
             <div className="space-y-2.5">
               {postMatches.map((match, mIdx) => (
-                <div key={mIdx} className="p-3 bg-[#030304]/80 rounded-xl border border-[#161621] flex gap-3.5 items-start">
+                <div key={mIdx} className="p-3 bg-[#08080c] rounded-lg border border-slate-800 flex gap-3.5 items-start">
                   {/* Percentage Circle Ring */}
-                  <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center bg-[#09090c] border border-indigo-500/20 rounded-full font-mono text-[11px] font-black text-indigo-400 shadow-inner">
+                  <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-[#0e0e14] border border-indigo-500/20 rounded-full font-mono text-xs font-bold text-indigo-400">
                     {match.score}%
                   </div>
                   
@@ -295,11 +295,11 @@ export const PostCard: React.FC<PostCardProps> = ({
                     <h4 className="text-xs font-bold text-slate-200 mb-0.5">{match.item}</h4>
                     <p className="text-[11px] text-slate-400 leading-normal mb-2">{match.reason}</p>
                     <a
-                      href={getWhatsAppLink(match.contact, `Hi! LINCO AI automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`)}
+                      href={getWhatsAppLink(match.contact, `Hi! LINCO automatically matched our posts. I believe your listing for '${match.item}' matches my post. Let's arrange a handover!`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition duration-150 shadow-md active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition duration-150 cursor-pointer"
                     >
                       {t("postcard.contactOwner", "Contact Owner")} <ChevronRight size={10} />
                     </a>
@@ -309,22 +309,22 @@ export const PostCard: React.FC<PostCardProps> = ({
             </div>
           </div>
         ) : (
-          <div className="mt-4 p-4 rounded-2xl border border-[#161621] bg-[#030304]/60 text-center space-y-2.5">
-            <div className="text-xs text-slate-300 font-bold flex items-center justify-center gap-2">
-              <Sparkles size={13} className="text-indigo-400 animate-pulse" />
-              {t("post.geminiPotentialMatches", `Gemini AI detected ${postMatches.length} potential smart match${postMatches.length > 1 ? "es" : ""}!`)}
+          <div className="mt-4 p-4 rounded-xl border border-slate-800 bg-[#08080c] text-center space-y-2.5">
+            <div className="text-xs text-slate-300 font-semibold flex items-center justify-center gap-2">
+              <Sparkles size={13} className="text-indigo-400" />
+              {t("post.geminiPotentialMatches", `Detected ${postMatches.length} potential smart match${postMatches.length > 1 ? "es" : ""}!`)}
             </div>
             <p className="text-[11px] text-slate-400 max-w-xs mx-auto leading-normal">
-              {t("postcard.creatorNotice", "Only the verified creator of this listing can decrypt similarity breakdowns and contact matching owners.")}
+              {t("postcard.creatorNotice", "Only the verified creator of this listing can view similarity breakdowns and contact matching owners.")}
             </p>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onUnlockPost?.(post.id, e);
               }}
-              className="mx-auto px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider transition-all duration-150 shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="mx-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition duration-150 flex items-center gap-1.5 cursor-pointer"
             >
-              🔓 {t("post.unlockToViewMatches", "Unlock to View matches")}
+              🔓 {t("post.unlockToViewMatches", "Unlock to View Matches")}
             </button>
           </div>
         )

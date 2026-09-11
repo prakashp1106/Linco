@@ -336,35 +336,32 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
           id="owner-claims-overlay"
         >
           <motion.div
             initial={{ scale: 0.96, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, y: 12 }}
-            className={`bg-[#07070a] border border-[#161621] rounded-3xl p-5 md:p-6 w-full max-w-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.95)] relative flex flex-col max-h-[90vh] my-4 ${
+            className={`bg-[#0c0e16] border border-slate-800 rounded-2xl p-5 md:p-6 w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[90vh] my-4 ${
               shaking ? "animate-shake" : ""
             }`}
           >
-            {/* Top decorative gradient bar */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-indigo-500 to-cyan-500 opacity-60" />
-
             {/* Header */}
-            <div className="flex justify-between items-start pb-3 border-b border-[#12121a] shrink-0">
+            <div className="flex justify-between items-start pb-3 border-b border-slate-800 shrink-0">
               <div>
-                <div className="flex items-center gap-1.5 text-[10px] font-mono font-black text-cyan-400 uppercase tracking-widest bg-cyan-950/20 px-3 py-1 rounded-full border border-cyan-500/10 w-fit mb-1.5">
-                  <ShieldCheck size={12} /> claims control board
+                <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 w-fit mb-1.5">
+                  <ShieldCheck size={13} /> Claims Control Board
                 </div>
-                <h3 className="text-base font-display font-black text-slate-100">
+                <h3 className="text-base font-semibold text-slate-100">
                   Manage Claims: {post.item}
                 </h3>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-xl hover:bg-[#12121a] text-slate-500 hover:text-slate-300 transition cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition cursor-pointer"
               >
-                <X size={15} />
+                <X size={16} />
               </button>
             </div>
 
@@ -376,13 +373,13 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                   onSubmit={(e) => handleVerifyPinAndLoadClaims(e)}
                   className="max-w-sm mx-auto py-6 text-center space-y-4"
                 >
-                  <div className="w-12 h-12 rounded-full bg-cyan-950/20 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto">
+                  <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
                     <Key size={18} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-mono font-black text-slate-200 uppercase tracking-wider">Enter security pin</h4>
-                    <p className="text-[10px] text-slate-400 leading-normal mt-1 font-mono">
-                      Specify the 4-digit security PIN specified when publishing this report to decrypt connection keys.
+                    <h4 className="text-sm font-semibold text-slate-200">Enter Security PIN</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed mt-1">
+                      Enter the 4-digit security PIN set when publishing this report to view claims and messages.
                     </p>
                   </div>
 
@@ -400,20 +397,20 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                         onChange={(e) => handleDigitChange(idx, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(idx, e)}
                         onPaste={handlePaste}
-                        className="w-11 h-12 text-center text-xl font-bold rounded-xl bg-[#030304] border border-[#1c1c26] focus:border-cyan-500 outline-none text-cyan-400 transition"
+                        className="w-11 h-12 text-center text-xl font-semibold rounded-xl bg-[#121520] border border-slate-800 focus:border-indigo-500 outline-none text-indigo-300 transition"
                       />
                     ))}
                   </div>
 
                   {/* Accessible Numeric Keypad */}
-                  <div className="bg-[#030304]/60 p-4 rounded-2xl border border-[#161621] space-y-3">
+                  <div className="bg-[#121520] p-4 rounded-xl border border-slate-800 space-y-3">
                     <div className="grid grid-cols-3 gap-2">
                       {keypadNumbers.map((digit) => (
                         <button
                           key={digit}
                           type="button"
                           onClick={() => handleKeypadPress(digit)}
-                          className="py-2.5 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-xs font-bold text-slate-200 hover:text-cyan-400 transition cursor-pointer active:scale-95"
+                          className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-slate-800/60 border border-slate-800 text-xs font-medium text-slate-200 hover:text-indigo-400 transition cursor-pointer active:scale-95"
                         >
                           {digit}
                         </button>
@@ -421,44 +418,44 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                       <button
                         type="button"
                         onClick={handleKeypadClear}
-                        className="py-2.5 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-[10px] uppercase font-bold text-slate-500 transition cursor-pointer active:scale-95"
+                        className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-slate-800/60 border border-slate-800 text-xs font-medium text-slate-400 transition cursor-pointer active:scale-95"
                       >
                         Clear
                       </button>
                       <button
                         type="button"
                         onClick={() => handleKeypadPress("0")}
-                        className="py-2.5 rounded-xl bg-[#07070a] hover:bg-[#12121a] border border-[#1c1c26] text-xs font-bold text-slate-200 hover:text-cyan-400 transition cursor-pointer active:scale-95"
+                        className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-slate-800/60 border border-slate-800 text-xs font-medium text-slate-200 hover:text-indigo-400 transition cursor-pointer active:scale-95"
                       >
                         0
                       </button>
                       <button
                         type="button"
                         onClick={handleKeypadBackspace}
-                        className="py-2.5 rounded-xl bg-[#07070a] hover:bg-red-950/20 border border-[#1c1c26] text-rose-400 transition flex items-center justify-center cursor-pointer active:scale-95"
+                        className="py-2.5 rounded-lg bg-[#0c0e16] hover:bg-rose-500/10 border border-slate-800 text-rose-400 transition flex items-center justify-center cursor-pointer active:scale-95"
                       >
-                        <Delete size={13} />
+                        <Delete size={14} />
                       </button>
                     </div>
                   </div>
 
                   {errorMsg && (
-                    <div className="text-[10px] text-rose-400 flex items-center gap-1.5 justify-center bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 max-w-xs mx-auto font-mono">
-                      <AlertTriangle size={13} className="shrink-0 text-rose-400 animate-bounce" /> {errorMsg}
+                    <div className="text-xs text-rose-400 flex items-center gap-1.5 justify-center bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 max-w-xs mx-auto">
+                      <AlertTriangle size={14} className="shrink-0 text-rose-400" /> {errorMsg}
                     </div>
                   )}
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full max-w-xs py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-black transition cursor-pointer text-xs flex items-center justify-center gap-1.5 mx-auto uppercase tracking-wider"
+                    className="w-full max-w-xs py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer text-xs flex items-center justify-center gap-1.5 mx-auto"
                   >
                     {loading ? (
                       <>
                         <RefreshCw className="animate-spin" size={13} /> Authenticating...
                       </>
                     ) : (
-                      "Decrypt & Access Dashboard"
+                      "Unlock Claims Board"
                     )}
                   </button>
                 </form>
@@ -467,27 +464,27 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                 <div className="space-y-4">
                   {/* Resolve Action Banner */}
                   {post.status !== "Resolved" ? (
-                    <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/15 flex flex-col md:flex-row justify-between items-center gap-3">
-                      <div className="space-y-1 text-center md:text-left">
-                        <h4 className="text-xs font-mono font-black text-amber-400 uppercase tracking-wider">Reclaim &amp; Resolve Listing</h4>
-                        <p className="text-[10px] text-slate-400 leading-normal font-mono">
-                          Once handover coordinates succeed, mark this listing resolved to prevent additional claims.
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col md:flex-row justify-between items-center gap-3">
+                      <div className="space-y-0.5 text-center md:text-left">
+                        <h4 className="text-xs font-semibold text-amber-300">Resolve Listing</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Once the handover is complete, mark this listing resolved to close further claims.
                         </p>
                       </div>
                       <button
                         onClick={handleResolvePost}
                         disabled={loading}
-                        className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 uppercase tracking-wider"
+                        className="w-full md:w-auto px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-medium text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
                       >
-                        {loading ? <RefreshCw size={12} className="animate-spin" /> : "Resolve Post"}
+                        {loading ? <RefreshCw size={12} className="animate-spin" /> : "Mark Resolved"}
                       </button>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-3">
+                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
                       <Check className="text-emerald-400 shrink-0" size={16} />
                       <div className="space-y-0.5">
-                        <h4 className="text-xs font-bold text-emerald-400">This Listing is Resolved</h4>
-                        <p className="text-[10px] text-slate-400 leading-normal">
+                        <h4 className="text-xs font-semibold text-emerald-400">This Listing is Resolved</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
                           This post is closed and is no longer accepting new claims. Existing claim history remains visible below.
                         </p>
                       </div>
@@ -496,9 +493,9 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
 
                   {claims.length === 0 ? (
                     <div className="text-center py-12 text-slate-400 space-y-2">
-                      <Calendar className="mx-auto text-slate-600 animate-pulse" size={28} />
+                      <Calendar className="mx-auto text-slate-500" size={28} />
                       <p className="text-xs font-medium">No claims submitted yet.</p>
-                      <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
+                      <p className="text-xs text-slate-500 max-w-xs mx-auto">
                         Whenever someone claims this item, their verification report and answers will appear here for your review.
                       </p>
                     </div>
@@ -515,15 +512,15 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                         .map((claim) => (
                         <div
                           key={claim.id}
-                          className="p-4 rounded-2xl bg-[#030304]/60 border border-[#161621] hover:border-slate-800 transition space-y-4"
+                          className="p-4 rounded-xl bg-[#121520] border border-slate-800 hover:border-slate-700 transition space-y-4"
                         >
                           {/* Claimant Info Header */}
                           <div className="flex justify-between items-start gap-2">
                             <div>
-                              <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                              <h4 className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                                 Claimant: {claim.claimantName}
                               </h4>
-                              <p className="text-[9px] text-slate-500 flex items-center gap-1 mt-0.5 font-mono">
+                              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                                 Submitted: {formatKolkataTimestamp(claim.created || claim.timestamp)}
                               </p>
                             </div>
@@ -531,27 +528,27 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                             {/* Status Badge */}
                             <div>
                               {claim.status === "Approved" ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                   Approved
                                 </span>
                               ) : claim.status === "Contact Unlocked" ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                   Contact Unlocked
                                 </span>
                               ) : claim.status === "Resolved" ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
                                   Resolved
                                 </span>
                               ) : claim.status === "Under Review" ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                   Under Review
                                 </span>
                               ) : claim.status === "Rejected" ? (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                   Rejected
                                 </span>
                               ) : (
-                                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse uppercase tracking-widest">
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                   Pending Review
                                 </span>
                               )}
@@ -559,33 +556,33 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                           </div>
 
                           {/* AI Confidence Meter */}
-                          <div className="p-3 rounded-xl bg-[#07070a] border border-[#1c1c26] space-y-1.5">
-                            <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                          <div className="p-3 rounded-xl bg-[#0c0e16] border border-slate-800 space-y-1.5">
+                            <div className="flex justify-between items-center text-xs font-medium text-slate-400">
                               <span>Gemini Integrity Score</span>
-                              <span className="text-cyan-400 font-mono text-xs">{claim.aiScore}% Match</span>
+                              <span className="text-indigo-400 font-semibold">{claim.aiScore}% Match</span>
                             </div>
-                            <div className="w-full bg-[#030304] h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-[#121520] h-1.5 rounded-full overflow-hidden">
                               <div
                                 className={`h-full ${claim.aiScore >= 80 ? "bg-emerald-500" : claim.aiScore >= 60 ? "bg-amber-500" : "bg-rose-500"}`}
                                 style={{ width: `${claim.aiScore}%` }}
                               />
                             </div>
-                            <p className="text-[9px] text-slate-400 leading-normal italic font-mono">
+                            <p className="text-xs text-slate-400 leading-relaxed italic">
                               "{claim.aiReason}"
                             </p>
                           </div>
 
                           {/* Questions & Answers Grid */}
-                          <div className="space-y-2.5 pl-2.5 border-l-2 border-[#161621]">
-                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+                          <div className="space-y-2.5 pl-3 border-l-2 border-slate-800">
+                            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                               Verification Answers
                             </div>
                             {claim.questions.map((q, idx) => (
-                              <div key={idx} className="space-y-0.5">
-                                <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
+                              <div key={idx} className="space-y-1">
+                                <p className="text-xs text-slate-300 font-medium leading-relaxed">
                                   Q: {q}
                                 </p>
-                                <p className="text-[10px] text-slate-200 bg-[#030304]/60 p-2 rounded-lg border border-[#161621] leading-relaxed">
+                                <p className="text-xs text-slate-200 bg-[#0c0e16] p-2.5 rounded-lg border border-slate-800 leading-relaxed">
                                   A: {claim.answers[idx] || "Not answered"}
                                 </p>
                               </div>
@@ -593,28 +590,28 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                           </div>
 
                           {/* Actions or Contact Reveal / Recovery Room workspace */}
-                          <div className="pt-3 border-t border-[#12121a] text-left space-y-4">
+                          <div className="pt-3 border-t border-slate-800 text-left space-y-4">
                             {(claim.status === "Pending" || claim.status === "Under Review") ? (
                               <div className="flex flex-wrap gap-2 items-center justify-between">
-                                <p className="text-[10px] text-slate-500 italic font-mono">
-                                  Review answers. Approving activates the Secure Recovery Room.
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                  Review answers. Approving activates the direct recovery room.
                                 </p>
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handleRejectClaim(claim.id)}
                                     disabled={actioningClaimId !== null}
-                                    className="px-3.5 py-1.5 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-xs font-bold transition cursor-pointer flex items-center gap-1 disabled:opacity-50 font-mono uppercase tracking-widest text-[10px]"
+                                    className="px-3 py-1.5 rounded-lg border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/15 text-rose-400 text-xs font-medium transition cursor-pointer flex items-center gap-1 disabled:opacity-50"
                                   >
-                                    <Ban size={12} /> Decline
+                                    <Ban size={13} /> Decline
                                   </button>
                                   <button
                                     onClick={() => handleApproveClaim(claim)}
                                     disabled={actioningClaimId !== null}
-                                    className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black transition cursor-pointer text-xs flex items-center gap-1 disabled:opacity-50 font-mono uppercase tracking-widest text-[10px]"
+                                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition cursor-pointer text-xs flex items-center gap-1 disabled:opacity-50"
                                   >
                                     {actioningClaimId === claim.id ? (
                                       <>
-                                        <RefreshCw className="animate-spin" size={12} /> Approving...
+                                        <RefreshCw className="animate-spin" size={13} /> Approving...
                                       </>
                                     ) : (
                                       <>
@@ -625,45 +622,45 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                 </div>
                               </div>
                             ) : claim.status === "Rejected" ? (
-                              <p className="text-[10px] text-slate-500 italic font-mono">
+                              <p className="text-xs text-slate-500 leading-relaxed">
                                 Claim declined. Connection room deactivated.
                               </p>
                             ) : (
                               /* Active Recovery Room workspace for approved claims */
-                              <div className="space-y-4 bg-[#050508] p-4 rounded-2xl border border-[#161621]">
-                                <div className="flex items-center gap-2 text-cyan-400 font-mono text-[10px] font-black uppercase tracking-widest">
-                                  <ShieldCheck size={12} /> Secure Recovery Room Workspace
+                              <div className="space-y-4 bg-[#0c0e16] p-4 rounded-xl border border-slate-800">
+                                <div className="flex items-center gap-1.5 text-indigo-400 text-xs font-semibold">
+                                  <ShieldCheck size={14} /> Direct Recovery Handover Room
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
                                   
                                   {/* Left: Chat Module (7/12) */}
-                                  <div className="md:col-span-7 bg-[#030304]/60 border border-[#14141d] rounded-xl flex flex-col h-[280px]">
-                                    <div className="px-3 py-1.5 bg-[#08080f] border-b border-[#111119] flex items-center gap-1.5">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                      <span className="text-[9px] font-mono font-bold text-slate-400">Handover Chat</span>
+                                  <div className="md:col-span-7 bg-[#121520] border border-slate-800 rounded-xl flex flex-col h-[280px]">
+                                    <div className="px-3 py-2 bg-[#0c0e16] border-b border-slate-800 flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                      <span className="text-xs font-medium text-slate-300">Handover Chat</span>
                                     </div>
                                     
                                     {/* Messages list */}
                                     <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
                                       {!claim.messages || claim.messages.length === 0 ? (
-                                        <div className="text-center py-12 text-slate-600 text-[10px] font-mono">
-                                          Room active. Send a greeting to start.
+                                        <div className="text-center py-12 text-slate-400 text-xs">
+                                          Room active. Send a greeting to coordinate handover.
                                         </div>
                                       ) : (
                                         claim.messages.map((msg) => {
                                           const isMe = msg.sender === "Finder";
                                           return (
                                             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                                              <div className={`max-w-[85%] rounded-xl px-3 py-1.5 text-[11px] ${
+                                              <div className={`max-w-[85%] rounded-xl px-3 py-1.5 text-xs ${
                                                 isMe 
-                                                  ? "bg-cyan-500 text-slate-950 font-medium rounded-tr-none" 
-                                                  : "bg-[#0c0c14] border border-[#1e1e2d] text-slate-200 rounded-tl-none"
+                                                  ? "bg-indigo-600 text-white font-medium rounded-tr-none" 
+                                                  : "bg-[#0c0e16] border border-slate-800 text-slate-200 rounded-tl-none"
                                               }`}>
-                                                <span className="block text-[7px] opacity-65 font-bold font-mono">
-                                                  {isMe ? "You (Finder)" : "Claimant"}
+                                                <span className="block text-[10px] opacity-75 font-medium mb-0.5">
+                                                  {isMe ? "You" : "Claimant"}
                                                 </span>
-                                                <p className="leading-snug whitespace-pre-wrap">{msg.text}</p>
+                                                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                               </div>
                                             </div>
                                           );
@@ -678,46 +675,46 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                         const text = chatInputs[claim.id] || "";
                                         handleSendFinderMessage(claim.id, text);
                                       }}
-                                      className="p-2 bg-[#08080f] border-t border-[#111119] flex gap-1.5"
+                                      className="p-2 bg-[#0c0e16] border-t border-slate-800 flex gap-1.5"
                                     >
                                       <input
                                         type="text"
-                                        placeholder="Type secure meeting coordinates..."
+                                        placeholder="Type meeting coordinates or details..."
                                         value={chatInputs[claim.id] || ""}
                                         onChange={(e) => setChatInputs({ ...chatInputs, [claim.id]: e.target.value })}
                                         disabled={sendingMsg[claim.id]}
-                                        className="flex-1 px-3 py-1.5 bg-[#030304] border border-[#1c1c2b] focus:border-cyan-500 outline-none rounded-lg text-[11px] text-slate-200"
+                                        className="flex-1 px-3 py-1.5 bg-[#121520] border border-slate-800 focus:border-indigo-500 outline-none rounded-lg text-xs text-slate-200"
                                       />
                                       <button
                                         type="submit"
                                         disabled={!(chatInputs[claim.id] || "").trim() || sendingMsg[claim.id]}
-                                        className="p-1.5 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-950 disabled:text-slate-800 text-slate-950 rounded-lg transition"
+                                        className="p-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg transition cursor-pointer"
                                       >
-                                        <Send size={11} />
+                                        <Send size={12} />
                                       </button>
                                     </form>
                                   </div>
 
                                   {/* Right: Verification Checkpoints & Handover (5/12) */}
-                                  <div className="md:col-span-5 space-y-3.5 flex flex-col justify-between">
+                                  <div className="md:col-span-5 space-y-3 flex flex-col justify-between">
                                     
                                     {/* 1. Trust Confirmation Check */}
-                                    <div className="p-3 bg-[#08080f] rounded-xl border border-[#13131f] space-y-2">
+                                    <div className="p-3 bg-[#121520] rounded-xl border border-slate-800 space-y-2">
                                       <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-bold font-display text-slate-300">Mutual Trust status</span>
-                                        <Lock size={10} className="text-slate-500" />
+                                        <span className="text-xs font-medium text-slate-300">Mutual Trust Status</span>
+                                        <Lock size={12} className="text-slate-400" />
                                       </div>
                                       
-                                      <div className="space-y-1 text-[9px] font-mono">
+                                      <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between items-center">
-                                          <span className="text-slate-500">Claimant:</span>
-                                          <span className={claim.claimantTrusted ? "text-emerald-400 font-bold" : "text-amber-500"}>
+                                          <span className="text-slate-400">Claimant:</span>
+                                          <span className={claim.claimantTrusted ? "text-emerald-400 font-medium" : "text-amber-400"}>
                                             {claim.claimantTrusted ? "✓ Confirmed" : "Pending"}
                                           </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                          <span className="text-slate-500">Finder (You):</span>
-                                          <span className={claim.finderTrusted ? "text-emerald-400 font-bold" : "text-amber-500"}>
+                                          <span className="text-slate-400">Finder (You):</span>
+                                          <span className={claim.finderTrusted ? "text-emerald-400 font-medium" : "text-amber-400"}>
                                             {claim.finderTrusted ? "✓ Confirmed" : "Pending"}
                                           </span>
                                         </div>
@@ -726,7 +723,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                       {!claim.finderTrusted && (
                                         <button
                                           onClick={() => handleFinderConfirmTrust(claim.id)}
-                                          className="w-full py-1.5 text-[10px] bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 hover:border-cyan-400 text-cyan-400 font-bold uppercase rounded-lg transition"
+                                          className="w-full py-1.5 text-xs bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 hover:border-indigo-500 text-indigo-400 font-medium rounded-lg transition cursor-pointer"
                                         >
                                           Confirm I Trust Claimant
                                         </button>
@@ -735,37 +732,37 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
 
                                     {/* 2. Contacts (Visible if unlocked) */}
                                     {(claim.status === "Contact Unlocked" || claim.status === "Resolved" || (claim.claimantTrusted && claim.finderTrusted)) ? (
-                                      <div className="p-3 bg-emerald-950/10 rounded-xl border border-emerald-500/10 space-y-1.5">
-                                        <span className="block text-[8px] font-mono font-bold text-emerald-400 uppercase tracking-wider">Unlocked Claimant Contact</span>
+                                      <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 space-y-1.5">
+                                        <span className="block text-xs font-medium text-emerald-400">Unlocked Claimant Contact</span>
                                         <a
                                           href={getWhatsAppLink(claim.claimantContact, `Hi ${claim.claimantName}! I approved your claim for '${post.item}' on LINCO. Let's arrange a handover!`)}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-[11px] font-mono font-black text-slate-200 hover:text-emerald-400 flex items-center gap-1"
+                                          className="text-xs font-semibold text-slate-200 hover:text-emerald-400 flex items-center gap-1.5"
                                         >
-                                          <MessageSquare size={10} /> +91 {claim.claimantContact} <ExternalLink size={9} />
+                                          <MessageSquare size={12} /> +91 {claim.claimantContact} <ExternalLink size={10} />
                                         </a>
                                       </div>
                                     ) : (
-                                      <div className="p-2.5 bg-[#030304] rounded-xl border border-[#161622] text-center text-[9px] text-slate-500 font-mono">
-                                        🔒 Confirm trust to reveal contact details
+                                      <div className="p-2.5 bg-[#121520] rounded-xl border border-slate-800 text-center text-xs text-slate-400">
+                                        Confirm trust to reveal direct contact
                                       </div>
                                     )}
 
                                     {/* 3. Handover Receipts confirmations */}
-                                    <div className="p-3 bg-[#08080f] rounded-xl border border-[#13131f] space-y-2">
-                                      <span className="block text-[9px] font-bold text-slate-300">Complete Handover</span>
+                                    <div className="p-3 bg-[#121520] rounded-xl border border-slate-800 space-y-2">
+                                      <span className="block text-xs font-medium text-slate-300">Complete Handover</span>
                                       
-                                      <div className="space-y-1 text-[9px] font-mono">
+                                      <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between items-center">
-                                          <span className="text-slate-500">You returned:</span>
-                                          <span className={claim.finderConfirmedReturned ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                                          <span className="text-slate-400">You returned:</span>
+                                          <span className={claim.finderConfirmedReturned ? "text-emerald-400 font-medium" : "text-slate-400"}>
                                             {claim.finderConfirmedReturned ? "✓ Yes" : "No"}
                                           </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                          <span className="text-slate-500">Claimant received:</span>
-                                          <span className={claim.ownerConfirmedReceived ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                                          <span className="text-slate-400">Claimant received:</span>
+                                          <span className={claim.ownerConfirmedReceived ? "text-emerald-400 font-medium" : "text-slate-400"}>
                                             {claim.ownerConfirmedReceived ? "✓ Yes" : "No"}
                                           </span>
                                         </div>
@@ -774,9 +771,9 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                       {!claim.finderConfirmedReturned && (
                                         <button
                                           onClick={() => handleFinderConfirmReturn(claim.id)}
-                                          className="w-full py-1.5 text-[10px] bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase rounded-lg transition"
+                                          className="w-full py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition cursor-pointer"
                                         >
-                                          Confirm I Returned Item
+                                          Confirm Item Returned
                                         </button>
                                       )}
                                     </div>
@@ -796,15 +793,15 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
 
             {/* Footer Error / Global Close */}
             {errorMsg && isPinVerified && (
-              <div className="text-[10px] text-red-400 flex items-center gap-1 bg-red-950/20 p-2.5 rounded-xl border border-red-900/30 mb-2 shrink-0 font-mono">
-                <AlertTriangle size={12} className="shrink-0" /> {errorMsg}
+              <div className="text-xs text-rose-400 flex items-center gap-1 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 mb-2 shrink-0">
+                <AlertTriangle size={13} className="shrink-0" /> {errorMsg}
               </div>
             )}
 
-            <div className="pt-3 border-t border-[#12121a] shrink-0">
+            <div className="pt-3 border-t border-slate-800 shrink-0">
               <button
                 onClick={onClose}
-                className="w-full py-2.5 rounded-xl bg-[#030304] border border-[#1c1c26] text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-wider font-mono cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition text-xs font-medium cursor-pointer"
               >
                 Close Window
               </button>
