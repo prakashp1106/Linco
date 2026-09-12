@@ -90,4 +90,29 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Admin API Endpoint Security", () => {
+    it("validates admin key presence and correctness using server handler logic", async () => {
+      const { authenticateAdminConfig } = await import("../../server.js");
+      const adminApiKey = "secret-admin-key-123";
+
+      // Unset ADMIN_API_KEY behavior (open/unrestricted)
+      expect(authenticateAdminConfig({}, { threshold: 85 })).toBe(true);
+
+      // Set ADMIN_API_KEY behavior - missing key
+      expect(authenticateAdminConfig({}, { threshold: 85 }, adminApiKey)).toBe(false);
+
+      // Set ADMIN_API_KEY behavior - incorrect key
+      expect(authenticateAdminConfig({ "x-admin-key": "wrong-key" }, { threshold: 85 }, adminApiKey)).toBe(false);
+
+      // Set ADMIN_API_KEY behavior - valid header key
+      expect(authenticateAdminConfig({ "x-admin-key": adminApiKey }, { threshold: 85 }, adminApiKey)).toBe(true);
+
+      // Set ADMIN_API_KEY behavior - valid body key
+      expect(authenticateAdminConfig({}, { threshold: 85, adminKey: adminApiKey }, adminApiKey)).toBe(true);
+
+      // Non-string / invalid type key
+      expect(authenticateAdminConfig({ "x-admin-key": ["secret-admin-key-123"] }, { threshold: 85 }, adminApiKey)).toBe(false);
+    });
+  });
 });

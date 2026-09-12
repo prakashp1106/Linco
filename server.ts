@@ -2988,8 +2988,23 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
+// Helper for admin config authorization
+export function authenticateAdminConfig(reqHeaders: Record<string, any>, reqBody: any, envAdminKey?: string) {
+  if (envAdminKey) {
+    const providedKey = reqHeaders["x-admin-key"] || reqBody?.adminKey;
+    if (!providedKey || typeof providedKey !== "string" || providedKey !== envAdminKey) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  if (!authenticateAdminConfig(req.headers, req.body, process.env.ADMIN_API_KEY)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid or missing admin key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
