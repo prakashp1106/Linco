@@ -1642,9 +1642,12 @@ export default function App() {
             >
               <LandingPage
                 stats={stats}
-                onNavigateToReport={(type) => {
+                onNavigateToReport={(type, category) => {
                   if (type) {
                     form.setFType(type);
+                  }
+                  if (category) {
+                    form.setFCategory(category);
                   }
                   setActiveTab("report");
                 }}

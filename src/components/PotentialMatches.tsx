@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import confetti from "canvas-confetti";
 import { 
   Sliders, 
   MapPin, 
@@ -795,12 +794,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
         setSelectedMatch(res.match);
         setMatches((prev) => prev.map((m) => (m.matchId === selectedMatch.matchId ? res.match : m)));
         if (res.match.matchStatus === "RESOLVED") {
-          confetti({
-            particleCount: 120,
-            spread: 80,
-            origin: { y: 0.6 }
-          });
-          addToast("🎉 Handover confirmed! Item successfully reunited & marked RESOLVED!", "success");
+          addToast("Item reunited. Handover confirmed by both parties.", "success");
         } else {
           addToast(`Confirmed as ${roleToConfirm}! Waiting for the other party to confirm.`, "info");
         }
@@ -1424,27 +1418,71 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                         </div>
                       </div>
 
-                      {/* Distance & Forensic Analytics */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left space-y-2">
-                          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">
-                            Spatial Distance
-                          </span>
-                          <p className="text-sm font-bold text-slate-900">{distance.text}</p>
-                          <p className="text-xs text-slate-500 leading-relaxed">
-                            {distance.km !== null && distance.km <= 5
-                              ? "✓ Exceptional spatial alignment! Reported within close geographic radius."
-                              : "Items reported further apart. Check transit or commuting route alignment."}
-                          </p>
+                      {/* Why We Think They Match — Human-Readable Evidence */}
+                      <div className="space-y-3 text-left">
+                        <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Why we think they match
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-medium">Corroborated by LINCO Matching</span>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-left space-y-2">
-                          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">
-                            AI Forensic Reason
-                          </span>
-                          <p className="text-xs text-slate-700 italic leading-relaxed">
-                            "{selectedMatch.reason}"
-                          </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          {/* 1. Same Item Type */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                              Item Type
+                            </span>
+                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>{lostPost.category === foundPost.category ? "Same item category" : "Compatible item type"}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500">
+                              Both logged under &ldquo;{lostPost.category}&rdquo;
+                            </p>
+                          </div>
+
+                          {/* 2. Similar Appearance */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                              Appearance
+                            </span>
+                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>Similar appearance</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 line-clamp-2">
+                              {selectedMatch.reason || "Attributes, color and item description strongly align"}
+                            </p>
+                          </div>
+
+                          {/* 3. Same Area */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                              Location
+                            </span>
+                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>{distance.km !== null && distance.km <= 3 ? "Same immediate area" : "Aligned corridor"}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500">
+                              {distance.text}
+                            </p>
+                          </div>
+
+                          {/* 4. Similar Time */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                              Timeline
+                            </span>
+                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>Similar time window</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500">
+                              Reported close in sequence
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -1980,36 +2018,41 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       <div className="space-y-6 text-left">
                         {/* Handover Status Banner */}
                         {isResolved ? (
-                          <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center mx-auto text-emerald-700 font-bold text-lg">
+                          <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-4">
+                            <div className="w-12 h-12 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center mx-auto text-emerald-700 font-bold text-lg shadow-xs">
                               ✓
                             </div>
                             <div className="space-y-1">
-                              <h4 className="text-sm font-bold text-slate-900">
-                                Item Successfully Reunited & Resolved!
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 block">
+                                Case Resolved
+                              </span>
+                              <h4 className="text-xl font-bold text-slate-900">
+                                Item reunited.
                               </h4>
                               <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                                Both owner and finder have confirmed the safe handover. Case resolved!
+                                Both owner and finder have confirmed the safe physical handover. Returned home safely.
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })}
-                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
-                            >
-                              Celebrate Reunion ✨
-                            </button>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-600 font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>Permanently recorded on LINCO network</span>
+                            </div>
                           </div>
                         ) : (
-                          <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 space-y-2">
-                            <div className="flex items-center gap-2 text-indigo-800">
-                              <MapPin size={16} className="text-indigo-600" />
-                              <h4 className="text-xs font-bold uppercase tracking-wider">
-                                Safe Handover Protocol
-                              </h4>
+                          <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-2 text-left shadow-xs">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-slate-900">
+                                <MapPin size={16} className="text-indigo-600" />
+                                <h4 className="text-sm font-bold">
+                                  Almost there.
+                                </h4>
+                              </div>
+                              <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
+                                Safe Public Handover
+                              </span>
                             </div>
                             <p className="text-xs text-slate-600 leading-relaxed">
-                              Coordinate a public meetup location (e.g. Metro Station, Police Helpdesk, or campus security). Once physically handed over, both parties confirm below to resolve the case.
+                              Coordinate a public meetup location (e.g. Metro Station Information Desk, Campus Security, or Mall Helpdesk). Once physically handed over, both parties confirm below to resolve the case.
                             </p>
                           </div>
                         )}
