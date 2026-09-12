@@ -55,7 +55,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm"
           onClick={() => {
             if (!isInitialOnboarding && onClose) onClose();
           }}
@@ -63,23 +63,23 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
 
         {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="relative w-full max-w-2xl rounded-3xl bg-[#090a10] border border-[#202234] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden z-10 flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-2xl rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]"
         >
           {/* Header Banner */}
-          <div className="relative p-6 sm:p-8 pb-4 border-b border-[#181a28] bg-gradient-to-b from-[#111322] to-transparent">
+          <div className="relative p-6 sm:p-8 pb-4 border-b border-slate-100 bg-slate-50/50">
             {/* Top Row: Icon + Close (if not onboarding) */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 via-orange-500/15 to-emerald-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
                   <Globe size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
                       LINCO Regional
                     </span>
                     <span className="text-[10px] text-slate-500 font-semibold">12 Indian Languages</span>
@@ -91,7 +91,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition border border-slate-800 cursor-pointer"
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition border border-slate-200 cursor-pointer"
                   title="Close"
                 >
                   <X size={18} />
@@ -99,10 +99,10 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
               )}
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-black text-slate-100 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {t("lang.heading", "Choose Your Language")}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed">
               {t("lang.subheading", "Use LINCO in the language you're most comfortable with.")}
             </p>
 
@@ -110,20 +110,20 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             <div className="relative mt-4">
               <Search
                 size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("lang.searchPlaceholder", "Search languages (e.g. Hindi, हिन्दी, Marathi, தமிழ்)...")}
-                className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#05060a] border border-[#1d2030] focus:border-amber-500/70 focus:ring-1 focus:ring-amber-500/20 outline-none text-xs text-slate-100 placeholder:text-slate-600 transition"
+                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-slate-200 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none text-xs text-slate-900 placeholder:text-slate-400 transition shadow-2xs"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -132,7 +132,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
           </div>
 
           {/* Languages Grid */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 custom-scrollbar bg-white">
             {filteredLanguages.map((item) => {
               const isSelected = selected === item.code;
               return (
@@ -142,21 +142,21 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                   onClick={() => setSelected(item.code)}
                   className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative flex flex-col justify-between gap-2 group ${
                     isSelected
-                      ? "bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent border-amber-500/80 shadow-[0_0_25px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40"
-                      : "bg-[#0c0d16]/70 border-[#181a28] hover:border-slate-700 hover:bg-[#111322]"
+                      ? "bg-indigo-50/70 border-indigo-500 shadow-xs ring-1 ring-indigo-500"
+                      : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
+                        <span className={`text-base sm:text-lg font-bold tracking-tight ${isSelected ? "text-indigo-950" : "text-slate-900"}`}>
                           {item.nativeName}
                         </span>
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-slate-500 font-medium">
                           ({item.name})
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium block mt-0.5">
+                      <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
                         {item.region}
                       </span>
                     </div>
@@ -164,20 +164,20 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                         isSelected
-                          ? "bg-amber-500 text-black font-black"
-                          : "border border-slate-700 group-hover:border-slate-500"
+                          ? "bg-indigo-600 text-white font-bold"
+                          : "border border-slate-300 group-hover:border-slate-400"
                       }`}
                     >
-                      {isSelected && <Check size={14} className="stroke-[3]" />}
+                      {isSelected && <Check size={14} className="stroke-[2.5]" />}
                     </div>
                   </div>
 
                   {/* Sample phrase pill */}
-                  <div className="pt-1.5 border-t border-[#181a28]/60 flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="italic truncate text-slate-400 font-normal">
+                  <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span className="italic truncate text-slate-600 font-normal">
                       "{item.samplePhrase}"
                     </span>
-                    <span className="text-[9px] font-mono uppercase text-slate-600 font-bold ml-2">
+                    <span className="text-[9px] font-mono uppercase text-slate-400 font-bold ml-2">
                       {item.script}
                     </span>
                   </div>
@@ -186,26 +186,26 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
             })}
 
             {filteredLanguages.length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-500 text-xs">
+              <div className="col-span-full py-12 text-center text-slate-400 text-xs">
                 No languages found matching "{searchQuery}".
               </div>
             )}
           </div>
 
           {/* Footer Controls */}
-          <div className="p-4 sm:p-6 pt-3 border-t border-[#181a28] bg-[#07080e] flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-              <Shield size={13} className="text-amber-400 shrink-0" />
+          <div className="p-4 sm:p-6 pt-3 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <Shield size={13} className="text-indigo-600 shrink-0" />
               <span>{t("lang.note", "You can change your language anytime from Settings.")}</span>
             </div>
 
             <button
               type="button"
               onClick={handleConfirm}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs tracking-wide uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.25)] transition cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs tracking-wide uppercase flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
             >
               <span>{t("lang.continue", "Continue with LINCO")}</span>
-              <ArrowRight size={14} className="stroke-[3]" />
+              <ArrowRight size={14} className="stroke-[2.5]" />
             </button>
           </div>
         </motion.div>

@@ -37,7 +37,8 @@ import { encryptContact, decryptContact } from "./services/encryptionService";
 import { Post, AIMatch, PotentialMatch, LincoNotification } from "./types";
 import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
 import { apiService } from "./services/api";
-import { formatKolkataTimestamp } from "./utils/date";
+import { formatLocalTimestamp, formatKolkataTimestamp } from "./utils/date";
+import { DEFAULT_USER_LOCATION } from "./constants";
 
 // UI Components
 import { CanvasParticles } from "./components/CanvasParticles";
@@ -220,7 +221,22 @@ export default function App() {
     return localStorage.getItem("linco_profile_is_logged_in") === "true";
   });
 
-  const [isSplashActive, setIsSplashActive] = useState(true);
+  const [isSplashActive, setIsSplashActive] = useState(() => {
+    try {
+      return !sessionStorage.getItem("linco_splash_shown");
+    } catch {
+      return true;
+    }
+  });
+
+  const handleSplashComplete = () => {
+    try {
+      sessionStorage.setItem("linco_splash_shown", "true");
+    } catch {
+      // safe fallback
+    }
+    setIsSplashActive(false);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -259,7 +275,7 @@ export default function App() {
               username: defaultUsername,
               email: user.email || `${defaultUsername}@linco.org`,
               bio: "Lost & Found helper on LINCO",
-              city: "Kolkata, India",
+              city: DEFAULT_USER_LOCATION,
               photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
               createdAt: Date.now()
             };
@@ -295,7 +311,7 @@ export default function App() {
               fullName: userData.displayName || user.displayName || "Verified User",
               username: userData.username || user.email?.split("@")[0] || "user",
               bio: userData.bio || "Lost & Found helper on LINCO",
-              location: userData.city || "Kolkata, India",
+              location: userData.city || DEFAULT_USER_LOCATION,
               memberSince: formattedDate,
               avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
               banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
@@ -793,7 +809,7 @@ export default function App() {
 
       // Metadata section (Location & Date)
       const locLinesCol = wrapTextToArray(shortAddr, 280, metaValueFont);
-      const formattedDate = formatKolkataTimestamp(p.created || p.timestamp);
+      const formattedDate = formatLocalTimestamp(p.created || p.timestamp);
       const dateLinesCol = wrapTextToArray(formattedDate, 280, metaValueFont);
 
       // Switch column format dynamically if scale is small or text wraps too much (avoid collision)
@@ -1161,7 +1177,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         <SplashScreen 
           key="linco-splash"
-          onComplete={() => setIsSplashActive(false)} 
+          onComplete={handleSplashComplete} 
         />
       </AnimatePresence>
     );

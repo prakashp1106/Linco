@@ -34,7 +34,8 @@ import {
 import { imageService } from "../services/imageService";
 import { auth, db } from "../services/firebaseClient";
 import { signOut } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { DEFAULT_USER_LOCATION } from "../constants";
 
 interface UserDashboardProps {
   addToast: (msg: string, type: "success" | "info" | "warn" | "error") => void;
@@ -95,6 +96,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   
   // Custom Cloudinary/Web URL Input state
   const [cloudinaryUrl, setCloudinaryUrl] = useState("");
+  const [avatarImgError, setAvatarImgError] = useState(false);
   
   // Camera capture states
   const [cameraActive, setCameraActive] = useState(false);
@@ -165,20 +167,25 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   }, [profile]);
 
   // Sync to global App.tsx state whenever profile changes
-  const saveProfileData = (newProfile: ProfileData | null) => {
+  const saveProfileData = async (newProfile: ProfileData | null) => {
     setProfile(newProfile);
     if (newProfile) {
       localStorage.setItem("linco_profile_details", JSON.stringify(newProfile));
       localStorage.setItem("linco_profile_is_logged_in", "true");
       if (auth.currentUser) {
         const userRef = doc(db, "users", auth.currentUser.uid);
-        updateDoc(userRef, {
-          displayName: newProfile.fullName,
-          username: newProfile.username,
-          city: newProfile.location,
-          bio: newProfile.bio,
-          photoURL: newProfile.avatar
-        }).catch(err => console.error("Error updating Firestore on profile save:", err));
+        try {
+          await setDoc(userRef, {
+            displayName: newProfile.fullName,
+            username: newProfile.username,
+            city: newProfile.location,
+            bio: newProfile.bio,
+            photoURL: newProfile.avatar,
+            updatedAt: Date.now()
+          }, { merge: true });
+        } catch (err) {
+          console.error("Error updating Firestore on profile save:", err);
+        }
       }
     } else {
       localStorage.removeItem("linco_profile_details");
@@ -218,7 +225,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       fullName: editForm.fullName.trim(),
       username: editForm.username.trim().toLowerCase().replace(/\s+/g, ""),
       bio: editForm.bio.trim() || "Lost & Found helper on LINCO",
-      location: editForm.location.trim() || "Kolkata, India",
+      location: editForm.location.trim() || DEFAULT_USER_LOCATION,
       memberSince: formattedDate,
       avatar: editForm.avatar || PRESET_AVATARS[0],
       banner: editForm.banner || PRESET_BANNERS[0]
@@ -235,7 +242,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       fullName: "Guest Finder",
       username: "guest_finder_" + Math.floor(Math.random() * 1000),
       bio: "Ready to help recover lost items.",
-      location: "Kolkata, India",
+      location: DEFAULT_USER_LOCATION,
       memberSince: formattedDate,
       avatar: PRESET_AVATARS[0],
       banner: PRESET_BANNERS[0]
@@ -301,7 +308,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     setCameraActive(false);
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
     canvas.width = 300;
@@ -311,11 +318,27 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       ctx.drawImage(videoRef.current, 0, 0, 300, 300);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       
-      setEditForm(prev => ({ ...prev, avatar: dataUrl }));
-      if (profile) {
-        saveProfileData({ ...profile, avatar: dataUrl });
+      addToast("Uploading captured photo to secure storage...", "info");
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: dataUrl, thumbnail: dataUrl })
+        });
+        if (!response.ok) throw new Error("Server upload failed");
+        const uploadResult = await response.json();
+        const persistentUrl = uploadResult.url;
+
+        setAvatarImgError(false);
+        setEditForm(prev => ({ ...prev, avatar: persistentUrl }));
+        if (profile) {
+          await saveProfileData({ ...profile, avatar: persistentUrl });
+        }
+        addToast("Profile photo captured and saved successfully!", "success");
+      } catch (err) {
+        console.error("Webcam upload error:", err);
+        addToast("Failed to upload captured photo. Please try file upload.", "error");
       }
-      addToast("Photo captured successfully!", "success");
     }
     stopCamera();
     setPhotoModal(null);
@@ -326,44 +349,38 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    addToast("Compressing & uploading to Cloudinary...", "info");
+    addToast(`Compressing & uploading ${target === "photo" ? "profile photo" : "banner"}...`, "info");
     try {
       const result = await imageService.uploadImage(file);
       const uploadedUrl = result.url;
       
+      if (!uploadedUrl) {
+        throw new Error("No URL returned from upload server");
+      }
+
+      setAvatarImgError(false);
+
       if (target === "photo") {
         setEditForm(prev => ({ ...prev, avatar: uploadedUrl }));
         if (profile) {
-          saveProfileData({ ...profile, avatar: uploadedUrl });
+          await saveProfileData({ ...profile, avatar: uploadedUrl });
         }
       } else {
         setEditForm(prev => ({ ...prev, banner: uploadedUrl }));
         if (profile) {
-          saveProfileData({ ...profile, banner: uploadedUrl });
+          await saveProfileData({ ...profile, banner: uploadedUrl });
         }
       }
-      addToast("Image uploaded successfully!", "success");
+      addToast(`${target === "photo" ? "Profile picture" : "Banner"} uploaded & saved successfully!`, "success");
     } catch (err) {
       console.error("Upload error:", err);
-      addToast("Cloudinary upload timed out. Using local offline preview.", "warn");
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const localUrl = event.target?.result as string;
-        if (target === "photo") {
-          setEditForm(prev => ({ ...prev, avatar: localUrl }));
-          if (profile) {
-            saveProfileData({ ...profile, avatar: localUrl });
-          }
-        } else {
-          setEditForm(prev => ({ ...prev, banner: localUrl }));
-          if (profile) {
-            saveProfileData({ ...profile, banner: localUrl });
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+      addToast("Image upload failed. Please try again with a valid JPG/PNG.", "error");
+    } finally {
+      if (e.target) {
+        e.target.value = "";
+      }
+      setPhotoModal(null);
     }
-    setPhotoModal(null);
   };
 
   // Paste direct Cloudinary/Web URL
@@ -577,7 +594,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <label className="text-xs font-semibold text-slate-700 block">City</label>
                 <input
                   type="text"
-                  placeholder="e.g. Kolkata, India"
+                  placeholder="e.g. Bandra, Mumbai or Indiranagar, Bengaluru"
                   value={editForm.location}
                   onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3.5 h-11 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -639,21 +656,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     {/* Circular floating avatar */}
                     <div className="absolute -top-14 sm:-top-16 left-1/2 sm:left-6 -translate-x-1/2 sm:translate-x-0">
                       <div className="w-24 h-24 sm:w-26 sm:h-26 rounded-full p-0.5 bg-white border-2 border-slate-200 shadow-md relative group overflow-hidden">
-                        {isGradient(profile.avatar) ? (
+                        {isGradient(profile.avatar) || avatarImgError ? (
                           <div 
                             className="w-full h-full rounded-full flex items-center justify-center text-white text-3xl font-bold uppercase"
-                            style={{ background: profile.avatar }}
+                            style={{ background: isGradient(profile.avatar) ? profile.avatar : PRESET_AVATARS[0] }}
                           >
-                            {profile.fullName.charAt(0)}
+                            {profile.fullName ? profile.fullName.charAt(0) : "U"}
                           </div>
                         ) : (
                           <img 
                             src={profile.avatar} 
                             alt={profile.fullName} 
                             className="w-full h-full rounded-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = PRESET_AVATARS[0];
-                            }}
+                            onError={() => setAvatarImgError(true)}
                           />
                         )}
                         <button
@@ -1174,7 +1189,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs text-slate-700 shadow-2xs">
                           <div>📧 Email: support@linco.org</div>
                           <div>🌐 Web: https://linco.org</div>
-                          <div>📍 Address: Kolkata Grid Ingress Hub</div>
+                          <div>📍 Address: Local Community Safe Drop Point</div>
                         </div>
                       </div>
                     )}

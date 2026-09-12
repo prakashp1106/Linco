@@ -26,4 +26,19 @@ export const URGENCY_LEVELS: UrgencyInfo[] = [
   { id: "Medical", cls: "text-red-400 border-red-500/20 bg-red-950/20", color: "#f87171", bgColor: "rgba(239, 68, 68, 0.1)" },
 ];
 
-export const CITIES = ["Pune", "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Noida", "Gurgaon"];
+export const DEFAULT_USER_LOCATION = "Local Community, India";
+
+export const CITIES = [
+  "Mumbai",
+  "Delhi NCR",
+  "Bengaluru",
+  "Pune",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+  "Noida",
+  "Gurgaon",
+  "Jaipur",
+  "Chandigarh"
+];

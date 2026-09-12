@@ -223,9 +223,9 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
                   type="button"
                   onClick={handleApply}
                   disabled={!editableText.trim() && !transcript.trim()}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black text-xs font-extrabold flex items-center gap-1.5 transition disabled:opacity-40 shadow-lg cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-40 shadow-xs cursor-pointer active:scale-95"
                 >
-                  <Check size={14} className="stroke-[3]" />
+                  <Check size={14} className="stroke-[2.5]" />
                   <span>{t("voice.apply", "Apply to Field")}</span>
                 </button>
               </div>

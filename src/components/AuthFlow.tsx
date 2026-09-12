@@ -30,6 +30,7 @@ import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { imageService } from "../services/imageService";
 import { LincoLogo } from "./LincoLogo";
+import { DEFAULT_USER_LOCATION } from "../constants";
 
 interface AuthFlowProps {
   onLoginSuccess: (fullName: string, email: string) => void;
@@ -131,7 +132,7 @@ export function AuthFlow({
             fullName: profile.displayName || "Verified User",
             username: profile.username || "user",
             bio: profile.bio || "Lost & Found helper on LINCO",
-            location: profile.city || "Kolkata, India",
+            location: profile.city || DEFAULT_USER_LOCATION,
             memberSince: formattedDate,
             avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
             banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
@@ -235,7 +236,7 @@ export function AuthFlow({
         phoneNumber: phoneVal,
         photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
         bio: "Lost & Found helper on LINCO",
-        city: "Kolkata, India",
+        city: DEFAULT_USER_LOCATION,
         createdAt: Date.now(),
         provider: providerId,
         lastLogin: Date.now()
@@ -292,7 +293,7 @@ export function AuthFlow({
         fullName: profile.displayName || "Verified User",
         username: profile.username || "user",
         bio: profile.bio || "Lost & Found helper on LINCO",
-        location: profile.city || "Kolkata, India",
+        location: profile.city || DEFAULT_USER_LOCATION,
         memberSince: formattedDate,
         avatar: profile.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
         banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
@@ -466,7 +467,7 @@ export function AuthFlow({
           fullName: userData.displayName || user.displayName || "Verified User",
           username: userData.username || user.email?.split("@")[0] || "user",
           bio: userData.bio || "Lost & Found helper on LINCO",
-          location: userData.city || "Kolkata, India",
+          location: userData.city || DEFAULT_USER_LOCATION,
           memberSince: formattedDate,
           avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
@@ -484,7 +485,7 @@ export function AuthFlow({
           username: defaultUsername,
           email: user.email || targetEmail,
           bio: "Lost & Found helper on LINCO",
-          city: "Kolkata, India",
+          city: DEFAULT_USER_LOCATION,
           photoURL: user.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
           createdAt: Date.now()
         };
@@ -591,7 +592,7 @@ export function AuthFlow({
         username: cleanUsername,
         email: email.trim().toLowerCase(),
         bio: "Lost & Found helper on LINCO",
-        city: "Kolkata, India",
+        city: DEFAULT_USER_LOCATION,
         photoURL: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
         createdAt: Date.now()
       };
@@ -1381,7 +1382,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="e.g. Kolkata, Salt Lake"
+                      placeholder="e.g. Bandra, Mumbai or Indiranagar, Bengaluru"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"

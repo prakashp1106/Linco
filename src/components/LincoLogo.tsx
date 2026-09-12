@@ -133,10 +133,10 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
         cx="24"
         cy="19"
         r="4.25"
-        stroke={monochrome ? "currentColor" : "#ffffff"}
+        stroke={monochrome ? "currentColor" : theme === "light" ? "#4f46e5" : "#ffffff"}
         strokeWidth="2.2"
-        fill={monochrome ? "none" : "#0c0d19"}
-        filter={!monochrome ? `url(#linco-glow-${uniqueId})` : undefined}
+        fill={monochrome ? "none" : theme === "light" ? "#ffffff" : "#0c0d19"}
+        filter={!monochrome && theme !== "light" ? `url(#linco-glow-${uniqueId})` : undefined}
       />
 
       {/* Inner Core Pulse Dot */}
@@ -144,7 +144,7 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
         cx="24"
         cy="19"
         r="1.75"
-        fill={monochrome ? "currentColor" : "#38bdf8"}
+        fill={monochrome ? "currentColor" : theme === "light" ? "#4f46e5" : "#38bdf8"}
       />
 
       {/* Converged Anchor Base Point */}
@@ -152,7 +152,7 @@ export const LincoLogo: React.FC<LincoLogoProps> = ({
         cx="24"
         cy="38"
         r="2"
-        fill={monochrome ? "currentColor" : "#818cf8"}
+        fill={monochrome ? "currentColor" : theme === "light" ? "#4f46e5" : "#818cf8"}
       />
     </svg>
   );

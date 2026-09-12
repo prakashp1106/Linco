@@ -91,7 +91,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   const [submittingTrust, setSubmittingTrust] = useState(false);
 
   // Safe Handover State
-  const [handoverMeetingPlace, setHandoverMeetingPlace] = useState("Kolkata Metro Station Public Concourse");
+  const [handoverMeetingPlace, setHandoverMeetingPlace] = useState("Central Metro Station Public Concourse");
   const [handoverScheduledTime, setHandoverScheduledTime] = useState("Today at 4:00 PM");
   const [startingHandover, setStartingHandover] = useState(false);
   const [confirmingHandover, setConfirmingHandover] = useState(false);
@@ -2068,7 +2068,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <label className="text-[10px] font-bold text-slate-600 uppercase">Public Meeting Spot</label>
                                 <input
                                   type="text"
-                                  placeholder="e.g. Kolkata Metro Station Gate #2 Concourse"
+                                  placeholder="e.g. Central Metro Station Gate #2 or City Mall Atrium"
                                   value={handoverMeetingPlace}
                                   onChange={(e) => setHandoverMeetingPlace(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"

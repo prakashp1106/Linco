@@ -31,7 +31,7 @@ export const LincoProductShowcases: React.FC<LincoProductShowcasesProps> = ({
         <div className="lg:col-span-6 flex justify-center order-2 lg:order-1">
           <div className="relative">
             <div className="absolute inset-0 bg-slate-100 rounded-full blur-2xl -z-10" />
-            <Linco3DHeroObject type="wallet" scale={1} interactive={false} />
+            <Linco3DHeroObject type="phone" scale={1} interactive={false} />
           </div>
         </div>
 

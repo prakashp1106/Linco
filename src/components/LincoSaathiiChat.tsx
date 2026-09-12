@@ -371,20 +371,26 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
         </button>
       </div>
 
-      {/* 2. FLOATING ACTION BUTTON FOR MOBILE AND QUICK LAUNCH */}
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* 2. REFINED FLOATING ACTION BUTTON (TACTILE, MINIMAL, POSITIONED CLEANLY ABOVE MOBILE NAV) */}
+      <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-30">
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setIsOpen(true)}
-          className="w-12 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-lg shadow-indigo-600/25 relative group cursor-pointer border border-indigo-500 transition"
-          title="Open AI Assistant"
+          className="group flex items-center gap-2.5 px-3.5 py-3 md:px-4 md:py-3 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] border border-slate-800 transition-all duration-200 cursor-pointer"
+          title="Open LINCO AI Assistant"
+          aria-label="Open LINCO AI Assistant"
         >
-          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400"></span>
+          <div className="relative flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            <Sparkles size={18} className="text-indigo-300 group-hover:text-indigo-200 transition-colors" />
+          </div>
+          <span className="hidden sm:inline-block text-xs font-semibold tracking-wide text-slate-100">
+            Ask Saathii
           </span>
-          <RobotAvatarIcon size={20} className="text-white" />
         </motion.button>
       </div>
 

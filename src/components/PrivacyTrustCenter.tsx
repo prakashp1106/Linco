@@ -53,8 +53,8 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
 
   // Simulated active sessions
   const [sessions, setSessions] = useState([
-    { id: 1, device: "Apple iPhone 15 Pro", location: "Kolkata, WB, India", active: true, time: "Current Session" },
-    { id: 2, device: "MacBook Pro (Chrome/macOS)", location: "Kolkata, WB, India", active: false, time: "2 hours ago" },
+    { id: 1, device: "Apple iPhone 15 Pro", location: "New Delhi, DL, India", active: true, time: "Current Session" },
+    { id: 2, device: "MacBook Pro (Chrome/macOS)", location: "Bengaluru, KA, India", active: false, time: "2 hours ago" },
     { id: 3, device: "iPad Air Safari", location: "Mumbai, MH, India", active: false, time: "3 days ago" }
   ]);
 

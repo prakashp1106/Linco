@@ -11,7 +11,7 @@ import { CATEGORIES } from "../constants";
 import { LiveMissingTimer } from "./LiveMissingTimer";
 import { MiniMap } from "./LeafletMap";
 import { ErrorBoundary } from "./ErrorBoundary";
-import { formatKolkataTimestamp } from "../utils/date";
+import { formatLocalTimestamp } from "../utils/date";
 import { getWhatsAppLink } from "../utils/whatsapp";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -128,7 +128,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       {/* Title */}
-      <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition duration-150 mb-1.5 leading-snug">
+      <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition duration-150 mb-1.5 leading-snug break-words">
         {post.item}
       </h3>
 
@@ -160,12 +160,13 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
 
       {/* Spacers & Location/Date Row */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4">
-        <span className="flex items-center gap-1.5 font-medium text-slate-700">
-          <MapPin size={13} className="text-indigo-600" /> {post.address}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4 min-w-0">
+        <span className="flex items-center gap-1.5 font-medium text-slate-700 min-w-0 max-w-full">
+          <MapPin size={13} className="text-indigo-600 shrink-0" /> 
+          <span className="truncate">{post.address}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <Calendar size={13} className="text-slate-400" /> {formatKolkataTimestamp(post.created || post.timestamp)}
+          <Calendar size={13} className="text-slate-400" /> {formatLocalTimestamp(post.created || post.timestamp)}
         </span>
         <span className="flex items-center gap-1.5">
           <Eye size={13} className="text-slate-400" /> {post.views || 0} views

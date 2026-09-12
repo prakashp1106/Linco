@@ -26,7 +26,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";
 import { apiService } from "../services/api";
 import { decryptContact } from "../services/encryptionService";
-import { formatKolkataTimestamp } from "../utils/date";
+import { formatLocalTimestamp } from "../utils/date";
 import { getWhatsAppLink } from "../utils/whatsapp";
 
 interface OwnerClaimsDashboardProps {
@@ -521,7 +521,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                 Claimant: {claim.claimantName}
                               </h4>
                               <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                Submitted: {formatKolkataTimestamp(claim.created || claim.timestamp)}
+                                Submitted: {formatLocalTimestamp(claim.created || claim.timestamp)}
                               </p>
                             </div>
 

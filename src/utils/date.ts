@@ -4,10 +4,14 @@
  */
 
 /**
- * Formats a Unix timestamp, Date object, or string in the Asia/Kolkata timezone.
+ * Formats a Unix timestamp, Date object, or string in the user's local timezone
+ * (defaulting cleanly to Asia/Kolkata for Indian users).
  * Conforming to format: 6 Jul 2026, 12:36 AM
  */
-export function formatKolkataTimestamp(created: number | string | Date): string {
+export function formatLocalTimestamp(
+  created: number | string | Date,
+  customTimeZone?: string
+): string {
   if (!created) return "";
   
   // Handle some special string formats if any, otherwise parse to Date
@@ -17,14 +21,23 @@ export function formatKolkataTimestamp(created: number | string | Date): string 
   }
 
   try {
-    const day = date.toLocaleString("en-US", { day: "numeric", timeZone: "Asia/Kolkata" });
-    const month = date.toLocaleString("en-US", { month: "short", timeZone: "Asia/Kolkata" });
-    const year = date.toLocaleString("en-US", { year: "numeric", timeZone: "Asia/Kolkata" });
+    let tz = customTimeZone;
+    if (!tz) {
+      try {
+        tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+      } catch {
+        tz = "Asia/Kolkata";
+      }
+    }
+
+    const day = date.toLocaleString("en-US", { day: "numeric", timeZone: tz });
+    const month = date.toLocaleString("en-US", { month: "short", timeZone: tz });
+    const year = date.toLocaleString("en-US", { year: "numeric", timeZone: tz });
     let timeStr = date.toLocaleString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-      timeZone: "Asia/Kolkata"
+      timeZone: tz
     });
 
     // Ensure AM/PM is uppercase
@@ -36,3 +49,8 @@ export function formatKolkataTimestamp(created: number | string | Date): string 
     return String(created);
   }
 }
+
+/**
+ * Backwards compatible alias for existing components importing formatKolkataTimestamp
+ */
+export const formatKolkataTimestamp = formatLocalTimestamp;
