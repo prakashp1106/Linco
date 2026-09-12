@@ -4,10 +4,9 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import {
+import { 
   Sparkles,
   CheckCircle2,
-  TrendingUp,
   Camera,
   Coins,
   ShieldCheck,
@@ -19,8 +18,6 @@ import {
   Compass,
   FileText,
   Bookmark,
-  ChevronRight,
-  Eye,
   Check,
   AlertCircle
 } from "lucide-react";
@@ -169,8 +166,8 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
     } else if (scoreVal >= 50) {
       return {
         text: "Moderate",
-        color: "text-amber-800 bg-amber-50 border-amber-200",
-        ringColor: "stroke-amber-500"
+        color: "text-slate-800 bg-slate-100 border-slate-300",
+        ringColor: "stroke-slate-500"
       };
     } else {
       return {
@@ -367,7 +364,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                     <span className={`text-[11px] font-bold ${
                       factor.confidence >= 90 ? "text-emerald-700" :
                       factor.confidence >= 70 ? "text-indigo-700" :
-                      factor.confidence >= 50 ? "text-amber-700" :
+                      factor.confidence >= 50 ? "text-slate-700" :
                       "text-rose-700"
                     }`}>
                       {factor.confidence}%
@@ -380,7 +377,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                       className={`h-full rounded-full ${
                         factor.confidence >= 90 ? "bg-emerald-600" :
                         factor.confidence >= 70 ? "bg-indigo-600" :
-                        factor.confidence >= 50 ? "bg-amber-500" :
+                        factor.confidence >= 50 ? "bg-slate-500" :
                         "bg-rose-500"
                       }`}
                       initial={{ width: 0 }}

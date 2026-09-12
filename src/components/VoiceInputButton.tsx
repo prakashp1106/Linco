@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Mic, MicOff, Check, RotateCcw, X, Volume2, AlertCircle } from "lucide-react";
+import { Mic, Check, RotateCcw, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useVoiceRecognition } from "../hooks/useVoiceRecognition";
 import { useLanguage } from "../context/LanguageContext";

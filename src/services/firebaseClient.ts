@@ -6,7 +6,7 @@ import {
   browserPopupRedirectResolver 
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaV3Provider, CustomProvider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import fileConfig from "../../firebase-applet-config.json";
 
 // Merge environment variables and fallback JSON configuration

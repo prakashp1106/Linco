@@ -2,24 +2,17 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { createPortal } from "react-dom";
 import { 
-  Send, 
-  MessageSquare, 
-  X, 
-  Mic, 
-  MicOff, 
-  Camera, 
-  Image as ImageIcon, 
-  Sparkles, 
-  MapPin, 
-  User, 
-  Phone, 
-  Shield, 
-  CheckCircle2, 
-  ChevronRight, 
-  ChevronLeft, 
-  AlertCircle,
-  HelpCircle,
-  HeartHandshake
+  Send,
+  X,
+  Mic,
+  Camera,
+  Image as ImageIcon,
+  Sparkles,
+  MapPin,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  AlertCircle
 } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 

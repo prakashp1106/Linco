@@ -4,20 +4,17 @@
  */
 
 import React, { useState } from "react";
-import {
+import { 
   ShieldCheck,
   X,
   Sparkles,
-  MapPin,
-  Calendar,
   KeyRound,
   CheckCircle2,
   AlertCircle,
   Camera,
   Upload,
   ArrowRight,
-  Shield,
-  Clock
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, PotentialMatch } from "../types";

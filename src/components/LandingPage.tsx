@@ -5,15 +5,11 @@
 
 import React, { useState } from "react";
 import { 
-  ShieldCheck, 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  ArrowRight, 
-  Search, 
+  ShieldCheck,
+  ArrowRight,
+  Search,
   ChevronDown,
   Lock,
-  Heart,
   Users,
   Building2,
   GraduationCap,

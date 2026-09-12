@@ -12,7 +12,6 @@ import {
   Bell, 
   Home, 
   Sparkles, 
-  Radar, 
   User,
   Menu,
   Settings,
@@ -28,21 +27,19 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import { motion, AnimatePresence } from "motion/react";
-import { formatWhatsAppNumber, getWhatsAppLink } from "./utils/whatsapp";
+import { formatWhatsAppNumber } from "./utils/whatsapp";
 import confetti from "canvas-confetti";
 
 import { usePosts } from "./hooks/usePosts";
 import { usePostForm } from "./hooks/usePostForm";
 import { encryptContact, decryptContact } from "./services/encryptionService";
-import { Post, AIMatch, PotentialMatch, LincoNotification } from "./types";
+import { Post, LincoNotification } from "./types";
 import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "./utils/extractor";
 import { apiService } from "./services/api";
-import { formatLocalTimestamp, formatKolkataTimestamp } from "./utils/date";
+import { formatLocalTimestamp } from "./utils/date";
 import { DEFAULT_USER_LOCATION } from "./constants";
 
 // UI Components
-import { CanvasParticles } from "./components/CanvasParticles";
-import { CountUpStat } from "./components/CountUpStat";
 import { PostForm } from "./components/PostForm";
 import { FeedList } from "./components/FeedList";
 import { AboutTab } from "./components/AboutTab";
@@ -56,6 +53,7 @@ import { CookieConsent } from "./components/CookieConsent";
 import { AuthFlow } from "./components/AuthFlow";
 import { SplashScreen } from "./components/SplashScreen";
 import { LincoLogo } from "./components/LincoLogo";
+import { LincoAvatar } from "./components/LincoAvatar";
 import { auth, db } from "./services/firebaseClient";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -1185,8 +1183,9 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="relative min-h-screen text-slate-100 font-sans pb-16 bg-dot-grid">
-        <CanvasParticles />
+      <div className="relative min-h-screen text-slate-900 font-sans pb-16 bg-[#fafbfc]">
+        {/* Soft subtle ambient background */}
+        <div className="fixed inset-0 bg-gradient-to-tr from-indigo-50/40 via-white to-sky-50/30 pointer-events-none z-0" />
         
         {/* TOAST NOTIFICATION CONTAINER */}
         <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm pointer-events-none">
@@ -1197,20 +1196,20 @@ export default function App() {
                 initial={{ opacity: 0, x: 50, scale: 0.9 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                className={`p-3.5 rounded-xl border backdrop-blur-lg flex justify-between items-start gap-2 shadow-2xl pointer-events-auto ${
-                  t.type === "success" ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-300" :
-                  t.type === "warn" ? "bg-amber-950/40 border-amber-500/20 text-amber-300" :
-                  t.type === "error" ? "bg-red-950/40 border-red-500/20 text-red-300" :
-                  "bg-cyan-950/40 border-cyan-500/20 text-cyan-300"
+                className={`p-3.5 rounded-xl border backdrop-blur-md flex justify-between items-start gap-2 shadow-lg pointer-events-auto ${
+                  t.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-900" :
+                  t.type === "warn" ? "bg-slate-50 border-slate-300 text-slate-900" :
+                  t.type === "error" ? "bg-rose-50 border-rose-200 text-rose-900" :
+                  "bg-indigo-50 border-indigo-200 text-indigo-900"
                 }`}
               >
                 <div className="flex gap-2">
                   <span className="text-sm mt-0.5">
                     {t.type === "success" ? "✅" : t.type === "warn" ? "⚠️" : t.type === "error" ? "❌" : "ℹ️"}
                   </span>
-                  <span className="text-xs font-medium leading-relaxed">{t.message}</span>
+                  <span className="text-xs font-semibold leading-relaxed">{t.message}</span>
                 </div>
-                <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-200 transition cursor-pointer">
+                <button onClick={() => setToasts((p) => p.filter((x) => x.id !== t.id))} className="text-slate-400 hover:text-slate-600 transition cursor-pointer">
                   <X size={14} />
                 </button>
               </motion.div>
@@ -1349,22 +1348,15 @@ export default function App() {
               setActiveTab("dashboard");
               window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
             }}
-            className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 hover:border-indigo-500 transition cursor-pointer flex items-center justify-center text-white text-[10px] font-black uppercase shadow-2xs"
+            className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 hover:border-indigo-500 transition cursor-pointer flex items-center justify-center shadow-2xs"
             aria-label="View Profile"
-            style={profileAvatar.startsWith("linear-gradient") ? { background: profileAvatar } : {}}
           >
-            {profileAvatar.startsWith("linear-gradient") ? (
-              profileDetails.fullName ? profileDetails.fullName.charAt(0) : "U"
-            ) : (
-              <img 
-                src={profileAvatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            )}
+            <LincoAvatar
+              src={profileAvatar}
+              name={profileDetails.fullName || "User"}
+              size="sm"
+              className="w-full h-full"
+            />
           </button>
         </div>
       </header>
@@ -1475,20 +1467,12 @@ export default function App() {
                     className="w-full text-left flex items-center justify-between p-2 rounded-xl hover:bg-white transition group cursor-pointer border border-transparent hover:border-slate-200"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      {profileDetails.avatar.startsWith("linear-gradient") ? (
-                        <div 
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold uppercase shadow-xs"
-                          style={{ background: profileDetails.avatar }}
-                        >
-                          {profileDetails.fullName.charAt(0)}
-                        </div>
-                      ) : (
-                        <img 
-                          src={profileDetails.avatar} 
-                          alt={profileDetails.fullName} 
-                          className="w-9 h-9 rounded-full object-cover border border-slate-200"
-                        />
-                      )}
+                      <LincoAvatar
+                        src={profileDetails.avatar}
+                        name={profileDetails.fullName || "User"}
+                        size="sm"
+                        className="w-9 h-9 border border-slate-200"
+                      />
                       <div className="flex flex-col min-w-0">
                         <span className="text-xs font-bold text-slate-900 truncate leading-tight">
                           {profileDetails.fullName}

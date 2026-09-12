@@ -5,22 +5,19 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  ShieldCheck, 
-  X, 
-  RefreshCw, 
-  AlertTriangle, 
-  Check, 
-  Ban, 
-  ExternalLink, 
-  MessageSquare, 
-  Key, 
-  Phone, 
+  ShieldCheck,
+  X,
+  RefreshCw,
+  AlertTriangle,
+  Check,
+  Ban,
+  ExternalLink,
+  MessageSquare,
+  Key,
   Calendar,
   Lock,
   Delete,
-  Send,
-  LockOpen,
-  Clock
+  Send
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";

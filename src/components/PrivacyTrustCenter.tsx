@@ -4,31 +4,22 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
+import { 
   Shield,
   Lock,
-  Eye,
   Trash2,
   Download,
-  CheckCircle,
-  HelpCircle,
   Mail,
   FileText,
   UserCheck,
   Smartphone,
   Globe,
   LogOut,
-  RefreshCw,
-  AlertTriangle,
-  Info,
-  Sliders,
   Database,
   Calendar,
   X,
-  Compass,
   FileCheck2,
   ChevronRight,
-  ShieldAlert,
   UserX,
   Linkedin,
   Clock

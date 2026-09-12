@@ -153,7 +153,7 @@ export const LincoProductShowcases: React.FC<LincoProductShowcasesProps> = ({
             <div className="space-y-2.5 text-xs text-slate-700">
               <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-slate-200/70">
                 <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                <span><strong>Item matches:</strong> Both describe a brown leather bifold wallet with a metro transit card.</span>
+                <span><strong>Item matches:</strong> Both describe a navy blue college backpack with a water bottle and notebook.</span>
               </div>
               <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-slate-200/70">
                 <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />

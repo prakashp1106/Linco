@@ -87,7 +87,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
             <Clock size={16} />
           </div>
           <div>
@@ -155,13 +155,13 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4 shadow-2xs">
           {/* Top Summary Banner */}
           {(timelineData.likelyLossLocation || timelineData.likelyTimeWindow) && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-900 block">
                   {t("timeline.likelyLocation", "Likely Misplacement Location")}
                 </span>
                 <p className="text-xs font-bold text-slate-900 mt-0.5 flex items-center gap-1.5">
-                  <MapPin size={13} className="text-amber-600 shrink-0" />
+                  <MapPin size={13} className="text-indigo-600 shrink-0" />
                   <span>{timelineData.likelyLossLocation || "Analysis in progress"}</span>
                   {timelineData.likelyTimeWindow && (
                     <span className="text-[11px] font-normal text-slate-500">
@@ -180,7 +180,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectSuggestedAddress(timelineData.likelyLossLocation!)}
-                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-amber-100/50 border border-amber-300 text-amber-900 text-[11px] font-semibold flex items-center gap-1 shrink-0 transition cursor-pointer self-start sm:self-center shadow-2xs"
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-900 text-[11px] font-semibold flex items-center gap-1 shrink-0 transition cursor-pointer self-start sm:self-center shadow-2xs"
                 >
                   <Check size={12} />
                   <span>{t("timeline.applyLocation", "Use as Report Location")}</span>
@@ -211,7 +211,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
                   evt.confidence === "High"
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                     : evt.confidence === "Medium"
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    ? "bg-slate-100 text-slate-700 border-slate-300"
                     : "bg-slate-50 text-slate-600 border-slate-200";
 
                 return (

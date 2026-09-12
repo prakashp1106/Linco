@@ -1,13 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { 
-  ShieldCheck, 
-  MapPin, 
-  Clock, 
-  Check, 
-  Lock,
+  Clock,
   PhoneCall,
-  MessageCircle,
   Tag
 } from "lucide-react";
 

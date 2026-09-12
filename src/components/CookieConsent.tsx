@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Info, Sparkles, X } from "lucide-react";
+import { ShieldCheck, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface CookieConsentProps {

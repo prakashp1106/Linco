@@ -88,7 +88,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
           {/* Urgency tag */}
           {post.urgency && post.urgency !== "Normal" && (
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-full">
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-full">
               ⚡ {t(`urgency.${post.urgency.toLowerCase()}`, post.urgency)}
             </span>
           )}

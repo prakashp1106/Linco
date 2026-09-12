@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Check, Globe, Search, X, Sparkles, ArrowRight, Shield } from "lucide-react";
+import { Check, Globe, Search, X, ArrowRight, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useLanguage } from "../context/LanguageContext";
 import { SUPPORTED_LANGUAGES, LanguageCode } from "../services/i18n";

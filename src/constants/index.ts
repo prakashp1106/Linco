@@ -26,7 +26,8 @@ export const URGENCY_LEVELS: UrgencyInfo[] = [
   { id: "Medical", cls: "text-red-400 border-red-500/20 bg-red-950/20", color: "#f87171", bgColor: "rgba(239, 68, 68, 0.1)" },
 ];
 
-export const DEFAULT_USER_LOCATION = "Local Community, India";
+// Location is never hardcoded or defaulted without user consent. Empty string represents "Location not set".
+export const DEFAULT_USER_LOCATION = "";
 
 export const CITIES = [
   "Mumbai",

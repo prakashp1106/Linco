@@ -1,3 +1,8 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Wallet, Smartphone, Key, Briefcase } from "lucide-react";
@@ -12,6 +17,7 @@ interface DiscoveryItem {
   name: string;
   category: string;
   description: string;
+  scale: number;
   icon: React.ElementType;
 }
 
@@ -19,8 +25,9 @@ const ITEMS: DiscoveryItem[] = [
   {
     type: "wallet",
     name: "Wallet & Purse",
-    category: "Wallet",
+    category: "Wallet / Purse",
     description: "Cards, cash, ID cards, and transit passes",
+    scale: 0.52,
     icon: Wallet
   },
   {
@@ -28,6 +35,7 @@ const ITEMS: DiscoveryItem[] = [
     name: "Phone & Electronics",
     category: "Electronics",
     description: "Smartphones, earphones, and accessories",
+    scale: 0.46,
     icon: Smartphone
   },
   {
@@ -35,13 +43,15 @@ const ITEMS: DiscoveryItem[] = [
     name: "Keys & Keychains",
     category: "Keys",
     description: "Home keys, vehicle keys, and office fobs",
+    scale: 0.50,
     icon: Key
   },
   {
     type: "bag",
     name: "Bag & Backpack",
     category: "Bag",
-    description: "College bags, handbags, totes, and luggage",
+    description: "College bags, backpacks, and luggage",
+    scale: 0.48,
     icon: Briefcase
   }
 ];
@@ -53,9 +63,9 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
   const [activeItem, setActiveItem] = useState<HeroObjectType>("wallet");
 
   return (
-    <section className="py-14 sm:py-20 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8 select-none">
+    <section className="py-12 sm:py-16 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8 select-none">
       
-      {/* Title & Subtext - Exactly per requirement 13 */}
+      {/* Title & Subtext */}
       <div className="space-y-2 max-w-lg mx-auto">
         <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
           Everyday Essentials
@@ -68,8 +78,8 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
         </p>
       </div>
 
-      {/* 4 Clean, recognizable item cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* 4 Clean, recognizable item cards with controlled scale & no overflow */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
         {ITEMS.map((item) => {
           const isSelected = activeItem === item.type;
           const Icon = item.icon;
@@ -78,16 +88,16 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
             <motion.div
               key={item.type}
               onClick={() => setActiveItem(item.type)}
-              whileHover={prefersReducedMotion ? {} : { y: -4 }}
-              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col items-center justify-between text-left cursor-pointer ${
+              whileHover={prefersReducedMotion ? {} : { y: -3 }}
+              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col justify-between text-left cursor-pointer min-h-[380px] overflow-hidden ${
                 isSelected
-                  ? "bg-slate-50 border-slate-900 shadow-sm ring-1 ring-slate-900/10"
+                  ? "bg-slate-50/90 border-slate-900 shadow-md ring-1 ring-slate-900/10"
                   : "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
               }`}
             >
               {/* Item Header */}
-              <div className="w-full flex items-center justify-between mb-2">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+              <div className="w-full flex items-center justify-between z-10">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
                   isSelected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
                 }`}>
                   <Icon size={16} />
@@ -97,18 +107,18 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
                 </span>
               </div>
 
-              {/* Realistic tactile visual miniature */}
-              <div className="h-44 sm:h-48 flex items-center justify-center my-2 pointer-events-none">
+              {/* Realistic tactile visual miniature with strictly bounded container */}
+              <div className="w-full h-44 flex items-center justify-center my-1 pointer-events-none overflow-visible">
                 <Linco3DHeroObject 
                   type={item.type} 
-                  scale={0.62} 
+                  scale={item.scale} 
                   interactive={false} 
                   subtleFloating={isSelected} 
                 />
               </div>
 
               {/* Name & Direct Report Action */}
-              <div className="w-full space-y-3 pt-3 border-t border-slate-100">
+              <div className="w-full space-y-3 pt-3 border-t border-slate-100 z-10">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.description}</p>

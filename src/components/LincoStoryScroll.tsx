@@ -1,15 +1,12 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { 
-  ArrowRight, 
-  HeartHandshake, 
-  Search, 
-  Sparkles, 
-  ShieldCheck, 
-  CheckCircle2, 
-  ChevronDown, 
-  MapPin, 
-  Clock, 
+  ArrowRight,
+  HeartHandshake,
+  Search,
+  CheckCircle2,
+  MapPin,
+  Clock,
   Lock,
   Wallet,
   Smartphone,
@@ -35,7 +32,7 @@ export const LincoStoryScroll: React.FC<LincoStoryScrollProps> = ({
 
   // Active story scene: 0=Lost, 1=Search, 2=Match, 3=Verify, 4=Reunite
   const [activeScene, setActiveScene] = useState<number>(0);
-  const [selectedHeroType, setSelectedHeroType] = useState<HeroObjectType>("wallet");
+  const [selectedHeroType, setSelectedHeroType] = useState<HeroObjectType>("phone");
 
   const scenes = [
     {
@@ -44,7 +41,7 @@ export const LincoStoryScroll: React.FC<LincoStoryScrollProps> = ({
       title: "Lost doesn't have to mean gone.",
       subtitle: "That sinking feeling when you reach into your pocket and find empty space. But you are not alone.",
       humanNote: "Most lost items are found by everyday people who want to return them.",
-      color: "text-amber-700 bg-amber-50 border-amber-200"
+      color: "text-slate-800 bg-slate-100 border-slate-200"
     },
     {
       id: "search",
@@ -293,7 +290,7 @@ export const LincoStoryScroll: React.FC<LincoStoryScrollProps> = ({
                   <div className="space-y-2.5 text-xs text-slate-600">
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center shrink-0">1</span>
-                      <span>Tell us what it looks like (e.g. &ldquo;Black leather bifold wallet with transit card&rdquo;)</span>
+                      <span>Tell us what it looks like (e.g. &ldquo;Matte black smartphone with protective case&rdquo;)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center shrink-0">2</span>
@@ -324,7 +321,7 @@ export const LincoStoryScroll: React.FC<LincoStoryScrollProps> = ({
                   <div className="space-y-2 text-xs">
                     <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 text-slate-700">
                       <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
-                      <span><strong>Item description matches:</strong> Both reports mention a dark brown leather wallet with a metro transit card.</span>
+                      <span><strong>Item description matches:</strong> Both reports describe a matte black smartphone with an ID transit pass tucked inside.</span>
                     </div>
                     <div className="flex items-start gap-2.5 p-2 rounded-xl bg-slate-50 text-slate-700">
                       <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />

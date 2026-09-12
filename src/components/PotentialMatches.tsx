@@ -1,28 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Sliders, 
-  MapPin, 
-  Calendar, 
-  Sparkles, 
-  Info, 
-  Eye, 
-  Trash2, 
-  CheckCircle, 
-  ArrowRight, 
-  X, 
-  AlertCircle, 
-  ShieldAlert,
-  ChevronDown,
-  ChevronUp,
+  Sliders,
+  MapPin,
+  Sparkles,
+  Eye,
+  Trash2,
+  CheckCircle,
+  ArrowRight,
+  X,
   Heart,
   Share2,
   Clock,
   Check,
   Compass,
-  ArrowLeftRight,
-  Bookmark,
-  BadgeCheck,
   Lock,
   Unlock,
   Send,
@@ -30,9 +21,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   XCircle,
-  UserCheck,
   RefreshCw,
-  KeyRound,
   Shield,
   Phone,
   ExternalLink,
@@ -41,7 +30,7 @@ import {
 } from "lucide-react";
 import { Post, PotentialMatch, MatchStatus } from "../types";
 import { apiService } from "../services/api";
-import { getWhatsAppLink, maskPhoneNumber, getMatchRevealedContact } from "../utils/whatsapp";
+import { getWhatsAppLink, getMatchRevealedContact } from "../utils/whatsapp";
 
 interface PotentialMatchesProps {
   posts: Post[];

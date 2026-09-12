@@ -1,6 +1,6 @@
 {
   "name": "LINCO – AI Lost & Found India",
   "description": "An AI-powered Lost & Found directory featuring Gemini matching, secure claim verification, voice speech dictation, and timeline reconstruction.",
-  "requestFramePermissions": ["microphone"],
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

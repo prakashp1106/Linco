@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Lock, X, CheckCircle2, AlertTriangle, Key, ShieldCheck, RefreshCw, Delete } from "lucide-react";
+import { Lock, X, CheckCircle2, AlertTriangle, RefreshCw, Delete } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface PinModalProps {

@@ -4,17 +4,14 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
+import { 
   Sparkles,
   Check,
   RotateCcw,
   Edit3,
   X,
   ShieldCheck,
-  AlertCircle,
-  HelpCircle,
-  Tag,
-  ArrowRight,
+  HelpCircle
 } from "lucide-react";
 import { EnhanceDescriptionResponse } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";

@@ -68,24 +68,23 @@ try {
           privateKey,
         }),
       });
-    } else if (projectId) {
-      console.log(`[FIREBASE-INIT] Initializing with ADC. Project ID: ${projectId}`);
-      app = initializeApp({
-        projectId,
-      });
+      console.log(`[FIREBASE-INIT] Instantiating Firestore on database: ${configDatabaseId || "default"}...`);
+      db = getFirestore(app, configDatabaseId || undefined);
+      console.log("[FIREBASE-INIT] Firestore database client ready.");
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+      console.log(`[FIREBASE-INIT] Initializing with GOOGLE_APPLICATION_CREDENTIALS file. Project ID: ${projectId || "auto"}`);
+      app = initializeApp(projectId ? { projectId } : undefined);
+      db = getFirestore(app, configDatabaseId || undefined);
+      console.log("[FIREBASE-INIT] Firestore database client ready.");
     } else {
-      console.log("[FIREBASE-INIT] Initializing with default Application Default Credentials (zero-config)...");
-      app = initializeApp();
+      console.log("[FIREBASE-INIT] Service account credentials (FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) not provided. Running in high-performance local database mode.");
+      db = null;
     }
   } else {
     console.log("[FIREBASE-INIT] Reusing existing initialized App instance.");
     app = existingApps[0];
+    db = getFirestore(app, configDatabaseId || undefined);
   }
-
-  // Use only getFirestore() with the default database
-  console.log(`[FIREBASE-INIT] Instantiating Firestore on database: ${configDatabaseId || "default"}...`);
-  db = getFirestore(app, configDatabaseId || undefined);
-  console.log("[FIREBASE-INIT] Firestore database client ready.");
 } catch (error: any) {
   console.error("[FIREBASE-INIT] Critical Error initializing Firebase (will fall back to local file storage):", error);
   db = null;

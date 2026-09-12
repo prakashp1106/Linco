@@ -4,7 +4,7 @@
  */
 
 import { apiService, QuickFillResponse, SuggestRewardResponse, VerifyClaimResponse, EnhanceDescriptionResponse, ReconstructTimelineResponse } from "./api";
-import { Post } from "../types";
+
 
 export const aiController = {
   /**

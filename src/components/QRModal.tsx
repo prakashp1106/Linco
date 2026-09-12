@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useRef } from "react";
-import { QrCode, X, Download, ShieldCheck, DownloadCloud } from "lucide-react";
+import { QrCode, X, Download, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import QRCode from "qrcode";
 import { Post } from "../types";

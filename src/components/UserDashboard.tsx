@@ -6,36 +6,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  User, 
-  MapPin, 
-  Calendar, 
-  Camera, 
-  Edit3, 
-  Share2, 
-  Settings, 
-  Shield, 
-  Bell, 
-  Palette, 
-  Languages, 
-  HelpCircle, 
-  Info, 
-  Download, 
-  Trash2, 
-  LogOut, 
-  ChevronRight, 
-  ChevronLeft, 
-  Check, 
-  Lock,
-  Mail,
-  AlertTriangle,
-  Sparkles,
-  Link2
+  User,
+  MapPin,
+  Calendar,
+  Camera,
+  Edit3,
+  Share2,
+  Settings,
+  Download,
+  LogOut,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+  AlertTriangle
 } from "lucide-react";
 import { imageService } from "../services/imageService";
 import { auth, db } from "../services/firebaseClient";
-import { signOut } from "firebase/auth";
-import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { signOut, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { DEFAULT_USER_LOCATION } from "../constants";
+import { LincoAvatar } from "./LincoAvatar";
+import { requestGenuineLocation } from "../utils/geolocation";
 
 interface UserDashboardProps {
   addToast: (msg: string, type: "success" | "info" | "warn" | "error") => void;
@@ -173,6 +164,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       localStorage.setItem("linco_profile_details", JSON.stringify(newProfile));
       localStorage.setItem("linco_profile_is_logged_in", "true");
       if (auth.currentUser) {
+        try {
+          await updateProfile(auth.currentUser, {
+            displayName: newProfile.fullName,
+            photoURL: newProfile.avatar
+          });
+        } catch (authErr) {
+          console.warn("Could not update auth profile directly:", authErr);
+        }
+
         const userRef = doc(db, "users", auth.currentUser.uid);
         try {
           await setDoc(userRef, {
@@ -515,21 +515,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   onClick={() => setPhotoModal("photo")}
                   className="w-20 h-20 rounded-full border border-slate-200 hover:border-indigo-500 transition relative group overflow-hidden flex items-center justify-center cursor-pointer bg-slate-100 shadow-2xs"
                 >
-                  {isGradient(editForm.avatar) ? (
-                    <div 
-                      className="w-full h-full flex items-center justify-center text-white text-2xl font-bold uppercase"
-                      style={{ background: editForm.avatar }}
-                    >
-                      {editForm.fullName ? editForm.fullName.charAt(0) : "U"}
-                    </div>
-                  ) : (
-                    <img 
-                      src={editForm.avatar} 
-                      alt="Avatar Preview" 
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <LincoAvatar
+                    src={editForm.avatar}
+                    name={editForm.fullName || "User"}
+                    size="xl"
+                    className="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10">
                     <Camera size={16} className="text-white" />
                   </div>
                 </button>
@@ -655,25 +647,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <div className="px-6 pb-6 pt-12 sm:pt-6 relative flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
                     {/* Circular floating avatar */}
                     <div className="absolute -top-14 sm:-top-16 left-1/2 sm:left-6 -translate-x-1/2 sm:translate-x-0">
-                      <div className="w-24 h-24 sm:w-26 sm:h-26 rounded-full p-0.5 bg-white border-2 border-slate-200 shadow-md relative group overflow-hidden">
-                        {isGradient(profile.avatar) || avatarImgError ? (
-                          <div 
-                            className="w-full h-full rounded-full flex items-center justify-center text-white text-3xl font-bold uppercase"
-                            style={{ background: isGradient(profile.avatar) ? profile.avatar : PRESET_AVATARS[0] }}
-                          >
-                            {profile.fullName ? profile.fullName.charAt(0) : "U"}
-                          </div>
-                        ) : (
-                          <img 
-                            src={profile.avatar} 
-                            alt={profile.fullName} 
-                            className="w-full h-full rounded-full object-cover"
-                            onError={() => setAvatarImgError(true)}
-                          />
-                        )}
+                      <div className="w-24 h-24 sm:w-26 sm:h-26 rounded-full p-0.5 bg-white border-2 border-slate-200 shadow-md relative group overflow-hidden flex items-center justify-center">
+                        <LincoAvatar 
+                          src={profile.avatar} 
+                          name={profile.fullName} 
+                          size="hero" 
+                          className="w-full h-full" 
+                        />
                         <button
                           onClick={() => setPhotoModal("photo")}
-                          className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                          className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer z-10"
+                          aria-label="Change Profile Photo"
                         >
                           <Camera size={16} className="text-white" />
                         </button>
@@ -700,7 +684,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-1.5 text-xs text-slate-500">
                         <div className="flex items-center gap-1.5">
                           <MapPin size={12} className="text-slate-400" />
-                          <span>{profile.location}</span>
+                          <span>{profile.location ? profile.location : "Location not specified"}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar size={12} className="text-slate-400" />
@@ -817,9 +801,29 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-slate-700 block">City</label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold text-slate-700 block">City / Neighborhood</label>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                addToast("Detecting your location...", "info");
+                                const res = await requestGenuineLocation();
+                                const detectedLocation = res?.city || res?.formattedAddress;
+                                if (detectedLocation) {
+                                  setEditForm(prev => ({ ...prev, location: detectedLocation }));
+                                  addToast(`Location set to: ${detectedLocation}`, "success");
+                                } else {
+                                  addToast("Could not detect location. Please type your city.", "warn");
+                                }
+                              }}
+                              className="text-[11px] text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer flex items-center gap-1 transition"
+                            >
+                              <MapPin size={11} /> Detect GPS
+                            </button>
+                          </div>
                           <input
                             type="text"
+                            placeholder="e.g. Bandra West, Mumbai"
                             value={editForm.location}
                             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"

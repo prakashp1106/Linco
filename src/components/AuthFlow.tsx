@@ -1,35 +1,35 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ChevronLeft, 
-  ArrowLeft, 
-  Check, 
-  Loader2, 
-  Sparkles, 
-  User, 
-  Shield, 
-  Info,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Check,
+  Loader2,
+  Sparkles,
+  User,
   MapPin,
   AlignLeft,
   Camera,
   Upload
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect
+  signInWithRedirect,
+  getRedirectResult
 } from "firebase/auth";
 import { auth, db, isConfigValid } from "../services/firebaseClient";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { imageService } from "../services/imageService";
 import { LincoLogo } from "./LincoLogo";
+import { LincoAvatar } from "./LincoAvatar";
+import { requestGenuineLocation } from "../utils/geolocation";
 import { DEFAULT_USER_LOCATION } from "../constants";
 
 interface AuthFlowProps {
@@ -121,7 +121,6 @@ export function AuthFlow({
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
-        const { getRedirectResult } = await import("firebase/auth");
         const result = await getRedirectResult(auth);
         if (result && result.user) {
           console.log("[AuthFlow] Redirect sign-in result retrieved successfully:", result.user.uid);
@@ -1268,22 +1267,18 @@ export function AuthFlow({
                     onClick={() => fileInputRef.current?.click()}
                     className="w-16 h-16 rounded-full border border-slate-200 hover:border-indigo-500 transition overflow-hidden flex items-center justify-center bg-slate-100 cursor-pointer shadow-2xs"
                   >
-                    {avatarUrl.startsWith("linear-gradient") ? (
-                      <div 
-                        className="w-full h-full flex items-center justify-center text-white text-xl font-bold uppercase"
-                        style={{ background: avatarUrl }}
-                      >
-                        {fullName ? fullName.charAt(0) : "U"}
-                      </div>
-                    ) : (
-                      <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                    )}
+                    <LincoAvatar
+                      src={avatarUrl}
+                      name={fullName || "User"}
+                      size="lg"
+                      className="w-full h-full"
+                    />
                   </button>
 
                   <button
                     type="button"
                     onClick={cameraActive ? stopCamera : startCamera}
-                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white border border-slate-200 hover:border-indigo-500 transition text-slate-600 hover:text-slate-900 cursor-pointer shadow-2xs"
+                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white border border-slate-200 hover:border-indigo-500 transition text-slate-600 hover:text-slate-900 cursor-pointer shadow-2xs z-10"
                   >
                     <Camera size={11} />
                   </button>
@@ -1375,7 +1370,26 @@ export function AuthFlow({
 
                 {/* City */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">City / Neighborhood (Required)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 block">City / Neighborhood (Required)</label>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        addToast("Detecting your location...", "info");
+                        const res = await requestGenuineLocation();
+                        const detectedLocation = res?.city || res?.formattedAddress;
+                        if (detectedLocation) {
+                          setCity(detectedLocation);
+                          addToast(`Location set to: ${detectedLocation}`, "success");
+                        } else {
+                          addToast("Could not detect location. Please type your city.", "warn");
+                        }
+                      }}
+                      className="text-[11px] text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer flex items-center gap-1 transition"
+                    >
+                      <MapPin size={11} /> Detect GPS
+                    </button>
+                  </div>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <MapPin size={13} />

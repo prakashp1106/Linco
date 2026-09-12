@@ -229,14 +229,9 @@ let lastFirestoreError: string | null = null;
 let lastFirestoreErrorDetails: string | null = null;
 
 // Initialize and verify Firestore
-try {
-  if (!db) {
-    throw new Error("Firestore client not initialized.");
-  }
-} catch (error: any) {
-  lastFirestoreError = error.message || String(error);
-  console.error("[DIAGNOSTIC-STARTUP] Firebase production Firestore client not loaded:", error);
+if (!db) {
   useLocalFallback = true;
+  console.log("[STORAGE] Running on local JSON persistence engine (no server service account credentials provided).");
 }
 
 // Function to read local fallback file
@@ -1587,8 +1582,12 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Serve uploaded files statically with safe cache controls
-app.use("/uploads", express.static(UPLOADS_DIR, {
+// Serve uploaded files statically with safe cache controls and CORS headers for iframe/cross-origin safety
+app.use("/uploads", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}, express.static(UPLOADS_DIR, {
   maxAge: "7d",
   etag: true
 }));
@@ -1688,10 +1687,17 @@ app.post("/api/upload", async (req, res) => {
     }
 
     // Local disk fallback when Cloudinary is unconfigured or fails
-    const mainUrl = saveBase64ToFile(image, "img");
-    const thumbUrl = thumbnail ? saveBase64ToFile(thumbnail, "thumb") : mainUrl;
+    const mainRelative = saveBase64ToFile(image, "img");
+    const thumbRelative = thumbnail ? saveBase64ToFile(thumbnail, "thumb") : mainRelative;
 
-    console.log("Successfully saved image to local disk! URLs:", { url: mainUrl, thumbnailUrl: thumbUrl });
+    // Use APP_URL if set, or incoming request origin, so URL is always an absolute HTTPS/HTTP link
+    const origin = process.env.APP_URL 
+      ? process.env.APP_URL.replace(/\/+$/, "") 
+      : `${req.protocol}://${req.get("host")}`;
+    const mainUrl = `${origin}${mainRelative}`;
+    const thumbUrl = `${origin}${thumbRelative}`;
+
+    console.log("Successfully saved image to local disk! Absolute URLs:", { url: mainUrl, thumbnailUrl: thumbUrl });
 
     return res.json({
       url: mainUrl,
@@ -1778,10 +1784,14 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "healthy",
     time: new Date().toISOString(),
+    storage: {
+      mode: useLocalFallback ? "local_json" : "firestore_admin",
+      status: "ready"
+    },
     firestore: {
-      initialized: !!db,
-      lastError: lastFirestoreError,
-      lastErrorDetails: lastFirestoreErrorDetails
+      initialized: !useLocalFallback && !!db,
+      mode: useLocalFallback ? "local_fallback" : "firestore_live",
+      ...(lastFirestoreError ? { lastError: lastFirestoreError } : {})
     }
   });
 });

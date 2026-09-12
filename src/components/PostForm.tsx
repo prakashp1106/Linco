@@ -4,10 +4,9 @@
  */
 
 import React, { useState, useRef, useEffect } from "react";
-import {
+import { 
   Sparkles,
   Camera,
-  Mic,
   Trash2,
   ShieldCheck,
   MapPin,
@@ -17,11 +16,7 @@ import {
   ChevronRight,
   Check,
   Lock,
-  ChevronDown,
-  ChevronUp,
   UploadCloud,
-  Eye,
-  EyeOff,
   BellRing,
   CheckCircle2,
   Pencil
@@ -30,7 +25,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { usePostForm } from "../hooks/usePostForm";
 import { useAI } from "../hooks/useAI";
 import { useMaps } from "../hooks/useMaps";
-import { detectCategoryLocal, extractItemLocal, capitalizeItemName } from "../utils/extractor";
+
 import { CATEGORIES, URGENCY_LEVELS } from "../constants";
 import { InteractiveMap } from "./LeafletMap";
 import { imageService } from "../services/imageService";
