@@ -1,5 +1,4 @@
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
 import { 
   ShieldCheck, 
   MapPin, 
@@ -8,7 +7,7 @@ import {
   Lock, 
   ArrowRight,
   Clock,
-  Navigation
+  HeartHandshake
 } from "lucide-react";
 import { Linco3DHeroObject } from "./Linco3DHeroObject";
 
@@ -21,69 +20,64 @@ export const LincoProductShowcases: React.FC<LincoProductShowcasesProps> = ({
   onNavigateToReport,
   onNavigateToMatches
 }) => {
-  const prefersReducedMotion = useReducedMotion();
-
   return (
-    <div className="space-y-28 sm:space-y-36 max-w-5xl mx-auto px-4 sm:px-6 w-full py-8 select-none">
+    <div className="space-y-24 sm:space-y-32 max-w-5xl mx-auto px-4 sm:px-6 w-full py-8 select-none">
       
       {/* ========================================================================= */}
-      {/* SHOWCASE 1: LOST — "One report is all it takes." */}
+      {/* SHOWCASE 1: REPORT — "One report is all it takes." */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
         {/* Visual Column */}
         <div className="lg:col-span-6 flex justify-center order-2 lg:order-1">
           <div className="relative">
-            {/* Subtle multi-layer ambient halo */}
-            <div className="absolute inset-0 bg-slate-100 rounded-full blur-3xl -z-10" />
-            <Linco3DHeroObject type="wallet" scale={1.05} />
+            <div className="absolute inset-0 bg-slate-100 rounded-full blur-2xl -z-10" />
+            <Linco3DHeroObject type="wallet" scale={1} interactive={false} />
           </div>
         </div>
 
         {/* Story Column */}
-        <div className="lg:col-span-6 space-y-6 text-left order-1 lg:order-2">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              01 / Private Incident Log
+        <div className="lg:col-span-6 space-y-5 text-left order-1 lg:order-2">
+          <div className="space-y-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              01 &bull; Report
             </span>
-            <div className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              LOST
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-indigo-600">
-              &ldquo;One report is all it takes.&rdquo;
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              One report is all it takes.
             </h3>
           </div>
 
-          <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-            No desperate social media posts exposing your private telephone number. LINCO lets you file an incident report in under two minutes with precision spatial pinning, approximate timeline windows, and local client-side PIN encryption.
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            No frantic social media posts exposing your private telephone number to strangers. LINCO lets you report a lost or found item in under two minutes with simple, everyday language.
           </p>
 
-          {/* Minimalist proof points */}
-          <div className="space-y-3 pt-2 text-xs text-slate-600">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+          {/* Reassuring human points */}
+          <div className="space-y-2.5 pt-1 text-xs text-slate-600">
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Lock size={12} />
               </div>
               <div>
-                <span className="font-semibold text-slate-900">Zero Public Contact Disclosure:</span>
-                <span className="text-slate-500 ml-1">Your phone number is encrypted in your browser and hidden from the public feed.</span>
+                <span className="font-semibold text-slate-900">Your phone number stays hidden:</span>
+                <span className="text-slate-500 ml-1">Nobody can see your personal contact details on the public feed.</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
                 <MapPin size={12} />
               </div>
               <div>
-                <span className="font-semibold text-slate-900">Spatial Accuracy Radius:</span>
-                <span className="text-slate-500 ml-1">Pinpoint transit lines, campus buildings, or society grounds with custom search radiuses.</span>
+                <span className="font-semibold text-slate-900">Simple location pin:</span>
+                <span className="text-slate-500 ml-1">Just tap where you remember having it: a metro station, college campus, or market.</span>
               </div>
             </div>
           </div>
 
           <div className="pt-2">
             <button
+              type="button"
               onClick={() => onNavigateToReport("Lost")}
-              className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+              className="px-5 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer pointer-events-auto active:scale-98"
             >
               <span>Report Lost Item</span>
               <ArrowRight size={13} />
@@ -95,258 +89,150 @@ export const LincoProductShowcases: React.FC<LincoProductShowcasesProps> = ({
       {/* ========================================================================= */}
       {/* SHOWCASE 2: MATCH — "LINCO connects the clues." */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
         {/* Story Column */}
-        <div className="lg:col-span-6 space-y-6 text-left">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              02 / Contextual Intelligence
+        <div className="lg:col-span-6 space-y-5 text-left">
+          <div className="space-y-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              02 &bull; Match
             </span>
-            <div className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              MATCH
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-indigo-600">
-              &ldquo;LINCO connects the clues.&rdquo;
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              LINCO connects the clues.
             </h3>
           </div>
 
-          <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-            Instead of manual scrolling through hundreds of messy forum posts, LINCO compares spatial proximity vectors, loss-to-find timeline windows, and item characteristics across languages to discover likely matches quietly.
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Instead of endlessly searching through chaotic forum posts, LINCO compares the item description, location, and timeline to gently notify you when something looks like yours.
           </p>
 
-          <div className="space-y-3 pt-2 text-xs text-slate-600">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="space-y-2.5 pt-1 text-xs text-slate-600">
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Sparkles size={12} />
               </div>
               <div>
-                <span className="font-semibold text-slate-900">Cross-Lingual Recognition:</span>
-                <span className="text-slate-500 ml-1">Reports in Hindi, Marathi, Tamil, Bengali, or English match seamlessly across communities.</span>
+                <span className="font-semibold text-slate-900">Works in any language:</span>
+                <span className="text-slate-500 ml-1">Reports in Hindi, Tamil, Bengali, or English match with each other automatically.</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Clock size={12} />
               </div>
               <div>
-                <span className="font-semibold text-slate-900">Timeline Vector Matching:</span>
-                <span className="text-slate-500 ml-1">Intelligently accounts for movement patterns along metro routes and college corridors.</span>
+                <span className="font-semibold text-slate-900">Timeline matching:</span>
+                <span className="text-slate-500 ml-1">Understands that things found 15 minutes after being lost along a metro line are closely related.</span>
               </div>
             </div>
           </div>
 
           <div className="pt-2">
             <button
+              type="button"
               onClick={onNavigateToMatches}
-              className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+              className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer pointer-events-auto active:scale-98"
             >
-              <span>Explore Smart Matches</span>
+              <span>Check Current Matches</span>
               <ArrowRight size={13} />
             </button>
           </div>
         </div>
 
-        {/* Visual Showcase: Visual Matching Diagram */}
+        {/* Visual: Human Evidence Matching Card */}
         <div className="lg:col-span-6 flex justify-center">
           <div className="w-full max-w-md p-6 rounded-3xl bg-slate-50 border border-slate-200/80 shadow-xs space-y-4 text-left">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <span className="text-xs font-bold text-slate-900">Match Correlation Matrix</span>
-              <span className="text-[11px] font-mono text-indigo-600 font-semibold">96% Confidence</span>
-            </div>
-
-            {/* Visual Vector Comparison Bars */}
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Category &amp; Object Class</span>
-                  <span className="text-slate-500 font-mono">100% Identical</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="w-full h-full bg-indigo-600 rounded-full" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Spatial Proximity (Rajiv Chowk)</span>
-                  <span className="text-slate-500 font-mono">18m Radius</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="w-[94%] h-full bg-indigo-600 rounded-full" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Temporal Concordance</span>
-                  <span className="text-slate-500 font-mono">35 mins apart</span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="w-[88%] h-full bg-indigo-600 rounded-full" />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between text-xs">
-              <span className="text-slate-600">Verification Readiness</span>
-              <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Safe to Connect
+              <span className="text-xs font-bold text-slate-900">Possible Match Found</span>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Ready to review
               </span>
+            </div>
+
+            {/* Human evidence points */}
+            <div className="space-y-2.5 text-xs text-slate-700">
+              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-slate-200/70">
+                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Item matches:</strong> Both describe a brown leather bifold wallet with a metro transit card.</span>
+              </div>
+              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-slate-200/70">
+                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Area matches:</strong> Reported near Rajiv Chowk Metro station concourse.</span>
+              </div>
+              <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-slate-200/70">
+                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>Time matches:</strong> Lost at ~2:15 PM, found at ~2:30 PM.</span>
+              </div>
+            </div>
+
+            <div className="pt-1 text-[11px] text-slate-500 text-center">
+              Clear, human facts before anyone connects.
             </div>
           </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* SHOWCASE 3: VERIFY — "Both sides stay protected." */}
+      {/* SHOWCASE 3: VERIFY & REUNITE — "Both sides stay protected." */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        {/* Visual Showcase Column */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+        {/* Visual Column */}
         <div className="lg:col-span-6 flex justify-center order-2 lg:order-1">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_40px_rgba(15,23,42,0.05)] space-y-4 text-left">
+          <div className="w-full max-w-md p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-4 text-left">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                 <ShieldCheck size={18} />
               </div>
               <div>
-                <h4 className="text-xs font-bold uppercase text-slate-900">Mutual Trust Vault</h4>
-                <p className="text-[11px] text-slate-500">Contact release requires bilateral consent</p>
+                <h4 className="text-xs font-bold text-slate-900">Protected Connection</h4>
+                <p className="text-[11px] text-slate-500">Mutual consent required</p>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-700">Finder Verification</span>
+                <span className="font-semibold text-slate-700">Finder Confirmed</span>
                 <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Approved
+                  Agreed
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-700">Owner Verification</span>
+                <span className="font-semibold text-slate-700">Owner Confirmed</span>
                 <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Approved
+                  Agreed
                 </span>
               </div>
               <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-1.5">
                 <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
-                <span>Encrypted contact unlocked via 4-digit PIN</span>
+                <span>Contact shared safely for public handover</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Story Column */}
-        <div className="lg:col-span-6 space-y-6 text-left order-1 lg:order-2">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              03 / Zero-Knowledge Proof
+        <div className="lg:col-span-6 space-y-5 text-left order-1 lg:order-2">
+          <div className="space-y-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              03 &bull; Trust &amp; Reunion
             </span>
-            <div className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              VERIFY
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-indigo-600">
-              &ldquo;Both sides stay protected.&rdquo;
+            <h3 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Both sides stay protected.
             </h3>
           </div>
 
-          <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-            Personal property recovery should never feel predatory or unsafe. LINCO generates blind verification queries so claimants must prove their authentic ownership without seeing the finder&apos;s photos or phone number beforehand.
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Safety and dignity always come first. A question only the genuine owner knows confirms ownership. Phone numbers are only shared when both people click &ldquo;I agree to connect&rdquo;.
           </p>
 
-          <div className="space-y-3 pt-2 text-xs text-slate-600">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                <ShieldCheck size={12} />
-              </div>
-              <div>
-                <span className="font-semibold text-slate-900">Anti-Scam Architecture:</span>
-                <span className="text-slate-500 ml-1">Impostors cannot inspect high-resolution images or copy item serials.</span>
-              </div>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs text-slate-700">
+            <div className="flex items-center gap-2 font-semibold text-slate-900">
+              <HeartHandshake size={15} className="text-indigo-600" />
+              <span>Safe handover places recommended</span>
             </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                <Lock size={12} />
-              </div>
-              <div>
-                <span className="font-semibold text-slate-900">Mutual Consent Unlock:</span>
-                <span className="text-slate-500 ml-1">Both sides must tap &ldquo;I Trust This Person&rdquo; before direct contact or WhatsApp is revealed.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* SHOWCASE 4: REUNITED — "Until it finds its way home." */}
-      {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-        {/* Story Column */}
-        <div className="lg:col-span-6 space-y-6 text-left">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              04 / Dignified Return
-            </span>
-            <div className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
-              REUNITED
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-indigo-600">
-              &ldquo;Until it finds its way home.&rdquo;
-            </h3>
-          </div>
-
-          <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-            The journey completes where public community life thrives. LINCO guides both individuals to safe, high-footfall handover points such as metro customer desks, college security booths, or clubhouse lobbies.
-          </p>
-
-          <div className="space-y-3 pt-2 text-xs text-slate-600">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
-                <Navigation size={12} />
-              </div>
-              <div>
-                <span className="font-semibold text-slate-900">Public Meeting Presets:</span>
-                <span className="text-slate-500 ml-1">Pre-selected secure meeting points ensure no one has to invite strangers to their home.</span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 size={12} />
-              </div>
-              <div>
-                <span className="font-semibold text-slate-900">Final Handshake Closure:</span>
-                <span className="text-slate-500 ml-1">Finder confirms item delivered; owner confirms item received; post closes automatically.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => onNavigateToReport("Lost")}
-              className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <span>Start a Recovery Today</span>
-              <ArrowRight size={13} />
-            </button>
-          </div>
-        </div>
-
-        {/* Visual Showcase */}
-        <div className="lg:col-span-6 flex justify-center">
-          <div className="relative p-8 rounded-3xl bg-slate-50 border border-slate-200/80 shadow-xs max-w-md w-full text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center">
-              <CheckCircle2 size={28} />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-base font-bold text-slate-900">Recovery Complete</h4>
-              <p className="text-xs text-slate-500">Item returned to genuine owner with dignity and trust.</p>
-            </div>
-            <div className="p-3 rounded-xl bg-white border border-slate-200/80 text-xs text-slate-600 flex items-center justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Case closed on LINCO Community Network</span>
-            </div>
+            <p className="text-slate-600">
+              We recommend meeting at public, staffed locations: metro customer service desks, college library counters, or local society security gates.
+            </p>
           </div>
         </div>
       </section>

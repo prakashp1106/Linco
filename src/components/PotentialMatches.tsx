@@ -67,7 +67,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   const [viewFilter, setViewFilter] = useState<"my" | "all">("my");
   
   // Rotating search messages for the loading state
-  const [loadingMessage, setLoadingMessage] = useState("AI is comparing thousands of reports...");
+  const [loadingMessage, setLoadingMessage] = useState("Looking for matching reports...");
 
   // Modal State
   const [selectedMatch, setSelectedMatch] = useState<PotentialMatch | null>(null);
@@ -139,11 +139,10 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   useEffect(() => {
     if (loading) {
       const messages = [
-        "AI is comparing thousands of reports...",
-        "Scanning forensic visual attachments...",
-        "Measuring spatial vector distances...",
-        "Analyzing description timelines & category patterns...",
-        "Calculating comparative confidence thresholds..."
+        "Looking for matching reports...",
+        "Checking descriptions and reported areas...",
+        "Comparing timelines and places...",
+        "Organizing matches for your review..."
       ];
       let i = 0;
       const interval = setInterval(() => {
@@ -948,8 +947,8 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
             </h4>
             <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
               {viewFilter === "my"
-                ? "None of your reported items have triggered match alerts exceeding your confidence setting. Add details or adjust the match threshold."
-                : "No active cross-listings meet or exceed the AI forensic match criteria. When a matching item is reported, LINCO will present it here."}
+                ? "None of your reported items have matching listings yet. When someone reports an item that looks like yours, it will show up here."
+                : "No matching reports found yet. When a lost item and found item share similar details, LINCO will present them here."}
             </p>
           </div>
           <button

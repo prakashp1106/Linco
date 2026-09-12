@@ -18,30 +18,30 @@ interface DiscoveryItem {
 const ITEMS: DiscoveryItem[] = [
   {
     type: "wallet",
-    name: "Wallet & Cards",
+    name: "Wallet & Purse",
     category: "Wallet",
-    description: "Credit cards, transit passes, cash & driver's licenses",
+    description: "Cards, cash, ID cards, and transit passes",
     icon: Wallet
   },
   {
     type: "phone",
-    name: "Smartphone & Devices",
+    name: "Phone & Electronics",
     category: "Electronics",
-    description: "Smartphones, earphones, chargers & tablets",
+    description: "Smartphones, earphones, and accessories",
     icon: Smartphone
   },
   {
     type: "keys",
-    name: "Keys & Access Rings",
+    name: "Keys & Keychains",
     category: "Keys",
-    description: "House keys, car fobs, smart tags & locker keys",
+    description: "Home keys, vehicle keys, and office fobs",
     icon: Key
   },
   {
     type: "bag",
-    name: "Bags & Luggage",
+    name: "Bag & Backpack",
     category: "Bag",
-    description: "Backpacks, laptop sleeves, totes & umbrellas",
+    description: "College bags, handbags, totes, and luggage",
     icon: Briefcase
   }
 ];
@@ -51,84 +51,79 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeItem, setActiveItem] = useState<HeroObjectType>("wallet");
-  const [hoveredItem, setHoveredItem] = useState<HeroObjectType | null>(null);
-
-  const current = hoveredItem || activeItem;
 
   return (
-    <section className="py-16 sm:py-24 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-10 select-none">
-      <div className="space-y-3 max-w-xl mx-auto">
-        <span className="text-xs font-bold uppercase tracking-widest text-indigo-600">
-          Targeted Search
+    <section className="py-14 sm:py-20 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8 select-none">
+      
+      {/* Title & Subtext - Exactly per requirement 13 */}
+      <div className="space-y-2 max-w-lg mx-auto">
+        <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+          Everyday Essentials
         </span>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          What&apos;s missing?
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
+          What&rsquo;s missing?
         </h2>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          Select what you misplaced. LINCO activates customized recovery safeguards for each type of personal essential.
+          Whatever you lost, there&rsquo;s still a chance.
         </p>
       </div>
 
-      {/* 4 Items Showcase Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {/* 4 Clean, recognizable item cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {ITEMS.map((item) => {
-          const isSelected = current === item.type;
+          const isSelected = activeItem === item.type;
           const Icon = item.icon;
 
           return (
             <motion.div
               key={item.type}
-              onClick={() => {
-                setActiveItem(item.type);
-                onSelectCategory(item.category);
-              }}
-              onMouseEnter={() => setHoveredItem(item.type)}
-              onMouseLeave={() => setHoveredItem(null)}
+              onClick={() => setActiveItem(item.type)}
               whileHover={prefersReducedMotion ? {} : { y: -4 }}
-              className={`relative p-5 sm:p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center justify-between cursor-pointer ${
+              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col items-center justify-between text-left cursor-pointer ${
                 isSelected
-                  ? "bg-slate-50 border-slate-900 shadow-md ring-1 ring-slate-900/10"
-                  : "bg-white border-slate-200/90 hover:border-slate-300 shadow-xs"
+                  ? "bg-slate-50 border-slate-900 shadow-sm ring-1 ring-slate-900/10"
+                  : "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
               }`}
             >
-              {/* Top Item Badge */}
-              <div className="w-full flex items-center justify-between mb-4">
+              {/* Item Header */}
+              <div className="w-full flex items-center justify-between mb-2">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                  isSelected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
+                  isSelected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
                 }`}>
                   <Icon size={16} />
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 font-semibold uppercase">
-                  {item.type}
+                <span className="text-[11px] font-semibold text-slate-400 capitalize">
+                  {item.category}
                 </span>
               </div>
 
-              {/* 3D Mini Render */}
-              <div className="h-44 sm:h-52 flex items-center justify-center my-2">
+              {/* Realistic tactile visual miniature */}
+              <div className="h-44 sm:h-48 flex items-center justify-center my-2 pointer-events-none">
                 <Linco3DHeroObject 
                   type={item.type} 
-                  scale={0.65} 
+                  scale={0.62} 
                   interactive={false} 
                   subtleFloating={isSelected} 
                 />
               </div>
 
-              {/* Name and Direct CTA */}
-              <div className="w-full text-center space-y-3 pt-3 border-t border-slate-100">
+              {/* Name & Direct Report Action */}
+              <div className="w-full space-y-3 pt-3 border-t border-slate-100">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
-                  <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{item.description}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.description}</p>
                 </div>
 
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectCategory(item.category);
                   }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer pointer-events-auto ${
                     isSelected
-                      ? "bg-slate-900 hover:bg-slate-800 text-white shadow-xs"
-                      : "bg-slate-100 hover:bg-slate-200/80 text-slate-700"
+                      ? "bg-slate-900 hover:bg-slate-800 text-white shadow-2xs active:scale-98"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-98"
                   }`}
                 >
                   <span>Report this item</span>
@@ -139,6 +134,7 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
           );
         })}
       </div>
+
     </section>
   );
 };

@@ -3,16 +3,15 @@ import { motion, useReducedMotion } from "motion/react";
 import { 
   ShieldCheck, 
   MapPin, 
-  Sparkles, 
+  Clock, 
   Check, 
   Lock,
-  Smartphone,
-  Wallet,
-  Key,
-  Briefcase
+  PhoneCall,
+  MessageCircle,
+  Tag
 } from "lucide-react";
 
-export type HeroObjectType = "wallet" | "phone" | "keys" | "bag";
+export type HeroObjectType = "wallet" | "phone" | "keys" | "bag" | "idcard";
 
 interface Linco3DHeroObjectProps {
   type?: HeroObjectType;
@@ -34,10 +33,9 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
   
-  // Mouse parallax state for desktop
-  const [rotateX, setRotateX] = useState(12);
-  const [rotateY, setRotateY] = useState(-18);
-  const [isHovered, setIsHovered] = useState(false);
+  // Parallax tilt angles for desktop cursor interaction
+  const [rotateX, setRotateX] = useState(8);
+  const [rotateY, setRotateY] = useState(-12);
 
   useEffect(() => {
     if (prefersReducedMotion || !interactive) return;
@@ -48,19 +46,17 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
-      // Calculate normalized delta (-1 to 1)
       const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
       const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
 
-      // Subtle tilt limits: ±14 deg
-      setRotateY(-18 + deltaX * 14);
-      setRotateX(12 - deltaY * 12);
+      // Subtle, refined tilt limits: ±10 deg
+      setRotateY(-12 + deltaX * 10);
+      setRotateX(8 - deltaY * 8);
     };
 
     const handleMouseLeave = () => {
-      setRotateX(12);
-      setRotateY(-18);
-      setIsHovered(false);
+      setRotateX(8);
+      setRotateY(-12);
     };
 
     const node = containerRef.current;
@@ -77,186 +73,282 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
     };
   }, [prefersReducedMotion, interactive]);
 
-  // Object Renderers with layered 3D depth and tactile realism
+  // Object Renderers: REALISTIC, RECOGNIZABLE, TACTILE PHYSICAL LOST BELONGINGS
   const renderObjectContent = () => {
     switch (type) {
+      // =======================================================================
+      // 1. SMARTPHONE: Real personal phone with lockscreen, photo, and missed call
+      // =======================================================================
       case "phone":
         return (
           <div 
-            className="relative w-48 h-80 sm:w-56 sm:h-92 rounded-[38px] p-2 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.35),0_0_0_1px_rgba(255,255,255,0.12)_inset] border border-slate-700/60"
+            className="relative w-52 h-84 sm:w-60 sm:h-96 rounded-[40px] p-2.5 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.3),0_0_0_1px_rgba(255,255,255,0.15)_inset] border border-slate-700/80 select-none"
             style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
           >
-            {/* Glossy bezel highlight */}
-            <div className="absolute inset-0 rounded-[38px] bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
-            
-            {/* Screen Surface */}
-            <div className="relative w-full h-full rounded-[30px] bg-slate-950 overflow-hidden flex flex-col justify-between p-4 border border-slate-800/80">
-              {/* Top Dynamic Island / Notch */}
-              <div className="flex items-center justify-between pt-1 px-2">
-                <span className="text-[10px] font-mono text-slate-400 font-semibold">9:41</span>
-                <div className="w-16 h-3.5 bg-black rounded-full border border-slate-800 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {/* Glossy subtle glass reflection */}
+            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-tr from-white/12 via-transparent to-transparent pointer-events-none" />
+
+            {/* Screen Surface with warm personal wallpaper */}
+            <div className="relative w-full h-full rounded-[32px] overflow-hidden flex flex-col justify-between p-4 bg-gradient-to-br from-amber-900/60 via-slate-900 to-slate-950 border border-slate-800 text-white">
+              
+              {/* Subtle wallpaper texture hint */}
+              <div className="absolute inset-0 opacity-25 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400/40 via-purple-900/20 to-transparent pointer-events-none" />
+
+              {/* Status Bar & Notch */}
+              <div className="relative z-10 flex items-center justify-between pt-1 px-1">
+                <span className="text-[11px] font-mono text-slate-300 font-semibold">2:41</span>
+                {/* Dynamic Camera Island */}
+                <div className="w-16 h-4 bg-black rounded-full border border-slate-800 flex items-center justify-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                  <div className="w-1 h-1 rounded-full bg-slate-900" />
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-1.5 border border-slate-400 rounded-2xs" />
+                <div className="flex items-center gap-1 text-[9px] text-slate-300">
+                  <span className="font-mono">5G</span>
+                  <div className="w-3.5 h-2 border border-slate-300 rounded-xs p-0.5 flex items-center">
+                    <div className="w-full h-full bg-slate-200 rounded-2xs" />
+                  </div>
                 </div>
               </div>
 
-              {/* Notification Card appearing on screen */}
-              <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 shadow-lg text-left backdrop-blur-md">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center text-white">
-                    <ShieldCheck size={12} />
-                  </div>
-                  <span className="text-[10px] font-semibold text-indigo-300">LINCO Security</span>
-                  <span className="text-[9px] text-slate-500 ml-auto">now</span>
+              {/* Big Clock Display on Lockscreen */}
+              <div className="relative z-10 text-center my-auto space-y-1">
+                <div className="text-4xl sm:text-5xl font-extralight tracking-tight font-sans text-white/95">
+                  02:41
                 </div>
-                <p className="text-[11px] font-bold text-slate-200 leading-tight">
-                  Item located safely
+                <p className="text-xs font-medium text-slate-300">
+                  Sunday, September 12
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                  <MapPin size={10} className="text-indigo-400" />
-                  Rajiv Chowk Metro Concourse
+              </div>
+
+              {/* Real Human Missed Notification — "Mom: 2 missed calls" */}
+              <div className="relative z-10 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shadow-lg text-left space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-300">
+                    <PhoneCall size={12} className="animate-pulse" />
+                    <span>Mom</span>
+                  </div>
+                  <span className="text-[10px] text-white/60">4m ago</span>
+                </div>
+                <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  2 Missed Calls &bull; &ldquo;Where are you beta? Did you reach?&rdquo;
                 </p>
               </div>
 
               {/* Bottom Unlock / Home bar */}
-              <div className="flex flex-col items-center gap-2 pb-1">
-                <span className="text-[9px] text-slate-500 flex items-center gap-1 font-medium">
-                  <Lock size={9} />
-                  Protected by LINCO Vault
+              <div className="relative z-10 flex flex-col items-center gap-1.5 pt-2">
+                <span className="text-[9px] text-slate-400 font-medium">
+                  Swipe up to open
                 </span>
-                <div className="w-24 h-1 bg-slate-700/80 rounded-full" />
+                <div className="w-24 h-1 bg-white/60 rounded-full" />
               </div>
             </div>
           </div>
         );
 
+      // =======================================================================
+      // 2. KEYS: Real keychain with house keys, brass tag and apartment ring
+      // =======================================================================
       case "keys":
         return (
           <div 
-            className="relative w-56 h-72 sm:w-64 sm:h-80 flex items-center justify-center"
+            className="relative w-56 h-76 sm:w-64 sm:h-84 flex items-center justify-center select-none"
             style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
           >
-            {/* Brass / Steel Key Ring */}
-            <div className="relative w-28 h-28 rounded-full border-[8px] border-slate-300 shadow-[0_15px_30px_rgba(15,23,42,0.15)] bg-gradient-to-tr from-slate-400 via-slate-200 to-white flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-slate-100/80 border border-slate-300/60 shadow-inner" />
+            {/* Stainless Steel Split Key Ring */}
+            <div className="absolute top-10 w-24 h-24 rounded-full border-[6px] border-slate-300 shadow-[0_12px_28px_rgba(15,23,42,0.15)] bg-gradient-to-tr from-slate-400 via-slate-200 to-white flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white border border-slate-300 shadow-inner" />
             </div>
 
-            {/* Smart FOB */}
+            {/* Natural Woven Fabric Key Fob ("Flat 402") */}
             <div 
-              className="absolute -bottom-2 -left-2 w-28 h-40 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 border border-slate-700 p-3 shadow-2xl flex flex-col justify-between"
-              style={{ transform: "rotate(-18deg) translateZ(20px)" }}
+              className="absolute top-20 -left-2 w-24 h-36 rounded-2xl bg-gradient-to-b from-stone-800 to-stone-900 border border-stone-700 p-3 shadow-xl flex flex-col justify-between text-left text-white"
+              style={{ transform: "rotate(-16deg) translateZ(15px)" }}
             >
-              <div className="w-6 h-6 rounded-full bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center">
-                <Sparkles size={12} className="text-indigo-400" />
+              <div className="w-5 h-5 rounded-full bg-stone-700 border border-stone-600 flex items-center justify-center text-[10px]">
+                🔑
               </div>
-              <div className="space-y-1">
-                <div className="text-[9px] font-mono font-bold tracking-widest text-slate-400 uppercase">LINCO FOB</div>
-                <div className="text-[8px] text-slate-500">ID: SEC-8842</div>
+              <div>
+                <div className="text-[11px] font-bold tracking-wide">HOME</div>
+                <div className="text-[9px] text-stone-400 font-mono">B-402 &bull; Green Glen</div>
               </div>
             </div>
 
-            {/* Metal Key blade */}
+            {/* Realistic Brass/Silver Master House Key */}
             <div 
-              className="absolute -bottom-6 -right-2 w-12 h-44 rounded-b-xl bg-gradient-to-r from-amber-200 via-amber-100 to-amber-300 border border-amber-300/80 shadow-xl flex flex-col justify-end p-1.5"
-              style={{ transform: "rotate(24deg) translateZ(10px)" }}
+              className="absolute top-22 left-16 w-14 h-44 rounded-b-xl bg-gradient-to-r from-slate-200 via-white to-slate-300 border border-slate-300 shadow-2xl flex flex-col items-center justify-between p-1.5"
+              style={{ transform: "rotate(14deg) translateZ(25px)" }}
             >
-              <div className="w-3 h-2 bg-amber-400/80 mb-2 rounded-xs self-end" />
-              <div className="w-4 h-2 bg-amber-400/80 mb-3 rounded-xs self-end" />
-              <div className="w-2 h-2 bg-amber-400/80 mb-4 rounded-xs self-end" />
+              {/* Key Head */}
+              <div className="w-10 h-10 rounded-full border-2 border-slate-400 bg-gradient-to-tr from-slate-300 to-slate-100 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-slate-400 shadow-inner" />
+              </div>
+
+              {/* Shaft & Serrations */}
+              <div className="w-5 h-28 bg-gradient-to-r from-slate-300 via-slate-100 to-slate-300 relative border-x border-slate-400">
+                {/* Genuine key notches */}
+                <div className="absolute right-0 top-6 w-2 h-2.5 bg-white border-b border-t border-slate-400" />
+                <div className="absolute right-0 top-14 w-2 h-3.5 bg-white border-b border-t border-slate-400" />
+                <div className="absolute right-0 top-22 w-1.5 h-2 bg-white border-b border-t border-slate-400" />
+              </div>
+
+              {/* Tip */}
+              <div className="w-4 h-2 bg-slate-300 rounded-b" />
+            </div>
+
+            {/* Second Smaller Padlock Key */}
+            <div 
+              className="absolute top-24 left-24 w-10 h-32 rounded-b-lg bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400 border border-amber-400 shadow-lg flex flex-col items-center justify-between p-1"
+              style={{ transform: "rotate(28deg) translateZ(8px)" }}
+            >
+              <div className="w-8 h-8 rounded-full border border-amber-500 bg-amber-200 flex items-center justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-inner" />
+              </div>
+              <div className="w-3.5 h-18 bg-amber-300 relative">
+                <div className="absolute right-0 top-4 w-1.5 h-2 bg-amber-100" />
+                <div className="absolute right-0 top-10 w-1.5 h-2 bg-amber-100" />
+              </div>
+              <div className="w-3 h-1.5 bg-amber-400 rounded-b" />
             </div>
           </div>
         );
 
+      // =======================================================================
+      // 3. BACKPACK: Real student canvas backpack with zipper and luggage tag
+      // =======================================================================
       case "bag":
         return (
           <div 
-            className="relative w-60 h-76 sm:w-68 sm:h-84 rounded-3xl bg-gradient-to-b from-stone-800 via-slate-800 to-slate-900 border border-slate-700/80 p-5 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.35)] flex flex-col justify-between"
+            className="relative w-56 h-76 sm:w-64 sm:h-84 rounded-[32px] bg-gradient-to-b from-slate-800 via-slate-850 to-slate-900 border border-slate-700/90 p-4 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.3)] flex flex-col justify-between select-none text-white"
             style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
           >
-            {/* Top Carry Handle */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-24 h-10 border-4 border-slate-700 rounded-t-2xl bg-transparent" />
-            
-            {/* Bag Body Design */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-slate-400 font-bold">COMMUTE PACK</span>
-              <div className="w-8 h-4 bg-amber-600/30 border border-amber-500/50 rounded flex items-center justify-center text-[9px] text-amber-300 font-semibold">
-                TAGGED
+            {/* Top Fabric Carrying Loop */}
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-20 h-8 border-4 border-slate-700 rounded-t-xl bg-transparent" />
+
+            {/* Top Zipper Line with Metal Puller */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-700/70">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-4 bg-slate-400 rounded-xs shadow-xs" />
+                <div className="h-0.5 w-24 bg-slate-600 rounded-full" />
+              </div>
+              <span className="text-[10px] font-sans text-slate-400 font-medium">Oxford Canvas</span>
+            </div>
+
+            {/* Front Zipper Compartment with Personal Student Tag */}
+            <div className="w-full h-36 rounded-2xl bg-slate-950/70 border border-slate-800 p-3.5 flex flex-col justify-between shadow-inner">
+              <div className="flex items-center justify-between">
+                <div className="h-0.5 w-16 bg-slate-700 rounded-full" />
+                <div className="w-2 h-3.5 bg-slate-400 rounded-xs shadow-xs" />
+              </div>
+
+              {/* Student Name Tag Attached */}
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/10 backdrop-blur-xs border border-white/15">
+                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Tag size={14} />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="text-[11px] font-bold text-slate-100">A. Sharma</div>
+                  <div className="text-[9px] text-slate-400">Campus ID &bull; Semester IV</div>
+                </div>
               </div>
             </div>
 
-            {/* Front Pocket Detail */}
-            <div className="w-full h-36 rounded-2xl bg-slate-950/60 border border-slate-700/80 p-3.5 flex flex-col justify-between shadow-inner">
-              <div className="w-full h-1 bg-slate-700 rounded-full" />
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                  <ShieldCheck size={14} />
-                </div>
-                <div className="text-left">
-                  <div className="text-[10px] font-bold text-slate-200">Campus Registered</div>
-                  <div className="text-[8px] text-slate-400">Library Level 2 Hotspot</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[9px] text-slate-400 pt-1">
-              <span>Secure Handover Ready</span>
-              <span>100% Privacy</span>
+            {/* Bottom Base details */}
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+              <span>Commute Pack</span>
+              <span className="text-indigo-400 font-medium">Notebooks Inside</span>
             </div>
           </div>
         );
 
+      // =======================================================================
+      // 4. STUDENT / TRANSIT ID CARD
+      // =======================================================================
+      case "idcard":
+        return (
+          <div 
+            className="relative w-56 h-80 sm:w-64 sm:h-90 rounded-2xl p-4 bg-white border border-slate-200 shadow-[0_20px_50px_rgba(15,23,42,0.15)] flex flex-col justify-between select-none text-slate-800 text-left"
+            style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
+          >
+            {/* Top Lanyard Clip Hole */}
+            <div className="w-10 h-2 bg-slate-200 rounded-full mx-auto" />
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="text-xs font-bold text-slate-900 tracking-wide">STUDENT IDENTITY CARD</span>
+                <span className="text-[10px] text-slate-400 font-mono">2026-27</span>
+              </div>
+
+              <div className="flex gap-3 items-center">
+                {/* Photo Placeholder */}
+                <div className="w-14 h-16 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400 shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-slate-300 mb-1" />
+                  <div className="w-10 h-3 rounded-t-lg bg-slate-300" />
+                </div>
+
+                <div className="space-y-1 leading-tight">
+                  <div className="text-xs font-bold text-slate-900">Rohan Verma</div>
+                  <div className="text-[10px] text-slate-500">Dept. of Architecture</div>
+                  <div className="text-[9px] font-mono text-slate-400">Roll: 2024-ARC-089</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Barcode & Signature Strip */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <div className="w-full h-7 bg-slate-100 rounded flex items-center justify-between px-2">
+                <span className="text-[9px] font-mono text-slate-500">RFID: 9482 1083 4402</span>
+                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Active</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      // =======================================================================
+      // 5. CLASSIC LEATHER WALLET: Real warm leather, realistic stitching, cards
+      // =======================================================================
       case "wallet":
       default:
         return (
           <div 
-            className="relative w-64 h-80 sm:w-72 sm:h-92 rounded-[32px] p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-[#131b2e] to-[#0a0f1d] border border-slate-700/80 shadow-[0_30px_70px_-15px_rgba(15,23,42,0.4),0_0_0_1px_rgba(255,255,255,0.08)_inset] flex flex-col justify-between text-left select-none overflow-hidden"
-            style={{ transform: "translateZ(35px)", transformStyle: "preserve-3d" }}
+            className="relative w-60 h-80 sm:w-68 sm:h-88 rounded-[32px] p-5 sm:p-6 bg-gradient-to-br from-[#3b2416] via-[#2c1a10] to-[#1e110a] border border-[#52331f]/70 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.35),0_0_0_1px_rgba(255,255,255,0.06)_inset] flex flex-col justify-between text-left select-none overflow-hidden"
+            style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
           >
-            {/* Subtle tactile leather grain & light sheen */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute inset-0 border border-dashed border-slate-600/40 rounded-[28px] m-1 pointer-events-none" />
+            {/* Genuine Leather Warm Sheen & Tactile Stitching */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-amber-600/15 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 border border-dashed border-amber-700/30 rounded-[28px] m-1.5 pointer-events-none" />
 
-            {/* Top Cards Slipped Out in 3D Stack */}
-            <div className="relative -mt-2 space-y-1.5" style={{ transform: "translateZ(20px)" }}>
-              {/* Card 1 - Emerald Debit/ID Card */}
-              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-emerald-700 to-teal-900 border border-emerald-500/40 p-2.5 shadow-md flex items-center justify-between text-white transform -rotate-2">
+            {/* Top Cards Naturally Slipped Into Inner Slits */}
+            <div className="relative -mt-1 space-y-2" style={{ transform: "translateZ(18px)" }}>
+              {/* Card 1: Metro Transit Card */}
+              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-teal-700 to-emerald-800 border border-teal-500/40 p-2.5 shadow-md flex items-center justify-between text-white transform -rotate-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-3 rounded-xs bg-amber-300/80 shadow-xs" />
-                  <span className="text-[10px] font-mono tracking-wider font-semibold">•••• 4892</span>
+                  <div className="w-4 h-3 rounded-xs bg-amber-300/90 shadow-xs" />
+                  <span className="text-[10px] font-mono tracking-wider font-semibold">Metro Smart Card</span>
                 </div>
-                <span className="text-[9px] uppercase tracking-widest text-emerald-200 font-bold">Transit Pass</span>
+                <span className="text-[9px] uppercase tracking-wider text-teal-200 font-bold">Transit</span>
               </div>
 
-              {/* Card 2 - Indigo LINCO Identity Pass */}
-              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 border border-indigo-400/40 p-2.5 shadow-md flex items-center justify-between text-white transform rotate-1">
+              {/* Card 2: Personal Bank Debit Card */}
+              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-slate-800 via-indigo-950 to-slate-900 border border-indigo-500/30 p-2.5 shadow-md flex items-center justify-between text-white transform rotate-1">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-indigo-200" />
-                  <span className="text-[10px] font-bold tracking-wide">LINCO Guard ID</span>
+                  <div className="w-4 h-3 rounded-xs bg-slate-300 shadow-xs" />
+                  <span className="text-[10px] font-mono font-medium">•••• 4892</span>
                 </div>
-                <div className="flex items-center gap-1 text-[8px] bg-white/10 px-1.5 py-0.5 rounded-full">
-                  <Check size={9} />
-                  <span>Verified</span>
-                </div>
+                <span className="text-[9px] text-slate-300 font-medium">HDFC Bank</span>
               </div>
             </div>
 
-            {/* Wallet Fold & Debossed LINCO Emblem */}
-            <div className="my-auto py-2 text-center" style={{ transform: "translateZ(25px)" }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/90 text-slate-300 text-[11px] font-semibold backdrop-blur-xs shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                <span>Genuine Personal Item</span>
+            {/* Middle: Leather Fold with Warm Genuine Leather Crease */}
+            <div className="my-auto py-1 text-center" style={{ transform: "translateZ(20px)" }}>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 border border-amber-900/40 text-amber-200/90 text-[11px] font-medium backdrop-blur-xs">
+                <span>Natural Saddle Leather</span>
               </div>
             </div>
 
-            {/* Bottom Details & Tactile Stitching */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-slate-400 text-[10px]" style={{ transform: "translateZ(15px)" }}>
-              <div className="flex items-center gap-1.5">
-                <Lock size={11} className="text-indigo-400" />
-                <span>PIN Secured</span>
-              </div>
-              <span className="font-mono text-slate-500 font-semibold">LINCO-VAULT</span>
+            {/* Bottom: Tucked Currency Corner & Personal Note Hint */}
+            <div className="pt-3 border-t border-amber-900/40 flex items-center justify-between text-[10px] text-amber-200/60" style={{ transform: "translateZ(12px)" }}>
+              <span className="font-sans">Contains Family Photo</span>
+              <span className="font-mono text-amber-300/80 font-medium">Bifold</span>
             </div>
           </div>
         );
@@ -267,50 +359,40 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
     <div
       ref={containerRef}
       onClick={onSelect}
-      onMouseEnter={() => setIsHovered(true)}
-      className={`relative inline-block cursor-pointer select-none transition-transform duration-300 ${className}`}
-      style={{ perspective: "1200px" }}
+      className={`relative inline-flex items-center justify-center select-none ${className}`}
+      style={{
+        perspective: "1000px",
+        cursor: onSelect ? "pointer" : "default"
+      }}
     >
-      {/* 3D Animated Floating Stage */}
       <motion.div
         animate={
-          prefersReducedMotion
-            ? { rotateX: 0, rotateY: 0, y: 0 }
-            : {
-                rotateX: isHovered ? rotateX - 3 : rotateX,
-                rotateY: isHovered ? rotateY + 4 : rotateY,
-                y: subtleFloating ? [0, -10, 0] : 0,
+          subtleFloating && !prefersReducedMotion
+            ? {
+                y: [0, -6, 0],
+                rotateZ: [0, 0.5, 0]
               }
+            : {}
         }
         transition={{
-          rotateX: { type: "spring", stiffness: 120, damping: 20 },
-          rotateY: { type: "spring", stiffness: 120, damping: 20 },
-          y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
+          duration: 5,
+          repeat: Infinity,
+          ease: "easeInOut"
         }}
         style={{
+          transform: `scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
           transformStyle: "preserve-3d",
-          scale
+          transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
         }}
-        className="relative flex items-center justify-center p-4"
+        className="relative flex items-center justify-center pointer-events-none"
       >
-        {/* Soft Realistic Contact Shadow (responds to floating elevation) */}
-        <motion.div 
-          animate={
-            prefersReducedMotion
-              ? { scale: 1, opacity: 0.2 }
-              : {
-                  scale: subtleFloating ? [1, 0.88, 1] : 1,
-                  opacity: subtleFloating ? [0.25, 0.16, 0.25] : 0.2,
-                }
-          }
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-6 w-52 sm:w-64 h-8 bg-slate-900 rounded-[100%] blur-xl -z-10 pointer-events-none"
+        {/* Soft, realistic contact shadow on the floor beneath */}
+        <div 
+          className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 sm:w-60 h-8 rounded-full bg-slate-900/10 blur-xl -z-10"
+          style={{ transform: "translateZ(-30px)" }}
         />
 
-        {/* Ambient Warm/Cool Soft Bounce Glow */}
-        <div className="absolute inset-0 bg-indigo-500/8 rounded-full blur-2xl -z-10 pointer-events-none" />
-
-        {/* The 3D Object */}
+        {/* The Realistic Physical Object */}
         {renderObjectContent()}
       </motion.div>
     </div>
