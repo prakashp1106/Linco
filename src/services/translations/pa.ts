@@ -700,4 +700,17 @@ export const paTranslations: Record<string, string> = {
   "home.step2Desc": "ਵੇਰਵੇ ਅਤੇ ਤਸਵੀਰਾਂ ਆਪਸ ਵਿੱਚ ਮੇਲਾਈਆਂ ਜਾਂਦੀਆਂ ਹਨ।",
   "home.step3Title": "3. ਸੁਰੱਖਿਅਤ ਸਪੁਰਦਗੀ",
   "home.step3Desc": "ਤਸਦੀਕ ਕਰਕੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਾਮਾਨ ਵਾਪਸ ਲਓ।",
+
+  "discovery.badge": "ਰੋਜ਼ਾਨਾ ਦੀਆਂ ਜ਼ਰੂਰੀ ਚੀਜ਼ਾਂ",
+  "discovery.title": "ਕੀ ਗੁਆਚ ਗਿਆ ਹੈ?",
+  "discovery.subtitle": "ਤੁਹਾਡਾ ਕੁਝ ਵੀ ਗੁਆਚਿਆ ਹੋਵੇ, ਵਾਪਸ ਮਿਲਣ ਦੀ ਪੂਰੀ ਉਮੀਦ ਹੈ।",
+  "discovery.walletTitle": "ਬਟੂਆ ਅਤੇ ਪਰਸ",
+  "discovery.walletDesc": "ਕਾਰਡ, ਨਕਦੀ, ਪਛਾਣ ਪੱਤਰ ਅਤੇ ਸਫ਼ਰ ਪਾਸ",
+  "discovery.phoneTitle": "ਫੋਨ ਅਤੇ ਇਲੈਕਟ੍ਰਾਨਿਕਸ",
+  "discovery.phoneDesc": "ਸਮਾਰਟਫੋਨ, ਈਅਰਫੋਨ ਅਤੇ ਸਹਾਇਕ ਉਪਕਰਣ",
+  "discovery.keysTitle": "ਚਾਬੀਆਂ ਅਤੇ ਕੀਚੇਨ",
+  "discovery.keysDesc": "ਘਰ ਦੀਆਂ ਚਾਬੀਆਂ, ਵਾਹਨ ਦੀਆਂ ਚਾਬੀਆਂ ਅਤੇ ਦਫ਼ਤਰ ਕਾਰਡ",
+  "discovery.bagTitle": "ਬੈਗ ਅਤੇ ਬੈਕਪੈਕ",
+  "discovery.bagDesc": "ਕਾਲਜ ਬੈਗ, ਬੈਕਪੈਕ ਅਤੇ ਸਫ਼ਰੀ ਸਾਮਾਨ",
+  "discovery.reportItem": "ਇਸ ਚੀਜ਼ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",
 };

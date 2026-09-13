@@ -702,4 +702,17 @@ export const teTranslations: Record<string, string> = {
   "home.step2Desc": "జెమినీ దృశ్య లక్షణాలు మరియు వివరణలను పోలుస్తుంది.",
   "home.step3Title": "3. ధృవీకరించబడిన అప్పగింత",
   "home.step3Desc": "రహస్య ప్రశ్నల ద్వారా ధృవీకరించి సురక్షితంగా వస్తువును పొందండి."
+,
+  "discovery.badge": "రోజువారీ అవసరమైన వస్తువులు",
+  "discovery.title": "ఏం పోయింది?",
+  "discovery.subtitle": "మీరు ఏది పోగొట్టుకున్నా, తిరిగి పొందే అవకాశం ఉంది.",
+  "discovery.walletTitle": "వాలెట్ మరియు పర్స్",
+  "discovery.walletDesc": "కార్డులు, నగదు, గుర్తింపు కార్డులు మరియు ప్రయాణ పాస్‌లు",
+  "discovery.phoneTitle": "ఫోన్ మరియు ఎలక్ట్రానిక్స్",
+  "discovery.phoneDesc": "స్మార్ట్‌ఫోన్లు, ఇయర్‌ఫోన్లు మరియు ఉపకరణాలు",
+  "discovery.keysTitle": "తాళాలు మరియు కీచైన్‌లు",
+  "discovery.keysDesc": "ఇంటి తాళాలు, వాహన తాళాలు మరియు కార్యాలయ కార్డులు",
+  "discovery.bagTitle": "బ్యాగ్ మరియు బ్యాక్‌ప్యాక్",
+  "discovery.bagDesc": "కాలేజీ బ్యాగులు, బ్యాక్‌ప్యాక్‌లు మరియు లగేజ్",
+  "discovery.reportItem": "ఈ వస్తువును నివేదించండి",
 };

@@ -14,6 +14,18 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+const getWelcomeMessage = (): string => {
+  try {
+    const lang = localStorage.getItem("linco_language") || "en";
+    if (lang === "hi") {
+      return "नमस्ते! मैं LincoSaathii हूँ, आपका सहायक Lost & Found AI साथी। क्या आपकी कोई वस्तु खो गई है या आपको कुछ मिला है? मुझे संक्षेप में बताइए, हम साथ मिलकर आसानी से रिपोर्ट दर्ज करेंगे।";
+    }
+    return "Hello! I'm LincoSaathii, your empathetic Lost & Found companion. Did you lose something, or did you find an item? Tell me what happened and we'll create your verified report together!";
+  } catch {
+    return "Hello! I'm LincoSaathii, your empathetic Lost & Found companion. Did you lose something, or did you find an item? Tell me what happened and we'll create your verified report together!";
+  }
+};
+
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
@@ -29,8 +41,8 @@ export function useChat() {
       {
         id: "initial_saathii_msg",
         role: "model",
-        content: "Hey! Pareshan mat ho bhai, LincoSaathii hai na. Batao kya ghum hua ya kya mila? Tension mat lo, hum sath mein report fill karke usey dhoond nikalenge! ❤️\n\n(Aap kisi bhi language jaise Hindi, Hinglish, Marathi ya English mein baat kar sakte hain!)",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        content: getWelcomeMessage(),
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ];
   });
@@ -44,7 +56,7 @@ export function useChat() {
       id: `user_msg_${Date.now()}`,
       role: "user",
       content: text,
-      timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     const newMessages = [...messages, userMsg];
@@ -58,13 +70,14 @@ export function useChat() {
         content: m.content,
       }));
 
-      const res = await apiService.lincoSaathii(history, currentState, text);
+      const activeLang = localStorage.getItem("linco_language") || "en";
+      const res = await apiService.lincoSaathii(history, currentState, text, activeLang);
 
       const systemMsg: ChatMessage = {
         id: `saathii_msg_${Date.now()}`,
         role: "model",
-        content: res.reply || "Kuch toh gadbad hai bhai, main abhi theek se samajh nahi paya. Fir se batao na.",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        content: res.reply || (activeLang === "hi" ? "क्षमा करें, मैं इसे ठीक से समझ नहीं सका। कृपया पुनः बताएं।" : "I couldn't quite process that. Could you please rephrase?"),
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
       const updatedMessages = [...newMessages, systemMsg];
@@ -73,11 +86,12 @@ export function useChat() {
       return res;
     } catch (error) {
       console.error("useChat failed:", error);
+      const activeLang = localStorage.getItem("linco_language") || "en";
       const errorMsg: ChatMessage = {
         id: `err_msg_${Date.now()}`,
         role: "model",
-        content: "Sorry bhai, network mein thodi problem lag rahi hai. Ek baar fir try karo na yaar!",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        content: activeLang === "hi" ? "क्षमा करें, नेटवर्क में अस्थायी समस्या है। कृपया पुनः प्रयास करें।" : "We're experiencing a network connection issue. Please try again in a moment.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       const updatedMessages = [...newMessages, errorMsg];
       setMessages(updatedMessages);
@@ -93,8 +107,8 @@ export function useChat() {
       {
         id: "initial_saathii_msg",
         role: "model",
-        content: "Hey! Pareshan mat ho bhai, LincoSaathii hai na. Batao kya ghum hua ya kya mila? Tension mat lo, hum sath mein report fill karke usey dhoond nikalenge! ❤️\n\n(Aap kisi bhi language jaise Hindi, Hinglish, Marathi ya English mein baat kar sakte hain!)",
-        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        content: getWelcomeMessage(),
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ];
     setMessages(defaultWelcome);

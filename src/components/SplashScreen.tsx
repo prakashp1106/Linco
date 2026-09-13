@@ -13,7 +13,7 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   onComplete,
-  durationMs = 1600,
+  durationMs = 1500,
 }) => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 

@@ -701,5 +701,17 @@ export const hiTranslations: Record<string, string> = {
   "home.step2Title": "2. स्मार्ट एआई मिलान",
   "home.step2Desc": "जेमिनी विज़ुअल विशेषताओं और विवरणों की तुलना करता है।",
   "home.step3Title": "3. सत्यापित सुपुर्दगी",
-  "home.step3Desc": "गुप्त प्रश्नों से दावे सत्यापित करें और सुरक्षित वापसी करें।"
+  "home.step3Desc": "गुप्त प्रश्नों से दावे सत्यापित करें और सुरक्षित वापसी करें।",
+  "discovery.badge": "दैनिक जरूरी वस्तुएं",
+  "discovery.title": "क्या खो गया है?",
+  "discovery.subtitle": "चाहे कुछ भी खोया हो, उसके मिलने की पूरी उम्मीद है।",
+  "discovery.walletTitle": "बटुआ और पर्स",
+  "discovery.walletDesc": "कार्ड, नकद, पहचान पत्र और ट्रांजिट पास",
+  "discovery.phoneTitle": "फोन और इलेक्ट्रॉनिक्स",
+  "discovery.phoneDesc": "स्मार्टफोन, ईयरफोन और सहायक उपकरण",
+  "discovery.keysTitle": "चाबियाँ और कीचेन",
+  "discovery.keysDesc": "घर की चाबियां, वाहन की चाबियां और ऑफिस कार्ड",
+  "discovery.bagTitle": "बैग और बैकपैक",
+  "discovery.bagDesc": "कॉलेज बैग, बैकपैक और यात्रा सामान",
+  "discovery.reportItem": "इस वस्तु की रिपोर्ट करें"
 };

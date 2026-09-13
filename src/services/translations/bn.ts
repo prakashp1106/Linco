@@ -702,4 +702,17 @@ export const bnTranslations: Record<string, string> = {
   "home.step2Desc": "জেমিনি ভিজ্যুয়াল বৈশিষ্ট্য এবং বিবরণ তুলনা করে।",
   "home.step3Title": "৩. যাচাইকৃত হস্তান্তর",
   "home.step3Desc": "গোপন প্রশ্নের মাধ্যমে দাবি যাচাই করুন এবং নিরাপদে জিনিস ফিরে পান।"
+,
+  "discovery.badge": "দৈনন্দিন প্রয়োজনীয় জিনিস",
+  "discovery.title": "কি হারিয়ে গেছে?",
+  "discovery.subtitle": "আপনার যা-ই হারিয়ে যাক না কেন, ফিরে পাওয়ার সুযোগ এখনও আছে।",
+  "discovery.walletTitle": "মানিব্যাগ ও পার্স",
+  "discovery.walletDesc": "কার্ড, নগদ টাকা, পরিচয়পত্র ও ট্রানজিট পাস",
+  "discovery.phoneTitle": "ফোন ও ইলেকট্রনিক্স",
+  "discovery.phoneDesc": "স্মার্টফোন, ইয়ারফোন ও আনুষাঙ্গিক সরঞ্জাম",
+  "discovery.keysTitle": "চাবি ও কিচেন",
+  "discovery.keysDesc": "বাড়ির চাবি, গাড়ির চাবি ও অফিস কার্ড",
+  "discovery.bagTitle": "ব্যাগ ও ব্যাকপ্যাক",
+  "discovery.bagDesc": "কলেজ ব্যাগ, ব্যাকপ্যাক ও ভ্রমণ লাগেজ",
+  "discovery.reportItem": "এই জিনিসটির রিপোর্ট করুন",
 };

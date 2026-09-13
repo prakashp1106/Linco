@@ -305,14 +305,26 @@ export default function App() {
           
           if (userData) {
             const formattedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleString("en-US", { month: "long", year: "numeric" }) : "July 2026";
+            let existingAvatar: string | null = null;
+            try {
+              const saved = localStorage.getItem("linco_profile_details");
+              if (saved) existingAvatar = JSON.parse(saved).avatar;
+            } catch {}
+            const canonicalAvatar = userData.photoURL || user.photoURL || existingAvatar || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)";
+
+            // If Firestore document lacked photoURL but we have a valid photo URL, backfill Firestore
+            if (!userData.photoURL && canonicalAvatar && !canonicalAvatar.startsWith("linear-gradient")) {
+              setDoc(userDocRef, { photoURL: canonicalAvatar }, { merge: true }).catch(() => {});
+            }
+
             const localProfile = {
               fullName: userData.displayName || user.displayName || "Verified User",
               username: userData.username || user.email?.split("@")[0] || "user",
               bio: userData.bio || "Lost & Found helper on LINCO",
               location: userData.city || DEFAULT_USER_LOCATION,
               memberSince: formattedDate,
-              avatar: userData.photoURL || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-              banner: "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
+              avatar: canonicalAvatar,
+              banner: userData.banner || "linear-gradient(120deg, #1e1b4b 0%, #311042 100%)"
             };
             localStorage.setItem("linco_profile_details", JSON.stringify(localProfile));
             localStorage.setItem("linco_profile_is_logged_in", "true");

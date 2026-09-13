@@ -1396,7 +1396,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="e.g. Bandra, Mumbai or Indiranagar, Bengaluru"
+                      placeholder="Enter your city / locality"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"

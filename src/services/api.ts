@@ -78,7 +78,7 @@ export interface ReconstructTimelineResponse {
 
 function getActiveLanguage(): string {
   try {
-    return localStorage.getItem("linco_lang") || "en";
+    return localStorage.getItem("linco_language") || localStorage.getItem("linco_lang") || "en";
   } catch {
     return "en";
   }

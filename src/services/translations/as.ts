@@ -700,4 +700,17 @@ export const asTranslations: Record<string, string> = {
   "home.step2Desc": "তথ্য আৰু ফটো পৰস্পৰ মিলোৱা হয়।",
   "home.step3Title": "3. সুৰক্ষিত হস্তান্তৰ",
   "home.step3Desc": "সত্যপন কৰি সুৰক্ষিতভাৱে বস্তু ঘূৰাই লওক।",
+
+  "discovery.badge": "দৈনন্দিন লাগতিয়াল সামগ্ৰী",
+  "discovery.title": "কি হেৰাইছে?",
+  "discovery.subtitle": "আপোনাৰ যিয়েই নাহেৰাওক, ঘূৰাই পোৱাৰ সম্পূৰ্ণ আশা আছে।",
+  "discovery.walletTitle": "পাৰ্চ আৰু ৱালেট",
+  "discovery.walletDesc": "কাৰ্ড, নগদ ধন, পৰিচয় পত্ৰ আৰু ভ্ৰমণ পাছ",
+  "discovery.phoneTitle": "ফোন আৰু ইলেক্ট্ৰনিক্স",
+  "discovery.phoneDesc": "স্মাৰ্টফোন, ইয়াৰফোন আৰু আনুসংগিক সামগ্ৰী",
+  "discovery.keysTitle": "চাবি আৰু কি-চেইন",
+  "discovery.keysDesc": "ঘৰৰ চাবি, বাহনৰ চাবি আৰু কাৰ্যালয় কাৰ্ড",
+  "discovery.bagTitle": "বেগ আৰু বেকপেক",
+  "discovery.bagDesc": "কলেজ বেগ, বেকপেক আৰু যাত্ৰাৰ সামগ্ৰী",
+  "discovery.reportItem": "এই সামগ্ৰীটো ৰিপোৰ্ট কৰক",
 };

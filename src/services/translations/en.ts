@@ -701,5 +701,17 @@ export const enTranslations: Record<string, string> = {
   "home.step2Title": "2. Smart AI Matching",
   "home.step2Desc": "Gemini compares visual attributes, spatio-temporal waypoints, and descriptions.",
   "home.step3Title": "3. Verified Handover",
-  "home.step3Desc": "Verify claims through secret questions and coordinate safe returns."
+  "home.step3Desc": "Verify claims through secret questions and coordinate safe returns.",
+  "discovery.badge": "Everyday Essentials",
+  "discovery.title": "What's missing?",
+  "discovery.subtitle": "Whatever you lost, there's still a chance.",
+  "discovery.walletTitle": "Wallet & Purse",
+  "discovery.walletDesc": "Cards, cash, ID cards, and transit passes",
+  "discovery.phoneTitle": "Phone & Electronics",
+  "discovery.phoneDesc": "Smartphones, earphones, and accessories",
+  "discovery.keysTitle": "Keys & Keychains",
+  "discovery.keysDesc": "Home keys, vehicle keys, and office fobs",
+  "discovery.bagTitle": "Bag & Backpack",
+  "discovery.bagDesc": "College bags, backpacks, and luggage",
+  "discovery.reportItem": "Report this item"
 };

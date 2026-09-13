@@ -157,6 +157,28 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
   }, [profile]);
 
+  // Listen to profile-updated & storage events so profile updates in App.tsx or Firestore reflect here immediately
+  useEffect(() => {
+    const handleProfileSync = () => {
+      try {
+        const saved = localStorage.getItem("linco_profile_details");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setProfile(parsed);
+          setEditForm(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to sync profile from storage:", err);
+      }
+    };
+    window.addEventListener("profile-updated", handleProfileSync);
+    window.addEventListener("storage", handleProfileSync);
+    return () => {
+      window.removeEventListener("profile-updated", handleProfileSync);
+      window.removeEventListener("storage", handleProfileSync);
+    };
+  }, []);
+
   // Sync to global App.tsx state whenever profile changes
   const saveProfileData = async (newProfile: ProfileData | null) => {
     setProfile(newProfile);
@@ -194,6 +216,22 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("profile-updated"));
+  };
+
+  // Helper to reliably update and persist profile regardless of previous state
+  const updateAndPersistProfile = async (updates: Partial<ProfileData>) => {
+    const base: ProfileData = profile || {
+      fullName: editForm.fullName || auth.currentUser?.displayName || "Verified User",
+      username: editForm.username || auth.currentUser?.email?.split("@")[0] || "user",
+      bio: editForm.bio || "Lost & Found helper on LINCO",
+      location: editForm.location || DEFAULT_USER_LOCATION,
+      memberSince: editForm.memberSince || "July 2026",
+      avatar: editForm.avatar || PRESET_AVATARS[0],
+      banner: editForm.banner || PRESET_BANNERS[0]
+    };
+    const merged: ProfileData = { ...base, ...updates };
+    setEditForm(merged);
+    await saveProfileData(merged);
   };
 
   // Check custom navigation events
@@ -330,10 +368,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         const persistentUrl = uploadResult.url;
 
         setAvatarImgError(false);
-        setEditForm(prev => ({ ...prev, avatar: persistentUrl }));
-        if (profile) {
-          await saveProfileData({ ...profile, avatar: persistentUrl });
-        }
+        await updateAndPersistProfile({ avatar: persistentUrl });
         addToast("Profile photo captured and saved successfully!", "success");
       } catch (err) {
         console.error("Webcam upload error:", err);
@@ -361,15 +396,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       setAvatarImgError(false);
 
       if (target === "photo") {
-        setEditForm(prev => ({ ...prev, avatar: uploadedUrl }));
-        if (profile) {
-          await saveProfileData({ ...profile, avatar: uploadedUrl });
-        }
+        await updateAndPersistProfile({ avatar: uploadedUrl });
       } else {
-        setEditForm(prev => ({ ...prev, banner: uploadedUrl }));
-        if (profile) {
-          await saveProfileData({ ...profile, banner: uploadedUrl });
-        }
+        await updateAndPersistProfile({ banner: uploadedUrl });
       }
       addToast(`${target === "photo" ? "Profile picture" : "Banner"} uploaded & saved successfully!`, "success");
     } catch (err) {
@@ -384,21 +413,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   };
 
   // Paste direct Cloudinary/Web URL
-  const handleCloudinaryUrlSubmit = (e: React.FormEvent) => {
+  const handleCloudinaryUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cloudinaryUrl.trim()) return;
 
     if (photoModal === "photo") {
-      setEditForm(prev => ({ ...prev, avatar: cloudinaryUrl.trim() }));
-      if (profile) {
-        saveProfileData({ ...profile, avatar: cloudinaryUrl.trim() });
-      }
+      await updateAndPersistProfile({ avatar: cloudinaryUrl.trim() });
       addToast("Profile picture updated from URL!", "success");
     } else {
-      setEditForm(prev => ({ ...prev, banner: cloudinaryUrl.trim() }));
-      if (profile) {
-        saveProfileData({ ...profile, banner: cloudinaryUrl.trim() });
-      }
+      await updateAndPersistProfile({ banner: cloudinaryUrl.trim() });
       addToast("Banner graphic updated from URL!", "success");
     }
     setCloudinaryUrl("");
@@ -406,17 +429,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   };
 
   // Choose preset avatar/banner gradient
-  const selectPreset = (preset: string, target: "photo" | "banner") => {
+  const selectPreset = async (preset: string, target: "photo" | "banner") => {
     if (target === "photo") {
-      setEditForm(prev => ({ ...prev, avatar: preset }));
-      if (profile) {
-        saveProfileData({ ...profile, avatar: preset });
-      }
+      setAvatarImgError(false);
+      await updateAndPersistProfile({ avatar: preset });
     } else {
-      setEditForm(prev => ({ ...prev, banner: preset }));
-      if (profile) {
-        saveProfileData({ ...profile, banner: preset });
-      }
+      await updateAndPersistProfile({ banner: preset });
     }
     setPhotoModal(null);
     addToast(`${target === "photo" ? "Avatar" : "Banner"} preset updated!`, "success");
@@ -586,7 +604,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <label className="text-xs font-semibold text-slate-700 block">City</label>
                 <input
                   type="text"
-                  placeholder="e.g. Bandra, Mumbai or Indiranagar, Bengaluru"
+                  placeholder="Enter your city / locality"
                   value={editForm.location}
                   onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3.5 h-11 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -823,7 +841,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           </div>
                           <input
                             type="text"
-                            placeholder="e.g. Bandra West, Mumbai"
+                            placeholder="Enter your city / locality"
                             value={editForm.location}
                             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"

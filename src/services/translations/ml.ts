@@ -702,4 +702,17 @@ export const mlTranslations: Record<string, string> = {
   "home.step2Desc": "വിവരങ്ങളും ഫോട്ടോകളും AI ഒത്തുനോക്കുന്നു.",
   "home.step3Title": "3. കൈമാറ്റം",
   "home.step3Desc": "പരിശോധിച്ച് സുരക്ഷിതമായി സാധനങ്ങൾ തിരികെ വാങ്ങുക."
+,
+  "discovery.badge": "നിത്യോപയോഗ സാധനങ്ങൾ",
+  "discovery.title": "എന്താണ് നഷ്ടപ്പെട്ടത്?",
+  "discovery.subtitle": "നിങ്ങൾക്ക് എന്ത് നഷ്ടപ്പെട്ടാലും അത് തിരികെ ലഭിക്കാൻ സാധ്യതയുണ്ട്.",
+  "discovery.walletTitle": "വാലറ്റും പേഴ്സും",
+  "discovery.walletDesc": "കാർഡുകൾ, പണം, തിരിച്ചറിയൽ കാർഡുകൾ, യാത്രാ പാസുകൾ",
+  "discovery.phoneTitle": "ഫോണും ഇലക്ട്രോണിക്സും",
+  "discovery.phoneDesc": "സ്മാർട്ട്ഫോണുകൾ, ഇയർഫോണുകൾ, അനുബന്ധ ഉപകരണങ്ങൾ",
+  "discovery.keysTitle": "താക്കോലുകളും കീചെയിനുകളും",
+  "discovery.keysDesc": "വീട്ടു താക്കോലുകൾ, വാഹന താക്കോലുകൾ, ഓഫീസ് കാർഡുകൾ",
+  "discovery.bagTitle": "ബാഗും ബാക്ക്പാക്കും",
+  "discovery.bagDesc": "കോളേജ് ബാഗുകൾ, ബാക്ക്പാക്കുകൾ, യാത്രാ ബാഗുകൾ",
+  "discovery.reportItem": "ഈ വസ്തു റിപ്പോർട്ട് ചെയ്യുക",
 };

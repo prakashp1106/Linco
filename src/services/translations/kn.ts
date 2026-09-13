@@ -702,4 +702,17 @@ export const knTranslations: Record<string, string> = {
   "home.step2Desc": "ಜೆಮಿನಿ ದೃಶ್ಯ ವೈಶಿಷ್ಟ್ಯಗಳು ಮತ್ತು ವಿವರಣೆಗಳನ್ನು ಹೋಲಿಸುತ್ತದೆ.",
   "home.step3Title": "3. ಪರಿಶೀಲಿಸಿದ ಹಸ್ತಾಂತರ",
   "home.step3Desc": "ರಹಸ್ಯ ಪ್ರಶ್ನೆಗಳ ಮೂಲಕ ಪರಿಶೀಲಿಸಿ ಸುರಕ್ಷಿತವಾಗಿ ವಸ್ತುವನ್ನು ಪಡೆಯಿರಿ."
+,
+  "discovery.badge": "ದೈನಂದಿನ ಅಗತ್ಯ ವಸ್ತುಗಳು",
+  "discovery.title": "ಏನು ಕಳೆದುಹೋಗಿದೆ?",
+  "discovery.subtitle": "ನೀವು ಏನನ್ನೇ ಕಳೆದುಕೊಂಡಿದ್ದರೂ, ಅದು ಮರಳಿ ಸಿಗುವ ಭರವಸೆ ಇದೆ.",
+  "discovery.walletTitle": "ವ್ಯಾಲೆಟ್ ಮತ್ತು ಪರ್ಸ್",
+  "discovery.walletDesc": "ಕಾರ್ಡ್‌ಗಳು, ನಗದು, ಗುರುತಿನ ಚೀಟಿಗಳು ಮತ್ತು ಪ್ರಯಾಣ ಪಾಸ್‌ಗಳು",
+  "discovery.phoneTitle": "ಫೋನ್ ಮತ್ತು ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್",
+  "discovery.phoneDesc": "ಸ್ಮಾರ್ಟ್‌ಫೋನ್‌ಗಳು, ಇಯರ್‌ಫೋನ್‌ಗಳು ಮತ್ತು ಉಪಕರಣಗಳು",
+  "discovery.keysTitle": "ಕೀಗಳು ಮತ್ತು ಕೀಚೈನ್‌ಗಳು",
+  "discovery.keysDesc": "ಮನೆಯ ಕೀಗಳು, ವಾಹನದ ಕೀಗಳು ಮತ್ತು ಕಚೇರಿ ಕಾರ್ಡ್‌ಗಳು",
+  "discovery.bagTitle": "ಬ್ಯಾಗ್ ಮತ್ತು ಬ್ಯಾಕ್‌ಪ್ಯಾಕ್",
+  "discovery.bagDesc": "ಕಾಲೇಜು ಬ್ಯಾಗ್‌ಗಳು, ಬ್ಯಾಕ್‌ಪ್ಯಾಕ್‌ಗಳು ಮತ್ತು ಲಗೇಜ್",
+  "discovery.reportItem": "ಈ ವಸ್ತುವನ್ನು ವರದಿ ಮಾಡಿ",
 };

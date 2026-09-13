@@ -702,4 +702,17 @@ export const guTranslations: Record<string, string> = {
   "home.step2Desc": "જેમિની દ્રશ્ય લક્ષણો અને વર્ણનોની સરખામણી કરે છે.",
   "home.step3Title": "૩. ચકાસાયેલ સોંપણી",
   "home.step3Desc": "ગુપ્ત પ્રશ્નો દ્વારા દાવા ચકાસો અને સુરક્ષિત રીતે વસ્તુ પરત મેળવો."
+,
+  "discovery.badge": "રોજિંદી આવશ્યક વસ્તુઓ",
+  "discovery.title": "શું ખોવાયું છે?",
+  "discovery.subtitle": "કંઈપણ ખોવાઈ ગયું હોય, તો પણ તે પાછું મળવાની પૂરી આશા છે.",
+  "discovery.walletTitle": "પાકીટ અને પર્સ",
+  "discovery.walletDesc": "કાર્ડ, રોકડ, ઓળખપત્ર અને મુસાફરી પાસ",
+  "discovery.phoneTitle": "ફોન અને ઇલેક્ટ્રોનિક્સ",
+  "discovery.phoneDesc": "સ્માર્ટફોન, ઇયરફોન અને એસેસરીઝ",
+  "discovery.keysTitle": "ચાવીઓ અને કીચેન",
+  "discovery.keysDesc": "ઘરની ચાવીઓ, વાહનની ચાવીઓ અને ઓફિસ કાર્ડ",
+  "discovery.bagTitle": "બેગ અને બેકપેક",
+  "discovery.bagDesc": "કોલેજ બેગ, બેકપેક અને મુસાફરીનો સામાન",
+  "discovery.reportItem": "આ વસ્તુની રિપોર્ટ કરો",
 };

@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Wallet, Smartphone, Key, Briefcase } from "lucide-react";
 import { Linco3DHeroObject, HeroObjectType } from "./Linco3DHeroObject";
+import { useLanguage } from "../context/LanguageContext";
 
 interface LincoInteractiveDiscoveryProps {
   onSelectCategory: (category: string) => void;
@@ -14,9 +15,11 @@ interface LincoInteractiveDiscoveryProps {
 
 interface DiscoveryItem {
   type: HeroObjectType;
-  name: string;
+  nameKey: string;
+  defaultName: string;
   category: string;
-  description: string;
+  descKey: string;
+  defaultDesc: string;
   scale: number;
   icon: React.ElementType;
 }
@@ -24,34 +27,42 @@ interface DiscoveryItem {
 const ITEMS: DiscoveryItem[] = [
   {
     type: "wallet",
-    name: "Wallet & Purse",
+    nameKey: "discovery.walletTitle",
+    defaultName: "Wallet & Purse",
     category: "Wallet / Purse",
-    description: "Cards, cash, ID cards, and transit passes",
-    scale: 0.52,
+    descKey: "discovery.walletDesc",
+    defaultDesc: "Cards, cash, ID cards, and transit passes",
+    scale: 0.44,
     icon: Wallet
   },
   {
     type: "phone",
-    name: "Phone & Electronics",
+    nameKey: "discovery.phoneTitle",
+    defaultName: "Phone & Electronics",
     category: "Electronics",
-    description: "Smartphones, earphones, and accessories",
-    scale: 0.46,
+    descKey: "discovery.phoneDesc",
+    defaultDesc: "Smartphones, earphones, and accessories",
+    scale: 0.44,
     icon: Smartphone
   },
   {
     type: "keys",
-    name: "Keys & Keychains",
+    nameKey: "discovery.keysTitle",
+    defaultName: "Keys & Keychains",
     category: "Keys",
-    description: "Home keys, vehicle keys, and office fobs",
-    scale: 0.50,
+    descKey: "discovery.keysDesc",
+    defaultDesc: "Home keys, vehicle keys, and office fobs",
+    scale: 0.46,
     icon: Key
   },
   {
     type: "bag",
-    name: "Bag & Backpack",
+    nameKey: "discovery.bagTitle",
+    defaultName: "Bag & Backpack",
     category: "Bag",
-    description: "College bags, backpacks, and luggage",
-    scale: 0.48,
+    descKey: "discovery.bagDesc",
+    defaultDesc: "College bags, backpacks, and luggage",
+    scale: 0.44,
     icon: Briefcase
   }
 ];
@@ -61,6 +72,7 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeItem, setActiveItem] = useState<HeroObjectType>("wallet");
+  const { t } = useLanguage();
 
   return (
     <section className="py-12 sm:py-16 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8 select-none">
@@ -68,13 +80,13 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
       {/* Title & Subtext */}
       <div className="space-y-2 max-w-lg mx-auto">
         <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-          Everyday Essentials
+          {t("discovery.badge", "Everyday Essentials")}
         </span>
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-          What&rsquo;s missing?
+          {t("discovery.title", "What's missing?")}
         </h2>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          Whatever you lost, there&rsquo;s still a chance.
+          {t("discovery.subtitle", "Whatever you lost, there's still a chance.")}
         </p>
       </div>
 
@@ -89,14 +101,14 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
               key={item.type}
               onClick={() => setActiveItem(item.type)}
               whileHover={prefersReducedMotion ? {} : { y: -3 }}
-              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col justify-between text-left cursor-pointer min-h-[380px] overflow-hidden ${
+              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col justify-between text-left cursor-pointer min-h-[400px] overflow-hidden ${
                 isSelected
                   ? "bg-slate-50/90 border-slate-900 shadow-md ring-1 ring-slate-900/10"
                   : "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
               }`}
             >
               {/* Item Header */}
-              <div className="w-full flex items-center justify-between z-10">
+              <div className="w-full flex items-center justify-between z-10 shrink-0">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
                   isSelected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
                 }`}>
@@ -108,7 +120,7 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
               </div>
 
               {/* Realistic tactile visual miniature with strictly bounded container */}
-              <div className="w-full h-44 flex items-center justify-center my-1 pointer-events-none overflow-visible">
+              <div className="w-full h-44 flex items-center justify-center my-2 pointer-events-none overflow-hidden relative">
                 <Linco3DHeroObject 
                   type={item.type} 
                   scale={item.scale} 
@@ -118,10 +130,14 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
               </div>
 
               {/* Name & Direct Report Action */}
-              <div className="w-full space-y-3 pt-3 border-t border-slate-100 z-10">
+              <div className="w-full space-y-3 pt-3 border-t border-slate-100 z-10 shrink-0 bg-inherit">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.description}</p>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {t(item.nameKey, item.defaultName)}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                    {t(item.descKey, item.defaultDesc)}
+                  </p>
                 </div>
 
                 <button
@@ -136,7 +152,7 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
                       : "bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-98"
                   }`}
                 >
-                  <span>Report this item</span>
+                  <span>{t("discovery.reportItem", "Report this item")}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -144,7 +160,6 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
           );
         })}
       </div>
-
     </section>
   );
 };

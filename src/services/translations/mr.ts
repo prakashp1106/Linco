@@ -702,4 +702,17 @@ export const mrTranslations: Record<string, string> = {
   "home.step2Desc": "जेमिनी व्हिज्युअल वैशिष्ट्ये आणि वर्णनांची तुलना करते.",
   "home.step3Title": "३. पडताळलेले हस्तांतरण",
   "home.step3Desc": "गुप्त प्रश्नांद्वारे दावे पडताळा आणि सुरक्षितपणे वस्तू परत मिळवा."
+,
+  "discovery.badge": "दैनंदिन आवश्यक वस्तू",
+  "discovery.title": "काय हरवले आहे?",
+  "discovery.subtitle": "काहीही हरवले असले तरी ते परत मिळण्याची पूर्ण आशा आहे.",
+  "discovery.walletTitle": "पाकीट आणि पर्स",
+  "discovery.walletDesc": "कार्ड्स, रोख रक्कम, ओळखपत्रे आणि प्रवास पास",
+  "discovery.phoneTitle": "फोन आणि इलेक्ट्रॉनिक्स",
+  "discovery.phoneDesc": "स्मार्टफोन, इयरफोन आणि उपकरणे",
+  "discovery.keysTitle": "चाव्या आणि कीचेन",
+  "discovery.keysDesc": "घराच्या चाव्या, वाहनाच्या चाव्या आणि ऑफिस कार्ड",
+  "discovery.bagTitle": "बॅग आणि बॅकपॅक",
+  "discovery.bagDesc": "कॉलेज बॅग, बॅकपॅक आणि प्रवासाचे सामान",
+  "discovery.reportItem": "या वस्तूची तक्रार करा",
 };

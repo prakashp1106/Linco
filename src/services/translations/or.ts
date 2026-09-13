@@ -700,4 +700,17 @@ export const orTranslations: Record<string, string> = {
   "home.step2Desc": "ବିବରଣୀ ଏବଂ ଫଟୋ ପାରସ୍ପରିକ ମେଳ କରାଯାଏ।",
   "home.step3Title": "3. ସୁରକ୍ଷିତ ହସ୍ତାନ୍ତର",
   "home.step3Desc": "ଯାଞ୍ଚ କରି ସୁରକ୍ଷିତ ଭାବେ ସାମଗ୍ରୀ ଫେରିପାଆନ୍ତୁ।",
+
+  "discovery.badge": "ଦୈନନ୍ଦିନ ଆବଶ୍ୟକୀୟ ଜିନିଷ",
+  "discovery.title": "କଣ ହଜିଯାଇଛି?",
+  "discovery.subtitle": "ଆପଣଙ୍କର ଯାହା ବି ହଜିଥାଉ, ତାହା ଫେରି ପାଇବାର ପୂର୍ଣ୍ଣ ଆଶା ଅଛି।",
+  "discovery.walletTitle": "ପର୍ସ ଓ ୱାଲେଟ୍",
+  "discovery.walletDesc": "କାର୍ଡ, ନଗଦ ଟଙ୍କା, ପରିଚୟ ପତ୍ର ଓ ଯାତ୍ରା ପାସ୍",
+  "discovery.phoneTitle": "ଫୋନ୍ ଓ ଇଲେକ୍ଟ୍ରୋନିକ୍ସ",
+  "discovery.phoneDesc": "ସ୍ମାର୍ଟଫୋନ୍, ଇୟରଫୋନ୍ ଓ ଉପକରଣ",
+  "discovery.keysTitle": "ଚାବି ଓ କିଚେନ୍",
+  "discovery.keysDesc": "ଘର ଚାବି, ଗାଡ଼ି ଚାବି ଓ ଅଫିସ୍ କାର୍ଡ",
+  "discovery.bagTitle": "ବ୍ୟାଗ୍ ଓ ବ୍ୟାକପ୍ୟାକ୍",
+  "discovery.bagDesc": "କଲେଜ ବ୍ୟାଗ୍, ବ୍ୟାକପ୍ୟାକ୍ ଓ ଯାତ୍ରା ଲଗେଜ୍",
+  "discovery.reportItem": "ଏହି ଜିନିଷଟି ରିପୋର୍ଟ କରନ୍ତୁ",
 };

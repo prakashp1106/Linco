@@ -6,7 +6,7 @@ import {
   Tag
 } from "lucide-react";
 
-export type HeroObjectType = "wallet" | "phone" | "keys" | "bag" | "idcard";
+export type HeroObjectType = "wallet" | "phone" | "keys" | "bag" | "idcard" | "smartwatch" | "earbuds";
 
 interface Linco3DHeroObjectProps {
   type?: HeroObjectType;
@@ -299,50 +299,139 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
         );
 
       // =======================================================================
-      // 5. CLASSIC LEATHER WALLET: Real warm leather, realistic stitching, cards
+      // 5. SMARTWATCH: Sleek aerospace casing, digital display, fluoroelastomer strap
+      // =======================================================================
+      case "smartwatch":
+        return (
+          <div 
+            className="relative w-48 h-72 sm:w-56 sm:h-80 flex flex-col items-center justify-center select-none"
+            style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
+          >
+            {/* Top Strap Segment */}
+            <div className="w-24 h-20 rounded-t-2xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-t border-x border-slate-700 shadow-md flex items-center justify-center -mb-2">
+              <div className="w-1.5 h-12 bg-slate-950/80 rounded-full" />
+            </div>
+
+            {/* Watch Body / Case */}
+            <div 
+              className="relative z-10 w-44 h-52 sm:w-48 sm:h-56 rounded-[36px] p-3 bg-gradient-to-b from-slate-700 via-slate-900 to-black border-2 border-slate-600 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.5),0_0_0_1px_rgba(255,255,255,0.15)_inset] flex flex-col items-center justify-between text-white overflow-hidden"
+              style={{ transform: "translateZ(20px)" }}
+            >
+              {/* Bezel Glass Highlight */}
+              <div className="absolute inset-0 rounded-[34px] bg-gradient-to-tr from-white/15 via-transparent to-transparent pointer-events-none" />
+
+              {/* Digital Dial Face */}
+              <div className="relative z-10 w-full h-full rounded-[28px] bg-black p-3.5 flex flex-col justify-between border border-slate-800">
+                {/* Status Bar */}
+                <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>GPS</span>
+                  </div>
+                  <span className="text-amber-400 font-bold">92%</span>
+                </div>
+
+                {/* Clock Center */}
+                <div className="text-center my-auto space-y-0.5">
+                  <div className="text-3xl sm:text-4xl font-black tracking-tight font-mono text-white">
+                    10:42
+                  </div>
+                  <div className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+                    Community Active
+                  </div>
+                </div>
+
+                {/* Activity Progress Rings */}
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px]">
+                  <span className="text-rose-400 font-mono font-semibold">5,420 steps</span>
+                  <span className="text-cyan-400 font-mono font-semibold">24m goal</span>
+                </div>
+              </div>
+
+              {/* Digital Crown on Right Side */}
+              <div className="absolute -right-2 top-1/2 -translate-y-4 w-2.5 h-8 rounded-r-md bg-gradient-to-r from-slate-400 to-slate-200 border-y border-r border-slate-500 shadow-md" />
+            </div>
+
+            {/* Bottom Strap Segment */}
+            <div className="w-24 h-20 rounded-b-2xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 border-b border-x border-slate-700 shadow-md flex items-center justify-center -mt-2">
+              <div className="w-1.5 h-12 bg-slate-950/80 rounded-full" />
+            </div>
+          </div>
+        );
+
+      // =======================================================================
+      // 6. EARBUDS CHARGING CASE
+      // =======================================================================
+      case "earbuds":
+        return (
+          <div 
+            className="relative w-48 h-64 sm:w-56 sm:h-72 rounded-[40px] p-6 bg-gradient-to-b from-slate-100 via-white to-slate-200 border border-slate-300 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.25),0_0_0_1px_rgba(255,255,255,0.9)_inset] flex flex-col justify-between items-center select-none"
+            style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
+          >
+            {/* Glossy Reflection */}
+            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-tr from-white/60 via-transparent to-transparent pointer-events-none" />
+
+            {/* Lid Seam Indicator */}
+            <div className="w-full pt-1">
+              <div className="w-full h-0.5 bg-slate-300 rounded-full" />
+            </div>
+
+            {/* LED Status Light */}
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] my-auto animate-pulse" />
+
+            {/* Base Connector & Tag */}
+            <div className="w-full flex items-center justify-between text-[10px] text-slate-500 font-mono border-t border-slate-200 pt-2">
+              <span>Wireless Pods</span>
+              <span className="text-indigo-600 font-semibold">Case Active</span>
+            </div>
+          </div>
+        );
+
+      // =======================================================================
+      // 7. CLASSIC LEATHER WALLET: Real warm leather, realistic stitching, cards
       // =======================================================================
       case "wallet":
       default:
         return (
           <div 
-            className="relative w-60 h-80 sm:w-68 sm:h-88 rounded-[32px] p-5 sm:p-6 bg-gradient-to-br from-[#3b2416] via-[#2c1a10] to-[#1e110a] border border-[#52331f]/70 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.35),0_0_0_1px_rgba(255,255,255,0.06)_inset] flex flex-col justify-between text-left select-none overflow-hidden"
+            className="relative w-52 h-72 sm:w-60 sm:h-80 rounded-[28px] p-4 sm:p-5 bg-gradient-to-br from-[#3b2416] via-[#2c1a10] to-[#1e110a] border border-[#52331f]/70 shadow-[0_25px_50px_-15px_rgba(15,23,42,0.35),0_0_0_1px_rgba(255,255,255,0.06)_inset] flex flex-col justify-between text-left select-none overflow-hidden"
             style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
           >
             {/* Genuine Leather Warm Sheen & Tactile Stitching */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-amber-600/15 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute inset-0 border border-dashed border-amber-700/30 rounded-[28px] m-1.5 pointer-events-none" />
+            <div className="absolute inset-0 border border-dashed border-amber-700/30 rounded-[24px] m-1 pointer-events-none" />
 
             {/* Top Cards Naturally Slipped Into Inner Slits */}
-            <div className="relative -mt-1 space-y-2" style={{ transform: "translateZ(18px)" }}>
+            <div className="relative space-y-1.5" style={{ transform: "translateZ(18px)" }}>
               {/* Card 1: Metro Transit Card */}
-              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-teal-700 to-emerald-800 border border-teal-500/40 p-2.5 shadow-md flex items-center justify-between text-white transform -rotate-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-3 rounded-xs bg-amber-300/90 shadow-xs" />
-                  <span className="text-[10px] font-mono tracking-wider font-semibold">Metro Smart Card</span>
+              <div className="h-12 sm:h-14 w-full rounded-xl bg-gradient-to-r from-teal-700 to-emerald-800 border border-teal-500/40 p-2 shadow-md flex items-center justify-between text-white transform -rotate-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-2.5 rounded-xs bg-amber-300/90 shadow-xs" />
+                  <span className="text-[9px] font-mono tracking-wider font-semibold">Metro Smart Card</span>
                 </div>
-                <span className="text-[9px] uppercase tracking-wider text-teal-200 font-bold">Transit</span>
+                <span className="text-[8px] uppercase tracking-wider text-teal-200 font-bold">Transit</span>
               </div>
 
               {/* Card 2: Personal Bank Debit Card */}
-              <div className="h-14 sm:h-16 w-full rounded-xl bg-gradient-to-r from-slate-800 via-indigo-950 to-slate-900 border border-indigo-500/30 p-2.5 shadow-md flex items-center justify-between text-white transform rotate-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-3 rounded-xs bg-slate-300 shadow-xs" />
-                  <span className="text-[10px] font-mono font-medium">•••• 4892</span>
+              <div className="h-12 sm:h-14 w-full rounded-xl bg-gradient-to-r from-slate-800 via-indigo-950 to-slate-900 border border-indigo-500/30 p-2 shadow-md flex items-center justify-between text-white transform rotate-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-2.5 rounded-xs bg-slate-300 shadow-xs" />
+                  <span className="text-[9px] font-mono font-medium">•••• 4892</span>
                 </div>
-                <span className="text-[9px] text-slate-300 font-medium">HDFC Bank</span>
+                <span className="text-[8px] text-slate-300 font-medium">HDFC Bank</span>
               </div>
             </div>
 
             {/* Middle: Leather Fold with Warm Genuine Leather Crease */}
-            <div className="my-auto py-1 text-center" style={{ transform: "translateZ(20px)" }}>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 border border-amber-900/40 text-amber-200/90 text-[11px] font-medium backdrop-blur-xs">
+            <div className="my-auto py-0.5 text-center" style={{ transform: "translateZ(20px)" }}>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/40 border border-amber-900/40 text-amber-200/90 text-[10px] font-medium backdrop-blur-xs">
                 <span>Natural Saddle Leather</span>
               </div>
             </div>
 
             {/* Bottom: Tucked Currency Corner & Personal Note Hint */}
-            <div className="pt-3 border-t border-amber-900/40 flex items-center justify-between text-[10px] text-amber-200/60" style={{ transform: "translateZ(12px)" }}>
-              <span className="font-sans">Contains Family Photo</span>
+            <div className="pt-2 border-t border-amber-900/40 flex items-center justify-between text-[9px] text-amber-200/60" style={{ transform: "translateZ(12px)" }}>
+              <span className="font-sans">Family Photo</span>
               <span className="font-mono text-amber-300/80 font-medium">Bifold</span>
             </div>
           </div>

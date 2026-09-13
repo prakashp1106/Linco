@@ -344,18 +344,10 @@ export const FeedList: React.FC<FeedListProps> = ({
   const processedPosts = posts.map((post) => {
     let distance = 0;
     
-    // If a city center is selected, or if we want to calculate distance
-    const centerCity = cityFilter !== "All" ? cityFilter : "Pune";
-    const center = CITY_COORDS[centerCity] || CITY_COORDS.Pune;
-
-    if (post.latitude && post.longitude) {
+    // If a specific city center filter is selected and the post has genuine coordinates
+    if (cityFilter !== "All" && CITY_COORDS[cityFilter] && typeof post.latitude === "number" && typeof post.longitude === "number") {
+      const center = CITY_COORDS[cityFilter];
       distance = getDistanceInKm(center.lat, center.lng, post.latitude, post.longitude);
-    } else {
-      // Create a deterministic mock coordinate nearby based on ID to maintain realistic filter
-      const offsetHash = post.id.charCodeAt(0) % 10;
-      const mockLat = center.lat + (offsetHash - 5) * 0.012;
-      const mockLng = center.lng + ((post.id.charCodeAt(1) || 0) % 10 - 5) * 0.012;
-      distance = getDistanceInKm(center.lat, center.lng, mockLat, mockLng);
     }
 
     // Similarity score calculations for Best Match

@@ -44,9 +44,9 @@ export const PrivacyTrustCenter: React.FC<PrivacyTrustCenterProps> = ({
 
   // Simulated active sessions
   const [sessions, setSessions] = useState([
-    { id: 1, device: "Apple iPhone 15 Pro", location: "New Delhi, DL, India", active: true, time: "Current Session" },
-    { id: 2, device: "MacBook Pro (Chrome/macOS)", location: "Bengaluru, KA, India", active: false, time: "2 hours ago" },
-    { id: 3, device: "iPad Air Safari", location: "Mumbai, MH, India", active: false, time: "3 days ago" }
+    { id: 1, device: "Current Browser / Device", location: "Verified Active Session", active: true, time: "Current Session" },
+    { id: 2, device: "Desktop Web (Secured)", location: "Protected Network Node", active: false, time: "2 hours ago" },
+    { id: 3, device: "Mobile Device (Authorized)", location: "Protected Network Node", active: false, time: "3 days ago" }
   ]);
 
   // Simulated security log

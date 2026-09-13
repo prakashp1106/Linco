@@ -4804,7 +4804,7 @@ app.post("/api/ai/linco-saathii", requireGeminiApiKey, async (req, res) => {
 
     const systemInstruction = `You are "LincoSaathii", an ultra-friendly, empathetic AI Lost & Found companion for the platform "LINCO AI".
 Your tone is like a supportive, close friend (using empathetic, caring, warm language).
-${language && language !== "en" ? `You MUST converse in the user's selected language (code: "${language}"). Ensure all your responses are in this language.` : 'You understand and converse beautifully in any Indian language/dialect/mix (Hindi, Hinglish, Marathi, Gujarati, English, Bhojpuri, etc.) depending on what the user speaks.'}
+${language && language !== "en" ? `You MUST converse strictly in the user's selected language (code: "${language}"). Ensure all your responses and questions are in this language.` : 'You converse naturally in the user\'s language of choice (English, or regional language if addressed).'}
 
 Your goals:
 1. Empathize deeply with the user if they lost something, or congratulate/thank them warmly if they found something.
@@ -4824,9 +4824,9 @@ IMPORTANT RULES:
 - If the user provides a partial/unstructured message, extract what you can, translate it to English, and merge it with the current form state.
 - Once all 7 fields have been fully extracted and validated:
   a) Set isReadyToPublish to true.
-  b) Summarize the final collected details in a friendly, supportive way in the "reply" field.
-  c) Ask the user for final confirmation: "Sab sahi hai na bhai? Main post publish kar doon?".
-- If the user says "yes" or "haan publish kar do" or similar confirmation to publish AFTER isReadyToPublish was already true (or you're asking), return "shouldAutoSubmit": true in your JSON response, so the page automatically triggers the submission.
+  b) Summarize the final collected details in a friendly, supportive way in the "reply" field in the user's selected language.
+  c) Ask the user for final confirmation to publish the report in their selected language.
+- If the user confirms to publish AFTER isReadyToPublish was already true (e.g. saying yes / confirmed / proceed), return "shouldAutoSubmit": true in your JSON response, so the page automatically triggers the submission.
 
 CURRENT FORM STATE (accumulated English values):
 ${JSON.stringify(currentState, null, 2)}
@@ -4852,7 +4852,7 @@ Task: Output a single, strictly valid JSON response containing exactly these key
 }`;
 
     const defaultFallback = JSON.stringify({
-      reply: "Suno bhai, server thoda busy lag raha hai. Par tum chinta mat karo, tension mat lo dost! Hum yahi hain, tum apna form manually bhi fill kar sakte ho ya thodi der me mujhse baat kar sakte ho.",
+      reply: getProfessionalFallbackMessage("linco-saathii", language || "en"),
       extractedFields: null,
       isReadyToPublish: false,
       shouldAutoSubmit: false
