@@ -102,14 +102,14 @@ export const LincoStoryScroll: React.FC<LincoStoryScrollProps> = ({
 
             {/* Clear, direct, human headline */}
             <div className="space-y-2">
-              <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.1]">
-                Lost something?
+              <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.08]">
+                Every lost thing has a story.
                 <br />
-                <span className="text-slate-900">Let&rsquo;s bring it back.</span>
+                <span className="text-slate-900">LINCO helps it find its way home.</span>
               </h1>
               
               <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-xl pt-2">
-                LINCO helps everyday people report, search, and safely return lost items in their community.
+                An AI-powered, privacy-first recovery network connecting lost belongings with honest finders across India.
               </p>
             </div>
 

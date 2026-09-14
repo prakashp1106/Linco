@@ -338,31 +338,32 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
 
   return (
     <>
-      {/* 1. SIDEBAR PROMO CARD */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden space-y-3.5 shadow-2xs">
+      {/* 1. CALM, SUBTLE COMPANION CARD */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 relative overflow-hidden space-y-3 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 text-indigo-600 shadow-2xs">
-            <RobotAvatarIcon size={18} className="text-indigo-600" />
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-600">
+            <RobotAvatarIcon size={16} className="text-indigo-600" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              LINCO Sathi
-              <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200">AI Assistant</span>
+            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              LINCO Saathi
+              <span className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">Companion</span>
             </h4>
-            <p className="text-xs text-slate-500">Conversational report assistant</p>
+            <p className="text-[11px] text-slate-500">Multilingual Voice &amp; Chat</p>
           </div>
         </div>
 
         <p className="text-xs text-slate-600 leading-relaxed">
-          Report your lost or found item quickly. Speak or type in Hinglish, Hindi, or English to extract details, address, and category.
+          Need help describing your item or remembering details? Speak or chat in English, Hindi, or Hinglish anytime.
         </p>
 
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs active:scale-95"
+          className="w-full py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs active:scale-98"
         >
-          <Sparkles size={14} />
-          <span>Start AI Report Assistant</span>
+          <Sparkles size={13} className="text-indigo-300" />
+          <span>Ask Saathi</span>
         </button>
       </div>
 

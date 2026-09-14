@@ -111,6 +111,17 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
       };
     }
 
+    if (storyState === "connection") {
+      return {
+        animate: {
+          y: [-2, -5, -2],
+          rotateZ: [-0.5, 0.5, -0.5],
+          scale: [1.01, 1.025, 1.01]
+        },
+        transition: { duration: 4.6, repeat: Infinity, ease: "easeInOut" }
+      };
+    }
+
     if (storyState === "recovery") {
       return {
         animate: {

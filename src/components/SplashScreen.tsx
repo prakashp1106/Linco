@@ -56,13 +56,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.995 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9999] w-screen h-screen bg-[#fafbfc] text-slate-900 flex flex-col justify-between items-center select-none overflow-hidden px-6 pt-[calc(env(safe-area-inset-top,0px)+2rem)] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)]"
+      className="fixed inset-0 z-[9999] w-screen h-screen bg-[#fafbfc] text-slate-900 flex flex-col justify-between items-center select-none overflow-hidden px-6 pt-[calc(env(safe-area-inset-top,0px)+2rem)] pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] cursor-pointer"
+      onClick={onComplete}
       style={{
         width: "100vw",
         height: "100dvh",
       }}
       role="region"
-      aria-label="LINCO Entrance"
+      aria-label="LINCO Entrance - Click anywhere to skip"
     >
       {/* Subtle soft ambient light vignette in background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[540px] h-[380px] sm:h-[540px] bg-gradient-to-tr from-indigo-50/60 via-purple-50/30 to-sky-50/50 rounded-full blur-[100px] pointer-events-none" />
@@ -71,17 +72,21 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       <motion.div
         initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
         className="w-full max-w-md flex justify-between items-center text-[11px] font-mono tracking-wider text-slate-400 uppercase z-10"
       >
         <span className="flex items-center gap-2 font-medium text-slate-500">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Community Network
+          Community Recovery Network
         </span>
         <button
-          onClick={onComplete}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onComplete();
+          }}
           className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer text-[10px] tracking-widest uppercase font-mono px-2.5 py-1 rounded-full hover:bg-slate-100"
-          aria-label="Skip splash screen"
+          aria-label="Skip entrance screen"
         >
           Skip ↵
         </button>
