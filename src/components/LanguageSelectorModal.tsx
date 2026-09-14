@@ -92,7 +92,7 @@ export const LanguageSelectorModal: React.FC<LanguageSelectorModalProps> = ({
                   type="button"
                   onClick={onClose}
                   className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition border border-slate-200 cursor-pointer"
-                  title="Close"
+                  title={t("common.close", "Close")}
                 >
                   <X size={18} />
                 </button>

@@ -90,109 +90,170 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       {/* Center Stage: The Cinematic LINCO Reunion Emblem & Typographic Lockup */}
       <div className="flex flex-col items-center justify-center my-auto w-full max-w-md text-center z-10">
         
-        {/* Animated Brand Emblem */}
-        <div className="relative mb-6 sm:mb-8 flex items-center justify-center">
-          <svg
-            width="88"
-            height="88"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-20 h-20 sm:w-22 sm:h-22 drop-shadow-[0_12px_28px_rgba(79,70,229,0.12)]"
-            aria-label="LINCO Emblem"
-          >
-            <defs>
-              <linearGradient id="splash-left-grad" x1="6" y1="38" x2="30" y2="10" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#4338ca" />
-                <stop offset="100%" stopColor="#6366f1" />
-              </linearGradient>
+        {/* Animated Brand Emblem with Cinematic Magnetic Convergence */}
+        <div className="relative mb-6 sm:mb-8 flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32">
+          {/* Subtle magnetic converging particle tracks (The "Lost Signals" finding one another) */}
+          {!prefersReducedMotion && (
+            <>
+              {/* Particle 1: Top-Left (Owner beacon signal) */}
+              <motion.div
+                className="absolute w-2 h-2 rounded-full bg-indigo-500/80 shadow-[0_0_10px_rgba(99,102,241,0.6)] pointer-events-none"
+                initial={{ x: -44, y: -36, opacity: 0, scale: 0.5 }}
+                animate={{ 
+                  x: [ -44, -18, 0 ], 
+                  y: [ -36, -14, 0 ], 
+                  opacity: [ 0, 0.9, 0 ],
+                  scale: [ 0.5, 1.2, 0 ]
+                }}
+                transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              />
 
-              <linearGradient id="splash-right-grad" x1="42" y1="38" x2="18" y2="10" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#0284c7" />
-                <stop offset="70%" stopColor="#38bdf8" />
-                <stop offset="100%" stopColor="#818cf8" />
-              </linearGradient>
-            </defs>
+              {/* Particle 2: Bottom-Right (Finder / Community signal) */}
+              <motion.div
+                className="absolute w-2 h-2 rounded-full bg-sky-500/80 shadow-[0_0_10px_rgba(14,165,233,0.6)] pointer-events-none"
+                initial={{ x: 44, y: 36, opacity: 0, scale: 0.5 }}
+                animate={{ 
+                  x: [ 44, 18, 0 ], 
+                  y: [ 36, 14, 0 ], 
+                  opacity: [ 0, 0.9, 0 ],
+                  scale: [ 0.5, 1.2, 0 ]
+                }}
+                transition={{ duration: 0.65, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              />
 
-            {/* Left Arc: Owner Journey */}
-            <motion.path
-              d="M 16 38 C 10 32 8 22 13 14 C 17 8 24 6 24 13 C 24 19 18 24 18 28 C 18 32 21 35 24 38"
-              stroke="url(#splash-left-grad)"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={prefersReducedMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            />
+              {/* Particle 3: Gentle central ripple awakening */}
+              <motion.div
+                className="absolute w-12 h-12 rounded-full border border-indigo-200/60 bg-indigo-50/30 pointer-events-none"
+                initial={{ scale: 0.2, opacity: 0 }}
+                animate={{ 
+                  scale: [0.2, 1.3, 1], 
+                  opacity: [0, 0.7, 0] 
+                }}
+                transition={{ duration: 0.75, delay: 0.2, ease: "easeOut" }}
+              />
+            </>
+          )}
 
-            {/* Right Arc: Community Return Journey */}
-            <motion.path
-              d="M 32 38 C 38 32 40 22 35 14 C 31 8 24 6 24 13 C 24 19 30 24 30 28 C 30 32 27 35 24 38"
-              stroke="url(#splash-right-grad)"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={prefersReducedMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            />
+          <div className="relative flex items-center justify-center">
+            <svg
+              width="88"
+              height="88"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-20 h-20 sm:w-22 sm:h-22 drop-shadow-[0_12px_28px_rgba(79,70,229,0.12)]"
+              aria-label="LINCO Emblem"
+            >
+              <defs>
+                <linearGradient id="splash-left-grad" x1="6" y1="38" x2="30" y2="10" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#4338ca" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
 
-            {/* Central Verification Beacon (The Reunion Point) */}
-            <motion.circle
-              cx="24"
-              cy="19"
-              r="4"
-              stroke="#4f46e5"
-              strokeWidth="2"
-              fill="#ffffff"
-              initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
-            />
+                <linearGradient id="splash-right-grad" x1="42" y1="38" x2="18" y2="10" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#0284c7" />
+                  <stop offset="70%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#818cf8" />
+                </linearGradient>
+              </defs>
 
-            {/* Inner Core Pulse */}
-            <motion.circle
-              cx="24"
-              cy="19"
-              r="1.8"
-              fill="#4f46e5"
-              initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.55 }}
-            />
+              {/* Left Arc: Owner Journey */}
+              <motion.path
+                d="M 16 38 C 10 32 8 22 13 14 C 17 8 24 6 24 13 C 24 19 18 24 18 28 C 18 32 21 35 24 38"
+                stroke="url(#splash-left-grad)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={prefersReducedMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              />
 
-            {/* Converged Anchor Base Point */}
-            <motion.circle
-              cx="24"
-              cy="38"
-              r="2"
-              fill="#4f46e5"
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.65 }}
-            />
-          </svg>
+              {/* Right Arc: Community Return Journey */}
+              <motion.path
+                d="M 32 38 C 38 32 40 22 35 14 C 31 8 24 6 24 13 C 24 19 30 24 30 28 C 30 32 27 35 24 38"
+                stroke="url(#splash-right-grad)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={prefersReducedMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              />
+
+              {/* Central Verification Beacon (The Reunion Point) */}
+              <motion.circle
+                cx="24"
+                cy="19"
+                r="4"
+                stroke="#4f46e5"
+                strokeWidth="2"
+                fill="#ffffff"
+                initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.35, delay: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+              />
+
+              {/* Inner Core Pulse */}
+              <motion.circle
+                cx="24"
+                cy="19"
+                r="1.8"
+                fill="#4f46e5"
+                initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.25, delay: 0.55 }}
+              />
+
+              {/* Converged Anchor Base Point */}
+              <motion.circle
+                cx="24"
+                cy="38"
+                r="2"
+                fill="#4f46e5"
+                initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.25, delay: 0.6 }}
+              />
+            </svg>
+
+            {/* Specular light sweep passing through the formed emblem */}
+            {!prefersReducedMotion && (
+              <motion.div
+                className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden rounded-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.85, 0] }}
+                transition={{ duration: 0.5, delay: 0.65, ease: "easeInOut" }}
+              >
+                <motion.div
+                  className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/80 to-transparent transform -skew-x-25"
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "200%" }}
+                  transition={{ duration: 0.55, delay: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* Brand Name: LINCO */}
         <motion.h1
-          initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
+          initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.45, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="font-sans font-black text-4xl sm:text-5xl tracking-tight text-slate-950 select-none"
         >
           LINCO
         </motion.h1>
 
-        {/* Emotional Copy: "Because every lost thing has a story." */}
+        {/* Emotional Copy: "Every lost thing has a story." */}
         <motion.p
-          initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+          initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-sm sm:text-base text-slate-600 font-medium tracking-normal mt-3 select-none"
+          transition={{ duration: 0.45, delay: 0.45 }}
+          className="text-sm sm:text-base text-slate-600 font-medium tracking-normal mt-2.5 select-none"
         >
-          Because every lost thing has a story.
+          Every lost thing has a story.
         </motion.p>
 
         {/* Subtle, refined connection indicator line */}

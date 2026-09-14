@@ -27,6 +27,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { DEFAULT_USER_LOCATION } from "../constants";
 import { LincoAvatar } from "./LincoAvatar";
 import { requestGenuineLocation } from "../utils/geolocation";
+import { useLanguage } from "../context/LanguageContext";
 
 interface UserDashboardProps {
   addToast: (msg: string, type: "success" | "info" | "warn" | "error") => void;
@@ -56,6 +57,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   onOpenNotifications,
   stats = { total: 0, lost: 0, found: 0, resolved: 0 }
 }) => {
+  const { t } = useLanguage();
   // Check if profile exists
   const [profile, setProfile] = useState<ProfileData | null>(() => {
     try {
@@ -570,7 +572,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Liam Smith"
+                  placeholder={t("auth.fullName")}
                   value={editForm.fullName}
                   onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
                   className="w-full px-3.5 h-11 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -582,7 +584,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. liamsmith"
+                  placeholder={t("auth.username")}
                   value={editForm.username}
                   onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
                   className="w-full px-3.5 h-11 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -592,7 +594,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 block">Bio (Optional)</label>
                 <textarea
-                  placeholder="e.g. Ready to help find and return lost items."
+                  placeholder={t("dashboard.bio")}
                   value={editForm.bio}
                   onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                   rows={2}
@@ -604,7 +606,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <label className="text-xs font-semibold text-slate-700 block">City</label>
                 <input
                   type="text"
-                  placeholder="Enter your city / locality"
+                  placeholder={t("dashboard.city")}
                   value={editForm.location}
                   onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3.5 h-11 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -675,7 +677,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         <button
                           onClick={() => setPhotoModal("photo")}
                           className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer z-10"
-                          aria-label="Change Profile Photo"
+                          aria-label={t("dashboard.choosePhoto")}
                         >
                           <Camera size={16} className="text-white" />
                         </button>
@@ -841,7 +843,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           </div>
                           <input
                             type="text"
-                            placeholder="Enter your city / locality"
+                            placeholder={t("dashboard.city")}
                             value={editForm.location}
                             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
@@ -1149,14 +1151,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         <div className="space-y-3">
                           <input
                             type="password"
-                            placeholder="Current Password"
+                            placeholder={t("auth.password")}
                             value={settingsPassword}
                             onChange={(e) => setSettingsPassword(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"
                           />
                           <input
                             type="password"
-                            placeholder="New Password"
+                            placeholder={t("auth.password")}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-slate-900 outline-none transition shadow-2xs"

@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/LanguageContext";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -37,6 +38,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
   isEnhancing,
   onClose
 }) => {
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Suggestions state
@@ -507,7 +509,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                       <input
                         type="text"
                         inputMode="numeric"
-                        placeholder="e.g. 500"
+                        placeholder={t("report.rewardPlaceholder", "500")}
                         value={localReward}
                         onChange={(e) => setLocalReward(e.target.value.replace(/\D/g, ""))}
                         className="w-full py-1.5 pr-3 bg-transparent outline-none text-xs text-slate-900 placeholder:text-slate-400"
@@ -585,7 +587,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                   <div className="flex items-center gap-2 pt-1 max-w-sm">
                     <input
                       type="text"
-                      placeholder="e.g. Apple, Nike, Samsung"
+                      placeholder={t("report.brandPlaceholder", "Brand")}
                       value={brandName}
                       onChange={(e) => setBrandName(e.target.value)}
                       className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 shadow-2xs"
@@ -637,7 +639,7 @@ export const RecoveryIntelligenceCard: React.FC<RecoveryIntelligenceCardProps> =
                   <div className="flex items-center gap-2 pt-1 max-w-sm">
                     <input
                       type="text"
-                      placeholder="e.g. Serial, IMEI, or specific scratch"
+                      placeholder={t("report.step4.identifyingPlaceholder", "Serial, IMEI, scratch")}
                       value={serialNumber}
                       onChange={(e) => setSerialNumber(e.target.value)}
                       className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-indigo-500 shadow-2xs"

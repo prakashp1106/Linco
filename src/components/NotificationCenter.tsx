@@ -239,7 +239,7 @@ export const NotificationCenter: React.FC<ActivityCenterProps> = ({
             <button 
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-slate-800/80 text-slate-400 hover:text-white transition cursor-pointer"
-              aria-label="Close activity center"
+              aria-label={t("common.close", "Close")}
             >
               <X size={18} />
             </button>

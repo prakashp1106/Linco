@@ -1287,7 +1287,7 @@ export default function App() {
           <button 
             onClick={() => setDrawerOpen(true)}
             className="p-2 -ml-1 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer md:hidden"
-            aria-label="Open navigation menu"
+            aria-label={t("common.menu", "Menu")}
           >
             <Menu size={20} />
           </button>
@@ -1336,7 +1336,7 @@ export default function App() {
             onClick={openSelector}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs text-slate-700 hover:text-slate-900 transition cursor-pointer"
             title="Change Language / भाषा बदलें"
-            aria-label="Change Language"
+            aria-label={t("dashboard.changeLanguage", "Change Language")}
           >
             <Globe size={14} className="text-indigo-600 shrink-0" />
             <span className="font-semibold text-[11px]">{meta.nativeName}</span>
@@ -1346,7 +1346,7 @@ export default function App() {
           <button
             onClick={() => setNotificationsOpen(true)}
             className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer relative"
-            aria-label="Open notifications"
+            aria-label={t("notifications.title", "Notifications")}
           >
             <Bell size={18} className="text-slate-600 hover:text-indigo-600 transition-colors" />
             {unreadCount > 0 && (
@@ -1361,7 +1361,7 @@ export default function App() {
               window.dispatchEvent(new CustomEvent("linco-navigate-dashboard", { detail: "profile" }));
             }}
             className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 hover:border-indigo-500 transition cursor-pointer flex items-center justify-center shadow-2xs"
-            aria-label="View Profile"
+            aria-label={t("dashboard.profile", "Profile")}
           >
             <LincoAvatar
               src={profileAvatar}
@@ -2019,13 +2019,13 @@ export default function App() {
 
           <nav 
             className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[11px] text-slate-400 font-medium font-sans"
-            aria-label="Footer Navigation"
+            aria-label={t("common.navigation", "Navigation")}
           >
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("privacy"); }}
               className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
-              aria-label="View Privacy Policy"
+              aria-label={t("privacy.title", "Privacy Policy")}
             >
               Privacy
             </button>
@@ -2034,7 +2034,7 @@ export default function App() {
               type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("terms"); }}
               className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
-              aria-label="View Terms and Conditions"
+              aria-label={t("auth.terms", "Terms and Conditions")}
             >
               Terms
             </button>
@@ -2043,7 +2043,7 @@ export default function App() {
               type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("security"); }}
               className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
-              aria-label="View Security and Sessions"
+              aria-label={t("privacy.zeroTrustTitle", "Security")}
             >
               Security
             </button>
@@ -2052,7 +2052,7 @@ export default function App() {
               type="button"
               onClick={(e) => { e.preventDefault(); setActiveTab("privacy-trust"); setPrivacySection("contact-team"); }}
               className="hover:text-indigo-400 hover:scale-105 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-1.5 py-0.5"
-              aria-label="View Contact Support"
+              aria-label={t("help.title", "Contact Support")}
             >
               Contact
             </button>

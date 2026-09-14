@@ -125,7 +125,8 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
                   type={item.type} 
                   scale={item.scale} 
                   interactive={false} 
-                  subtleFloating={isSelected} 
+                  subtleFloating={true}
+                  storyState={isSelected ? "match" : "idle"}
                 />
               </div>
 

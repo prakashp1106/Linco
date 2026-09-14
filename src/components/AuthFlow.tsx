@@ -31,6 +31,7 @@ import { LincoLogo } from "./LincoLogo";
 import { LincoAvatar } from "./LincoAvatar";
 import { requestGenuineLocation } from "../utils/geolocation";
 import { DEFAULT_USER_LOCATION } from "../constants";
+import { useLanguage } from "../context/LanguageContext";
 
 interface AuthFlowProps {
   onLoginSuccess: (fullName: string, email: string) => void;
@@ -55,6 +56,7 @@ export function AuthFlow({
   isSplashOnly = false,
   initialScreen = "welcome"
 }: AuthFlowProps) {
+  const { t } = useLanguage();
   const [screen, setScreen] = useState<ScreenType>(initialScreen);
   const [loading, setLoading] = useState(false);
   
@@ -936,7 +938,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="you@domain.com or username"
+                      placeholder={t("auth.emailOrUsername")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
@@ -1038,7 +1040,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="John Doe"
+                      placeholder={t("auth.fullName")}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`}
@@ -1058,7 +1060,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="john_doe"
+                      placeholder={t("auth.username")}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.username ? "border-rose-500 focus:border-rose-500" : ""}`}
@@ -1078,7 +1080,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="john@example.com"
+                      placeholder={t("auth.emailAddress")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
@@ -1209,7 +1211,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="name@domain.com"
+                      placeholder={t("auth.emailAddress")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none placeholder:text-slate-400 transition shadow-2xs ${errors.email ? "border-rose-500 focus:border-rose-500" : ""}`}
@@ -1343,7 +1345,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder={t("auth.fullName")}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
@@ -1359,7 +1361,7 @@ export function AuthFlow({
                     <span className="absolute left-3.5 text-slate-400 text-xs font-mono z-10 pointer-events-none">@</span>
                     <input
                       type="text"
-                      placeholder="rahul_sharma"
+                      placeholder={t("auth.username")}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
@@ -1396,7 +1398,7 @@ export function AuthFlow({
                     </span>
                     <input
                       type="text"
-                      placeholder="Enter your city / locality"
+                      placeholder={t("dashboard.city")}
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       className="w-full pl-11! pr-4 h-11 text-xs text-slate-900 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl outline-none transition shadow-2xs"
@@ -1413,7 +1415,7 @@ export function AuthFlow({
                       <AlignLeft size={13} />
                     </span>
                     <textarea
-                      placeholder="Tell us a bit about your neighborhood or typical routes..."
+                      placeholder={t("dashboard.bio")}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={2}

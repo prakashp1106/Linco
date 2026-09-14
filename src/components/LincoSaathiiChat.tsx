@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useChat } from "../hooks/useChat";
+import { useLanguage } from "../context/LanguageContext";
 
 interface LincoSaathiiChatProps {
   addToast?: (message: string, type: "info" | "success" | "warn" | "error") => void;
@@ -86,6 +87,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
   currentState,
   addToast,
 }) => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [inputMessage, setInputMessage] = useState("");
@@ -371,8 +373,8 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
           whileTap={{ scale: 0.96 }}
           onClick={() => setIsOpen(true)}
           className="group flex items-center gap-2.5 px-3.5 py-3 md:px-4 md:py-3 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] border border-slate-800 transition-all duration-200 cursor-pointer"
-          title="Open LINCO AI Assistant"
-          aria-label="Open LINCO AI Assistant"
+          title={t("app.title")}
+          aria-label={t("app.title")}
         >
           <div className="relative flex items-center justify-center">
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
@@ -822,7 +824,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                             type="button"
                             onClick={triggerVoiceToast}
                             className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 border border-slate-200 transition cursor-pointer shadow-2xs"
-                            title="Voice Assistant"
+                            title={t("voice.assistant")}
                           >
                             <Mic size={15} />
                           </button>
@@ -832,7 +834,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                             type="button"
                             onClick={() => cameraInputRef.current?.click()}
                             className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 border border-slate-200 transition cursor-pointer shadow-2xs"
-                            title="Take Live Camera Shot"
+                            title={t("report.step1.takePhoto")}
                           >
                             <Camera size={15} />
                           </button>
@@ -842,7 +844,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 border border-slate-200 transition cursor-pointer shadow-2xs"
-                            title="Upload from Gallery"
+                            title={t("report.step1.uploadPhoto")}
                           >
                             <ImageIcon size={15} />
                           </button>
@@ -852,7 +854,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                         <div className="flex-1 flex items-center gap-2 px-1">
                           <input
                             type="text"
-                            placeholder="Type lost/found item details..."
+                            placeholder={t("chat.placeholder")}
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             disabled={isThinking || chatLoading}
@@ -864,7 +866,7 @@ const LincoSaathiiChatInner: React.FC<LincoSaathiiChatProps> = ({
                             type="submit"
                             disabled={isThinking || chatLoading || !inputMessage.trim()}
                             className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-30 cursor-pointer shrink-0 shadow-2xs active:scale-95"
-                            title="Send Message"
+                            title={t("chat.send")}
                           >
                             <Send size={14} />
                           </button>

@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Post, Claim } from "../types";
 import { useAI } from "../hooks/useAI";
 import { apiService } from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
 
 interface ClaimModalProps {
   isOpen: boolean;
@@ -187,6 +188,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
   onClose,
   onClaimSubmitted,
 }) => {
+  const { t } = useLanguage();
   const { runVerificationQuestions } = useAI();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -349,7 +351,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="Your full name"
+                          placeholder={t("auth.fullName")}
                           value={claimantName}
                           onChange={(e) => setClaimantName(e.target.value)}
                           className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 focus:border-indigo-500 outline-none text-xs text-slate-900 transition shadow-2xs"
@@ -368,7 +370,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                             type="tel"
                             inputMode="tel"
                             maxLength={10}
-                            placeholder="9876543210"
+                            placeholder={t("report.step5.contactPlaceholder")}
                             value={claimantContact}
                             onChange={(e) => setClaimantContact(e.target.value.replace(/\D/g, ""))}
                             className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-200 focus:border-indigo-500 outline-none text-xs text-slate-900 transition shadow-2xs"
@@ -389,7 +391,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                           </label>
                           <textarea
                             rows={2}
-                            placeholder="Describe in detail (mention markings, inner contents, purchase details if applicable)..."
+                            placeholder={t("claim.proofPlaceholder")}
                             value={claimAnswers[idx] || ""}
                             onChange={(e) => {
                               const updated = [...claimAnswers];

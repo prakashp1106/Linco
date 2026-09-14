@@ -113,7 +113,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
               setError("");
               setTimelineInput(e.target.value);
             }}
-            placeholder="Describe your sequence of steps (e.g., 'left PG at 9 AM, took metro at 9:30 to Rajiv Chowk, sat in library till 1 PM, then canteen at 1:30 PM...')"
+            placeholder={t("timeline.promptPlaceholder", "Describe your sequence of movements...")}
             className="w-full text-xs p-3.5 pr-20 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 text-slate-900 outline-none transition placeholder:text-slate-400 resize-none leading-relaxed shadow-2xs"
           />
           <div className="absolute right-2.5 bottom-2.5">
@@ -249,7 +249,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => onSelectSuggestedAddress(evt.location)}
-                        title="Use this location"
+                        title={t("timeline.useLocation", "Use this location")}
                         className="p-1 rounded bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[10px] cursor-pointer transition border border-slate-200 shadow-2xs"
                       >
                         <MapPin size={12} />
@@ -258,7 +258,7 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
                         type="button"
                         onClick={() => handleDeleteCheckpoint(idx)}
                         className="p-1 rounded bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 text-[10px] cursor-pointer transition border border-slate-200 shadow-2xs"
-                        title="Delete checkpoint"
+                        title={t("common.delete", "Delete")}
                       >
                         ✕
                       </button>
@@ -277,21 +277,21 @@ export const TimelineSection: React.FC<TimelineSectionProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                   <input
                     type="text"
-                    placeholder="Time (e.g. 11:30 AM)"
+                    placeholder={t("report.step3.time", "Time")}
                     value={newTime}
                     onChange={(e) => setNewTime(e.target.value)}
                     className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 outline-none text-xs shadow-2xs"
                   />
                   <input
                     type="text"
-                    placeholder="Location / Area"
+                    placeholder={t("report.step2.locationPlaceholder", "Location")}
                     value={newLocation}
                     onChange={(e) => setNewLocation(e.target.value)}
                     className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 outline-none text-xs shadow-2xs"
                   />
                   <input
                     type="text"
-                    placeholder="Description / Activity"
+                    placeholder={t("report.step4.descPlaceholder", "Description")}
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
                     className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 outline-none text-xs shadow-2xs"

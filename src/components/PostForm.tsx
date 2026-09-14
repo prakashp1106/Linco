@@ -836,7 +836,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="e.g. Matte Black iPhone 15 Pro, Brown Leather Tommy Hilfiger Wallet"
+                  placeholder={t("report.step1.itemNamePlaceholder")}
                   value={form.fItem}
                   onChange={(e) => {
                     form.setFItem(e.target.value);
@@ -898,7 +898,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   </div>
                 </div>
                 <textarea
-                  placeholder="Describe unique identifiers, colors, brand names, scratch marks, stickers, lock screen wallpaper or any specific markings. Example: 'iPhone 15 Pro with a minor scratch on the top-left rim, inside a clear silicone cover, wallpaper is a high-contrast mountain skyline.'"
+                  placeholder={t("report.step4.descPlaceholder")}
                   rows={4}
                   value={form.fDetails}
                   onChange={(e) => {
@@ -962,7 +962,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="e.g. Color: Space Gray, Brand: Apple, Model: iPhone 15 Pro, Material: Titanium & Glass"
+                  placeholder={t("report.brandPlaceholder")}
                   value={form.fCharacteristics || ""}
                   onChange={(e) => form.setFCharacteristics(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
@@ -988,7 +988,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="e.g. Small scratch on bottom right edge, NASA sticker on rear, customized keychain attached"
+                  placeholder={t("report.step4.identifyingPlaceholder")}
                   value={form.fUniqueMarks || ""}
                   onChange={(e) => form.setFUniqueMarks(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
@@ -1011,7 +1011,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="e.g. College ID card, Metro pass, 2 keys, blue ballpoint pen inside pouch"
+                  placeholder={t("report.secretCluePlaceholder")}
                   value={form.fContents || ""}
                   onChange={(e) => form.setFContents(e.target.value)}
                   className="w-full h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none text-xs text-slate-900 transition-all placeholder:text-slate-400 shadow-2xs"
@@ -1281,7 +1281,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     <MapPin size={16} className="absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="e.g. Pune University Library cafeteria, Block A elevators, Wagholi area"
+                      placeholder={t("report.step2.locationPlaceholder")}
                       value={form.fAddress}
                       onChange={(e) => {
                         form.setFAddress(e.target.value);
@@ -1294,7 +1294,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     type="button"
                     onClick={handleUseCurrentLocation}
                     className="h-12 px-5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0 shadow-2xs"
-                    title="Retrieve Coordinates via Device GPS"
+                    title={t("report.step2.autoDetect")}
                   >
                     <MapPin size={14} className="text-rose-400" /> <span>Current Location</span>
                   </button>
@@ -1531,7 +1531,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   <input
                     type="text"
                     inputMode="numeric"
-                    placeholder="e.g. 500, 1000, 2500"
+                    placeholder={t("report.rewardPlaceholder")}
                     value={form.fReward}
                     onChange={(e) => form.setFReward(e.target.value.replace(/\D/g, ""))}
                     className="w-full h-full pr-4 bg-transparent outline-none text-xs text-slate-900 font-mono font-bold placeholder:text-slate-400"
@@ -1606,7 +1606,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                     type="tel"
                     inputMode="tel"
                     maxLength={10}
-                    placeholder="9876543210"
+                    placeholder={t("report.step5.contactPlaceholder")}
                     value={form.fContact}
                     onChange={(e) => {
                       form.setFContact(e.target.value.replace(/\D/g, ""));
@@ -1739,7 +1739,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   <input
                     type={showPin ? "text" : "password"}
                     maxLength={4}
-                    placeholder="Set 4-Digit PIN"
+                    placeholder={t("report.step6.pin")}
                     value={form.fSecurityPin}
                     onChange={(e) => {
                       form.setFSecurityPin(e.target.value.replace(/\D/g, ""));
@@ -1805,7 +1805,7 @@ export const PostForm: React.FC<PostFormProps> = ({ onSubmit, form }) => {
                   type="button"
                   onClick={() => setCurrentStep(2)}
                   className="p-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition duration-150 flex items-center gap-1.5 text-xs font-medium cursor-pointer"
-                  title="Edit title & details"
+                  title={t("common.edit")}
                 >
                   <Pencil size={13} />
                   <span className="hidden sm:inline">Edit</span>

@@ -1,3 +1,4 @@
+import { useLanguage } from "../context/LanguageContext";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -39,6 +40,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
   onClose,
   onPostUpdated,
 }) => {
+  const { t } = useLanguage();
   const [pinDigits, setPinDigits] = useState<string[]>(Array(4).fill(""));
   const [isPinVerified, setIsPinVerified] = useState(false);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -676,7 +678,7 @@ export const OwnerClaimsDashboard: React.FC<OwnerClaimsDashboardProps> = ({
                                     >
                                       <input
                                         type="text"
-                                        placeholder="Type meeting coordinates or details..."
+                                        placeholder={t("chat.placeholder", "Type details...")}
                                         value={chatInputs[claim.id] || ""}
                                         onChange={(e) => setChatInputs({ ...chatInputs, [claim.id]: e.target.value })}
                                         disabled={sendingMsg[claim.id]}

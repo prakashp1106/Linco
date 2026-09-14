@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Post, PotentialMatch } from "../types";
 import { apiService } from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
 
 interface CommunityFoundModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
   onFoundReportCreated,
   onNavigateToMatches
 }) => {
+  const { t } = useLanguage();
   const [finderName, setFinderName] = useState("");
   const [finderContact, setFinderContact] = useState("");
   const [whereFound, setWhereFound] = useState("");
@@ -195,7 +197,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
             <button
               onClick={handleClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-              aria-label="Close"
+              aria-label={t("common.close")}
             >
               <X size={16} />
             </button>
@@ -246,7 +248,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Alex Kumar"
+                      placeholder={t("auth.fullName")}
                       value={finderName}
                       onChange={(e) => setFinderName(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
@@ -260,7 +262,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                     </label>
                     <input
                       type="tel"
-                      placeholder="+91 98765 43210"
+                      placeholder={t("report.step5.contactPlaceholder")}
                       value={finderContact}
                       onChange={(e) => setFinderContact(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 font-mono outline-none focus:border-indigo-500 focus:bg-white"
@@ -283,7 +285,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Near Cafeteria Bench, 2nd Floor"
+                        placeholder={t("report.step2.locationPlaceholder")}
                         value={whereFound}
                         onChange={(e) => setWhereFound(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
@@ -297,7 +299,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Today around 3:30 PM"
+                        placeholder={t("report.step3.time")}
                         value={whenFound}
                         onChange={(e) => setWhenFound(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
@@ -312,7 +314,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="e.g. Black leather cardholder wallet with metallic zipper..."
+                      placeholder={t("report.step4.descPlaceholder")}
                       value={foundDetails}
                       onChange={(e) => setFoundDetails(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
@@ -326,7 +328,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="e.g. Small star sticker on corner, slight scratch on back..."
+                      placeholder={t("report.step4.identifyingPlaceholder")}
                       value={uniqueCharacteristics}
                       onChange={(e) => setUniqueCharacteristics(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
@@ -340,7 +342,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Metro card, student pass..."
+                      placeholder={t("report.step4.identifyingPlaceholder")}
                       value={insideContents}
                       onChange={(e) => setInsideContents(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
@@ -392,7 +394,7 @@ export const CommunityFoundModal: React.FC<CommunityFoundModalProps> = ({
                   <input
                     type="password"
                     maxLength={6}
-                    placeholder="e.g. 1234"
+                    placeholder={t("report.step6.pin")}
                     value={securityPin}
                     onChange={(e) => setSecurityPin(e.target.value)}
                     className="w-36 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 font-mono text-center outline-none focus:border-indigo-500 tracking-widest shadow-2xs"

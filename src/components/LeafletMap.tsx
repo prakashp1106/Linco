@@ -1,5 +1,6 @@
+import { useLanguage } from "../context/LanguageContext";
 import React, { useState, useEffect, useRef } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Navigation } from "lucide-react";
 
 interface InteractiveMapProps {
   lat?: number;
@@ -14,6 +15,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onChange,
   onAddressChange,
 }) => {
+  const { t } = useLanguage();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -21,6 +23,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Reverse geocoding using secure server map proxy (MapmyIndia + Nominatim)
   const reverseGeocode = async (newLat: number, newLng: number) => {
@@ -242,6 +245,30 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        const { latitude, longitude } = pos.coords;
+        onChange(latitude, longitude);
+        if (mapRef.current) {
+          mapRef.current.flyTo([latitude, longitude], 16);
+        }
+        if (markerRef.current) {
+          markerRef.current.setLatLng([latitude, longitude]);
+        }
+        reverseGeocode(latitude, longitude);
+      },
+      (err) => {
+        setIsLocating(false);
+        console.warn("[LeafletMap] Geolocation request rejected or unavailable:", err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  };
+
   return (
     <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xs bg-slate-50">
       {/* Map Search Input Overlay */}
@@ -250,7 +277,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
           <input
             type="text"
-            placeholder="Search landmark, campus, town, city..."
+            placeholder={t("report.step2.locationPlaceholder", "Search location...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-14 py-2.5 rounded-xl bg-white/95 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-300 shadow-sm backdrop-blur-md"
@@ -268,6 +295,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </button>
           )}
         </div>
+        <button
+          type="button"
+          onClick={handleLocateMe}
+          disabled={isLocating}
+          title={t("map.locateMe", "Use current device location")}
+          aria-label={t("map.locateMe", "Use current device location")}
+          className="p-2.5 bg-white/95 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+        >
+          {isLocating ? <Loader2 className="animate-spin text-indigo-600" size={14} /> : <Navigation size={14} className="text-indigo-600" />}
+        </button>
         <button
           type="submit"
           disabled={searchLoading}

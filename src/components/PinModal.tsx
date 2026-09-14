@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Lock, X, CheckCircle2, AlertTriangle, RefreshCw, Delete } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../context/LanguageContext";
 
 interface PinModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const PinModal: React.FC<PinModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { t } = useLanguage();
   const [pinDigits, setPinDigits] = useState<string[]>(Array(4).fill(""));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -205,7 +207,7 @@ export const PinModal: React.FC<PinModalProps> = ({
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                aria-label="Close"
+                aria-label={t("common.close")}
               >
                 <X size={16} />
               </button>
@@ -269,7 +271,7 @@ export const PinModal: React.FC<PinModalProps> = ({
                     type="button"
                     onClick={handleKeypadBackspace}
                     className="py-2.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200 text-rose-600 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-                    aria-label="Delete"
+                    aria-label={t("common.delete")}
                   >
                     <Delete size={15} />
                   </button>

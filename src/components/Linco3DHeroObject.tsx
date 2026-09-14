@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion, type Transition } from "motion/react";
 import { 
   Clock,
   PhoneCall,
@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 export type HeroObjectType = "wallet" | "phone" | "keys" | "bag" | "idcard" | "smartwatch" | "earbuds";
+export type HeroStoryState = "lost" | "search" | "match" | "connection" | "recovery" | "idle";
 
 interface Linco3DHeroObjectProps {
   type?: HeroObjectType;
@@ -15,6 +16,7 @@ interface Linco3DHeroObjectProps {
   className?: string;
   subtleFloating?: boolean;
   onSelect?: () => void;
+  storyState?: HeroStoryState;
 }
 
 export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
@@ -23,7 +25,8 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
   scale = 1,
   className = "",
   subtleFloating = true,
-  onSelect
+  onSelect,
+  storyState = "idle"
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -67,6 +70,139 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
       }
     };
   }, [prefersReducedMotion, interactive]);
+
+  // Distinct Physical Motion Identity per Object Type
+  const getObjectMotionConfig = (): { animate: Record<string, any>; transition: Transition } => {
+    if (prefersReducedMotion || !subtleFloating) {
+      return { animate: {}, transition: {} };
+    }
+
+    // Story state modifier adjustments
+    if (storyState === "lost") {
+      return {
+        animate: {
+          y: [2, 6, 2],
+          rotateZ: [-4, -2.5, -4],
+          scale: [0.97, 0.985, 0.97]
+        },
+        transition: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+      };
+    }
+
+    if (storyState === "search") {
+      return {
+        animate: {
+          y: [-2, -6, -2],
+          rotateZ: [-1, 2, -1],
+          x: [-2, 2, -2]
+        },
+        transition: { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+      };
+    }
+
+    if (storyState === "match") {
+      return {
+        animate: {
+          y: [-6, -9, -6],
+          rotateZ: [0, 0.8, 0],
+          scale: [1.02, 1.035, 1.02]
+        },
+        transition: { duration: 3.8, repeat: Infinity, ease: "easeInOut" }
+      };
+    }
+
+    if (storyState === "recovery") {
+      return {
+        animate: {
+          y: [0, -2, 0],
+          rotateZ: [0, 0.3, 0],
+          scale: [1, 1.01, 1]
+        },
+        transition: { duration: 7, repeat: Infinity, ease: "easeInOut" }
+      };
+    }
+
+    // Default object-specific physical identities
+    switch (type) {
+      case "phone":
+        // Phone: subtle perspective rotation + depth parallax + screen breathing
+        return {
+          animate: {
+            y: [0, -5, 0],
+            rotateZ: [-0.6, 1.2, -0.6],
+            scale: [1, 1.015, 1]
+          },
+          transition: { duration: 6.2, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "wallet":
+        // Wallet: tactile leather tilt + controlled organic float
+        return {
+          animate: {
+            y: [0, -6, 0],
+            rotateZ: [1.2, -1.2, 1.2],
+            rotateY: [-12, -15, -12]
+          },
+          transition: { duration: 5.4, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "smartwatch":
+        // Watch: mechanical precision + tiny wrist rotation
+        return {
+          animate: {
+            y: [0, -3.5, 0],
+            rotateZ: [-2.5, 0.8, -2.5],
+            rotateX: [6, 10, 6]
+          },
+          transition: { duration: 4.8, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "keys":
+        // Keys: jingle-inspired micro-rotational oscillation on key ring axis
+        return {
+          animate: {
+            y: [0, -4.5, 0],
+            rotateZ: [-3, 3, -3],
+            rotateX: [5, 11, 5]
+          },
+          transition: { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "bag":
+        // Bag: grounded, heavier canvas posture with slow breath
+        return {
+          animate: {
+            y: [0, -3.5, 0],
+            scale: [1, 1.012, 1],
+            rotateZ: [-0.5, 0.8, -0.5]
+          },
+          transition: { duration: 7.2, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "idcard":
+        // Card/doc: aerodynamic paper-light buoyancy
+        return {
+          animate: {
+            y: [0, -6, 0],
+            rotateZ: [2, -2.5, 2],
+            rotateX: [6, 11, 6]
+          },
+          transition: { duration: 4.6, repeat: Infinity, ease: "easeInOut" }
+        };
+      case "earbuds":
+        // Earbuds: magnetic snap levitation feel
+        return {
+          animate: {
+            y: [0, -4, 0],
+            scale: [1, 1.018, 1],
+            rotateZ: [0.8, -0.8, 0.8]
+          },
+          transition: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+        };
+      default:
+        return {
+          animate: { y: [0, -5, 0], rotateZ: [0, 0.6, 0] },
+          transition: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+        };
+    }
+  };
+
+  const motionConfig = getObjectMotionConfig();
 
   // Object Renderers: REALISTIC, RECOGNIZABLE, TACTILE PHYSICAL LOST BELONGINGS
   const renderObjectContent = () => {
@@ -450,19 +586,8 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
       }}
     >
       <motion.div
-        animate={
-          subtleFloating && !prefersReducedMotion
-            ? {
-                y: [0, -6, 0],
-                rotateZ: [0, 0.5, 0]
-              }
-            : {}
-        }
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
+        animate={motionConfig.animate}
+        transition={motionConfig.transition}
         style={{
           transform: `scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
           transformStyle: "preserve-3d",
@@ -470,9 +595,19 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
         }}
         className="relative flex items-center justify-center pointer-events-none"
       >
-        {/* Soft, realistic contact shadow on the floor beneath */}
-        <div 
-          className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 sm:w-60 h-8 rounded-full bg-slate-900/10 blur-xl -z-10"
+        {/* Dynamic, realistic contact shadow on the floor beneath synchronized with physical weight */}
+        <motion.div 
+          animate={
+            prefersReducedMotion || !subtleFloating
+              ? {}
+              : {
+                  scaleX: [1, 0.9, 1],
+                  scaleY: [1, 0.85, 1],
+                  opacity: [0.14, 0.08, 0.14]
+                }
+          }
+          transition={motionConfig.transition}
+          className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 sm:w-60 h-8 rounded-full bg-slate-950/15 blur-xl -z-10"
           style={{ transform: "translateZ(-30px)" }}
         />
 

@@ -31,6 +31,7 @@ import {
 import { Post, PotentialMatch, MatchStatus } from "../types";
 import { apiService } from "../services/api";
 import { getWhatsAppLink, getMatchRevealedContact } from "../utils/whatsapp";
+import { useLanguage } from "../context/LanguageContext";
 
 interface PotentialMatchesProps {
   posts: Post[];
@@ -49,6 +50,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
   initialSelectedMatchId,
   onClearSelectedMatchId,
 }) => {
+  const { t } = useLanguage();
   const [matches, setMatches] = useState<PotentialMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [threshold, setThreshold] = useState(80);
@@ -877,7 +879,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
             <span>Mutual verification required</span>
             <button
               onClick={loadData}
-              title="Refresh Matches"
+              title={t("matches.filterAll")}
               className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
             >
               <RefreshCw size={12} />
@@ -1101,7 +1103,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     <button
                       onClick={() => handleDismissMatch(m.matchId)}
                       className="px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-rose-50 hover:border-rose-200 text-slate-500 hover:text-rose-600 transition cursor-pointer flex items-center justify-center shrink-0"
-                      title="Dismiss Match"
+                      title={t("common.delete")}
                     >
                       <Trash2 size={13} />
                     </button>
@@ -1121,7 +1123,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     <button
                       onClick={(e) => handleShareMatch(m, e)}
                       className="px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer flex items-center justify-center shrink-0"
-                      title="Share Match"
+                      title={t("common.share") || "Share"}
                     >
                       <Share2 size={13} />
                     </button>
@@ -1201,7 +1203,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                     <button
                       onClick={() => setSelectedMatch(null)}
                       className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
-                      title="Back to matches list"
+                      title={t("common.back")}
                     >
                       <span>← Back</span>
                     </button>
@@ -1215,7 +1217,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                   <button
                     onClick={() => setSelectedMatch(null)}
                     className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-slate-700 cursor-pointer transition shadow-2xs"
-                    aria-label="Close modal"
+                    aria-label={t("common.close")}
                   >
                     <X size={15} />
                   </button>
@@ -1699,7 +1701,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <label className="text-[10px] font-bold text-slate-600 uppercase">Your Name</label>
                                 <input
                                   type="text"
-                                  placeholder="Full Name"
+                                  placeholder={t("auth.fullName")}
                                   value={respondentName}
                                   onChange={(e) => setRespondentName(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"
@@ -1710,7 +1712,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <label className="text-[10px] font-bold text-slate-600 uppercase">WhatsApp / Contact</label>
                                 <input
                                   type="text"
-                                  placeholder="+91 98765 43210"
+                                  placeholder={t("report.step5.contactPlaceholder")}
                                   value={respondentContact}
                                   onChange={(e) => setRespondentContact(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"
@@ -1728,7 +1730,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <span className="text-[11px] text-slate-600 font-medium">1. What are the secret markings, serial codes, or inner engravings?</span>
                                 <input
                                   type="text"
-                                  placeholder="e.g., small scratch on bottom left, serial ending in 492"
+                                  placeholder={t("report.step4.identifyingPlaceholder")}
                                   value={verificationAnswers[0]}
                                   onChange={(e) => {
                                     const next = [...verificationAnswers];
@@ -1743,7 +1745,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <span className="text-[11px] text-slate-600 font-medium">2. What specific accessories, cards, or contents were inside/attached?</span>
                                 <input
                                   type="text"
-                                  placeholder="e.g., metro card in sleeve, blue charging cable"
+                                  placeholder={t("report.secretCluePlaceholder")}
                                   value={verificationAnswers[1]}
                                   onChange={(e) => {
                                     const next = [...verificationAnswers];
@@ -1758,7 +1760,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <span className="text-[11px] text-slate-600 font-medium">3. Where precisely was the item lost or found at the exact location?</span>
                                 <input
                                   type="text"
-                                  placeholder="e.g., near bench #3 at gate 2"
+                                  placeholder={t("report.step2.locationPlaceholder")}
                                   value={verificationAnswers[2]}
                                   onChange={(e) => {
                                     const next = [...verificationAnswers];
@@ -2057,7 +2059,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <label className="text-[10px] font-bold text-slate-600 uppercase">Public Meeting Spot</label>
                                 <input
                                   type="text"
-                                  placeholder="e.g. Central Metro Station Gate #2 or City Mall Atrium"
+                                  placeholder={t("report.step2.locationPlaceholder")}
                                   value={handoverMeetingPlace}
                                   onChange={(e) => setHandoverMeetingPlace(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"
@@ -2068,7 +2070,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                                 <label className="text-[10px] font-bold text-slate-600 uppercase">Scheduled Date / Time</label>
                                 <input
                                   type="text"
-                                  placeholder="e.g. Today at 4:00 PM"
+                                  placeholder={t("report.step3.time")}
                                   value={handoverScheduledTime}
                                   onChange={(e) => setHandoverScheduledTime(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs"
@@ -2229,7 +2231,7 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                           <form onSubmit={handleSendChat} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
                             <input
                               type="text"
-                              placeholder="Type a message to coordinate handover..."
+                              placeholder={t("chat.placeholder")}
                               value={chatMessage}
                               onChange={(e) => setChatMessage(e.target.value)}
                               className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
