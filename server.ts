@@ -2990,6 +2990,15 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  // Security: Protect administrative config endpoint against unauthorized modifications when ADMIN_API_KEY is set
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const reqKey = req.headers["x-admin-key"] || req.body?.adminKey;
+    if (!reqKey || reqKey !== adminApiKey) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing Admin API Key." });
+    }
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
