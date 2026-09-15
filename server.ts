@@ -9,6 +9,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch, Claim, PotentialMatch, LincoNotification } from "./src/types.js";
 import { db } from "./src/services/firebaseAdmin.js";
+import { verifyAdminApiKey } from "./src/utils/security.js";
 import { v2 as cloudinary } from "cloudinary";
 
 import helmet from "helmet";
@@ -2990,6 +2991,14 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const providedKey = (req.headers["x-admin-key"] as string) || req.body?.adminKey;
+    if (!verifyAdminApiKey(providedKey, adminApiKey)) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing Admin API Key." });
+    }
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
