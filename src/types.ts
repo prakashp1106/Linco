@@ -117,6 +117,17 @@ export interface HandoverDetails {
   startedAt?: number;
 }
 
+export interface MatchEvidencePoint {
+  key: string;
+  category: "item" | "location" | "timeline" | "brand" | "color" | "general";
+  score: number;
+  highlightKey?: string;
+  params?: Record<string, string | number>;
+  dimension?: string;
+  status?: "strong" | "moderate" | "weak";
+  explanation?: string;
+}
+
 export interface PotentialMatch {
   matchId: string;
   lostPostId: string;
@@ -163,6 +174,9 @@ export interface PotentialMatch {
   notificationsSent: boolean;
   lastUpdated: number;
   reason: string;
+  reasonKey?: string;
+  reasonParams?: Record<string, string | number>;
+  evidencePoints?: MatchEvidencePoint[];
 }
 
 export type NotificationType =

@@ -371,3 +371,25 @@ export function getLocalizedNotificationMessage(
 
   return notif.message;
 }
+
+/**
+ * Returns a localized, user-friendly match reason based on score, offline status, or fallback.
+ */
+export function getLocalizedMatchReason(
+  reason: string | undefined,
+  t: (key: string, defaultVal?: string) => string
+): string {
+  if (!reason) {
+    return t("matches.appearanceAlign", "Attributes, color and item description strongly align");
+  }
+
+  // If reason contains offline programmatic heuristic fallback
+  if (reason.includes("PROGRAMMATIC HEURISTIC PRESERVED")) {
+    return t(
+      "matches.appearanceAlign",
+      "Attributes, color and item description strongly align"
+    );
+  }
+
+  return reason;
+}

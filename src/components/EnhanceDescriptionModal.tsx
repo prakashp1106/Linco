@@ -104,7 +104,7 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                 {t("enhance.analyzing", "Analyzing forensic details & formatting...")}
               </p>
               <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-                Extracting brand, model, unique scratch marks, and structuring search keywords for matching.
+                {t("enhance.extractingNotice", "Extracting brand, model, unique scratch marks, and structuring search keywords for matching.")}
               </p>
             </div>
           ) : (
@@ -123,7 +123,7 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                       </span>
                     </div>
                     <p className="text-xs text-slate-700 leading-relaxed font-sans whitespace-pre-wrap">
-                      {originalText || "(No description entered)"}
+                      {originalText || t("enhance.noDesc", "(No description entered)")}
                     </p>
                   </div>
 
@@ -153,7 +153,7 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                         className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
                       >
                         <Edit3 size={11} />
-                        <span>{isEditing ? "Cancel Edit" : "Edit Text"}</span>
+                        <span>{isEditing ? t("enhance.cancelEdit", "Cancel Edit") : t("enhance.editText", "Edit Text")}</span>
                       </button>
                     </div>
 
@@ -166,18 +166,18 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                       />
                     ) : (
                       <p className="text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-wrap">
-                        {enhancedData?.description || "No enhanced version produced."}
+                        {enhancedData?.description || t("enhance.noEnhanced", "No enhanced version produced.")}
                       </p>
                     )}
                   </div>
 
                   <div className="pt-3 mt-3 border-t border-indigo-100 flex items-center justify-between">
                     <span className="text-[10px] text-slate-500 font-medium">
-                      High match visibility
+                      {t("enhance.highVisibility", "High match visibility")}
                     </span>
                     {isEditing && (
                       <span className="text-[10px] text-amber-700 font-semibold">
-                        (Editing mode active)
+                        {t("enhance.editingMode", "(Editing mode active)")}
                       </span>
                     )}
                   </div>
@@ -189,37 +189,37 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 shadow-2xs">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                     <ShieldCheck size={12} className="text-emerald-600" />
-                    Extracted Forensic Facts
+                    {t("enhance.structuredHeading", "Extracted Forensic Facts")}
                   </span>
                   <div className="flex flex-wrap gap-2 text-xs">
                     {structured.brand && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Brand:</strong> {structured.brand}
+                        <strong className="text-slate-500 font-medium">{t("enhance.brand", "Brand")}:</strong> {structured.brand}
                       </span>
                     )}
                     {structured.model && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Model:</strong> {structured.model}
+                        <strong className="text-slate-500 font-medium">{t("enhance.model", "Model")}:</strong> {structured.model}
                       </span>
                     )}
                     {structured.color && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Color:</strong> {structured.color}
+                        <strong className="text-slate-500 font-medium">{t("enhance.color", "Color")}:</strong> {structured.color}
                       </span>
                     )}
                     {structured.visibleCondition && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Condition:</strong> {structured.visibleCondition}
+                        <strong className="text-slate-500 font-medium">{t("enhance.condition", "Condition")}:</strong> {structured.visibleCondition}
                       </span>
                     )}
                     {structured.uniqueMarks && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Marks:</strong> {structured.uniqueMarks}
+                        <strong className="text-slate-500 font-medium">{t("enhance.marks", "Marks")}:</strong> {structured.uniqueMarks}
                       </span>
                     )}
                     {structured.identifyingDetails && (
                       <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
-                        <strong className="text-slate-500 font-medium">Identifiers:</strong> {structured.identifyingDetails}
+                        <strong className="text-slate-500 font-medium">{t("enhance.identifiers", "Identifiers")}:</strong> {structured.identifyingDetails}
                       </span>
                     )}
                   </div>
@@ -234,7 +234,7 @@ export const EnhanceDescriptionModal: React.FC<EnhanceDescriptionModalProps> = (
                     {t("enhance.missingSuggestions", "Missing Details Suggestions (Optional)")}
                   </span>
                   <p className="text-xs text-slate-700">
-                    Adding these details can increase your match confidence:
+                    {t("enhance.addDetailsNotice", "Adding these details can increase your match confidence:")}
                   </p>
                   <ul className="space-y-1">
                     {missingSuggestions.map((item, idx) => (

@@ -32,6 +32,7 @@ import { Post, PotentialMatch, MatchStatus } from "../types";
 import { apiService } from "../services/api";
 import { getWhatsAppLink, getMatchRevealedContact } from "../utils/whatsapp";
 import { useLanguage } from "../context/LanguageContext";
+import { getLocalizedMatchReason } from "../services/i18n";
 
 interface PotentialMatchesProps {
   posts: Post[];
@@ -995,9 +996,16 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       <span>{statusBadge.label}</span>
                     </span>
                     
-                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border ${confidence.badgeStyle}`}>
-                      {m.matchScore}% match
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {m.reason?.includes("PROGRAMMATIC HEURISTIC PRESERVED") && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                          {t("matches.offlineEstimate", "Offline Match Estimate")}
+                        </span>
+                      )}
+                      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-lg border ${confidence.badgeStyle}`}>
+                        {m.matchScore}% match
+                      </span>
+                    </div>
                   </div>
 
                   {/* Side-by-Side Images Panel */}
@@ -1212,6 +1220,11 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       <h3 className="font-bold text-xs sm:text-sm text-slate-900 tracking-tight">
                         Forensic Audit & Mutual Approval ({selectedMatch.matchScore}% Confidence)
                       </h3>
+                      {selectedMatch.reason?.includes("PROGRAMMATIC HEURISTIC PRESERVED") && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                          {t("matches.offlineEstimate", "Offline Match Estimate")}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -1412,68 +1425,116 @@ export const PotentialMatches: React.FC<PotentialMatchesProps> = ({
                       <div className="space-y-3 text-left">
                         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                            Why we think they match
+                            {t("matchEvidence.title", "Why we think they match — Forensic Evidence")}
                           </h4>
-                          <span className="text-[11px] text-slate-500 font-medium">Corroborated by LINCO Matching</span>
+                          <span className="text-[11px] text-slate-500 font-medium">Corroborated by LINCO Matching Engine</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                          {/* 1. Same Item Type */}
-                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-                              Item Type
-                            </span>
-                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span>{lostPost.category === foundPost.category ? "Same item category" : "Compatible item type"}</span>
-                            </div>
-                            <p className="text-[11px] text-slate-500">
-                              Both logged under &ldquo;{lostPost.category}&rdquo;
-                            </p>
+                        {selectedMatch.evidencePoints && selectedMatch.evidencePoints.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {selectedMatch.evidencePoints.map((ep, idx) => {
+                              const statusColor = 
+                                ep.status === "strong" ? "bg-emerald-50 border-emerald-200 text-emerald-800" :
+                                ep.status === "moderate" ? "bg-amber-50 border-amber-200 text-amber-800" :
+                                "bg-slate-50 border-slate-200 text-slate-700";
+                              const dotColor =
+                                ep.status === "strong" ? "bg-emerald-500" :
+                                ep.status === "moderate" ? "bg-amber-500" :
+                                "bg-slate-400";
+                              return (
+                                <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 flex flex-col justify-between">
+                                  <div>
+                                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                                        {ep.dimension}
+                                      </span>
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor} capitalize flex items-center gap-1`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                                        {ep.status} ({ep.score}%)
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                                      {ep.explanation}
+                                    </p>
+                                  </div>
+                                  <div className="w-full bg-slate-200/80 rounded-full h-1.5 mt-2 overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all ${
+                                        ep.status === "strong" ? "bg-emerald-500" : ep.status === "moderate" ? "bg-amber-500" : "bg-slate-400"
+                                      }`}
+                                      style={{ width: `${Math.max(5, Math.min(100, ep.score))}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            {/* 1. Same Item Type */}
+                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                                Item Type
+                              </span>
+                              <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>{lostPost.category === foundPost.category ? "Same item category" : "Compatible item type"}</span>
+                              </div>
+                              <p className="text-[11px] text-slate-500">
+                                Both logged under &ldquo;{lostPost.category}&rdquo;
+                              </p>
+                            </div>
 
-                          {/* 2. Similar Appearance */}
-                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-                              Appearance
-                            </span>
-                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span>Similar appearance</span>
+                            {/* 2. Similar Appearance */}
+                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                                Appearance
+                              </span>
+                              <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span>Similar appearance</span>
+                                </div>
+                                {selectedMatch.reason?.includes("PROGRAMMATIC HEURISTIC PRESERVED") && (
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                    {t("matches.offlineEstimate", "Offline Match Estimate")}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 line-clamp-2">
+                                {getLocalizedMatchReason(selectedMatch.reason, t)}
+                              </p>
                             </div>
-                            <p className="text-[11px] text-slate-500 line-clamp-2">
-                              {selectedMatch.reason || "Attributes, color and item description strongly align"}
-                            </p>
-                          </div>
 
-                          {/* 3. Same Area */}
-                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-                              Location
-                            </span>
-                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span>{distance.km !== null && distance.km <= 3 ? "Same immediate area" : "Aligned corridor"}</span>
+                            {/* 3. Same Area */}
+                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                                Location
+                              </span>
+                              <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>{distance.km !== null && distance.km <= 3 ? "Same immediate area" : "Aligned corridor"}</span>
+                              </div>
+                              <p className="text-[11px] text-slate-500">
+                                {distance.text}
+                              </p>
                             </div>
-                            <p className="text-[11px] text-slate-500">
-                              {distance.text}
-                            </p>
-                          </div>
 
-                          {/* 4. Similar Time */}
-                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-                              Timeline
-                            </span>
-                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span>Similar time window</span>
+                            {/* 4. Similar Time */}
+                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+                                Timeline
+                              </span>
+                              <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>Similar time window</span>
+                              </div>
+                              <p className="text-[11px] text-slate-500">
+                                Reported close in sequence
+                              </p>
                             </div>
-                            <p className="text-[11px] text-slate-500">
-                              Reported close in sequence
-                            </p>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Quick Mutual Approval Decision Strip */}

@@ -849,7 +849,7 @@ export function AuthFlow({
               <div className="text-center space-y-2 pt-2">
                 <LincoLogo variant="stacked" size="lg" className="mb-2" />
                 <p className="text-xs text-slate-600 leading-relaxed max-w-[290px] mx-auto">
-                  Recover lost belongings safely through trusted citizens and intelligent verification.
+                  {t("home.heroEmotionalDesc", "An AI-powered, privacy-first recovery network connecting lost belongings with honest finders across India.")}
                 </p>
               </div>
 
@@ -862,7 +862,7 @@ export function AuthFlow({
                   className="w-full h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 font-semibold text-xs transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                 >
                   <Mail size={14} className="text-indigo-600 shrink-0" />
-                  <span>Get Started with Email</span>
+                  <span>{t("auth.getStartedEmail", "Get Started with Email")}</span>
                 </button>
 
                 {/* Google */}
@@ -877,7 +877,7 @@ export function AuthFlow({
                     <path fill="#FBBC05" d="M5.04 10.69C4.81 11.39 4.69 12.13 4.69 12s.12 1.31.35 2.01l-3.8 2.95C.44 15.42 0 13.76 0 12s.44-3.42 1.24-4.96l3.8 2.95z" />
                     <path fill="#34A853" d="M12 23c3.24 0 5.96-1.08 7.95-2.91l-3.65-2.83c-1.01.68-2.31 1.08-3.91 1.08-3.26 0-6.07-2.29-7.05-5.36l-3.8 2.95C3.2 20.27 7.24 23 12 23z" />
                   </svg>
-                  <span>{loading ? "Connecting..." : "Continue with Google"}</span>
+                  <span>{loading ? t("common.loading", "Connecting...") : t("auth.continueGoogle", "Continue with Google")}</span>
                 </button>
 
                 {/* Phone Coming Soon */}
@@ -890,26 +890,26 @@ export function AuthFlow({
                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                     <line x1="12" y1="18" x2="12" y2="18.01" />
                   </svg>
-                  <span>Continue with Phone</span>
+                  <span>{t("auth.continuePhone", "Continue with Phone")}</span>
                 </button>
               </div>
 
               {/* Navigation Footer */}
               <div className="text-center pt-2 pb-1 border-t border-slate-100">
                 <span className="text-xs text-slate-500">
-                  Already have an account?{" "}
+                  {t("auth.alreadyHaveAccount", "Already have an account?")}{" "}
                   <button 
                     onClick={() => navigateTo("login")}
                     className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
-                    Sign In
+                    {t("auth.signIn", "Sign In")}
                   </button>
                 </span>
               </div>
             </div>
           )}
 
-          {/* 3. LOGIN SCREEN */}
+          {/* 5. LOGIN SCREEN */}
           {screen === "login" && (
             <div
               key="login"
@@ -924,14 +924,14 @@ export function AuthFlow({
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-bold text-lg text-slate-900">Welcome Back</h2>
-                <p className="text-xs text-slate-500">Sign in to your LINCO account to resume tracking.</p>
+                <h2 className="font-bold text-lg text-slate-900">{t("auth.welcomeBack", "Welcome Back")}</h2>
+                <p className="text-xs text-slate-500">{t("auth.welcomeBackSubtitle", "Sign in to your LINCO account to resume tracking.")}</p>
               </div>
 
               <form onSubmit={(e) => handleEmailLogin(e)} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 block">Email or Username</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.emailOrUsername", "Email or Username")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
@@ -952,13 +952,13 @@ export function AuthFlow({
                 {/* Password Field */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-slate-700 block">Password</label>
+                    <label className="text-xs font-semibold text-slate-700 block">{t("auth.password", "Password")}</label>
                     <button
                       type="button"
                       onClick={() => navigateTo("forgot_password")}
                       className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
                     >
-                      Forgot Password?
+                      {t("auth.forgotPassword", "Forgot Password?")}
                     </button>
                   </div>
                   <div className="relative flex items-center">
@@ -992,26 +992,26 @@ export function AuthFlow({
                   className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Sign In</span>
+                  <span>{t("auth.signIn", "Sign In")}</span>
                 </button>
               </form>
 
               {/* Create Account link */}
               <div className="text-center pt-1">
                 <span className="text-xs text-slate-500">
-                  New to LINCO?{" "}
+                  {t("auth.newToLinco", "New to LINCO?")}{" "}
                   <button
                     onClick={() => navigateTo("signup")}
                     className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
-                    Create Account
+                    {t("auth.createAccount", "Create Account")}
                   </button>
                 </span>
               </div>
             </div>
           )}
 
-          {/* 4. SIGNUP SCREEN */}
+          {/* 6. SIGNUP SCREEN */}
           {screen === "signup" && (
             <div
               key="signup"
@@ -1026,14 +1026,14 @@ export function AuthFlow({
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-bold text-lg text-slate-900">Create Account</h2>
-                <p className="text-xs text-slate-500">Join the smart local recovery network.</p>
+                <h2 className="font-bold text-lg text-slate-900">{t("auth.createAccount", "Create Account")}</h2>
+                <p className="text-xs text-slate-500">{t("auth.joinNetwork", "Join the smart local recovery network.")}</p>
               </div>
 
               <form onSubmit={(e) => handleSignup(e)} className="space-y-3 pt-1">
                 {/* Full Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Full Name</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.fullName", "Full Name")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <User size={14} />
@@ -1053,7 +1053,7 @@ export function AuthFlow({
 
                 {/* Username */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Username</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.username", "Username")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Sparkles size={14} className="text-slate-400" />
@@ -1073,7 +1073,7 @@ export function AuthFlow({
 
                 {/* Email */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Email Address</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.emailAddress", "Email Address")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
@@ -1093,7 +1093,7 @@ export function AuthFlow({
 
                 {/* Password */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Password</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.password", "Password")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Lock size={14} />
@@ -1120,7 +1120,7 @@ export function AuthFlow({
 
                 {/* Confirm Password */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Confirm Password</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.confirmPassword", "Confirm Password")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Lock size={14} />
@@ -1148,7 +1148,7 @@ export function AuthFlow({
                       className="mt-0.5 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500/30 w-3.5 h-3.5 cursor-pointer accent-indigo-600"
                     />
                     <span className="text-[11px] text-slate-600 leading-normal select-none group-hover:text-slate-900 transition-colors">
-                      I accept the <span className="text-indigo-600 hover:underline font-semibold">Privacy Policy</span> and consent to encrypted data sharing.
+                      {t("auth.privacyConsent", "I accept the Privacy Policy and consent to encrypted data sharing.")}
                     </span>
                   </label>
                   {errors.privacy && (
@@ -1163,19 +1163,19 @@ export function AuthFlow({
                   className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Create Account</span>
+                  <span>{t("auth.createAccount", "Create Account")}</span>
                 </button>
               </form>
 
               {/* Already have an account */}
               <div className="text-center pt-1">
                 <span className="text-xs text-slate-500">
-                  Already registered?{" "}
+                  {t("auth.alreadyRegistered", "Already registered?")}{" "}
                   <button
                     onClick={() => navigateTo("login")}
                     className="text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer hover:underline ml-1"
                   >
-                    Sign In
+                    {t("auth.signIn", "Sign In")}
                   </button>
                 </span>
               </div>
@@ -1197,14 +1197,14 @@ export function AuthFlow({
               </button>
 
               <div className="space-y-1">
-                <h2 className="font-bold text-lg text-slate-900">Reset Password</h2>
-                <p className="text-xs text-slate-500">We'll transmit a secure recovery connection link to retrieve control of your profile.</p>
+                <h2 className="font-bold text-lg text-slate-900">{t("auth.resetPassword", "Reset Password")}</h2>
+                <p className="text-xs text-slate-500">{t("auth.resetPasswordDesc", "We'll transmit a secure recovery connection link to retrieve control of your profile.")}</p>
               </div>
 
               <form onSubmit={(e) => handleForgotPasswordSubmit(e)} className="space-y-4 pt-1">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 block">Email Address</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.emailAddress", "Email Address")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <Mail size={14} />
@@ -1229,7 +1229,7 @@ export function AuthFlow({
                   className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Send Reset Link</span>
+                  <span>{t("auth.sendResetLink", "Send Reset Link")}</span>
                 </button>
               </form>
 
@@ -1239,7 +1239,7 @@ export function AuthFlow({
                   onClick={() => navigateTo("login")}
                   className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
                 >
-                  Return to Sign In
+                  {t("auth.returnToSignIn", "Return to Sign In")}
                 </button>
               </div>
             </div>
@@ -1255,9 +1255,9 @@ export function AuthFlow({
                 <div className="w-10 h-10 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center mx-auto mb-1.5">
                   <User size={18} className="text-indigo-600" />
                 </div>
-                <h2 className="font-bold text-lg text-slate-900">Set Up Your Profile</h2>
+                <h2 className="font-bold text-lg text-slate-900">{t("auth.setUpProfile", "Set Up Your Profile")}</h2>
                 <p className="text-xs text-slate-500 leading-normal">
-                  Complete your profile so citizens can coordinate handovers with you.
+                  {t("auth.setUpProfileDesc", "Complete your profile so citizens can coordinate handovers with you.")}
                 </p>
               </div>
 
@@ -1321,7 +1321,7 @@ export function AuthFlow({
                       className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer hover:bg-slate-50 flex items-center gap-1.5 shadow-2xs"
                     >
                       <Upload size={12} className="text-indigo-600" />
-                      <span>Choose Photo</span>
+                      <span>{t("auth.choosePhoto", "Choose Photo")}</span>
                     </button>
                   </div>
                 )}
@@ -1338,7 +1338,7 @@ export function AuthFlow({
               <form onSubmit={(e) => handleProfileSetupSubmit(e)} className="space-y-3.5">
                 {/* Full Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Full Name (Required)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.fullName", "Full Name")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 z-10 pointer-events-none">
                       <User size={13} />
@@ -1356,7 +1356,7 @@ export function AuthFlow({
 
                 {/* Username */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Username (Required)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("auth.username", "Username")}</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-3.5 text-slate-400 text-xs font-mono z-10 pointer-events-none">@</span>
                     <input
@@ -1373,7 +1373,7 @@ export function AuthFlow({
                 {/* City */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-700 block">City / Neighborhood (Required)</label>
+                    <label className="text-xs font-semibold text-slate-700 block">{t("dashboard.city", "City / Neighborhood")}</label>
                     <button
                       type="button"
                       onClick={async () => {
@@ -1389,7 +1389,7 @@ export function AuthFlow({
                       }}
                       className="text-[11px] text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer flex items-center gap-1 transition"
                     >
-                      <MapPin size={11} /> Detect GPS
+                      <MapPin size={11} /> {t("auth.detectGps", "Detect GPS")}
                     </button>
                   </div>
                   <div className="relative flex items-center">
@@ -1409,7 +1409,7 @@ export function AuthFlow({
 
                 {/* Bio */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 block">Short Bio (Optional)</label>
+                  <label className="text-xs font-semibold text-slate-700 block">{t("dashboard.bio", "Short Bio")}</label>
                   <div className="relative flex items-start">
                     <span className="absolute left-3.5 top-3 text-slate-400 z-10 pointer-events-none">
                       <AlignLeft size={13} />
@@ -1431,7 +1431,7 @@ export function AuthFlow({
                   className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2 disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
-                  <span>Complete Profile Setup</span>
+                  <span>{t("auth.completeSetup", "Complete Profile Setup")}</span>
                 </button>
               </form>
             </div>

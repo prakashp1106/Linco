@@ -4,8 +4,20 @@
  */
 
 import React, { useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, Wallet, Smartphone, Key, Briefcase } from "lucide-react";
+import { motion, useReducedMotion, AnimatePresence } from "motion/react";
+import { 
+  ArrowRight, 
+  Wallet, 
+  Smartphone, 
+  Key, 
+  Briefcase, 
+  GraduationCap, 
+  Train, 
+  Coffee, 
+  Building2, 
+  MapPin, 
+  CheckCircle2 
+} from "lucide-react";
 import { Linco3DHeroObject, HeroObjectType } from "./Linco3DHeroObject";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -20,8 +32,8 @@ interface DiscoveryItem {
   category: string;
   descKey: string;
   defaultDesc: string;
-  scale: number;
   icon: React.ElementType;
+  contents: string[];
 }
 
 const ITEMS: DiscoveryItem[] = [
@@ -32,8 +44,8 @@ const ITEMS: DiscoveryItem[] = [
     category: "Wallet / Purse",
     descKey: "discovery.walletDesc",
     defaultDesc: "Cards, cash, ID cards, and transit passes",
-    scale: 0.44,
-    icon: Wallet
+    icon: Wallet,
+    contents: ["Government / Student ID", "Metro / Transit pass", "Bank cards & cash"]
   },
   {
     type: "phone",
@@ -42,8 +54,8 @@ const ITEMS: DiscoveryItem[] = [
     category: "Electronics",
     descKey: "discovery.phoneDesc",
     defaultDesc: "Smartphones, earphones, and accessories",
-    scale: 0.44,
-    icon: Smartphone
+    icon: Smartphone,
+    contents: ["Device lockscreen photo", "Protective case & stickers", "Earphones & cables"]
   },
   {
     type: "keys",
@@ -52,8 +64,8 @@ const ITEMS: DiscoveryItem[] = [
     category: "Keys",
     descKey: "discovery.keysDesc",
     defaultDesc: "Home keys, vehicle keys, and office fobs",
-    scale: 0.46,
-    icon: Key
+    icon: Key,
+    contents: ["Bike / Car remote keys", "Society / Flat main key", "Personal keychain charm"]
   },
   {
     type: "bag",
@@ -62,8 +74,8 @@ const ITEMS: DiscoveryItem[] = [
     category: "Bag",
     descKey: "discovery.bagDesc",
     defaultDesc: "College bags, backpacks, and luggage",
-    scale: 0.44,
-    icon: Briefcase
+    icon: Briefcase,
+    contents: ["Laptop & study material", "Work documents & charger", "Gym or sports kit"]
   }
 ];
 
@@ -71,96 +83,175 @@ export const LincoInteractiveDiscovery: React.FC<LincoInteractiveDiscoveryProps>
   onSelectCategory
 }) => {
   const prefersReducedMotion = useReducedMotion();
-  const [activeItem, setActiveItem] = useState<HeroObjectType>("wallet");
+  const [selectedType, setSelectedType] = useState<HeroObjectType>("wallet");
   const { t } = useLanguage();
 
+  const selectedItem = ITEMS.find((i) => i.type === selectedType) || ITEMS[0];
+
   return (
-    <section className="py-12 sm:py-16 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8 select-none">
+    <section className="py-16 sm:py-20 max-w-5xl mx-auto px-4 sm:px-6 select-none">
       
-      {/* Title & Subtext */}
-      <div className="space-y-2 max-w-lg mx-auto">
+      {/* Chapter 3 Header — Editorial & Human */}
+      <div className="text-center space-y-2 max-w-xl mx-auto mb-12">
         <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-          {t("discovery.badge", "Everyday Essentials")}
+          {t("home.discoveryBadge", "Everyday Essentials")}
         </span>
         <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-          {t("discovery.title", "What's missing?")}
+          {t("home.discoveryTitle", "What are you trying to bring home?")}
         </h2>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          {t("discovery.subtitle", "Whatever you lost, there's still a chance.")}
+          {t("home.discoverySubtitle", "Select an item to begin a safe, two-minute search across your local community.")}
         </p>
       </div>
 
-      {/* 4 Clean, recognizable item cards with controlled scale & no overflow */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-stretch">
-        {ITEMS.map((item) => {
-          const isSelected = activeItem === item.type;
-          const Icon = item.icon;
+      {/* Editorial Object Composition (Non-SaaS Grid) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        {/* LEFT / CENTER STAGE: Editorial Physical Object Presentation (7 cols) */}
+        <div className="lg:col-span-7 p-6 sm:p-10 rounded-3xl bg-slate-50 border border-slate-200/90 flex flex-col justify-between relative overflow-hidden shadow-2xs">
+          {/* Subtle warm ambient glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-indigo-100/50 blur-3xl pointer-events-none" />
 
-          return (
-            <motion.div
-              key={item.type}
-              onClick={() => setActiveItem(item.type)}
-              whileHover={prefersReducedMotion ? {} : { y: -3 }}
-              className={`relative p-5 rounded-3xl border transition-all duration-200 flex flex-col justify-between text-left cursor-pointer min-h-[400px] overflow-hidden ${
-                isSelected
-                  ? "bg-slate-50/90 border-slate-900 shadow-md ring-1 ring-slate-900/10"
-                  : "bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs"
-              }`}
-            >
-              {/* Item Header */}
-              <div className="w-full flex items-center justify-between z-10 shrink-0">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
-                  isSelected ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"
-                }`}>
-                  <Icon size={16} />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-400 capitalize">
-                  {item.category}
-                </span>
-              </div>
+          {/* Top Stage Bar */}
+          <div className="flex items-center justify-between z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-indigo-600" />
+              <span>{t(selectedItem.nameKey, selectedItem.defaultName)}</span>
+            </div>
+            <span className="text-[11px] font-medium text-slate-400">
+              {t("home.heroObjectTag", "Recognizable everyday lost belongings")}
+            </span>
+          </div>
 
-              {/* Realistic tactile visual miniature with strictly bounded container */}
-              <div className="w-full h-44 flex items-center justify-center my-2 pointer-events-none overflow-hidden relative">
+          {/* 3D Physical Object Stage */}
+          <div className="my-8 sm:my-10 w-full min-h-[220px] flex items-center justify-center relative z-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedType}
+                initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="flex items-center justify-center"
+              >
                 <Linco3DHeroObject 
-                  type={item.type} 
-                  scale={item.scale} 
-                  interactive={false} 
+                  type={selectedType}
+                  scale={0.8}
+                  interactive={true}
                   subtleFloating={true}
-                  storyState={isSelected ? "match" : "idle"}
+                  storyState="match"
                 />
-              </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-              {/* Name & Direct Report Action */}
-              <div className="w-full space-y-3 pt-3 border-t border-slate-100 z-10 shrink-0 bg-inherit">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {t(item.nameKey, item.defaultName)}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+          {/* Bottom Stage Details & Action */}
+          <div className="z-10 pt-4 border-t border-slate-200/70 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedItem.contents.map((detail, idx) => (
+                <span 
+                  key={idx} 
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 text-[11px] font-medium text-slate-600 shadow-2xs"
+                >
+                  <CheckCircle2 size={11} className="text-emerald-600 shrink-0" />
+                  <span>{detail}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+                {t(selectedItem.descKey, selectedItem.defaultDesc)}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => onSelectCategory(selectedItem.category)}
+                className="px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-xs transition flex items-center gap-2 cursor-pointer shadow-xs active:scale-98"
+              >
+                <span>{t("discovery.reportItem", "Report this item")}</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT / SELECTION STRIP: Curated Everyday Belongings (5 cols) */}
+        <div className="lg:col-span-5 flex flex-col justify-between gap-3">
+          {ITEMS.map((item) => {
+            const isSelected = selectedType === item.type;
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.type}
+                type="button"
+                onClick={() => setSelectedType(item.type)}
+                className={`w-full p-4 sm:p-5 rounded-2xl text-left border transition-all duration-150 flex items-start gap-4 cursor-pointer relative overflow-hidden ${
+                  isSelected
+                    ? "bg-white border-slate-900 shadow-sm ring-1 ring-slate-900/10"
+                    : "bg-white/70 hover:bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs"
+                }`}
+              >
+                <div className={`p-3 rounded-xl transition-colors shrink-0 ${
+                  isSelected ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700"
+                }`}>
+                  <Icon size={18} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 truncate">
+                      {t(item.nameKey, item.defaultName)}
+                    </h3>
+                    {isSelected && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     {t(item.descKey, item.defaultDesc)}
                   </p>
                 </div>
+              </button>
+            );
+          })}
+        </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectCategory(item.category);
-                  }}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer pointer-events-auto ${
-                    isSelected
-                      ? "bg-slate-900 hover:bg-slate-800 text-white shadow-2xs active:scale-98"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-98"
-                  }`}
-                >
-                  <span>{t("discovery.reportItem", "Report this item")}</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
       </div>
+
+      {/* PART L: REAL-WORLD CONTEXT — LINCO RECOVERY WEB */}
+      <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-slate-50/70 border border-slate-200/80 text-center space-y-4">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            {t("home.networkTitle", "The LINCO Recovery Network")}
+          </span>
+          <p className="text-xs sm:text-sm text-slate-600">
+            {t("home.networkDesc", "Connecting Campus • Metro • Cafe • Society • Neighborhood into one unified recovery web.")}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          {[
+            { icon: GraduationCap, label: "Colleges & Campus" },
+            { icon: Train, label: "Metro & Transit" },
+            { icon: Coffee, label: "Cafes & Workspaces" },
+            { icon: Building2, label: "Societies & Flats" },
+            { icon: MapPin, label: "Neighborhood Hubs" }
+          ].map((env, i) => {
+            const Icon = env.icon;
+            return (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs"
+              >
+                <Icon size={13} className="text-indigo-600" />
+                <span>{env.label}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
     </section>
   );
 };

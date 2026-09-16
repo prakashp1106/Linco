@@ -1508,8 +1508,8 @@ export default function App() {
                       <User size={14} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-900">Complete Profile</span>
-                      <span className="text-[10px] text-slate-500">View Profile →</span>
+                      <span className="text-xs font-bold text-slate-900">{t("dashboard.completeProfile", "Complete Profile")}</span>
+                      <span className="text-[10px] text-slate-500">{t("dashboard.viewProfile", "View Profile →")}</span>
                     </div>
                   </button>
                 )}
@@ -1523,7 +1523,7 @@ export default function App() {
                       localStorage.removeItem("linco_profile_is_logged_in");
                       window.dispatchEvent(new Event("storage"));
                       window.dispatchEvent(new Event("profile-updated"));
-                      addToast("Successfully logged out.", "success");
+                      addToast(t("auth.loggedOutMsg", "Successfully logged out."), "success");
                       setDrawerOpen(false);
                     } catch (err) {
                       localStorage.removeItem("linco_profile_details");
@@ -1536,7 +1536,7 @@ export default function App() {
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer"
                 >
                   <ShieldAlert size={15} />
-                  <span>Logout</span>
+                  <span>{t("auth.logout", "Logout")}</span>
                 </button>
               </div>
             </motion.div>

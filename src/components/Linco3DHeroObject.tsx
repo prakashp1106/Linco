@@ -38,21 +38,33 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
   useEffect(() => {
     if (prefersReducedMotion || !interactive) return;
 
+    let rafId: number | null = null;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
-      const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
 
-      // Subtle, refined tilt limits: ±10 deg
-      setRotateY(-12 + deltaX * 10);
-      setRotateX(8 - deltaY * 8);
+      rafId = requestAnimationFrame(() => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
+        const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
+
+        // Subtle, refined tilt limits: ±10 deg
+        setRotateY(-12 + deltaX * 10);
+        setRotateX(8 - deltaY * 8);
+      });
     };
 
     const handleMouseLeave = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       setRotateX(8);
       setRotateY(-12);
     };
@@ -64,6 +76,9 @@ export const Linco3DHeroObject: React.FC<Linco3DHeroObjectProps> = ({
     }
 
     return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       window.removeEventListener("mousemove", handleMouseMove);
       if (node) {
         node.removeEventListener("mouseleave", handleMouseLeave);
