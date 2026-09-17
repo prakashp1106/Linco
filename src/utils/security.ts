@@ -78,3 +78,18 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates whether the incoming request contains a valid admin API key when ADMIN_API_KEY is set.
+ */
+export function isAdminAuthorized(
+  headers: Record<string, string | string[] | undefined>,
+  body: any,
+  adminApiKey: string | undefined
+): boolean {
+  if (!adminApiKey) return true;
+  const headerKey = headers["x-admin-key"];
+  const providedHeaderKey = Array.isArray(headerKey) ? headerKey[0] : headerKey;
+  const providedKey = providedHeaderKey || body?.adminKey;
+  return Boolean(providedKey && typeof providedKey === "string" && providedKey === adminApiKey);
+}
