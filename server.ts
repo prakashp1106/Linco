@@ -15,6 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { isAdminAuthorized } from "./src/utils/security.js";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -3048,6 +3049,11 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  // Security: Require Admin API Key if configured in environment
+  if (!isAdminAuthorized(req.headers, req.body, process.env.ADMIN_API_KEY)) {
+    return res.status(401).json({ error: "Unauthorized access. Invalid admin key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;

@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isAdminAuthorized
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -72,6 +73,21 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Endpoint Security", () => {
+    it("validates request headers or body for admin key when ADMIN_API_KEY is configured", () => {
+      const adminApiKey = "secret_admin_key_123";
+
+      expect(isAdminAuthorized({ "x-admin-key": "secret_admin_key_123" }, {}, adminApiKey)).toBe(true);
+      expect(isAdminAuthorized({}, { adminKey: "secret_admin_key_123" }, adminApiKey)).toBe(true);
+      expect(isAdminAuthorized({ "x-admin-key": ["secret_admin_key_123"] }, {}, adminApiKey)).toBe(true);
+      expect(isAdminAuthorized({ "x-admin-key": "wrong_key" }, {}, adminApiKey)).toBe(false);
+      expect(isAdminAuthorized({}, { adminKey: "wrong_key" }, adminApiKey)).toBe(false);
+      expect(isAdminAuthorized({}, {}, adminApiKey)).toBe(false);
+      // When ADMIN_API_KEY is not set, authorization succeeds by default
+      expect(isAdminAuthorized({}, {}, undefined)).toBe(true);
     });
   });
 
