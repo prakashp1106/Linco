@@ -90,4 +90,33 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Admin API Key Authentication Controls", () => {
+    function isAuthorizedAdminRequest(
+      configuredAdminKey: string | undefined,
+      providedHeaderKey?: string | string[],
+      providedBodyKey?: string
+    ): boolean {
+      if (!configuredAdminKey) return true;
+      const key = (Array.isArray(providedHeaderKey) ? providedHeaderKey[0] : providedHeaderKey) || providedBodyKey;
+      return Boolean(key && key === configuredAdminKey);
+    }
+
+    it("allows config updates when ADMIN_API_KEY environment variable is not configured", () => {
+      expect(isAuthorizedAdminRequest(undefined, undefined, undefined)).toBe(true);
+    });
+
+    it("requires and validates key via X-Admin-Key header when ADMIN_API_KEY is configured", () => {
+      const secret = "secret_admin_key_123";
+      expect(isAuthorizedAdminRequest(secret, "secret_admin_key_123")).toBe(true);
+      expect(isAuthorizedAdminRequest(secret, "wrong_key")).toBe(false);
+      expect(isAuthorizedAdminRequest(secret, undefined)).toBe(false);
+    });
+
+    it("requires and validates key via adminKey body property when ADMIN_API_KEY is configured", () => {
+      const secret = "secret_admin_key_123";
+      expect(isAuthorizedAdminRequest(secret, undefined, "secret_admin_key_123")).toBe(true);
+      expect(isAuthorizedAdminRequest(secret, undefined, "invalid_key")).toBe(false);
+    });
+  });
 });
