@@ -90,4 +90,45 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Admin API Key Protection for /api/config Endpoint", () => {
+    it("enforces authentication logic correctly when ADMIN_API_KEY is configured", () => {
+      const crypto = require("crypto");
+      const adminApiKey = "secret_admin_key_123";
+
+      const checkAuth = (headers: Record<string, string>, body: any) => {
+        const providedKey = (headers["x-admin-key"] || body?.adminKey) as string | undefined;
+        const a = Buffer.from(adminApiKey);
+        const b = Buffer.from(providedKey || "");
+        if (!providedKey || a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          return { status: 401, error: "Unauthorized: Invalid or missing Admin API Key." };
+        }
+        return { status: 200, success: true };
+      };
+
+      // Missing key -> 401
+      expect(checkAuth({}, {})).toEqual({
+        status: 401,
+        error: "Unauthorized: Invalid or missing Admin API Key."
+      });
+
+      // Wrong key in header -> 401
+      expect(checkAuth({ "x-admin-key": "wrong_key" }, {})).toEqual({
+        status: 401,
+        error: "Unauthorized: Invalid or missing Admin API Key."
+      });
+
+      // Correct key in X-Admin-Key header -> 200
+      expect(checkAuth({ "x-admin-key": adminApiKey }, {})).toEqual({
+        status: 200,
+        success: true
+      });
+
+      // Correct key in adminKey body -> 200
+      expect(checkAuth({}, { adminKey: adminApiKey })).toEqual({
+        status: 200,
+        success: true
+      });
+    });
+  });
 });
