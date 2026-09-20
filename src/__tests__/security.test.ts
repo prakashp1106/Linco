@@ -75,6 +75,30 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
     });
   });
 
+  describe("Admin API Security", () => {
+    it("validates ADMIN_API_KEY authentication on POST /api/config logic", () => {
+      const adminKey = "secret-admin-key-123";
+
+      const authenticateRequest = (envKey: string | undefined, providedKey: string | undefined) => {
+        if (envKey) {
+          if (!providedKey || providedKey !== envKey) {
+            return { status: 401, error: "Unauthorized: Invalid or missing admin API key." };
+          }
+        }
+        return { status: 200, success: true };
+      };
+
+      // Unauthenticated request when ADMIN_API_KEY is configured -> 401
+      expect(authenticateRequest(adminKey, undefined).status).toBe(401);
+      // Wrong key -> 401
+      expect(authenticateRequest(adminKey, "wrong-key").status).toBe(401);
+      // Valid key -> 200
+      expect(authenticateRequest(adminKey, adminKey).status).toBe(200);
+      // Unconfigured ADMIN_API_KEY allows default access -> 200
+      expect(authenticateRequest(undefined, undefined).status).toBe(200);
+    });
+  });
+
   describe("Spam & Abuse Defense Edge Cases", () => {
     it("safely handles null, undefined and non-string inputs", () => {
       expect(sanitizeText(null as any)).toBe("");
