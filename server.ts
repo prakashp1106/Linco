@@ -3048,12 +3048,21 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  // Security: Enforce administrative API key authentication if ADMIN_API_KEY env var is set
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+    if (!providedKey || providedKey !== adminApiKey) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative API key." });
+    }
+  }
+
   const { threshold } = req.body;
-  if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
+  if (typeof threshold === "number" && Number.isFinite(threshold) && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
     res.json({ success: true, matchThreshold });
   } else {
-    res.status(400).json({ error: "Invalid threshold value. Must be between 0 and 100." });
+    res.status(400).json({ error: "Invalid threshold value. Must be a finite number between 0 and 100." });
   }
 });
 

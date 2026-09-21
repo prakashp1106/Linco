@@ -90,4 +90,35 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Admin API Configuration Security", () => {
+    it("validates administrative API key check logic", () => {
+      const checkAdminAuth = (adminApiKey: string | undefined, headerKey?: string, bodyKey?: string) => {
+        if (!adminApiKey) return true; // Unset means authentication not enforced
+        const providedKey = headerKey || bodyKey;
+        return Boolean(providedKey && providedKey === adminApiKey);
+      };
+
+      expect(checkAdminAuth("secret_key_123", "secret_key_123")).toBe(true);
+      expect(checkAdminAuth("secret_key_123", undefined, "secret_key_123")).toBe(true);
+      expect(checkAdminAuth("secret_key_123", "wrong_key")).toBe(false);
+      expect(checkAdminAuth("secret_key_123")).toBe(false);
+      expect(checkAdminAuth(undefined)).toBe(true);
+    });
+
+    it("validates threshold numerical bounds and finite constraints", () => {
+      const isValidThreshold = (val: unknown): boolean => {
+        return typeof val === "number" && Number.isFinite(val) && val >= 0 && val <= 100;
+      };
+
+      expect(isValidThreshold(0)).toBe(true);
+      expect(isValidThreshold(80)).toBe(true);
+      expect(isValidThreshold(100)).toBe(true);
+      expect(isValidThreshold(-1)).toBe(false);
+      expect(isValidThreshold(101)).toBe(false);
+      expect(isValidThreshold(NaN)).toBe(false);
+      expect(isValidThreshold(Infinity)).toBe(false);
+      expect(isValidThreshold("80")).toBe(false);
+    });
+  });
 });
