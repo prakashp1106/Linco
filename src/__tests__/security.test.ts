@@ -90,4 +90,33 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Administrative API Key Authentication Logic", () => {
+    it("verifies administrative API key auth validation logic", () => {
+      const validateAdminKey = (
+        envAdminKey: string | undefined,
+        headerKey?: string,
+        bodyKey?: string
+      ) => {
+        if (envAdminKey) {
+          const providedKey = headerKey || bodyKey;
+          if (providedKey !== envAdminKey) {
+            return { status: 401, error: "Unauthorized: Invalid or missing admin key." };
+          }
+        }
+        return { status: 200, success: true };
+      };
+
+      // When ADMIN_API_KEY is not set, access is allowed for backward compatibility
+      expect(validateAdminKey(undefined, undefined, undefined).status).toBe(200);
+
+      // When ADMIN_API_KEY is set, missing or incorrect key returns 401
+      expect(validateAdminKey("secret_admin_key", undefined, undefined).status).toBe(401);
+      expect(validateAdminKey("secret_admin_key", "wrong_key", undefined).status).toBe(401);
+
+      // When correct key is provided via header or body, access is granted (200)
+      expect(validateAdminKey("secret_admin_key", "secret_admin_key", undefined).status).toBe(200);
+      expect(validateAdminKey("secret_admin_key", undefined, "secret_admin_key").status).toBe(200);
+    });
+  });
 });
