@@ -15,6 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { validateAdminKey } from "./src/utils/security.js";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -3045,18 +3046,6 @@ app.post("/api/notifications/:id/read", async (req, res) => {
 app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
-
-// Administrative Config Authorization Middleware
-export function validateAdminKey(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const adminApiKey = process.env.ADMIN_API_KEY;
-  if (adminApiKey) {
-    const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
-    if (!providedKey || providedKey !== adminApiKey) {
-      return res.status(401).json({ error: "Unauthorized access. Valid admin key required." });
-    }
-  }
-  next();
-}
 
 // Update Configuration
 app.post("/api/config", validateAdminKey, (req, res) => {
