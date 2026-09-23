@@ -3046,8 +3046,20 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
+// Administrative Config Authorization Middleware
+export function validateAdminKey(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const providedKey = req.headers["x-admin-key"] || req.body?.adminKey;
+    if (!providedKey || providedKey !== adminApiKey) {
+      return res.status(401).json({ error: "Unauthorized access. Valid admin key required." });
+    }
+  }
+  next();
+}
+
 // Update Configuration
-app.post("/api/config", (req, res) => {
+app.post("/api/config", validateAdminKey, (req, res) => {
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
