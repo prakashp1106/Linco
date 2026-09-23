@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { 
   sanitizeText, 
   hasDangerousContent, 
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,83 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative Config Authorization (POST /api/config)", () => {
+    const originalAdminKey = process.env.ADMIN_API_KEY;
+
+    afterEach(() => {
+      if (originalAdminKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalAdminKey;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    function testMiddleware(reqPartial: any) {
+      let statusCode: number | null = null;
+      let jsonOutput: any = null;
+      let nextCalled = false;
+
+      const req = {
+        headers: reqPartial.headers || {},
+        body: reqPartial.body || {}
+      } as any;
+
+      const res = {
+        status(code: number) {
+          statusCode = code;
+          return this;
+        },
+        json(data: any) {
+          jsonOutput = data;
+          return this;
+        }
+      } as any;
+
+      const next = () => {
+        nextCalled = true;
+      };
+
+      validateAdminKey(req, res, next);
+      return { statusCode, jsonOutput, nextCalled };
+    }
+
+    it("blocks unauthenticated config update requests when ADMIN_API_KEY is configured", () => {
+      process.env.ADMIN_API_KEY = "secret-admin-key-123";
+      const res = testMiddleware({ headers: {}, body: { threshold: 50 } });
+      expect(res.nextCalled).toBe(false);
+      expect(res.statusCode).toBe(401);
+      expect(res.jsonOutput?.error).toBe("Unauthorized access. Valid admin key required.");
+    });
+
+    it("blocks config updates with an invalid admin key", () => {
+      process.env.ADMIN_API_KEY = "secret-admin-key-123";
+      const res = testMiddleware({ headers: { "x-admin-key": "wrong-key" }, body: { threshold: 50 } });
+      expect(res.nextCalled).toBe(false);
+      expect(res.statusCode).toBe(401);
+    });
+
+    it("permits config updates with valid X-Admin-Key header", () => {
+      process.env.ADMIN_API_KEY = "secret-admin-key-123";
+      const res = testMiddleware({ headers: { "x-admin-key": "secret-admin-key-123" }, body: { threshold: 50 } });
+      expect(res.nextCalled).toBe(true);
+      expect(res.statusCode).toBeNull();
+    });
+
+    it("permits config updates with valid adminKey body parameter", () => {
+      process.env.ADMIN_API_KEY = "secret-admin-key-123";
+      const res = testMiddleware({ headers: {}, body: { adminKey: "secret-admin-key-123", threshold: 50 } });
+      expect(res.nextCalled).toBe(true);
+      expect(res.statusCode).toBeNull();
+    });
+
+    it("allows config updates when ADMIN_API_KEY environment variable is unconfigured", () => {
+      delete process.env.ADMIN_API_KEY;
+      const res = testMiddleware({ headers: {}, body: { threshold: 50 } });
+      expect(res.nextCalled).toBe(true);
+      expect(res.statusCode).toBeNull();
     });
   });
 });

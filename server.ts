@@ -15,6 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { validateAdminKey } from "./src/utils/security.js";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -3047,7 +3048,7 @@ app.get("/api/config", (req, res) => {
 });
 
 // Update Configuration
-app.post("/api/config", (req, res) => {
+app.post("/api/config", validateAdminKey, (req, res) => {
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;

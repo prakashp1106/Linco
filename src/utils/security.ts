@@ -78,3 +78,17 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Express middleware to validate administrative API key when ADMIN_API_KEY environment variable is configured.
+ */
+export function validateAdminKey(req: any, res: any, next: any) {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (adminApiKey) {
+    const providedKey = req.headers?.["x-admin-key"] || req.body?.adminKey;
+    if (!providedKey || providedKey !== adminApiKey) {
+      return res.status(401).json({ error: "Unauthorized access. Valid admin key required." });
+    }
+  }
+  next();
+}
