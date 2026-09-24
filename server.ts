@@ -3046,8 +3046,15 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
+import { validateAdminApiKey } from "./src/utils/security.js";
+
 // Update Configuration
 app.post("/api/config", (req, res) => {
+  // Security: Require admin API key authentication if configured
+  if (!validateAdminApiKey(req.headers["x-admin-key"], req.body?.adminKey, process.env.ADMIN_API_KEY)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid admin key" });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;

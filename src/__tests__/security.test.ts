@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,25 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative API Key Protection", () => {
+    it("allows request when ADMIN_API_KEY is not configured", () => {
+      expect(validateAdminApiKey(undefined, undefined, undefined)).toBe(true);
+    });
+
+    it("blocks unauthorized requests when ADMIN_API_KEY is set and key is missing/incorrect", () => {
+      const secretKey = "super-secret-admin-key";
+      expect(validateAdminApiKey(undefined, undefined, secretKey)).toBe(false);
+      expect(validateAdminApiKey("wrong-key", undefined, secretKey)).toBe(false);
+      expect(validateAdminApiKey(undefined, "wrong-key", secretKey)).toBe(false);
+    });
+
+    it("authorizes requests providing matching admin key via header or body", () => {
+      const secretKey = "super-secret-admin-key";
+      expect(validateAdminApiKey(secretKey, undefined, secretKey)).toBe(true);
+      expect(validateAdminApiKey(undefined, secretKey, secretKey)).toBe(true);
     });
   });
 });
