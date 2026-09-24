@@ -78,3 +78,28 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+import crypto from "crypto";
+
+function safeTimingConstantEqual(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Validates whether an incoming admin request provides a matching admin key when ADMIN_API_KEY is configured.
+ */
+export function validateAdminApiKey(
+  providedHeaderKey: string | string[] | undefined,
+  providedBodyKey: string | undefined,
+  adminApiKey: string | undefined
+): boolean {
+  if (!adminApiKey) return true;
+  const headerKey = Array.isArray(providedHeaderKey) ? providedHeaderKey[0] : providedHeaderKey;
+  if (headerKey && safeTimingConstantEqual(headerKey, adminApiKey)) return true;
+  if (providedBodyKey && safeTimingConstantEqual(providedBodyKey, adminApiKey)) return true;
+  return false;
+}
