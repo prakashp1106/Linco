@@ -78,3 +78,32 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates administrative API key against ADMIN_API_KEY env var using timing-safe comparison.
+ * Returns true if ADMIN_API_KEY is not configured or if provided key matches.
+ */
+export function validateAdminApiKey(providedKey: string | undefined | null): boolean {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (!adminApiKey) return true;
+  if (!providedKey || typeof providedKey !== "string") return false;
+
+  const keyBuffer = Buffer.from(providedKey);
+  const adminBuffer = Buffer.from(adminApiKey);
+
+  if (keyBuffer.length !== adminBuffer.length) return false;
+
+  // Dynamically import or require crypto if needed, or use Web Crypto / Node crypto
+  // In Node environment, Buffer and crypto.timingSafeEqual are available.
+  try {
+    const crypto = require("crypto");
+    return crypto.timingSafeEqual(keyBuffer, adminBuffer);
+  } catch {
+    // Fallback if crypto module is unavailable
+    let diff = 0;
+    for (let i = 0; i < keyBuffer.length; i++) {
+      diff |= keyBuffer[i] ^ adminBuffer[i];
+    }
+    return diff === 0;
+  }
+}
