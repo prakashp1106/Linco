@@ -3,17 +3,48 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { 
   sanitizeText, 
   hasDangerousContent, 
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
+  describe("Admin API Key Validation", () => {
+    const originalEnvKey = process.env.ADMIN_API_KEY;
+
+    afterEach(() => {
+      if (originalEnvKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalEnvKey;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    it("bypasses authentication when ADMIN_API_KEY env var is not set", () => {
+      delete process.env.ADMIN_API_KEY;
+      expect(validateAdminApiKey(undefined)).toBe(true);
+      expect(validateAdminApiKey("any-key")).toBe(true);
+    });
+
+    it("authenticates valid API key when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super-secret-admin-key-123";
+      expect(validateAdminApiKey("super-secret-admin-key-123")).toBe(true);
+    });
+
+    it("rejects invalid or missing API keys when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super-secret-admin-key-123";
+      expect(validateAdminApiKey("wrong-key")).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+      expect(validateAdminApiKey(null)).toBe(false);
+      expect(validateAdminApiKey(undefined)).toBe(false);
+    });
+  });
   describe("Input Sanitization & XSS Defense", () => {
     it("strips malicious script tags from description text", () => {
       const dirty = "Lost black bag <script>alert('xss')</script> near Metro station";
