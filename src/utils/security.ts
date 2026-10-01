@@ -78,3 +78,30 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates administrative API key using timing-safe comparison.
+ * Returns true if ADMIN_API_KEY environment variable is not configured, or if provided key matches ADMIN_API_KEY.
+ */
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const expectedKey = process.env.ADMIN_API_KEY;
+  if (!expectedKey) {
+    return true; // Unconfigured ADMIN_API_KEY allows open access or unconstrained mode
+  }
+  if (!providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+
+  const expectedBuffer = Buffer.from(expectedKey);
+  const providedBuffer = Buffer.from(providedKey);
+
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+
+  let result = 0;
+  for (let i = 0; i < expectedBuffer.length; i++) {
+    result |= expectedBuffer[i] ^ providedBuffer[i];
+  }
+  return result === 0;
+}

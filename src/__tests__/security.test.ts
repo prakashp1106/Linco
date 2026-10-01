@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { 
   sanitizeText, 
   hasDangerousContent, 
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -72,6 +73,39 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Authentication", () => {
+    const originalAdminKey = process.env.ADMIN_API_KEY;
+
+    afterEach(() => {
+      if (originalAdminKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalAdminKey;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    it("allows access when ADMIN_API_KEY environment variable is not configured", () => {
+      delete process.env.ADMIN_API_KEY;
+      expect(validateAdminApiKey(undefined)).toBe(true);
+      expect(validateAdminApiKey("any-key")).toBe(true);
+    });
+
+    it("rejects invalid or missing keys when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super-secret-admin-key-123";
+      expect(validateAdminApiKey(undefined)).toBe(false);
+      expect(validateAdminApiKey(null)).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+      expect(validateAdminApiKey("wrong-key")).toBe(false);
+      expect(validateAdminApiKey("super-secret-admin-key-122")).toBe(false); // length match, char mismatch
+      expect(validateAdminApiKey("super-secret-admin-key-1234")).toBe(false); // length mismatch
+    });
+
+    it("accepts exact matching key when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super-secret-admin-key-123";
+      expect(validateAdminApiKey("super-secret-admin-key-123")).toBe(true);
     });
   });
 
