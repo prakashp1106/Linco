@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -72,6 +73,23 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Validation", () => {
+    it("validates administrative API key with constant-time comparison", () => {
+      const secret = "super_secret_admin_key_123";
+      expect(validateAdminApiKey(secret, secret)).toBe(true);
+      expect(validateAdminApiKey("wrong_key", secret)).toBe(false);
+      expect(validateAdminApiKey("", secret)).toBe(false);
+      expect(validateAdminApiKey(null, secret)).toBe(false);
+      expect(validateAdminApiKey(undefined, secret)).toBe(false);
+    });
+
+    it("fails closed when expected admin key is missing or unconfigured", () => {
+      expect(validateAdminApiKey(undefined, undefined)).toBe(false);
+      expect(validateAdminApiKey(undefined, "")).toBe(false);
+      expect(validateAdminApiKey("any_key", "")).toBe(false);
     });
   });
 
