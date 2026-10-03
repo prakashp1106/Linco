@@ -79,6 +79,14 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
   describe("Administrative API Key Validation", () => {
     const originalEnv = process.env.ADMIN_API_KEY;
 
+    const restoreEnv = () => {
+      if (originalEnv !== undefined) {
+        process.env.ADMIN_API_KEY = originalEnv;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    };
+
     it("validates correct admin API key in constant time", () => {
       process.env.ADMIN_API_KEY = "secret_admin_key_12345";
       expect(validateAdminApiKey("secret_admin_key_12345")).toBe(true);
@@ -86,13 +94,13 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(validateAdminApiKey("")).toBe(false);
       expect(validateAdminApiKey(null)).toBe(false);
       expect(validateAdminApiKey(undefined)).toBe(false);
-      process.env.ADMIN_API_KEY = originalEnv;
+      restoreEnv();
     });
 
     it("rejects authentication if ADMIN_API_KEY is not configured", () => {
       delete process.env.ADMIN_API_KEY;
       expect(validateAdminApiKey("secret_admin_key_12345")).toBe(false);
-      process.env.ADMIN_API_KEY = originalEnv;
+      restoreEnv();
     });
   });
 

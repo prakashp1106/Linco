@@ -3050,7 +3050,7 @@ app.get("/api/config", (req, res) => {
 // Update Configuration
 app.post("/api/config", (req, res) => {
   const apiKey = (req.headers["x-admin-key"] as string) || req.body?.adminKey;
-  if (process.env.ADMIN_API_KEY && !validateAdminApiKey(apiKey)) {
+  if (!validateAdminApiKey(apiKey)) {
     return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative API key." });
   }
 
