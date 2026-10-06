@@ -78,3 +78,36 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates an administrative API key against ADMIN_API_KEY environment variable using timing-safe comparison.
+ */
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const expectedKey = process.env.ADMIN_API_KEY;
+  if (!expectedKey || typeof providedKey !== "string" || !providedKey) {
+    return false;
+  }
+
+  const providedBuffer = Buffer.from(providedKey);
+  const expectedBuffer = Buffer.from(expectedKey);
+
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  try {
+    const cryptoModule = require("crypto");
+    if (cryptoModule && typeof cryptoModule.timingSafeEqual === "function") {
+      return cryptoModule.timingSafeEqual(providedBuffer, expectedBuffer);
+    }
+  } catch {
+    // Fallback if crypto module is unavailable
+  }
+
+  // Constant-time comparison fallback
+  let result = 0;
+  for (let i = 0; i < providedBuffer.length; i++) {
+    result |= providedBuffer[i] ^ expectedBuffer[i];
+  }
+  return result === 0;
+}
