@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import crypto from "crypto";
+
 /**
  * Strips dangerous HTML tags, javascript: links, and unescaped scripts from user input.
  */
@@ -77,4 +79,20 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   const clean = String(phone).trim();
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
+}
+
+/**
+ * Validates administrative API key using timing-safe comparison to prevent timing attacks.
+ */
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const adminKey = process.env.ADMIN_API_KEY;
+  if (!adminKey || !providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+  const bufProvided = Buffer.from(providedKey);
+  const bufExpected = Buffer.from(adminKey);
+  if (bufProvided.length !== bufExpected.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(bufProvided, bufExpected);
 }
