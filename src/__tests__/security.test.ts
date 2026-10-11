@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -72,6 +73,37 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Validation", () => {
+    it("validates administrative API keys using timing-safe comparison", () => {
+      const originalKey = process.env.ADMIN_API_KEY;
+      process.env.ADMIN_API_KEY = "test-secret-admin-key-2026";
+
+      expect(validateAdminApiKey("test-secret-admin-key-2026")).toBe(true);
+      expect(validateAdminApiKey("wrong-admin-key")).toBe(false);
+      expect(validateAdminApiKey("test-secret-admin-key-202")).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+      expect(validateAdminApiKey(null)).toBe(false);
+      expect(validateAdminApiKey(undefined)).toBe(false);
+
+      if (originalKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalKey;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    it("returns false when ADMIN_API_KEY is unconfigured", () => {
+      const originalKey = process.env.ADMIN_API_KEY;
+      delete process.env.ADMIN_API_KEY;
+
+      expect(validateAdminApiKey("any-key")).toBe(false);
+
+      if (originalKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalKey;
+      }
     });
   });
 
