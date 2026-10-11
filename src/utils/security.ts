@@ -3,6 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import crypto from "crypto";
+
+/**
+ * Validates administrative API key using timing-safe comparison.
+ * Compares provided key against process.env.ADMIN_API_KEY.
+ */
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const adminKey = process.env.ADMIN_API_KEY;
+  if (!adminKey || !providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+
+  const providedBuffer = Buffer.from(providedKey);
+  const expectedBuffer = Buffer.from(adminKey);
+
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
 /**
  * Strips dangerous HTML tags, javascript: links, and unescaped scripts from user input.
  */
