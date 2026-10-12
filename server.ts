@@ -15,6 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { validateAdminApiKey } from "./src/utils/security.js";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -3046,8 +3047,15 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
-// Update Configuration
+// Update Configuration (Requires Admin API Key)
 app.post("/api/config", (req, res) => {
+  const adminKey = (req.headers["x-admin-key"] as string) || req.body?.adminKey;
+  const expectedAdminKey = process.env.ADMIN_API_KEY;
+
+  if (!expectedAdminKey || !validateAdminApiKey(adminKey, expectedAdminKey)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid or missing Admin API Key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
