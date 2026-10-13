@@ -78,3 +78,26 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates provided admin API key against process.env.ADMIN_API_KEY using constant-time comparison.
+ */
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const expectedKey = process.env.ADMIN_API_KEY;
+  if (!expectedKey || !providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+  const providedBuffer = Buffer.from(providedKey);
+  const expectedBuffer = Buffer.from(expectedKey);
+
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  // Bitwise constant-time comparison or crypto.timingSafeEqual
+  let diff = 0;
+  for (let i = 0; i < expectedBuffer.length; i++) {
+    diff |= providedBuffer[i] ^ expectedBuffer[i];
+  }
+  return diff === 0;
+}
