@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,26 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin API Key Validation", () => {
+    it("returns true for matching admin API keys", () => {
+      expect(validateAdminApiKey("secret_admin_key_123", "secret_admin_key_123")).toBe(true);
+    });
+
+    it("returns false for non-matching or wrong length keys", () => {
+      expect(validateAdminApiKey("wrong_key", "secret_admin_key_123")).toBe(false);
+      expect(validateAdminApiKey("secret_admin_key_122", "secret_admin_key_123")).toBe(false);
+      expect(validateAdminApiKey("short", "secret_admin_key_123")).toBe(false);
+    });
+
+    it("returns false for missing, empty, or non-string keys", () => {
+      expect(validateAdminApiKey("", "secret_admin_key_123")).toBe(false);
+      expect(validateAdminApiKey(null, "secret_admin_key_123")).toBe(false);
+      expect(validateAdminApiKey(undefined, "secret_admin_key_123")).toBe(false);
+      expect(validateAdminApiKey("key", "")).toBe(false);
+      expect(validateAdminApiKey("key", undefined)).toBe(false);
     });
   });
 });
