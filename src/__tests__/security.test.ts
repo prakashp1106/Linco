@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { apiService } from "../services/api";
 import { 
   sanitizeText, 
   hasDangerousContent, 
@@ -88,6 +89,56 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin Authorization Controls & apiService.updateConfig", () => {
+    it("sends X-Admin-Key header and adminKey in body when updating config via apiService", async () => {
+      let capturedUrl = "";
+      let capturedInit: RequestInit | undefined;
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
+        capturedUrl = String(url);
+        capturedInit = init;
+        return new Response(JSON.stringify({ success: true, matchThreshold: 85 }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }) as typeof fetch;
+
+      try {
+        const res = await apiService.updateConfig(85, "secret-admin-key-123");
+        expect(res.success).toBe(true);
+        expect(res.matchThreshold).toBe(85);
+        expect(capturedUrl).toBe("/api/config");
+        expect(capturedInit?.method).toBe("POST");
+
+        const headers = capturedInit?.headers as Record<string, string>;
+        expect(headers["X-Admin-Key"]).toBe("secret-admin-key-123");
+
+        const body = JSON.parse(capturedInit?.body as string);
+        expect(body.threshold).toBe(85);
+        expect(body.adminKey).toBe("secret-admin-key-123");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("throws an error when server rejects unauthorized config update", async () => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () => {
+        return new Response(JSON.stringify({ error: "Unauthorized: Invalid or missing Admin API Key." }), {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        });
+      }) as typeof fetch;
+
+      try {
+        await expect(apiService.updateConfig(90, "wrong-key")).rejects.toThrow("Unauthorized: Invalid or missing Admin API Key.");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 });
