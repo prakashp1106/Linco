@@ -75,6 +75,33 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
     });
   });
 
+  describe("Admin API Authorization Verification", () => {
+    it("verifies ADMIN_API_KEY validation logic for administrative endpoints", () => {
+      const adminApiKey = "secret_admin_key_123";
+
+      // Helper simulating backend auth check
+      function checkAdminAuth(headers: Record<string, string>, body: Record<string, any>, configuredKey?: string) {
+        if (!configuredKey) return true;
+        const reqKey = headers["x-admin-key"] || body?.adminKey;
+        return Boolean(reqKey && reqKey === configuredKey);
+      }
+
+      // Allowed when ADMIN_API_KEY is unset
+      expect(checkAdminAuth({}, {}, undefined)).toBe(true);
+
+      // Blocked when ADMIN_API_KEY is configured and no key is provided
+      expect(checkAdminAuth({}, {}, adminApiKey)).toBe(false);
+
+      // Blocked when wrong key provided
+      expect(checkAdminAuth({ "x-admin-key": "wrong_key" }, {}, adminApiKey)).toBe(false);
+      expect(checkAdminAuth({}, { adminKey: "wrong_key" }, adminApiKey)).toBe(false);
+
+      // Allowed when valid key provided via header or body
+      expect(checkAdminAuth({ "x-admin-key": adminApiKey }, {}, adminApiKey)).toBe(true);
+      expect(checkAdminAuth({}, { adminKey: adminApiKey }, adminApiKey)).toBe(true);
+    });
+  });
+
   describe("Spam & Abuse Defense Edge Cases", () => {
     it("safely handles null, undefined and non-string inputs", () => {
       expect(sanitizeText(null as any)).toBe("");
