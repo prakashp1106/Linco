@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isAdminKeyValid
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,23 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin Endpoint Authentication Security", () => {
+    it("requires admin key when ADMIN_API_KEY environment variable is configured", () => {
+      expect(isAdminKeyValid(undefined, "secret_admin_key_123")).toBe(false);
+      expect(isAdminKeyValid("wrong_key", "secret_admin_key_123")).toBe(false);
+    });
+
+    it("accepts valid admin key when ADMIN_API_KEY is configured", () => {
+      expect(isAdminKeyValid("secret_admin_key_123", "secret_admin_key_123")).toBe(true);
+    });
+
+    it("allows request without key when ADMIN_API_KEY is not configured in env", () => {
+      expect(isAdminKeyValid(undefined, undefined)).toBe(true);
+      expect(isAdminKeyValid(undefined, "")).toBe(true);
+      expect(isAdminKeyValid("any_key", undefined)).toBe(true);
     });
   });
 });
