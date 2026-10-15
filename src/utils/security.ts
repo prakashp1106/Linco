@@ -78,3 +78,19 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates administrative API Key against configured environment key.
+ * Checks request header 'x-admin-key' or request body property 'adminKey'.
+ */
+export function validateAdminApiKey(
+  headers: Record<string, string | string[] | undefined>,
+  body: Record<string, any> | null | undefined,
+  envAdminKey: string | undefined = process.env.ADMIN_API_KEY
+): boolean {
+  if (!envAdminKey) return true;
+  const providedHeaderKey = headers["x-admin-key"];
+  const headerKeyStr = Array.isArray(providedHeaderKey) ? providedHeaderKey[0] : providedHeaderKey;
+  const providedKey = headerKeyStr || body?.adminKey;
+  return providedKey === envAdminKey;
+}

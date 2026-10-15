@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,25 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin Endpoint Authentication", () => {
+    it("allows config update when ADMIN_API_KEY is not configured in env", () => {
+      expect(validateAdminApiKey({}, { threshold: 80 }, undefined)).toBe(true);
+    });
+
+    it("rejects request when ADMIN_API_KEY is configured and provided key is missing or invalid", () => {
+      const adminKey = "secret_admin_key_123";
+      expect(validateAdminApiKey({}, { threshold: 80 }, adminKey)).toBe(false);
+      expect(validateAdminApiKey({ "x-admin-key": "wrong_key" }, { threshold: 80 }, adminKey)).toBe(false);
+      expect(validateAdminApiKey({}, { adminKey: "wrong_key", threshold: 80 }, adminKey)).toBe(false);
+    });
+
+    it("authenticates successfully via X-Admin-Key header or adminKey body property", () => {
+      const adminKey = "secret_admin_key_123";
+      expect(validateAdminApiKey({ "x-admin-key": adminKey }, { threshold: 80 }, adminKey)).toBe(true);
+      expect(validateAdminApiKey({}, { adminKey: adminKey, threshold: 80 }, adminKey)).toBe(true);
     });
   });
 });
