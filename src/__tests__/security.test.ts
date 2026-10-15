@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,28 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin Config API Key Authentication", () => {
+    it("allows config update when ADMIN_API_KEY is not configured", () => {
+      expect(validateAdminKey(undefined, undefined, undefined)).toBe(true);
+    });
+
+    it("rejects config update when ADMIN_API_KEY is set and no key is provided", () => {
+      expect(validateAdminKey("secret-admin-key", undefined, undefined)).toBe(false);
+    });
+
+    it("rejects config update when incorrect admin key is provided", () => {
+      expect(validateAdminKey("secret-admin-key", "wrong-key", undefined)).toBe(false);
+    });
+
+    it("allows config update when correct admin key is provided via header", () => {
+      expect(validateAdminKey("secret-admin-key", "secret-admin-key", undefined)).toBe(true);
+    });
+
+    it("allows config update when correct admin key is provided via body", () => {
+      expect(validateAdminKey("secret-admin-key", undefined, "secret-admin-key")).toBe(true);
     });
   });
 });
