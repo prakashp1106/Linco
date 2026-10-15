@@ -127,6 +127,17 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests from this IP, please try again later." },
 });
 
+// Strict rate limiting for authentication endpoints to guard against brute-force attacks and user/email enumeration
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 auth requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false },
+  message: { error: "Too many authentication requests from this IP, please try again later." },
+});
+
+app.use("/api/auth/", authLimiter);
 app.use("/api/", apiLimiter);
 
 // Set high body limits to allow base64 images to pass through

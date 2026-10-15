@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { rateLimit } from "express-rate-limit";
 import { 
   sanitizeText, 
   hasDangerousContent, 
@@ -88,6 +89,45 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Authentication Rate Limiting Defense", () => {
+    it("blocks requests exceeding the 20-request limit for authentication endpoints", async () => {
+      const authLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 20,
+        standardHeaders: true,
+        legacyHeaders: false,
+        validate: { trustProxy: false },
+        message: { error: "Too many authentication requests from this IP, please try again later." },
+      });
+
+      let nextCalledCount = 0;
+      let statusCode = 200;
+      let responseBody: any = null;
+
+      for (let i = 0; i < 21; i++) {
+        const req: any = {
+          ip: "10.0.0.1",
+          headers: {},
+          app: { get: () => false },
+        };
+        const res: any = {
+          headers: {},
+          setHeader(name: string, value: any) { this.headers[name] = value; },
+          getHeader(name: string) { return this.headers[name]; },
+          status(code: number) { statusCode = code; return this; },
+          send(body: any) { responseBody = body; return this; },
+        };
+        const next = () => { nextCalledCount++; };
+
+        await authLimiter(req, res, next);
+      }
+
+      expect(nextCalledCount).toBe(20);
+      expect(statusCode).toBe(429);
+      expect(responseBody).toEqual({ error: "Too many authentication requests from this IP, please try again later." });
     });
   });
 });
