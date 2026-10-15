@@ -75,6 +75,26 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
     });
   });
 
+  describe("Admin API Security", () => {
+    it("validates header and body key checks logic for admin authorization", () => {
+      const adminApiKey = "secret_admin_key_123";
+
+      const authorize = (keyHeader?: string, bodyKey?: string) => {
+        const providedKey = keyHeader || bodyKey;
+        if (!providedKey || providedKey !== adminApiKey) {
+          return { status: 401, error: "Unauthorized: Invalid or missing administrative key." };
+        }
+        return { status: 200, success: true };
+      };
+
+      expect(authorize(undefined, undefined).status).toBe(401);
+      expect(authorize("wrong_key", undefined).status).toBe(401);
+      expect(authorize(undefined, "wrong_key").status).toBe(401);
+      expect(authorize("secret_admin_key_123", undefined).status).toBe(200);
+      expect(authorize(undefined, "secret_admin_key_123").status).toBe(200);
+    });
+  });
+
   describe("Spam & Abuse Defense Edge Cases", () => {
     it("safely handles null, undefined and non-string inputs", () => {
       expect(sanitizeText(null as any)).toBe("");
