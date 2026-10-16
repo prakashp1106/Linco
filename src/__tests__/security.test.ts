@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  validateAdminApiKey
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,23 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative API Key Validation", () => {
+    it("validates exact matching keys in constant time", () => {
+      expect(validateAdminApiKey("secret123key", "secret123key")).toBe(true);
+      expect(validateAdminApiKey(" secret123key ", "secret123key")).toBe(true);
+    });
+
+    it("rejects invalid, truncated, or wrong keys safely", () => {
+      expect(validateAdminApiKey("wrongkey", "secret123key")).toBe(false);
+      expect(validateAdminApiKey("secret123ke", "secret123key")).toBe(false);
+      expect(validateAdminApiKey("secret123keyextra", "secret123key")).toBe(false);
+      expect(validateAdminApiKey("", "secret123key")).toBe(false);
+      expect(validateAdminApiKey(null, "secret123key")).toBe(false);
+      expect(validateAdminApiKey(undefined, "secret123key")).toBe(false);
+      expect(validateAdminApiKey("secret123key", null)).toBe(false);
     });
   });
 });
