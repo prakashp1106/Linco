@@ -3049,11 +3049,14 @@ app.get("/api/config", (req, res) => {
 
 // Update Configuration
 app.post("/api/config", (req, res) => {
-  const apiKeyHeader = req.headers["x-admin-key"];
-  const adminKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader || req.body?.adminKey;
+  // If ADMIN_API_KEY environment variable is set, enforce administrative API key verification
+  if (process.env.ADMIN_API_KEY) {
+    const apiKeyHeader = req.headers["x-admin-key"];
+    const adminKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader || req.body?.adminKey;
 
-  if (!validateAdminApiKey(adminKey)) {
-    return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative API key" });
+    if (!validateAdminApiKey(adminKey)) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative API key" });
+    }
   }
 
   const { threshold } = req.body;
