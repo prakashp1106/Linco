@@ -78,3 +78,24 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates an administrative API key using timing-safe comparison.
+ */
+export function validateAdminApiKey(key: string | null | undefined): boolean {
+  if (!key || typeof key !== "string") return false;
+
+  const expectedKey = process.env.ADMIN_API_KEY;
+  if (!expectedKey) return false;
+
+  const a = Buffer.from(key);
+  const b = Buffer.from(expectedKey);
+
+  if (a.length !== b.length) return false;
+
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a[i] ^ b[i];
+  }
+  return result === 0;
+}
