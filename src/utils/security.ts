@@ -78,3 +78,25 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates an administrative API key using timing-safe string comparison.
+ * Works safely across both browser and Node.js runtime environments without Node globals.
+ */
+export function validateAdminApiKey(key: string | null | undefined, expectedKeyInput?: string | null | undefined): boolean {
+  if (!key || typeof key !== "string") return false;
+
+  const expectedKey = expectedKeyInput !== undefined
+    ? expectedKeyInput
+    : (typeof process !== "undefined" && process.env ? process.env.ADMIN_API_KEY : undefined);
+
+  if (!expectedKey || typeof expectedKey !== "string") return false;
+
+  if (key.length !== expectedKey.length) return false;
+
+  let result = 0;
+  for (let i = 0; i < key.length; i++) {
+    result |= key.charCodeAt(i) ^ expectedKey.charCodeAt(i);
+  }
+  return result === 0;
+}
