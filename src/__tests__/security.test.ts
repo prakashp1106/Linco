@@ -10,10 +10,37 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber
 } from "../utils/security";
+import { validateAdminApiKey } from "../utils/serverSecurity";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
+  describe("Admin API Key Validation", () => {
+    it("validates correct admin API key in constant time", () => {
+      const originalEnv = process.env.ADMIN_API_KEY;
+      process.env.ADMIN_API_KEY = "secret_admin_key_12345";
+      try {
+        expect(validateAdminApiKey("secret_admin_key_12345")).toBe(true);
+        expect(validateAdminApiKey("wrong_key")).toBe(false);
+        expect(validateAdminApiKey("")).toBe(false);
+        expect(validateAdminApiKey(null)).toBe(false);
+        expect(validateAdminApiKey(undefined)).toBe(false);
+      } finally {
+        process.env.ADMIN_API_KEY = originalEnv;
+      }
+    });
+
+    it("rejects validation when ADMIN_API_KEY environment variable is missing", () => {
+      const originalEnv = process.env.ADMIN_API_KEY;
+      delete process.env.ADMIN_API_KEY;
+      try {
+        expect(validateAdminApiKey("secret_admin_key_12345")).toBe(false);
+      } finally {
+        process.env.ADMIN_API_KEY = originalEnv;
+      }
+    });
+  });
+
   describe("Input Sanitization & XSS Defense", () => {
     it("strips malicious script tags from description text", () => {
       const dirty = "Lost black bag <script>alert('xss')</script> near Metro station";
