@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { 
   sanitizeText, 
   hasDangerousContent, 
@@ -12,6 +12,7 @@ import {
   isValidPhoneNumber,
   maskPhoneNumber 
 } from "../utils/security";
+import { validateAdminApiKey } from "../../server";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
   describe("Input Sanitization & XSS Defense", () => {
@@ -72,6 +73,38 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Authentication & Timing-Safe Security", () => {
+    const originalEnv = process.env.ADMIN_API_KEY;
+
+    afterEach(() => {
+      if (originalEnv !== undefined) {
+        process.env.ADMIN_API_KEY = originalEnv;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    it("allows request when ADMIN_API_KEY is unconfigured on server", () => {
+      delete process.env.ADMIN_API_KEY;
+      expect(validateAdminApiKey(undefined)).toBe(true);
+      expect(validateAdminApiKey(null)).toBe(true);
+      expect(validateAdminApiKey("any_key")).toBe(true);
+    });
+
+    it("rejects invalid or missing keys when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super_secret_admin_key_123";
+      expect(validateAdminApiKey(undefined)).toBe(false);
+      expect(validateAdminApiKey(null)).toBe(false);
+      expect(validateAdminApiKey("wrong_key")).toBe(false);
+      expect(validateAdminApiKey("super_secret_admin_key_12")).toBe(false); // different length
+    });
+
+    it("authenticates valid key using timing-safe comparison when ADMIN_API_KEY is set", () => {
+      process.env.ADMIN_API_KEY = "super_secret_admin_key_123";
+      expect(validateAdminApiKey("super_secret_admin_key_123")).toBe(true);
     });
   });
 

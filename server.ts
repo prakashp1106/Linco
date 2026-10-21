@@ -6,6 +6,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch, Claim, PotentialMatch, LincoNotification, MatchEvidencePoint } from "./src/types.js";
 import { db } from "./src/services/firebaseAdmin.js";
@@ -3046,8 +3047,31 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
-// Update Configuration
+// Helper to validate administrative API key using timing-safe comparison
+export function validateAdminApiKey(providedKey: string | null | undefined): boolean {
+  const configuredKey = process.env.ADMIN_API_KEY;
+  if (!configuredKey) {
+    // If no ADMIN_API_KEY is configured on server, allow request (development mode)
+    return true;
+  }
+  if (!providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+  const providedBuf = Buffer.from(providedKey);
+  const configuredBuf = Buffer.from(configuredKey);
+  if (providedBuf.length !== configuredBuf.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(providedBuf, configuredBuf);
+}
+
+// Update Configuration (Requires Admin API Key when ADMIN_API_KEY env is set)
 app.post("/api/config", (req, res) => {
+  const providedKey = (req.headers["x-admin-key"] as string) || req.body?.adminKey;
+  if (!validateAdminApiKey(providedKey)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid or missing administrative API key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
