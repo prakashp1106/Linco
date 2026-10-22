@@ -12,6 +12,7 @@ import {
   isValidPhoneNumber,
   maskPhoneNumber 
 } from "../utils/security";
+import { validateAdminApiKey } from "../utils/adminAuth";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
   describe("Input Sanitization & XSS Defense", () => {
@@ -88,6 +89,27 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Administrative API Key Validation", () => {
+    it("validates administrative API key using timing-safe comparison", () => {
+      const originalKey = process.env.ADMIN_API_KEY;
+      process.env.ADMIN_API_KEY = "super-secret-admin-key-123";
+
+      expect(validateAdminApiKey("super-secret-admin-key-123")).toBe(true);
+      expect(validateAdminApiKey("wrong-admin-key")).toBe(false);
+      expect(validateAdminApiKey("super-secret-admin-key-124")).toBe(false);
+      expect(validateAdminApiKey("short")).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+      expect(validateAdminApiKey(undefined)).toBe(false);
+
+      delete process.env.ADMIN_API_KEY;
+      expect(validateAdminApiKey("super-secret-admin-key-123")).toBe(false);
+
+      if (originalKey !== undefined) {
+        process.env.ADMIN_API_KEY = originalKey;
+      }
     });
   });
 });
