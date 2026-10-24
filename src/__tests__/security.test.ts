@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { 
   sanitizeText, 
   hasDangerousContent, 
@@ -12,6 +12,7 @@ import {
   isValidPhoneNumber,
   maskPhoneNumber 
 } from "../utils/security";
+import { validateAdminApiKey } from "../utils/adminAuth";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
   describe("Input Sanitization & XSS Defense", () => {
@@ -88,6 +89,41 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Admin API Key Authentication", () => {
+    const originalEnv = process.env.ADMIN_API_KEY;
+
+    afterEach(() => {
+      if (originalEnv !== undefined) {
+        process.env.ADMIN_API_KEY = originalEnv;
+      } else {
+        delete process.env.ADMIN_API_KEY;
+      }
+    });
+
+    it("rejects authentication if ADMIN_API_KEY environment variable is missing", () => {
+      delete process.env.ADMIN_API_KEY;
+      expect(validateAdminApiKey("some-key")).toBe(false);
+    });
+
+    it("rejects authentication if provided key is missing or empty", () => {
+      process.env.ADMIN_API_KEY = "super-secret-key-123";
+      expect(validateAdminApiKey(undefined)).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+    });
+
+    it("rejects authentication for mismatched keys or length mismatch", () => {
+      process.env.ADMIN_API_KEY = "super-secret-key-123";
+      expect(validateAdminApiKey("wrong-key")).toBe(false);
+      expect(validateAdminApiKey("super-secret-key-12")).toBe(false);
+      expect(validateAdminApiKey("super-secret-key-1234")).toBe(false);
+    });
+
+    it("accepts authentication when provided key matches ADMIN_API_KEY exactly", () => {
+      process.env.ADMIN_API_KEY = "super-secret-key-123";
+      expect(validateAdminApiKey("super-secret-key-123")).toBe(true);
     });
   });
 });
