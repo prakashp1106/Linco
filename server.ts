@@ -9,6 +9,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch, Claim, PotentialMatch, LincoNotification, MatchEvidencePoint } from "./src/types.js";
 import { db } from "./src/services/firebaseAdmin.js";
+import { validateAdminApiKey } from "./src/utils/adminAuth.js";
 import { v2 as cloudinary } from "cloudinary";
 
 import helmet from "helmet";
@@ -3046,8 +3047,16 @@ app.get("/api/config", (req, res) => {
   res.json({ success: true, matchThreshold });
 });
 
-// Update Configuration
+// Update Configuration (Requires ADMIN_API_KEY authentication)
 app.post("/api/config", (req, res) => {
+  const apiKeyHeader = req.headers["x-admin-key"] as string | undefined;
+  const apiKeyBody = req.body?.adminKey as string | undefined;
+  const providedKey = apiKeyHeader || apiKeyBody;
+
+  if (!validateAdminApiKey(providedKey)) {
+    return res.status(401).json({ error: "Unauthorized: Invalid or missing admin API key." });
+  }
+
   const { threshold } = req.body;
   if (typeof threshold === "number" && threshold >= 0 && threshold <= 100) {
     matchThreshold = threshold;
