@@ -12,6 +12,7 @@ import {
   isValidPhoneNumber,
   maskPhoneNumber 
 } from "../utils/security";
+import { validateAdminApiKey } from "../utils/adminAuth";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
   describe("Input Sanitization & XSS Defense", () => {
@@ -72,6 +73,31 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Admin API Key Authentication", () => {
+    it("validates correct admin key when ADMIN_API_KEY is configured", () => {
+      const originalEnv = process.env.ADMIN_API_KEY;
+      process.env.ADMIN_API_KEY = "secret-admin-key-123";
+
+      expect(validateAdminApiKey("secret-admin-key-123")).toBe(true);
+      expect(validateAdminApiKey("wrong-key")).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+      expect(validateAdminApiKey(null)).toBe(false);
+      expect(validateAdminApiKey(undefined)).toBe(false);
+
+      process.env.ADMIN_API_KEY = originalEnv;
+    });
+
+    it("rejects authentication if ADMIN_API_KEY environment variable is not configured", () => {
+      const originalEnv = process.env.ADMIN_API_KEY;
+      delete process.env.ADMIN_API_KEY;
+
+      expect(validateAdminApiKey("secret-admin-key-123")).toBe(false);
+      expect(validateAdminApiKey("")).toBe(false);
+
+      process.env.ADMIN_API_KEY = originalEnv;
     });
   });
 
