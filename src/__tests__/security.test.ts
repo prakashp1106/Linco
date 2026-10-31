@@ -90,4 +90,58 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
     });
   });
+
+  describe("Uploads Directory Access Control", () => {
+    it("blocks access to sensitive fallback_db and json files", async () => {
+      const { uploadsSecurityMiddleware } = await import("../../server");
+
+      const createMockRes = () => {
+        const res: any = {};
+        res.status = (code: number) => {
+          res.statusCode = code;
+          return res;
+        };
+        res.json = (data: any) => {
+          res.body = data;
+          return res;
+        };
+        return res;
+      };
+
+      // Test access to /fallback_db.json
+      let nextCalled = false;
+      const res1 = createMockRes();
+      uploadsSecurityMiddleware(
+        { path: "/fallback_db.json" } as any,
+        res1 as any,
+        () => { nextCalled = true; }
+      );
+      expect(res1.statusCode).toBe(403);
+      expect(res1.body).toEqual({ error: "Access denied." });
+      expect(nextCalled).toBe(false);
+
+      // Test access to any .json file
+      nextCalled = false;
+      const res2 = createMockRes();
+      uploadsSecurityMiddleware(
+        { path: "/sub/data.json" } as any,
+        res2 as any,
+        () => { nextCalled = true; }
+      );
+      expect(res2.statusCode).toBe(403);
+      expect(res2.body).toEqual({ error: "Access denied." });
+      expect(nextCalled).toBe(false);
+
+      // Test allowed access to image files
+      nextCalled = false;
+      const res3 = createMockRes();
+      uploadsSecurityMiddleware(
+        { path: "/img_12345.jpeg" } as any,
+        res3 as any,
+        () => { nextCalled = true; }
+      );
+      expect(nextCalled).toBe(true);
+      expect(res3.statusCode).toBeUndefined();
+    });
+  });
 });

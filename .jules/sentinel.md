@@ -1,0 +1,4 @@
+## 2026-03-31 - Static Upload Directory Information Disclosure via Local Fallback DB
+**Vulnerability:** The local database file `fallback_db.json` is stored inside the `uploads/` directory, which is served statically via Express (`app.use("/uploads", express.static(...))`). An unauthenticated attacker could download the entire database (posts, PIN hashes, unmasked phone numbers, claims, and audit logs) directly over HTTP GET `/uploads/fallback_db.json`.
+**Learning:** Storing backend runtime persistence or fallback database files within a publicly served static upload folder creates an unintentional public exposure vector unless explicit access controls or directory separation are enforced.
+**Prevention:** Guard static asset directories with access-control middleware blocking `.json` and database files, and store runtime database files outside public static serving roots.

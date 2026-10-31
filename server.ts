@@ -1640,8 +1640,17 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Serve uploaded files statically with safe cache controls and CORS headers for iframe/cross-origin safety
-app.use("/uploads", (req, res, next) => {
+// Serve uploaded files statically with safe cache controls and CORS headers for iframe/cross-origin safety.
+// Security Defense: Forbid direct access to sensitive local fallback database files or any JSON data files in uploads directory.
+export function uploadsSecurityMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const normalizedPath = req.path.toLowerCase();
+  if (normalizedPath.endsWith(".json") || normalizedPath.includes("fallback_db")) {
+    return res.status(403).json({ error: "Access denied." });
+  }
+  next();
+}
+
+app.use("/uploads", uploadsSecurityMiddleware, (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
