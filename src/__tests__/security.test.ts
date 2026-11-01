@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isSafeUploadPath
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -72,6 +73,40 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(isValidPhoneNumber("98765 43210")).toBe(true);
       expect(isValidPhoneNumber("123")).toBe(false);
       expect(isValidPhoneNumber("invalid-phone")).toBe(false);
+    });
+  });
+
+  describe("Static Uploads Access Control", () => {
+    it("blocks access to local fallback database files", () => {
+      expect(isSafeUploadPath("/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/subfolder/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/%66allback_db.json")).toBe(false);
+    });
+
+    it("blocks access to any arbitrary .json sensitive file in uploads", () => {
+      expect(isSafeUploadPath("/secrets.json")).toBe(false);
+      expect(isSafeUploadPath("/config.json")).toBe(false);
+      expect(isSafeUploadPath("/data.JSON")).toBe(false);
+      expect(isSafeUploadPath("/export.json?query=1")).toBe(false);
+    });
+
+    it("allows safe image upload assets", () => {
+      expect(isSafeUploadPath("/img_12345_abc.jpeg")).toBe(true);
+      expect(isSafeUploadPath("/thumb_67890_def.png")).toBe(true);
+      expect(isSafeUploadPath("/photo.webp")).toBe(true);
+      expect(isSafeUploadPath("/avatar.jpg")).toBe(true);
+    });
+
+    it("handles malformed URI percent encodings safely without crashing", () => {
+      expect(isSafeUploadPath("/%99invalid")).toBe(false);
+      expect(isSafeUploadPath("/%E0%A4%A")).toBe(false);
+    });
+
+    it("rejects empty or non-string paths", () => {
+      expect(isSafeUploadPath("")).toBe(false);
+      expect(isSafeUploadPath(null as any)).toBe(false);
+      expect(isSafeUploadPath(undefined as any)).toBe(false);
     });
   });
 
