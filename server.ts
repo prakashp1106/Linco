@@ -15,7 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { isSafeUploadPath } from "./src/utils/security.js";
+import { isSafeUploadPath } from "./src/utils/security";
 
 // Configure Cloudinary
 cloudinary.config({
