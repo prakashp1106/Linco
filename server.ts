@@ -15,6 +15,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { isSafeUploadPath } from "./src/utils/security";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -1642,6 +1643,10 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 
 // Serve uploaded files statically with safe cache controls and CORS headers for iframe/cross-origin safety
 app.use("/uploads", (req, res, next) => {
+  // Security: Deny access to sensitive database fallback files and prevent path traversal
+  if (!isSafeUploadPath(req.path)) {
+    return res.status(403).json({ error: "Access denied to requested file." });
+  }
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
