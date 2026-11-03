@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isSafeUploadPath
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,41 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Upload Path Security & Fallback DB Protection", () => {
+    it("denies access to fallback database and JSON data", () => {
+      expect(isSafeUploadPath("/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/nested/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/data.json")).toBe(false);
+      expect(isSafeUploadPath("/some_file.json")).toBe(false);
+    });
+
+    it("denies path traversal attempts and malformed URI encodings", () => {
+      expect(isSafeUploadPath("../etc/passwd")).toBe(false);
+      expect(isSafeUploadPath("/uploads/../secret.txt")).toBe(false);
+      expect(isSafeUploadPath("..\\windows\\win.ini")).toBe(false);
+      expect(isSafeUploadPath("/%99baduri")).toBe(false);
+    });
+
+    it("denies non-image or executable files", () => {
+      expect(isSafeUploadPath("/shell.sh")).toBe(false);
+      expect(isSafeUploadPath("/payload.exe")).toBe(false);
+      expect(isSafeUploadPath("/script.js")).toBe(false);
+      expect(isSafeUploadPath("")).toBe(false);
+      expect(isSafeUploadPath(null)).toBe(false);
+      expect(isSafeUploadPath(undefined)).toBe(false);
+    });
+
+    it("allows valid image files", () => {
+      expect(isSafeUploadPath("/img_1719680000000_abc123.jpg")).toBe(true);
+      expect(isSafeUploadPath("/img_1719680000000_abc123.jpeg")).toBe(true);
+      expect(isSafeUploadPath("/thumb_1719680000000_abc123.png")).toBe(true);
+      expect(isSafeUploadPath("/photo.webp")).toBe(true);
+      expect(isSafeUploadPath("/icon.gif")).toBe(true);
+      expect(isSafeUploadPath("/badge.svg")).toBe(true);
     });
   });
 });
