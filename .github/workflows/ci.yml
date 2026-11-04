@@ -19,16 +19,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Type Check & Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Execute Vitest Automated Test Suites
-        run: npm test
+        run: yarn test
 
       - name: Verify Production Bundle Compilation
-        run: npm run build
+        run: yarn build
