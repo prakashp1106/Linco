@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isSafeUploadPath
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,33 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Static Upload Path Traversal & Sensitive File Exposure Defense", () => {
+    it("allows valid image files in uploads", () => {
+      expect(isSafeUploadPath("/img_12345_abc.png")).toBe(true);
+      expect(isSafeUploadPath("/photo_sample.jpg")).toBe(true);
+      expect(isSafeUploadPath("/item.jpeg")).toBe(true);
+      expect(isSafeUploadPath("valid_image.webp")).toBe(true);
+    });
+
+    it("blocks access to local database files and .json files", () => {
+      expect(isSafeUploadPath("/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/data/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/other_data.json")).toBe(false);
+      expect(isSafeUploadPath("/file.json/something")).toBe(false);
+    });
+
+    it("blocks directory traversal attacks and hidden files", () => {
+      expect(isSafeUploadPath("/../server.ts")).toBe(false);
+      expect(isSafeUploadPath("/../../etc/passwd")).toBe(false);
+      expect(isSafeUploadPath("/%2e%2e/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/.env")).toBe(false);
+      expect(isSafeUploadPath("/.git/config")).toBe(false);
+      expect(isSafeUploadPath(null)).toBe(false);
+      expect(isSafeUploadPath(undefined)).toBe(false);
     });
   });
 });
