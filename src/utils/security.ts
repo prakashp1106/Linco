@@ -78,3 +78,26 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates whether a requested static upload path is safe to serve publicly.
+ * Prevents directory traversal, access to database fallbacks, and non-image files.
+ */
+export function isSafeUploadPath(reqPath: string | null | undefined): boolean {
+  if (!reqPath || typeof reqPath !== "string") return false;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(reqPath).toLowerCase();
+  } catch {
+    return false;
+  }
+
+  // Prevent path traversal
+  if (decoded.includes("..") || decoded.includes("\\")) return false;
+
+  // Protect internal database fallback file and JSON files
+  if (decoded.includes("fallback_db") || decoded.endsWith(".json")) return false;
+
+  // Ensure safe file extension (images only)
+  return /\.(png|jpe?g|webp|gif|svg)$/i.test(decoded);
+}
