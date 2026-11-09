@@ -9,6 +9,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import { Post, AIMatch, Claim, PotentialMatch, LincoNotification, MatchEvidencePoint } from "./src/types.js";
 import { db } from "./src/services/firebaseAdmin.js";
+import { isSafeUploadPath } from "./src/utils/security.js";
 import { v2 as cloudinary } from "cloudinary";
 
 import helmet from "helmet";
@@ -1642,6 +1643,9 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 
 // Serve uploaded files statically with safe cache controls and CORS headers for iframe/cross-origin safety
 app.use("/uploads", (req, res, next) => {
+  if (!isSafeUploadPath(req.path)) {
+    return res.status(403).json({ error: "Access denied to protected file" });
+  }
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
