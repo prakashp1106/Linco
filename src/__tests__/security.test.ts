@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isSafeUploadPath
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,28 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Upload Path Security & Information Disclosure Defense", () => {
+    it("blocks access to local fallback database files", () => {
+      expect(isSafeUploadPath("/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/sub/fallback_db.json")).toBe(false);
+    });
+
+    it("blocks access to any .json files and traversal attempts", () => {
+      expect(isSafeUploadPath("/secrets.json")).toBe(false);
+      expect(isSafeUploadPath("/data.json?cache=1")).toBe(false);
+      expect(isSafeUploadPath("/../server.ts")).toBe(false);
+      expect(isSafeUploadPath(null)).toBe(false);
+      expect(isSafeUploadPath("")).toBe(false);
+    });
+
+    it("allows legitimate uploaded image files", () => {
+      expect(isSafeUploadPath("/img_1789385275230_og0kfi.png")).toBe(true);
+      expect(isSafeUploadPath("/photo_123.jpg")).toBe(true);
+      expect(isSafeUploadPath("/item_wallet.webp")).toBe(true);
     });
   });
 });

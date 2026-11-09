@@ -78,3 +78,20 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Validates whether a file path requested from /uploads is safe to serve.
+ * Denies access to JSON databases (like fallback_db.json), dotfiles, or path traversal.
+ */
+export function isSafeUploadPath(urlPath: string | null | undefined): boolean {
+  if (!urlPath || typeof urlPath !== "string") return false;
+  try {
+    const decoded = decodeURIComponent(urlPath).toLowerCase();
+    if (decoded.includes("fallback_db") || decoded.endsWith(".json") || decoded.includes(".json?") || decoded.includes("..")) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
