@@ -78,3 +78,27 @@ export function maskPhoneNumber(phone: string | null | undefined): string {
   if (clean.length < 6) return "******";
   return clean.slice(0, 2) + "*".repeat(clean.length - 4) + clean.slice(-2);
 }
+
+/**
+ * Guards uploaded files from unauthorized access to sensitive fallback data or system files.
+ * Rejects requests to JSON databases (e.g. fallback_db.json), dotfiles, or path traversal.
+ */
+export function isSafeUploadPath(reqPath: string | null | undefined): boolean {
+  if (!reqPath || typeof reqPath !== "string") return false;
+  // Decode URL components to inspect raw characters
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(reqPath);
+  } catch {
+    return false;
+  }
+  const normalized = decoded.toLowerCase();
+  if (normalized.includes("..") || normalized.includes("fallback_db") || normalized.endsWith(".json")) {
+    return false;
+  }
+  // Disallow hidden files
+  if (/(?:^|\/)\.[^\/]+/.test(normalized)) {
+    return false;
+  }
+  return true;
+}
