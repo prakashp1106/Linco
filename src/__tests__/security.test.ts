@@ -10,7 +10,8 @@ import {
   isValidPinFormat, 
   isValidUsername, 
   isValidPhoneNumber,
-  maskPhoneNumber 
+  maskPhoneNumber,
+  isSafeUploadPath
 } from "../utils/security";
 
 describe("LINCO Security, Sanitization & Validation Suite", () => {
@@ -88,6 +89,35 @@ describe("LINCO Security, Sanitization & Validation Suite", () => {
       expect(hasDangerousContent("<svg/onload=alert(1)>")).toBe(true);
       expect(hasDangerousContent("window.location='https://attacker.com'")).toBe(true);
       expect(hasDangerousContent("eval('malicious()')")).toBe(true);
+    });
+  });
+
+  describe("Upload Path & Information Disclosure Defense", () => {
+    it("blocks access to sensitive database fallback files", () => {
+      expect(isSafeUploadPath("/fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("fallback_db.json")).toBe(false);
+      expect(isSafeUploadPath("/FALLBACK_DB.JSON")).toBe(false);
+      expect(isSafeUploadPath("/data.json")).toBe(false);
+      expect(isSafeUploadPath("/sub/secret.json")).toBe(false);
+    });
+
+    it("blocks directory traversal attacks", () => {
+      expect(isSafeUploadPath("/../etc/passwd")).toBe(false);
+      expect(isSafeUploadPath("/uploads/../package.json")).toBe(false);
+      expect(isSafeUploadPath("..%2F..%2Fetc%2Fpasswd")).toBe(false);
+    });
+
+    it("allows valid uploaded images", () => {
+      expect(isSafeUploadPath("/img_1719680000000_abc123.jpg")).toBe(true);
+      expect(isSafeUploadPath("/thumb_1719680000000_xyz456.png")).toBe(true);
+      expect(isSafeUploadPath("/item.webp")).toBe(true);
+      expect(isSafeUploadPath("/photo.jpeg")).toBe(true);
+    });
+
+    it("safely handles null and non-string paths", () => {
+      expect(isSafeUploadPath(null)).toBe(false);
+      expect(isSafeUploadPath(undefined)).toBe(false);
+      expect(isSafeUploadPath("")).toBe(false);
     });
   });
 });
