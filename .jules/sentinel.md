@@ -1,0 +1,4 @@
+## 2026-09-17 - Fallback DB Co-located with Static Uploads Directory
+**Vulnerability:** The local database fallback file (`fallback_db.json`) containing all posts, user claims, and hashed security PINs was stored directly inside `uploads/`, which is statically served via Express static middleware. Any client could request `/uploads/fallback_db.json` and download the entire fallback database.
+**Learning:** Local storage fallbacks intended for developer or offline modes must never share directory paths with publicly exposed static routes unless strict file extension filtering and path allowlisting is enforced.
+**Prevention:** Guard static directory routes with `isSafeUploadPath()` to restrict served files strictly to approved image extensions (`.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`) and reject any requests for `.json` files or path traversal attempts.
